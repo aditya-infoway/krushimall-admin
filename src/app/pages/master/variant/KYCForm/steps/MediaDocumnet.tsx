@@ -63,7 +63,7 @@ export function MediaDocumnet({
     setValue,
     watch,
   } = useForm<MediaDocumnetType>({
-    resolver: yupResolver(MediaDocumnetSchema) as Resolver<MediaDocumnetType>,
+   resolver: yupResolver(MediaDocumnetSchema) as unknown as Resolver<MediaDocumnetType>,
     defaultValues: kycFormCtx.state.formData.MediaDocumnet,
   });
 

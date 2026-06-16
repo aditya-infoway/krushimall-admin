@@ -455,7 +455,7 @@ export function PriceLocation({
       <div className="mt-8 flex justify-between">
         <Button
           type="button"
-          variant="outline"
+          variant="outlined"
           className="min-w-[7rem]"
           onClick={() => setCurrentStep(3)}
         >

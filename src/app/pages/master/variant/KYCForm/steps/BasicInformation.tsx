@@ -429,7 +429,7 @@ export function BasicInformation({
             </div>
 
             <div>
-              <TextArea
+              <Textarea
                 {...register("metaDescription")}
                 label="Meta Description"
                 placeholder="Enter meta description"

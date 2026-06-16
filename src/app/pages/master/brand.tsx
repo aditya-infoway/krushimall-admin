@@ -26,7 +26,7 @@ import apiHelper from "@/utils/apiHelper";
 
 // Local UI Imports
 import { Button, Checkbox, Input } from "@/components/ui";
-import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/table";
+import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/Table";
 import { Listbox } from "@/components/shared/form/StyledListbox";
 
 type Brand = {
@@ -330,10 +330,11 @@ const handleDelete = async (id: number) => {
         console.log("✅ Upload response:", result);
       } else {
         // No new image, send as JSON
-        const payload = {
+        const payload: any = {
           brandName: data.name,
           categoryId: Number(data.categoryId),
           status: data.status,
+        
         };
 
         // Only include image if it exists and is not a new upload
@@ -958,7 +959,7 @@ const handleDelete = async (id: number) => {
                       data={categoryOptions}
                       value={
                         categoryOptions.find(
-                          (opt) => opt.id === formCategoryValue,
+                          (opt) => opt.id === Number(formCategoryValue),
                         ) || categoryOptions[0]
                       }
                       placeholder="Select Category"
