@@ -6,16 +6,7 @@ import { Controller, useForm, Resolver } from "react-hook-form";
 import { Button, Input, } from "@/components/ui";
 import { useKYCFormContext } from "../KYCFormContext";
 import { EnginedetailsSchema, EnginedetailsType } from "../schema";
-import {
-
-  Droplets,
-  Filter,
-  Cog,
-  CheckCircle,
-  
-  Thermometer,
- 
-} from "lucide-react";
+import { Droplets, Filter, Cog, CheckCircle, Thermometer } from "lucide-react";
 // ----------------------------------------------------------------------
 import { Listbox } from "@/components/shared/form/StyledListbox";
 // Options for various select fields
@@ -141,27 +132,24 @@ export function Enginedetails({
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div>
-             
-             <Controller
-  name="engineType"
-  control={control}
-  render={({ field }) => (
-    <Listbox
-      data={engineTypeOptions}
-      value={
-        engineTypeOptions.find(
-          (item) => item.value === field.value
-        ) || null
-      }
-      onChange={(option: any) =>
-        field.onChange(option?.value)
-      }
-      displayField="label"
-      placeholder="Select Engine Type"
-      label="Engine Type"
-    />
-  )}
-/>
+              <Controller
+                name="engineType"
+                control={control}
+                render={({ field }) => (
+                  <Listbox
+                    data={engineTypeOptions}
+                    value={
+                      engineTypeOptions.find(
+                        (item) => item.value === field.value,
+                      ) || null
+                    }
+                    onChange={(option: any) => field.onChange(option?.value)}
+                    displayField="label"
+                    placeholder="Select Engine Type"
+                    label="Engine Type"
+                  />
+                )}
+              />
               {errors?.engineType && (
                 <p className="mt-1 text-sm text-red-500">
                   {errors.engineType.message}
@@ -170,24 +158,24 @@ export function Enginedetails({
             </div>
 
             <div>
-             <Controller
-  name="fuelType"
-  control={control}
-  render={({ field }) => (
-    <Listbox
-      data={fuelTypeOptions}
-      value={
-        fuelTypeOptions.find(
-          (item) => item.value === field.value
-        ) || null
-      }
-      onChange={(option) => field.onChange(option?.value)}
-      displayField="label"
-      placeholder="Select Fuel Type"
-      label="Fuel Type"
-    />
-  )}
-/>
+              <Controller
+                name="fuelType"
+                control={control}
+                render={({ field }) => (
+                  <Listbox
+                    data={fuelTypeOptions}
+                    value={
+                      fuelTypeOptions.find(
+                        (item) => item.value === field.value,
+                      ) || null
+                    }
+                    onChange={(option) => field.onChange(option?.value)}
+                    displayField="label"
+                    placeholder="Select Fuel Type"
+                    label="Fuel Type"
+                  />
+                )}
+              />
               {errors?.fuelType && (
                 <p className="mt-1 text-sm text-red-500">
                   {errors.fuelType.message}
@@ -205,24 +193,24 @@ export function Enginedetails({
             />
 
             <div>
-             <Controller
-  name="numberOfCylinders"
-  control={control}
-  render={({ field }) => (
-    <Listbox
-      data={cylinderOptions}
-      value={
-        cylinderOptions.find(
-          (item) => item.value === field.value
-        ) || null
-      }
-      onChange={(option) => field.onChange(option?.value)}
-      displayField="label"
-      placeholder="Select Cylinders"
-      label="Number of Cylinders"
-    />
-  )}
-/>
+              <Controller
+                name="numberOfCylinders"
+                control={control}
+                render={({ field }) => (
+                  <Listbox
+                    data={cylinderOptions}
+                    value={
+                      cylinderOptions.find(
+                        (item) => item.value === field.value,
+                      ) || null
+                    }
+                    onChange={(option) => field.onChange(option?.value)}
+                    displayField="label"
+                    placeholder="Select Cylinders"
+                    label="Number of Cylinders"
+                  />
+                )}
+              />
               {errors?.numberOfCylinders && (
                 <p className="mt-1 text-sm text-red-500">
                   {errors.numberOfCylinders.message}
@@ -249,26 +237,24 @@ export function Enginedetails({
             />
 
             <div>
-               <Controller
-    name="aspiratedType"
-    control={control}
-    render={({ field }) => (
-      <Listbox
-        data={aspiratedTypeOptions}
-        value={
-          aspiratedTypeOptions.find(
-            (item) => item.value === field.value
-          ) || null
-        }
-        onChange={(option: any) =>
-          field.onChange(option?.value)
-        }
-        displayField="label"
-        placeholder="Select Aspirated Type"
-        label="Aspirated Type"
-      />
-    )}
-  />
+              <Controller
+                name="aspiratedType"
+                control={control}
+                render={({ field }) => (
+                  <Listbox
+                    data={aspiratedTypeOptions}
+                    value={
+                      aspiratedTypeOptions.find(
+                        (item) => item.value === field.value,
+                      ) || null
+                    }
+                    onChange={(option: any) => field.onChange(option?.value)}
+                    displayField="label"
+                    placeholder="Select Aspirated Type"
+                    label="Aspirated Type"
+                  />
+                )}
+              />
               {errors?.aspiratedType && (
                 <p className="mt-1 text-sm text-red-500">
                   {errors.aspiratedType.message}
@@ -277,26 +263,24 @@ export function Enginedetails({
             </div>
 
             <div>
-               <Controller
-    name="emissionNorms"
-    control={control}
-    render={({ field }) => (
-      <Listbox
-        data={emissionNormsOptions}
-        value={
-          emissionNormsOptions.find(
-            (item) => item.value === field.value
-          ) || null
-        }
-        onChange={(option: any) =>
-          field.onChange(option?.value)
-        }
-        displayField="label"
-        placeholder="Select Emission Norms"
-        label="Emission Norms"
-      />
-    )}
-  />
+              <Controller
+                name="emissionNorms"
+                control={control}
+                render={({ field }) => (
+                  <Listbox
+                    data={emissionNormsOptions}
+                    value={
+                      emissionNormsOptions.find(
+                        (item) => item.value === field.value,
+                      ) || null
+                    }
+                    onChange={(option: any) => field.onChange(option?.value)}
+                    displayField="label"
+                    placeholder="Select Emission Norms"
+                    label="Emission Norms"
+                  />
+                )}
+              />
               {errors?.emissionNorms && (
                 <p className="mt-1 text-sm text-red-500">
                   {errors.emissionNorms.message}
@@ -308,9 +292,9 @@ export function Enginedetails({
 
         {/* Cooling System Section */}
         <div className="mb-4 flex items-center gap-2">
-            {/* <Filter className="text-primary-500 h-5 w-5" /> */}
-            <h3 className="text-lg font-semibold">Cooling System</h3>
-          </div>
+          {/* <Filter className="text-primary-500 h-5 w-5" /> */}
+          <h3 className="text-lg font-semibold">Cooling System</h3>
+        </div>
         <div className="flex flex-wrap gap-4">
           {coolingSystemOptions.map((option) => {
             const selected = watch("coolingSystem") === option.value;
@@ -318,9 +302,9 @@ export function Enginedetails({
             return (
               <label
                 key={option.value}
-                className={`relative flex min-w-[300px] cursor-pointer items-center gap-3 rounded-lg border  p-4 transition-all ${
+                className={`relative flex min-w-[300px] cursor-pointer items-center gap-3 rounded-lg border p-4 transition-all ${
                   selected
-                    ? "border-primary-500 "
+                    ? "border-primary-500"
                     : "hover:border-primary-300 border-primary"
                 }`}
               >
@@ -353,17 +337,18 @@ export function Enginedetails({
             <h3 className="text-lg font-semibold">Air Filter Type</h3>
           </div>
           <div className="flex flex-wrap gap-4">
-            {airFilterTypeOptions.map((option) => {
-              const selected = watch("airFilterType") === option.value;
+           {airFilterTypeOptions.map((option) => {
+  const selected = watch("airFilterType") === option.value;
 
-              return (
-                <label
-                  className={`relative flex min-w-[280px] cursor-pointer items-center gap-3 rounded-lg border p-4 ${
-                    selected
-                      ? "border-primary-500 bg-primary/10"
-                      : "hover:border-primary/50 border-primary"
-                  }`}
-                >
+  return (
+    <label
+      key={option.value}
+      className={`relative flex min-w-[280px] cursor-pointer items-center gap-3 rounded-lg border p-4 ${
+        selected
+          ? "border-primary-500 bg-primary/10"
+          : "hover:border-primary/50 border-primary"
+      }`}
+    >
                   <input
                     type="radio"
                     value={option.value}
@@ -426,7 +411,7 @@ export function Enginedetails({
         {/* Engine Condition Section */}
         <div className="">
           <h3 className="mb-4 text-lg font-semibold">Engine Condition</h3>
-          
+
           <div className="flex flex-wrap gap-6">
             {engineConditionOptions.map((option) => (
               <label

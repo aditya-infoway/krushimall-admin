@@ -1,14 +1,16 @@
 // Import Dependencies
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Controller, Resolver, useForm } from "react-hook-form";
-
+import { useState } from "react";
 // Local Imports
 import { Button, Input, Textarea } from "@/components/ui";
 import { useKYCFormContext } from "../KYCFormContext";
 import { BasicInformationSchema, BasicInformationType } from "../schema";
-
+import { Listbox } from "@/components/shared/form/StyledListbox";
 // ----------------------------------------------------------------------
-
+import { DatePicker } from "@/components/shared/form/Datepicker";
+import Select from "react-select";
+import { Country, State, City } from "country-state-city";
 // Options for various select fields
 const brandOptions = [
   { label: "John Deere", value: "john_deere" },
@@ -30,15 +32,6 @@ const modelOptions = [
   { label: "Arjun Novo 605", value: "arjun_novo_605" },
   { label: "Yuvraj 215", value: "yuvraj_215" },
   { label: "Force 60", value: "force_60" },
-];
-
-const countryOptions = [
-  { label: "India", value: "india" },
-  { label: "USA", value: "usa" },
-  { label: "Japan", value: "japan" },
-  { label: "Germany", value: "germany" },
-  { label: "China", value: "china" },
-  { label: "Brazil", value: "brazil" },
 ];
 
 const tractorStatusOptions = [
@@ -63,6 +56,32 @@ const stockStatusOptions = [
   { label: "Limited Stock", value: "limited_stock" },
   { label: "Pre-order", value: "pre_order" },
 ];
+const variantOptions = [
+  { label: "Base Variant", value: "base_variant" },
+  { label: "Standard Variant", value: "standard_variant" },
+  { label: "Premium Variant", value: "premium_variant" },
+];
+
+const tractorCategoryOptions = [
+  { label: "Mini Tractor", value: "mini_tractor" },
+  { label: "Utility Tractor", value: "utility_tractor" },
+  { label: "Row Crop Tractor", value: "row_crop_tractor" },
+  { label: "Orchard Tractor", value: "orchard_tractor" },
+  { label: "Heavy Duty Tractor", value: "heavy_duty_tractor" },
+];
+const dealerOptions = [
+  { label: "Dealer 1", value: "dealer1" },
+  { label: "Dealer 2", value: "dealer2" },
+  { label: "Dealer 3", value: "dealer3" },
+];
+const modelYearOptions = Array.from({ length: 20 }, (_, i) => {
+  const year = new Date().getFullYear() - i;
+
+  return {
+    label: year.toString(),
+    value: year.toString(),
+  };
+});
 
 export function BasicInformation({
   setCurrentStep,
@@ -75,16 +94,22 @@ export function BasicInformation({
     register,
     handleSubmit,
     formState: { errors },
-    // control,
+    control,
     watch,
     setValue,
   } = useForm({
-    resolver: yupResolver(BasicInformationSchema) as Resolver<BasicInformationType>,
+    resolver: yupResolver(
+      BasicInformationSchema,
+    ) as Resolver<BasicInformationType>,
     defaultValues: kycFormCtx.state.formData.BasicInformation,
   });
-
+  const [country, setCountry] = useState("");
+  const [state, setState] = useState("");
+  const [city, setCity] = useState("");
+  const [district, setDistrict] = useState("");
+  const [stateCode, setStateCode] = useState("");
   const showCustomColorInput = watch("showCustomColor");
-
+  const [highlightCount, setHighlightCount] = useState(5);
   const onSubmit = (data: BasicInformationType) => {
     kycFormCtx.dispatch({
       type: "SET_FORM_DATA",
@@ -96,60 +121,204 @@ export function BasicInformation({
     });
     setCurrentStep(1);
   };
+  const countryOptions = Country.getAllCountries().map((country) => ({
+    value: country.isoCode,
+    label: country.name,
+  }));
+  const stateOptions = State.getStatesOfCountry(country).map((state) => ({
+    value: state.isoCode,
+    label: state.name,
+    state,
+  }));
+  const cityOptions = City.getCitiesOfState(country, state).map((city) => ({
+    value: city.name,
+    label: city.name,
+  }));
+  const customSelectStyles = {
+    control: (provided: any, state: any) => ({
+      ...provided,
+      backgroundColor: "transparent",
+      borderColor: state.isFocused
+        ? "var(--color-primary-600)"
+        : "var(--color-gray-300)",
+      boxShadow: state.isFocused
+        ? "0 0 0 1px var(--color-primary-600)"
+        : "none",
+      minHeight: "42px",
 
+      "&:hover": {
+        borderColor: "var(--color-primary-500)",
+      },
+    }),
+
+    valueContainer: (provided: any) => ({
+      ...provided,
+      color: "var(--color-dark-100)",
+    }),
+
+    singleValue: (provided: any) => ({
+      ...provided,
+      color: "var(--color-dark-100)",
+    }),
+
+    input: (provided: any) => ({
+      ...provided,
+      color: "var(--color-dark-100)",
+    }),
+
+    placeholder: (provided: any) => ({
+      ...provided,
+      color: "var(--color-gray-400)",
+    }),
+
+    menu: (provided: any) => ({
+      ...provided,
+      backgroundColor: "var(--color-dark-700)",
+      border: "1px solid var(--color-primary-600)",
+      borderRadius: "12px",
+      overflow: "hidden",
+    }),
+
+    menuList: (provided: any) => ({
+      ...provided,
+      padding: 0,
+    }),
+
+    option: (provided: any, state: any) => ({
+      ...provided,
+      backgroundColor: state.isSelected
+        ? "var(--color-primary-600)"
+        : state.isFocused
+          ? "var(--color-primary-500)"
+          : "var(--color-dark-700)",
+      color: "#fff",
+      cursor: "pointer",
+    }),
+
+    dropdownIndicator: (provided: any, state: any) => ({
+      ...provided,
+      color: state.isFocused
+        ? "var(--color-primary-600)"
+        : "var(--color-gray-400)",
+    }),
+
+    clearIndicator: (provided: any) => ({
+      ...provided,
+      color: "var(--color-gray-400)",
+    }),
+
+    indicatorSeparator: () => ({
+      display: "none",
+    }),
+  };
   return (
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
       <div className="mt-6 space-y-6">
         {/* Basic Information Section */}
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           <div>
-            <label className="mb-1 block text-sm font-medium">
-              Brand Name <span className="text-red-500">*</span>
-            </label>
-            <select
-              {...register("brandName")}
-              className="w-full rounded-lg border border-gray-300 p-2.5 focus:border-primary-500 focus:ring-primary-500"
-            >
-              <option value="">Select Brand</option>
-              {brandOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-           
-             {errors?.brandName && (
-                <p className="mt-1 text-sm text-red-500">
-                  {errors.brandName.message}
-                </p>
+            <Controller
+              name="brandName"
+              control={control}
+              render={({ field }) => (
+                <Listbox
+                  data={brandOptions}
+                  value={
+                    brandOptions.find((item) => item.value === field.value) ||
+                    null
+                  }
+                  onChange={(option: any) => field.onChange(option?.value)}
+                  displayField="label"
+                  placeholder="Select Brand"
+                  label="Brand Name"
+                />
               )}
+            />
+
+            {errors?.brandName && (
+              <p className="mt-1 text-sm text-red-500">
+                {errors.brandName.message}
+              </p>
+            )}
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium">
-              Model Name <span className="text-red-500">*</span>
-            </label>
-            <select
-              {...register("modelName")}
-              className="w-full rounded-lg border border-gray-300 p-2.5 focus:border-primary-500 focus:ring-primary-500"
-            >
-              <option value="">Select Model</option>
-              {modelOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-           
-             {errors?.modelName && (
-                <p className="mt-1 text-sm text-red-500">
-                  {errors.modelName.message}
-                </p>
+            <Controller
+              name="modelName"
+              control={control}
+              render={({ field }) => (
+                <Listbox
+                  data={modelOptions}
+                  value={
+                    modelOptions.find((item) => item.value === field.value) ||
+                    null
+                  }
+                  onChange={(option: any) => field.onChange(option?.value)}
+                  displayField="label"
+                  placeholder="Select Model"
+                  label="Model Name"
+                />
               )}
+            />
+
+            {errors?.modelName && (
+              <p className="mt-1 text-sm text-red-500">
+                {errors.modelName.message}
+              </p>
+            )}
+          </div>
+          <div>
+            <Controller
+              name="variantName"
+              control={control}
+              render={({ field }) => (
+                <Listbox
+                  data={variantOptions}
+                  value={
+                    variantOptions.find((item) => item.value === field.value) ||
+                    null
+                  }
+                  onChange={(option: any) => field.onChange(option?.value)}
+                  displayField="label"
+                  placeholder="Select Variant"
+                  label="Variant Name"
+                />
+              )}
+            />
+            {errors?.variantName && (
+              <p className="mt-1 text-sm text-red-500">
+                {errors.variantName.message}
+              </p>
+            )}
+          </div>
+          <div>
+            <Controller
+              name="tractorCategory"
+              control={control}
+              render={({ field }) => (
+                <Listbox
+                  data={tractorCategoryOptions}
+                  value={
+                    tractorCategoryOptions.find(
+                      (item) => item.value === field.value,
+                    ) || null
+                  }
+                  onChange={(option: any) => field.onChange(option?.value)}
+                  displayField="label"
+                  placeholder="Select Category"
+                  label="Tractor Category"
+                />
+              )}
+            />
+            {errors?.tractorCategory && (
+              <p className="mt-1 text-sm text-red-500">
+                {errors.tractorCategory.message}
+              </p>
+            )}
           </div>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Input
             {...register("productCode")}
             label="Product Code"
@@ -163,92 +332,179 @@ export function BasicInformation({
             placeholder="Enter SKU code"
             error={errors?.skuCode?.message}
           />
+        <Controller
+  name="launchYear"
+  control={control}
+  render={({ field: { onChange, value, ...rest } }) => (
+    <DatePicker
+      value={value || ""}
+      onChange={(date: any) => {
+        if (!date) {
+          onChange("");
+          return;
+        }
+
+        const selectedDate = new Date(date);
+
+        if (isNaN(selectedDate.getTime())) {
+          onChange("");
+          return;
+        }
+
+        onChange(
+          selectedDate.toISOString().split("T")[0]
+        );
+      }}
+      label="Launch Year"
+      error={errors?.launchYear?.message}
+      options={{ disableMobile: true }}
+      placeholder="Select launch date..."
+      {...rest}
+    />
+  )}
+/>
+          <Controller
+            name="modelYear"
+            control={control}
+            render={({ field }) => (
+              <Listbox
+                data={modelYearOptions}
+                value={
+                  modelYearOptions.find((item) => item.value === field.value) ||
+                  null
+                }
+                onChange={(option: any) => field.onChange(option?.value)}
+                displayField="label"
+                placeholder="Select Year"
+                label="Model Year"
+              />
+            )}
+          />
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           <div>
-            <label className="mb-1 block text-sm font-medium">
-              Country of Origin
-            </label>
-            <select
-              {...register("countryOfOrigin")}
-              className="w-full rounded-lg border border-gray-300 p-2.5 focus:border-primary-500 focus:ring-primary-500"
-            >
-              <option value="">Select Country</option>
-              {countryOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-           
-             {errors?.countryOfOrigin && (
-                <p className="mt-1 text-sm text-red-500">
-                  {errors.countryOfOrigin.message}
-                </p>
+            <label className="mb-1 inline-block">Country</label>
+            <Controller
+              name="country"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  options={countryOptions}
+                    classNamePrefix="react-select"
+                  styles={customSelectStyles}
+                  placeholder="Search Country"
+                  value={
+                    countryOptions.find(
+                      (option) => option.value === field.value,
+                    ) || null
+                  }
+                  onChange={(selected) => {
+                    field.onChange(selected?.value || "");
+                    setCountry(selected?.value || "");
+                    setState("");
+                    setCity("");
+                  }}
+                />
               )}
+            />
+            {errors.country && (
+              <p className="text-error dark:text-error-lighter mt-1 text-xs">
+                {errors.country.message}
+              </p>
+            )}
           </div>
+          <div>
+            <Controller
+              name="tractorStatus"
+              control={control}
+              render={({ field }) => (
+                <Listbox
+                  data={tractorStatusOptions}
+                  value={
+                    tractorStatusOptions.find(
+                      (item) => item.value === field.value,
+                    ) || null
+                  }
+                  onChange={(option: any) => field.onChange(option?.value)}
+                  displayField="label"
+                  placeholder="Select Status"
+                  label="Tractor Status"
+                />
+              )}
+            />
 
-          <div>
-            <label className="mb-1 block text-sm font-medium">
-              Tractor Status <span className="text-red-500">*</span>
-            </label>
-            <select
-              {...register("tractorStatus")}
-              className="w-full rounded-lg border border-gray-300 p-2.5 focus:border-primary-500 focus:ring-primary-500"
-            >
-              <option value="">Select Status</option>
-              {tractorStatusOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-         
-             {errors?.tractorStatus && (
-                <p className="mt-1 text-sm text-red-500">
-                  {errors.tractorStatus.message}
-                </p>
-              )}
+            {errors?.tractorStatus && (
+              <p className="mt-1 text-sm text-red-500">
+                {errors.tractorStatus.message}
+              </p>
+            )}
           </div>
+          <Controller
+            name="stockStatus"
+            control={control}
+            render={({ field }) => (
+              <Listbox
+                data={stockStatusOptions}
+                value={
+                  stockStatusOptions.find(
+                    (item) => item.value === field.value,
+                  ) || null
+                }
+                onChange={(option: any) => field.onChange(option?.value)}
+                displayField="label"
+                placeholder="Select Stock Status"
+                label="Stock Status"
+              />
+            )}
+          />
         </div>
 
         {/* Short Description */}
-        <Textarea
-          {...register("shortDescription")}
-          label="Short Description"
-          placeholder="Write short description about this tractor (Max 200 characters)"
-          maxLength={200}
-          rows={3}
-          error={errors?.shortDescription?.message}
-          // helperText="Max 200 characters"
-        />
+        <div className="border-y border-gray-500 py-8">
+          <Textarea
+            {...register("shortDescription")}
+            label="Short Description"
+            placeholder="Write short description about this tractor (Max 200 characters)"
+            maxLength={200}
+            rows={3}
+            error={errors?.shortDescription?.message}
+            helperText="Max 200 characters"
+          />
+        </div>
 
         {/* Key Highlights Section */}
-        <div className="rounded-lg border border-gray-200 p-4">
-          <h3 className="mb-4 text-lg font-semibold">Key Highlights</h3>
-          <p className="mb-4 text-sm text-gray-500">
+        <div className="border-y border-gray-500 py-8">
+          <h3 className="mb-2 text-lg font-semibold text-gray-500">
+            Key Highlights
+          </h3>
+
+          <p className="mb-6 text-sm text-gray-500">
             Add key highlights about this tractor
           </p>
 
-          {[1, 2, 3, 4, 5].map((index) => (
-            <div key={index} className="mb-3">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
+            {Array.from({ length: highlightCount }, (_, index) => (
               <Input
-                // {...register(`highlights.highlight${index}`)}
-                label={`Highlight ${index}`}
+                key={index}
+                {...register(`highlights.highlight${index + 1}` as const)}
+                label={`Highlight ${index + 1}`}
                 placeholder="Enter highlight"
-                // error={errors?.highlights?.[`highlight${index}`]?.message}
               />
-            </div>
-          ))}
+            ))}
+          </div>
 
-          <Button type="button"  className="mt-2">
+          <Button
+            type="button"
+            className="mt-4"
+            onClick={() => setHighlightCount((prev) => prev + 1)}
+          >
             + Add Another Highlight
           </Button>
         </div>
 
         {/* Available Colors Section */}
-        <div className="rounded-lg border border-gray-200 p-4">
+        <div className="border-y border-gray-500 py-8">
           <h3 className="mb-4 text-lg font-semibold">Available Colors</h3>
           <p className="mb-4 text-sm text-gray-500">
             Select available colors for this tractor
@@ -284,45 +540,68 @@ export function BasicInformation({
           </div>
 
           {showCustomColorInput && (
-            <div className="mt-3">
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
               <Input
                 {...register("customColorName")}
                 label="Custom Color Name"
-                placeholder="Enter custom color name (if any)"
+                placeholder="Enter custom color name"
                 error={errors?.customColorName?.message}
               />
+
+              <div>
+                <label className="mb-1 block text-sm font-medium">
+                  Custom Color
+                </label>
+
+                <input
+                  type="color"
+                  {...register("customColorCode")}
+                  className="h-10 w-20 cursor-pointer rounded border border-gray-300"
+                />
+              </div>
             </div>
           )}
         </div>
 
         {/* Dealer Availability Section */}
-        <div className="rounded-lg border border-gray-200 p-4">
+        <div className="">
           <h3 className="mb-4 text-lg font-semibold">Dealer Availability</h3>
           <p className="mb-4 text-sm text-gray-500">
             Select where this tractor is available
           </p>
 
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
             <div>
               <label className="mb-1 block text-sm font-medium">
                 Available States <span className="text-red-500">*</span>
               </label>
-              <select
-                {...register("availableStates")}
-                multiple
-                className="w-full rounded-lg border border-gray-300 p-2.5"
-                size={4}
-              >
-                <option value="california">California</option>
-                <option value="texas">Texas</option>
-                <option value="new_york">New York</option>
-                <option value="florida">Florida</option>
-              </select>
+             <Controller
+  name="availableStates"
+  control={control}
+  render={({ field }) => (
+    <Select
+      options={stateOptions}
+      isMulti
+      styles={customSelectStyles}
+      placeholder="Search State"
+      isDisabled={!country}
+      value={stateOptions.filter((option) =>
+        field.value?.includes(option.value)
+      )}
+      onChange={(selected: any) => {
+        field.onChange(
+          selected?.map((item: any) => item.value) || []
+        );
+      }}
+    />
+  )}
+/>
+
               <p className="mt-1 text-xs text-gray-400">
                 Hold Ctrl/Cmd to select multiple
               </p>
-            
-               {errors?.availableStates && (
+
+              {errors?.availableStates && (
                 <p className="mt-1 text-sm text-red-500">
                   {errors.availableStates.message}
                 </p>
@@ -333,21 +612,32 @@ export function BasicInformation({
               <label className="mb-1 block text-sm font-medium">
                 Available Districts <span className="text-red-500">*</span>
               </label>
-              <select
-                {...register("availableDistricts")}
-                multiple
-                className="w-full rounded-lg border border-gray-300 p-2.5"
-                size={4}
-              >
-                <option value="district1">District 1</option>
-                <option value="district2">District 2</option>
-                <option value="district3">District 3</option>
-              </select>
+             <Controller
+  name="availableDistricts"
+  control={control}
+  render={({ field }) => (
+    <Select
+      options={cityOptions}
+      isMulti
+      styles={customSelectStyles}
+      placeholder="Search District"
+      isDisabled={!state}
+      value={cityOptions.filter((option) =>
+        field.value?.includes(option.value)
+      )}
+      onChange={(selected: any) => {
+        field.onChange(
+          selected?.map((item: any) => item.value) || []
+        );
+      }}
+    />
+  )}
+/>
               <p className="mt-1 text-xs text-gray-400">
                 Hold Ctrl/Cmd to select multiple
               </p>
-             
-               {errors?.availableDistricts && (
+
+              {errors?.availableDistricts && (
                 <p className="mt-1 text-sm text-red-500">
                   {errors.availableDistricts.message}
                 </p>
@@ -356,23 +646,35 @@ export function BasicInformation({
 
             <div>
               <label className="mb-1 block text-sm font-medium">
-                Available Dealers <span className="text-red-500">*</span>
+                {" "}
+                Available Dealers <span className="text-red-500">*</span>{" "}
               </label>
-              <select
-                {...register("availableDealers")}
-                multiple
-                className="w-full rounded-lg border border-gray-300 p-2.5"
-                size={4}
-              >
-                <option value="dealer1">Dealer 1</option>
-                <option value="dealer2">Dealer 2</option>
-                <option value="dealer3">Dealer 3</option>
-              </select>
+              <Controller
+                name="availableDealers"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    options={dealerOptions}
+                    
+                    isMulti
+                    styles={customSelectStyles}
+                    placeholder="Search Dealers"
+                    value={dealerOptions.filter((option) =>
+                      field.value?.includes(option.value),
+                    )}
+                    onChange={(selected: any) => {
+                      field.onChange(
+                        selected?.map((item: any) => item.value) || [],
+                      );
+                    }}
+                  />
+                )}
+              />
               <p className="mt-1 text-xs text-gray-400">
                 Hold Ctrl/Cmd to select multiple
               </p>
-            
-               {errors?.availableDealers && (
+
+              {errors?.availableDealers && (
                 <p className="mt-1 text-sm text-red-500">
                   {errors.availableDealers.message}
                 </p>
@@ -380,21 +682,24 @@ export function BasicInformation({
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium">
-                Stock Status <span className="text-red-500">*</span>
-              </label>
-              <select
-                {...register("stockStatus")}
-                className="w-full rounded-lg border border-gray-300 p-2.5"
-              >
-                <option value="">Select Stock Status</option>
-                {stockStatusOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              
+              <Controller
+                name="stockStatus"
+                control={control}
+                render={({ field }) => (
+                  <Listbox
+                    data={stockStatusOptions}
+                    value={
+                      stockStatusOptions.find(
+                        (item) => item.value === field.value,
+                      ) || null
+                    }
+                    onChange={(option: any) => field.onChange(option?.value)}
+                    displayField="label"
+                    placeholder="Select Stock Status"
+                    label="Stock Status"
+                  />
+                )}
+              />
               {errors?.stockStatus && (
                 <p className="mt-1 text-sm text-red-500">
                   {errors.stockStatus.message}
@@ -405,10 +710,10 @@ export function BasicInformation({
         </div>
 
         {/* SEO Details Section */}
-        <div className="rounded-lg border border-gray-200 p-4">
+        <div className="border-y border-gray-500 py-8">
           <h3 className="mb-4 text-lg font-semibold">SEO Details</h3>
 
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
             <Input
               {...register("seoTitle")}
               label="SEO Title"
@@ -456,7 +761,7 @@ export function BasicInformation({
       </div>
 
       <div className="mt-8 flex justify-end space-x-3">
-        <Button type="button"  className="min-w-[7rem]">
+        <Button type="button" className="min-w-[7rem]">
           Cancel
         </Button>
         <Button type="submit" className="min-w-[7rem]" color="primary">

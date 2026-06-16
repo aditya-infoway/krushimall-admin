@@ -13,9 +13,14 @@ export const BasicInformationSchema = Yup.object().shape({
   // Basic Information
   brandName: Yup.string().trim().required("Brand Name Required"),
   modelName: Yup.string().trim().required("Model Name Required"),
+  variantName: Yup.string().required("Variant Name is required"),
+
+tractorCategory: Yup.string().required("Tractor Category is required"),
   productCode: Yup.string().trim(),
   skuCode: Yup.string().trim(),
-  countryOfOrigin: Yup.string().trim(),
+  launchYear: Yup.string().nullable(),
+  modelYear: Yup.string().required("Model Year is required"),
+  country: Yup.string().trim("Country is required "),
   tractorStatus: Yup.string().trim().required("Tractor Status Required"),
   
   // Short Description
@@ -41,11 +46,20 @@ export const BasicInformationSchema = Yup.object().shape({
     custom: Yup.boolean(),
   }),
   customColorName: Yup.string().when("colors.custom", {
-    is: true,
-    then: (schema) => schema.trim().required("Please enter custom color name"),
-    otherwise: (schema) => schema.trim().nullable(),
-  }),
-  showCustomColor: Yup.boolean(),
+  is: true,
+  then: (schema) =>
+    schema.trim().required("Please enter custom color name"),
+  otherwise: (schema) => schema.trim().nullable(),
+}),
+
+customColorCode: Yup.string().when("colors.custom", {
+  is: true,
+  then: (schema) =>
+    schema.required("Please select custom color"),
+  otherwise: (schema) => schema.nullable(),
+}),
+
+showCustomColor: Yup.boolean(),
   
   // Dealer Availability
   availableStates: Yup.array()
@@ -164,10 +178,13 @@ export const HydraulicTyresSchema = Yup.object().shape({
   addc: Yup.boolean(),
   positionControl: Yup.boolean(),
   draftControl: Yup.boolean(),
-  
+  liftingCapacityAt610mm: Yup.string().nullable(),
   // Control Type
   controlType: Yup.string().trim(),
-  
+  threePointLinkage: Yup.string().required("Please select linkage type"),
+linkageCategory: Yup.string().required("Please select linkage category"),
+topLink: Yup.string().required("Please select top link"),
+draftSensitivity: Yup.string().required("Please select draft sensitivity"),
   // Remote Valve
   remoteValveType: Yup.string().trim(),
   numberOfRemoteValves: Yup.string().trim(),
@@ -208,6 +225,10 @@ export const PriceLocationSchema = Yup.object().shape({
       then: (schema) => schema.required("TCS Percentage Required"),
       otherwise: (schema) => schema.nullable(),
     }),
+    exchangeOffer: Yup.string()
+  .trim()
+  .oneOf(["yes", "no"])
+  .required("Exchange Offer Required"),
   financeAvailable: Yup.string()
     .trim()
     .oneOf(["yes", "no"])
@@ -231,6 +252,7 @@ export const PriceLocationSchema = Yup.object().shape({
   negotiable: Yup.string().trim().oneOf(["yes", "no"]),
   
   // Location Details
+    country: Yup.string().trim("Country is required "),
   state: Yup.string().trim().required("State Required"),
   district: Yup.string().trim().required("District Required"),
   taluka: Yup.string().trim(),
@@ -291,9 +313,13 @@ export type BasicInformationType = {
   // Basic Information
   brandName: string;
   modelName: string;
+  variantName: string;
+  tractorCategory: string;
   productCode?: string;
   skuCode?: string;
-  countryOfOrigin?: string;
+    launchYear?: string;
+    modelYear?: string;
+  country?: string;
   tractorStatus: string;
   
   // Short Description
@@ -319,11 +345,12 @@ export type BasicInformationType = {
     custom?: boolean;
   };
   customColorName?: string | null;
-  showCustomColor?: boolean;
+customColorCode?: string | null;
+showCustomColor?: boolean;
   
   // Dealer Availability
-  availableStates: string[];
-  availableDistricts: string[];
+  availableStates: string;
+  availableDistricts: string;
   availableDealers: string[];
   stockStatus: string;
   
@@ -407,10 +434,13 @@ export type HydraulicTyresType = {
   addc?: boolean;
   positionControl?: boolean;
   draftControl?: boolean;
-  
+  liftingCapacityAt610mm?: string;
   // Control Type
   controlType?: string;
-  
+  threePointLinkage?: string;
+linkageCategory?: string;
+topLink?: string;
+draftSensitivity?: string;
   // Remote Valve
   remoteValveType?: string;
   numberOfRemoteValves?: string;
@@ -441,8 +471,9 @@ export type PriceLocationType = {
   downPayment?: number | null;
   offerPrice?: number | null;
   negotiable?: string;
-  
+    exchangeOffer: string;
   // Location Details
+  country : string;
   state: string;
   district: string;
   taluka?: string;

@@ -51,7 +51,7 @@ const steps: Step[] = [
     component: HydraulicTyres,
     label: "Hydraulic & Tyres",
     description:
-      "Read and agree to the terms and conditions of the form. Check the box to confirm information and consent.",
+      "   Add hydraulic system details of this tractor",
   },
   
    {
