@@ -24,7 +24,7 @@ import {
   Tr,
   Th,
   Td,
-} from "@/components/ui/table";
+} from "@/components/ui/Table";
 import { Listbox } from "@/components/shared/form/StyledListbox";
 
 type YearDataType = {

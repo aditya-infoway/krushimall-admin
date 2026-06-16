@@ -41,5 +41,12 @@ export const master: NavigationTree = {
    path: "/master/variant",
    icon: "variant",
   },
+  {
+   id: "showroomvariant",
+   type: "item",
+   title: "Showroom Variant",
+   path: "/master/showroomvariant",
+    icon: "showroom",
+  },
  ],
 };

@@ -7,7 +7,7 @@ import "./i18n/config";
 import "simplebar-react/dist/simplebar.min.css";
 
 import "./styles/index.css";
-
+import "leaflet/dist/leaflet.css";
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />

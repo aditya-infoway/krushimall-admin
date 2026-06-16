@@ -92,8 +92,37 @@ const protectedRoutes: RouteObject = {
             ).default,
           }),
         },
+
+          {
+          path: "showroomvariant",
+          lazy: async () => ({
+            Component: (
+              await import("@/app/pages/master/showroomvariant")
+            ).default,
+          }),
+        },
+
       ],
+    },  
+
+    {
+  path: "leadmaster",
+  children: [
+    {
+      path: "leadbuilder",
+      lazy: async () => ({
+        Component: (
+          await import("@/app/pages/leadmaster/leadbuilder")
+        ).default,
+      }),
     },
+  ],
+},
+    
+    
+
+
+
 
       ],
     },
