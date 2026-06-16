@@ -13,7 +13,7 @@ import { HydraulicTyres } from "./steps/HydraulicTyres.tsx";
 import { Transmission } from "./steps/Transmission.tsx";
 import { BasicInformation } from "./steps/BasicInformation.tsx";
 import { FormState } from "./KYCFormContext.ts";
-import { PriceLocation} from "./steps/priceLocation.tsx"
+import { PriceLocation } from "./steps/PriceLocation";
 import { MediaDocumnet } from "./steps/MediaDocumnet.tsx"
 import {PreviewSubmit } from "./steps/PreviewSubmit.tsx"
 // ----------------------------------------------------------------------
@@ -51,7 +51,7 @@ const steps: Step[] = [
     component: HydraulicTyres,
     label: "Hydraulic & Tyres",
     description:
-      "Read and agree to the terms and conditions of the form. Check the box to confirm information and consent.",
+      "   Add hydraulic system details of this tractor",
   },
   
    {

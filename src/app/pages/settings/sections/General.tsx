@@ -158,7 +158,7 @@ const customSelectStyles = {
               avatar
                 ? URL.createObjectURL(avatar)
                 : company?.logo
-                  ? `http://localhost:5000/uploads/company/${company.logo}`
+                  ? `http://192.168.1.38:5000/uploads/company/${company.logo}`
                   : "/images/avatar/avatar-20.jpg"
             }
             classNames={{

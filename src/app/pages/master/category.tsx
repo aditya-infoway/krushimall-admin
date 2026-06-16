@@ -27,7 +27,7 @@ import apiHelper from "@/utils/apiHelper";
 
 // Local Imports
 import { Button, Checkbox, Input } from "@/components/ui";
-import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/table";
+import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/Table";
 import { Listbox } from "@/components/shared/form/StyledListbox";
 
 type Category = {

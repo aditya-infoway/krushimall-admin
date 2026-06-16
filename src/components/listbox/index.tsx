@@ -1,5 +1,5 @@
 // Local Imports
-import { type Demo, DemoLayout } from "@/components/docs/demo/DemoLayout";
+// import { type Demo, DemoLayout } from "@/components/docs/demo/DemoLayout";
 import { type BreadcrumbItem } from "@/components/shared/Breadcrumbs";
 import { Advanced } from "./Advanced";
 import { Styled } from "./Styled";
@@ -16,7 +16,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 const markdownPath = "forms/listbox";
 
-const demos: Demo[] = [
+const demos: any[] = [
   {
     title: "Styled Example",
     description:
@@ -52,13 +52,4 @@ const demos: Demo[] = [
   },
 ];
 
-export default function Listbox() {
-  return (
-    <DemoLayout
-      title="Listbox"
-      breadcrumbs={breadcrumbs}
-      markdownPath={markdownPath}
-      demos={demos}
-    />
-  );
-}
+

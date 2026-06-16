@@ -3,4 +3,5 @@
  * https://github.com/pinia-studio/jwt-api-node
  **/
 
-export const JWT_HOST_API: string = "http://localhost:5000/api";
+export const JWT_HOST_API: string =
+  import.meta.env.VITE_API_URL || "http://192.168.1.38:5000/api";

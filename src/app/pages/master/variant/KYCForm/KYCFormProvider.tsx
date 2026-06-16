@@ -16,9 +16,13 @@ const initialState: FormState = {
   // Basic Information
   brandName: "",
   modelName: "",
+  variantName: "",
+tractorCategory: "",
   productCode: "",
   skuCode: "",
-  countryOfOrigin: "",
+  launchYear :"",
+  modelYear :"",
+  country: "",
   tractorStatus: "",
   
   // Short Description
@@ -43,12 +47,12 @@ const initialState: FormState = {
     white: false,
     custom: false,
   },
-  customColorName: null,
-  showCustomColor: false,
-  
+customColorName: "",
+customColorCode: "#ff0000",
+showCustomColor: false,
   // Dealer Availability
-  availableStates: [],
-  availableDistricts: [],
+  availableStates: "",
+  availableDistricts: "",
   availableDealers: [],
   stockStatus: "",
   
@@ -116,18 +120,26 @@ const initialState: FormState = {
 HydraulicTyres: {
   // Hydraulic System
   liftingCapacity: 0,
+  liftingCapacityAt610mm: "",
+
   hydraulicType: "",
   addc: false,
   positionControl: false,
   draftControl: false,
-  
+
   // Control Type
   controlType: "",
-  
+
   // Remote Valve
   remoteValveType: "",
   numberOfRemoteValves: "",
-  
+
+  // Linkage Section
+  threePointLinkage: "",
+  linkageCategory: "",
+  topLink: "",
+  draftSensitivity: "",
+
   // Additional Features
   features: {
     externalHydraulicCylinder: false,
@@ -153,8 +165,9 @@ HydraulicTyres: {
   downPayment: null,
   offerPrice: null,
   negotiable: "no",
-  
+    exchangeOffer: "no",
   // Location Details
+  country:"",
   state: "",
   district: "",
   taluka: "",
