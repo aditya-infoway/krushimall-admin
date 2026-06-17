@@ -36,6 +36,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { Button, Input } from "@/components/ui";
 import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/Table";
+import { LeadDetailsModal } from "./model";
 
 // ─── Types based on image_06d90a.jpg ────────────────────────
 type Lead = {
@@ -207,7 +208,7 @@ export default function LeadBuilder() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <Button color="primary" onClick={() => setShowLeadModal(false)}>
+          <Button color="primary" onClick={() => setShowLeadModal(true)}>
             <PlusIcon className="mr-1 size-4.5" /> Add Lead
           </Button>
         </div>
@@ -280,7 +281,7 @@ export default function LeadBuilder() {
                     </div>
                   </Td>
 
-                  <Td className="text-xs w-[180px]"> 
+                  <Td className="w-[180px] text-xs">
                     <div className="space-y-1">
                       <div className="font-medium text-gray-900 dark:text-white">
                         Model: {lead.model}
@@ -294,7 +295,7 @@ export default function LeadBuilder() {
                     </div>
                   </Td>
 
-                  <Td className="text-xs w-[180px]">
+                  <Td className="w-[180px] text-xs">
                     <div className="space-y-1">
                       <div className="font-medium text-gray-900 dark:text-white">
                         Executive: {lead.executive}
@@ -311,70 +312,64 @@ export default function LeadBuilder() {
                   {/* Update Column - Vertical buttons (one per row) */}
                   <Td>
                     <div className="flex w-full flex-col gap-1.5">
-                      <Button
-                        variant="outlined"
-                        className="w-full text-[10px]"
+                      {/* Follow-up: Red border */}
+                      <button
                         onClick={() => handleFollowUp(lead.id)}
+                        className="w-full rounded-full border border-red-500 py-[2px] text-[10px] text-red-600"
                       >
-                        <ClockIcon className="mr-1 size-3" /> Follow Up
-                      </Button>
-                      <Button
-                        variant="outlined"
-                        className="w-full text-[10px]"
+                        Follow-up
+                      </button>
+                      {/* Payment: Green border */}
+                      <button
                         onClick={() => handlePayment(lead.id)}
+                        className="w-full rounded-full border border-green-500 py-[2px] text-[10px] text-green-600"
                       >
-                        <CreditCardIcon className="mr-1 size-3" /> Payment
-                      </Button>
-                      <Button
-                        variant="outlined"
-                        className="w-full text-[10px]"
+                        Payment
+                      </button>
+                      {/* Send Quotation: Yellow/Orange border */}
+                      <button
                         onClick={() => handleSendQuotation(lead.id)}
+                        className="w-full rounded-full border border-yellow-500 py-[2px] text-[10px] text-yellow-600"
                       >
-                        <DocumentTextIcon className="mr-1 size-3" /> Send
-                        Quotation
-                      </Button>
-                      <Button
-                        variant="outlined"
-                        className="w-full text-[10px]"
+                        Send Quotation
+                      </button>
+                      {/* Test Drive: Red border */}
+                      <button
                         onClick={() => handleTestDrive(lead.id)}
+                        className="w-full rounded-full border border-red-500 py-[2px] text-[10px] text-red-600"
                       >
-                        <TruckIcon className="mr-1 size-3" /> Test Drive
-                      </Button>
+                        Test Drive
+                      </button>
                     </div>
                   </Td>
-
                   {/* Process / Billing Column - Vertical buttons (one per row) */}
                   <Td>
                     <div className="flex w-full flex-col gap-1.5">
-                      <Button
-                        variant="outlined"
-                        className="w-full text-[10px]"
+                      <button
                         onClick={() => handleCreateOrder(lead.id)}
+                        className="w-full rounded-md border border-emerald-500 py-[2px] text-[10px] text-emerald-600"
                       >
                         Create Order
-                      </Button>
-                      <Button
-                        variant="outlined"
-                        className="w-full text-[10px]"
+                      </button>
+                      <button
                         onClick={() => handleCreateBooking(lead.id)}
+                        className="w-full rounded-md border border-red-500 py-[2px] text-[10px] text-red-600"
                       >
                         Create Booking
-                      </Button>
-                      <Button
-                        variant="outlined"
-                        className="w-full text-[10px]"
+                      </button>
+                      <button
                         onClick={() => handleCancel(lead.id)}
+                        className="w-full rounded-md border border-blue-900 py-[2px] text-[10px] text-blue-900"
                       >
-                        <XCircleIcon className="mr-1 size-3" /> Cancel
-                      </Button>
-                      <Button
-                        variant="filled"
-                        color="primary"
-                        className="w-full text-[10px]"
+                        Cancel
+                      </button>
+                      {/* Solid Red Button */}
+                      <button
                         onClick={() => handleOrderBill(lead.id)}
+                        className="w-full rounded-md border border-red-600 py-[2px] text-[10px] text-red-600"
                       >
-                        <DocumentTextIcon className="mr-1 size-3" /> Order Bill
-                      </Button>
+                        Order Bill
+                      </button>
                     </div>
                   </Td>
 
@@ -435,17 +430,17 @@ export default function LeadBuilder() {
                     <div className="flex items-center justify-center gap-2">
                       <button
                         onClick={() => handleEdit(lead.id)}
-                        className="rounded p-1.5 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                        className="flex size-7 items-center justify-center rounded-full border border-blue-200 bg-white text-blue-600 hover:bg-blue-50"
                         title="Edit"
                       >
-                        <PencilSquareIcon className="size-4 text-blue-600 dark:text-blue-400" />
+                        <PencilSquareIcon className="size-4" />
                       </button>
                       <button
                         onClick={() => handleDelete(lead.id)}
-                        className="rounded p-1.5 hover:bg-red-50 dark:hover:bg-red-900/20"
+                        className="flex size-7 items-center justify-center rounded-full border border-red-200 bg-white text-red-600 hover:bg-red-50"
                         title="Delete"
                       >
-                        <TrashIcon className="size-4 text-red-600 dark:text-red-400" />
+                        <TrashIcon className="size-4" />
                       </button>
                     </div>
                   </Td>
@@ -599,6 +594,11 @@ export default function LeadBuilder() {
           </div>
         )}
       </div>
+
+      <LeadDetailsModal 
+        isOpen={showLeadModal} 
+        onClose={() => setShowLeadModal(false)} 
+      />
     </div>
   );
 }
