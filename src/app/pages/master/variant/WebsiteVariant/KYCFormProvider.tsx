@@ -14,10 +14,17 @@ const initialState: FormState = {
   formData: {
   BasicInformation: {
   // Basic Information
+   categoryId: "",
+  brandId: "",
+  modelId: "",
+  modelYearId: "",
+  variantId: "",
+  variantCode: "",
   brandName: "",
   modelName: "",
   variantName: "",
 tractorCategory: "",
+productName:"",
   productCode: "",
   skuCode: "",
   launchYear :"",

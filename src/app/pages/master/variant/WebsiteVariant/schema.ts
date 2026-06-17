@@ -11,15 +11,16 @@ export type DocumentType = "passport" | "driverLicense" | "nationalID";
 
 export const BasicInformationSchema = Yup.object().shape({
   // Basic Information
-  brandName: Yup.string().trim().required("Brand Name Required"),
-  modelName: Yup.string().trim().required("Model Name Required"),
-  variantName: Yup.string().required("Variant Name is required"),
+  brandId: Yup.string().trim().required("Brand Name Required"),
+  modelId: Yup.string().trim().required("Model Name Required"),
+  variantId: Yup.string().required("Variant Name is required"),
 
-tractorCategory: Yup.string().required("Tractor Category is required"),
+categoryId: Yup.string().required("Tractor Category is required"),
+productName : Yup.string().required("Tractor Product Name is required"),
   productCode: Yup.string().trim(),
   skuCode: Yup.string().trim(),
   launchYear: Yup.string().nullable(),
-  modelYear: Yup.string().required("Model Year is required"),
+  modelYearId: Yup.string().required("Model Year is required"),
   country: Yup.string().trim("Country is required "),
   tractorStatus: Yup.string().trim().required("Tractor Status Required"),
   
@@ -311,10 +312,18 @@ export const PreviewSubmitSchema = Yup.object().shape({
 });
 export type BasicInformationType = {
   // Basic Information
+   categoryId?: number | string;
+  brandId?: number | string;
+  modelId?: number | string;
+  modelYearId?: number | string;
+  variantId?: number | string;
+
+  variantCode?: string;
   brandName: string;
   modelName: string;
   variantName: string;
   tractorCategory: string;
+  productName: string;
   productCode?: string;
   skuCode?: string;
     launchYear?: string;
