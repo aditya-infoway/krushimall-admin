@@ -14,26 +14,7 @@ import { MapPinned } from "lucide-react";
 import Select from "react-select";
 import { Country, State, City } from "country-state-city";
 // Options for select fields
-const stateOptions = [
-  { label: "Maharashtra", value: "maharashtra" },
-  { label: "Gujarat", value: "gujarat" },
-  { label: "Punjab", value: "punjab" },
-  { label: "Haryana", value: "haryana" },
-  { label: "Uttar Pradesh", value: "uttar_pradesh" },
-  { label: "Rajasthan", value: "rajasthan" },
-  { label: "Madhya Pradesh", value: "madhya_pradesh" },
-  { label: "Bihar", value: "bihar" },
-  { label: "West Bengal", value: "west_bengal" },
-  { label: "Tamil Nadu", value: "tamil_nadu" },
-];
 
-const districtOptions = [
-  { label: "Ahmedabad", value: "ahmedabad" },
-  { label: "Surat", value: "surat" },
-  { label: "Vadodara", value: "vadodara" },
-  { label: "Rajkot", value: "rajkot" },
-  { label: "Bhavnagar", value: "bhavnagar" },
-];
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 

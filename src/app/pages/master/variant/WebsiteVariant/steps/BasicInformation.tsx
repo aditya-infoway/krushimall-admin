@@ -11,28 +11,12 @@ import { Listbox } from "@/components/shared/form/StyledListbox";
 import { DatePicker } from "@/components/shared/form/Datepicker";
 import Select from "react-select";
 import { Country, State, City } from "country-state-city";
+import apiHelper from "@/utils/apiHelper";
 // Options for various select fields
-const brandOptions = [
-  { label: "John Deere", value: "john_deere" },
-  { label: "Mahindra", value: "mahindra" },
-  { label: "Massey Ferguson", value: "massey_ferguson" },
-  { label: "New Holland", value: "new_holland" },
-  { label: "Sonalika", value: "sonalika" },
-  { label: "Escorts", value: "escorts" },
-  { label: "Kubota", value: "kubota" },
-  { label: "Swaraj", value: "swaraj" },
-];
+import { useEffect } from "react";
 
-const modelOptions = [
-  { label: "5050 D", value: "5050_d" },
-  { label: "5055 D", value: "5055_d" },
-  { label: "6060", value: "6060" },
-  { label: "6075", value: "6075" },
-  { label: "Arjun 605", value: "arjun_605" },
-  { label: "Arjun Novo 605", value: "arjun_novo_605" },
-  { label: "Yuvraj 215", value: "yuvraj_215" },
-  { label: "Force 60", value: "force_60" },
-];
+
+
 
 const tractorStatusOptions = [
   { label: "Available", value: "available" },
@@ -56,32 +40,13 @@ const stockStatusOptions = [
   { label: "Limited Stock", value: "limited_stock" },
   { label: "Pre-order", value: "pre_order" },
 ];
-const variantOptions = [
-  { label: "Base Variant", value: "base_variant" },
-  { label: "Standard Variant", value: "standard_variant" },
-  { label: "Premium Variant", value: "premium_variant" },
-];
 
-const tractorCategoryOptions = [
-  { label: "Mini Tractor", value: "mini_tractor" },
-  { label: "Utility Tractor", value: "utility_tractor" },
-  { label: "Row Crop Tractor", value: "row_crop_tractor" },
-  { label: "Orchard Tractor", value: "orchard_tractor" },
-  { label: "Heavy Duty Tractor", value: "heavy_duty_tractor" },
-];
 const dealerOptions = [
   { label: "Dealer 1", value: "dealer1" },
   { label: "Dealer 2", value: "dealer2" },
   { label: "Dealer 3", value: "dealer3" },
 ];
-const modelYearOptions = Array.from({ length: 20 }, (_, i) => {
-  const year = new Date().getFullYear() - i;
 
-  return {
-    label: year.toString(),
-    value: year.toString(),
-  };
-});
 
 export function BasicInformation({
   setCurrentStep,
@@ -106,8 +71,14 @@ export function BasicInformation({
   const [country, setCountry] = useState("");
   const [state, setState] = useState("");
   const [city, setCity] = useState("");
-  const [district, setDistrict] = useState("");
-  const [stateCode, setStateCode] = useState("");
+  // const [district, setDistrict] = useState("");
+  // const [stateCode, setStateCode] = useState("");
+  const [categories, setCategories] = useState([]);
+  const [brands, setBrands] = useState([]);
+  const [models, setModels] = useState([]);
+  const [modelYears, setModelYears] = useState([]);
+
+  const [variants, setVariants] = useState([]);
   const showCustomColorInput = watch("showCustomColor");
   const [highlightCount, setHighlightCount] = useState(5);
   const onSubmit = (data: BasicInformationType) => {
@@ -130,10 +101,18 @@ export function BasicInformation({
     label: state.name,
     state,
   }));
-  const cityOptions = City.getCitiesOfState(country, state).map((city) => ({
-    value: city.name,
-    label: city.name,
-  }));
+ const selectedStates =
+  watch("availableStates") || [];
+
+const cityOptions = selectedStates.flatMap(
+  (stateCode: string) =>
+    City.getCitiesOfState(country, stateCode).map(
+      (city) => ({
+        value: city.name,
+        label: city.name,
+      })
+    )
+);
   const customSelectStyles = {
     control: (provided: any, state: any) => ({
       ...provided,
@@ -211,6 +190,51 @@ export function BasicInformation({
       display: "none",
     }),
   };
+  const categoryId = watch("categoryId");
+  const brandId = watch("brandId");
+  const modelId = watch("modelId");
+  const modelYearId = watch("modelYearId");
+  const filteredBrands = brands.filter(
+    (item: any) => Number(item.categoryId) === Number(categoryId),
+  );
+
+  const filteredModels = models.filter(
+    (item: any) => Number(item.brandId) === Number(brandId),
+  );
+
+  const filteredModelYears = modelYears.filter(
+    (item: any) => Number(item.modelId) === Number(modelId),
+  );
+
+  const filteredVariants = variants.filter(
+    (item: any) => Number(item.modelYearId) === Number(modelYearId),
+  );
+  useEffect(() => {
+    loadMasters();
+    console.log("loadMasters called");
+  }, []);
+
+  const loadMasters = async () => {
+    try {
+      const [categoryRes, brandRes, modelRes, modelYearRes, variantRes] =
+        await Promise.all([
+          apiHelper.get("/category"),
+
+          apiHelper.get("/brand"),
+          apiHelper.get("/model"),
+          apiHelper.get("/model-year"),
+          apiHelper.get("/variant"),
+        ]);
+
+      setCategories(categoryRes.data || categoryRes);
+      setBrands(brandRes.data || brandRes);
+      setModels(modelRes.data || modelRes);
+      setModelYears(modelYearRes.data || modelYearRes);
+      setVariants(variantRes.data || variantRes);
+    } catch (error) {
+      console.error(error);
+    }
+  };
   return (
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
       <div className="mt-6 space-y-6">
@@ -218,19 +242,59 @@ export function BasicInformation({
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           <div>
             <Controller
-              name="brandName"
+              name="categoryId"
               control={control}
               render={({ field }) => (
                 <Listbox
-                  data={brandOptions}
+                  data={categories}
                   value={
-                    brandOptions.find((item) => item.value === field.value) ||
+                    categories.find((item: any) => item.id === field.value) ||
                     null
                   }
-                  onChange={(option: any) => field.onChange(option?.value)}
-                  displayField="label"
+                  onChange={(option: any) => {
+                    field.onChange(option.id);
+
+                    setValue("brandId", "");
+                    setValue("modelId", "");
+                    setValue("modelYearId", "");
+                    setValue("variantId", "");
+                    setValue("variantCode", "");
+                  }}
+                  displayField="categoryName"
+                  placeholder="Select Category"
+                  label="Select Category"
+                />
+              )}
+            />
+            {errors?.tractorCategory && (
+              <p className="mt-1 text-sm text-red-500">
+                {errors.tractorCategory.message}
+              </p>
+            )}
+          </div>
+          <div>
+            <Controller
+              name="brandId"
+              control={control}
+              render={({ field }) => (
+                <Listbox
+                  data={filteredBrands}
+                  value={
+                    filteredBrands.find(
+                      (item: any) => item.id === field.value,
+                    ) || null
+                  }
+                  onChange={(option: any) => {
+                    field.onChange(option.id);
+
+                    setValue("modelId", "");
+                    setValue("modelYearId", "");
+                    setValue("variantId", "");
+                    setValue("variantCode", "");
+                  }}
+                  displayField="brandName"
                   placeholder="Select Brand"
-                  label="Brand Name"
+                  label="Select Brand"
                 />
               )}
             />
@@ -244,19 +308,26 @@ export function BasicInformation({
 
           <div>
             <Controller
-              name="modelName"
+              name="modelId"
               control={control}
               render={({ field }) => (
                 <Listbox
-                  data={modelOptions}
+                  data={filteredModels}
                   value={
-                    modelOptions.find((item) => item.value === field.value) ||
-                    null
+                    filteredModels.find(
+                      (item: any) => item.id === field.value,
+                    ) || null
                   }
-                  onChange={(option: any) => field.onChange(option?.value)}
-                  displayField="label"
+                  onChange={(option: any) => {
+                    field.onChange(option.id);
+
+                    setValue("modelYearId", "");
+                    setValue("variantId", "");
+                    setValue("variantCode", "");
+                  }}
+                  displayField="modelName"
                   placeholder="Select Model"
-                  label="Model Name"
+                  label="Select Model"
                 />
               )}
             />
@@ -267,21 +338,52 @@ export function BasicInformation({
               </p>
             )}
           </div>
+          <Controller
+            name="modelYearId"
+            control={control}
+            render={({ field }) => (
+              <Listbox
+                data={filteredModelYears}
+                value={
+                  filteredModelYears.find(
+                    (item: any) => item.id === field.value,
+                  ) || null
+                }
+                onChange={(option: any) => {
+                  field.onChange(option.id);
+
+                  setValue("variantId", "");
+                  setValue("variantCode", "");
+                }}
+                displayField="modelYear"
+                placeholder="Select Model Year"
+                label="Select Model Year"
+              />
+            )}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           <div>
             <Controller
-              name="variantName"
+              name="variantId"
               control={control}
               render={({ field }) => (
                 <Listbox
-                  data={variantOptions}
+                  data={filteredVariants}
                   value={
-                    variantOptions.find((item) => item.value === field.value) ||
-                    null
+                    filteredVariants.find(
+                      (item: any) => item.id === field.value,
+                    ) || null
                   }
-                  onChange={(option: any) => field.onChange(option?.value)}
-                  displayField="label"
+                  onChange={(option: any) => {
+                    field.onChange(option.id);
+
+                    setValue("variantCode", option.variantCode || "");
+                  }}
+                  displayField="variantName"
                   placeholder="Select Variant"
-                  label="Variant Name"
+                  label="Select Variant"
                 />
               )}
             />
@@ -291,38 +393,51 @@ export function BasicInformation({
               </p>
             )}
           </div>
-          <div>
-            <Controller
-              name="tractorCategory"
-              control={control}
-              render={({ field }) => (
-                <Listbox
-                  data={tractorCategoryOptions}
-                  value={
-                    tractorCategoryOptions.find(
-                      (item) => item.value === field.value,
-                    ) || null
+          <Input
+            {...register("variantCode")}
+            label="Variant Code"
+            placeholder="Variant Code"
+            disabled
+          />
+          <Controller
+            name="launchYear"
+            control={control}
+            render={({ field: { onChange, value, ...rest } }) => (
+              <DatePicker
+                value={value || ""}
+                onChange={(date: any) => {
+                  if (!date) {
+                    onChange("");
+                    return;
                   }
-                  onChange={(option: any) => field.onChange(option?.value)}
-                  displayField="label"
-                  placeholder="Select Category"
-                  label="Tractor Category"
-                />
-              )}
-            />
-            {errors?.tractorCategory && (
-              <p className="mt-1 text-sm text-red-500">
-                {errors.tractorCategory.message}
-              </p>
-            )}
-          </div>
-        </div>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+                  const selectedDate = new Date(date);
+
+                  if (isNaN(selectedDate.getTime())) {
+                    onChange("");
+                    return;
+                  }
+
+                  onChange(selectedDate.toISOString().split("T")[0]);
+                }}
+                label="Launch Year"
+                error={errors?.launchYear?.message}
+                options={{ disableMobile: true }}
+                placeholder="Select launch date..."
+                {...rest}
+              />
+            )}
+          />
+           <Input
+            {...register("productName")}
+            label="Website Display Product Name"
+            placeholder="Enter product Name"
+            error={errors?.productName?.message}
+          />
           <Input
             {...register("productCode")}
             label="Product Code"
-            placeholder="Enter product code"
+            placeholder="Enter product Code"
             error={errors?.productCode?.message}
           />
 
@@ -332,89 +447,7 @@ export function BasicInformation({
             placeholder="Enter SKU code"
             error={errors?.skuCode?.message}
           />
-        <Controller
-  name="launchYear"
-  control={control}
-  render={({ field: { onChange, value, ...rest } }) => (
-    <DatePicker
-      value={value || ""}
-      onChange={(date: any) => {
-        if (!date) {
-          onChange("");
-          return;
-        }
-
-        const selectedDate = new Date(date);
-
-        if (isNaN(selectedDate.getTime())) {
-          onChange("");
-          return;
-        }
-
-        onChange(
-          selectedDate.toISOString().split("T")[0]
-        );
-      }}
-      label="Launch Year"
-      error={errors?.launchYear?.message}
-      options={{ disableMobile: true }}
-      placeholder="Select launch date..."
-      {...rest}
-    />
-  )}
-/>
-          <Controller
-            name="modelYear"
-            control={control}
-            render={({ field }) => (
-              <Listbox
-                data={modelYearOptions}
-                value={
-                  modelYearOptions.find((item) => item.value === field.value) ||
-                  null
-                }
-                onChange={(option: any) => field.onChange(option?.value)}
-                displayField="label"
-                placeholder="Select Year"
-                label="Model Year"
-              />
-            )}
-          />
-        </div>
-
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <div>
-            <label className="mb-1 inline-block">Country</label>
-            <Controller
-              name="country"
-              control={control}
-              render={({ field }) => (
-                <Select
-                  options={countryOptions}
-                    classNamePrefix="react-select"
-                  styles={customSelectStyles}
-                  placeholder="Search Country"
-                  value={
-                    countryOptions.find(
-                      (option) => option.value === field.value,
-                    ) || null
-                  }
-                  onChange={(selected) => {
-                    field.onChange(selected?.value || "");
-                    setCountry(selected?.value || "");
-                    setState("");
-                    setCity("");
-                  }}
-                />
-              )}
-            />
-            {errors.country && (
-              <p className="text-error dark:text-error-lighter mt-1 text-xs">
-                {errors.country.message}
-              </p>
-            )}
-          </div>
-          <div>
+           <div>
             <Controller
               name="tractorStatus"
               control={control}
@@ -440,25 +473,9 @@ export function BasicInformation({
               </p>
             )}
           </div>
-          <Controller
-            name="stockStatus"
-            control={control}
-            render={({ field }) => (
-              <Listbox
-                data={stockStatusOptions}
-                value={
-                  stockStatusOptions.find(
-                    (item) => item.value === field.value,
-                  ) || null
-                }
-                onChange={(option: any) => field.onChange(option?.value)}
-                displayField="label"
-                placeholder="Select Stock Status"
-                label="Stock Status"
-              />
-            )}
-          />
         </div>
+
+       
 
         {/* Short Description */}
         <div className="border-y border-gray-500 py-8">
@@ -570,32 +587,64 @@ export function BasicInformation({
             Select where this tractor is available
           </p>
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
+             <div>
+            <label className="mb-1 inline-block">Country</label>
+            <Controller
+              name="country"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  options={countryOptions}
+                  classNamePrefix="react-select"
+                  styles={customSelectStyles}
+                  placeholder="Search Country"
+                  value={
+                    countryOptions.find(
+                      (option) => option.value === field.value,
+                    ) || null
+                  }
+                  onChange={(selected) => {
+                    field.onChange(selected?.value || "");
+                    setCountry(selected?.value || "");
+                    setState("");
+                    setCity("");
+                  }}
+                />
+              )}
+            />
+            {errors.country && (
+              <p className="text-error dark:text-error-lighter mt-1 text-xs">
+                {errors.country.message}
+              </p>
+            )}
+          </div>
             <div>
               <label className="mb-1 block text-sm font-medium">
                 Available States <span className="text-red-500">*</span>
               </label>
-             <Controller
-  name="availableStates"
-  control={control}
-  render={({ field }) => (
-    <Select
-      options={stateOptions}
-      isMulti
-      styles={customSelectStyles}
-      placeholder="Search State"
-      isDisabled={!country}
-      value={stateOptions.filter((option) =>
-        field.value?.includes(option.value)
-      )}
-      onChange={(selected: any) => {
-        field.onChange(
-          selected?.map((item: any) => item.value) || []
-        );
-      }}
-    />
-  )}
-/>
+              <Controller
+                name="availableStates"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    options={stateOptions}
+                    isMulti
+                    styles={customSelectStyles}
+                      classNamePrefix="react-select"
+                    placeholder="Search State"
+                    isDisabled={!country}
+                    value={stateOptions.filter((option) =>
+                      field.value?.includes(option.value),
+                    )}
+                    onChange={(selected: any) => {
+                      field.onChange(
+                        selected?.map((item: any) => item.value) || [],
+                      );
+                    }}
+                  />
+                )}
+              />
 
               <p className="mt-1 text-xs text-gray-400">
                 Hold Ctrl/Cmd to select multiple
@@ -612,27 +661,29 @@ export function BasicInformation({
               <label className="mb-1 block text-sm font-medium">
                 Available Districts <span className="text-red-500">*</span>
               </label>
-             <Controller
-  name="availableDistricts"
-  control={control}
-  render={({ field }) => (
-    <Select
-      options={cityOptions}
-      isMulti
-      styles={customSelectStyles}
-      placeholder="Search District"
-      isDisabled={!state}
-      value={cityOptions.filter((option) =>
-        field.value?.includes(option.value)
-      )}
-      onChange={(selected: any) => {
-        field.onChange(
-          selected?.map((item: any) => item.value) || []
-        );
-      }}
-    />
-  )}
-/>
+              <Controller
+                name="availableDistricts"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    options={cityOptions}
+                    isMulti
+                    styles={customSelectStyles}
+                      classNamePrefix="react-select"
+                    placeholder="Search District"
+                    isDisabled={!selectedStates.length}
+                    value={cityOptions.filter((option) =>
+                      field.value?.includes(option.value),
+                    )}
+                    onChange={(selected: any) => {
+                      field.onChange(
+                        selected?.map((item: any) => item.value) || [],
+                      );
+                    }}
+                  />
+                )}
+              />
+              
               <p className="mt-1 text-xs text-gray-400">
                 Hold Ctrl/Cmd to select multiple
               </p>
@@ -655,9 +706,9 @@ export function BasicInformation({
                 render={({ field }) => (
                   <Select
                     options={dealerOptions}
-                    
                     isMulti
                     styles={customSelectStyles}
+                      classNamePrefix="react-select"
                     placeholder="Search Dealers"
                     value={dealerOptions.filter((option) =>
                       field.value?.includes(option.value),
