@@ -130,9 +130,11 @@ export default function Brand() {
       } else if (Array.isArray(response)) {
         brandsData = response;
       }
-
+console.log("API Data:", brandsData);
       const mappedData = brandsData.map((item: any) => ({
+         
         ...item,
+        
         name: item.brandName || item.name || "Unknown",
         image: apiHelper.getImageUrl(item.image), // ✅ Use helper
         category:
@@ -613,12 +615,13 @@ const handleDelete = async (id: number) => {
                       {indexOfFirstItem + index + 1}
                     </Td>
                     <Td className="py-4">
-                      <div className="dark:border-dark-500 flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
+                      <div className="dark:border-dark-500 flex h-15 w-15 items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
                         {item.image ? (
                           <img
                             src={item.image}
                             alt={item.name}
-                            className="h-full w-full object-cover"
+                            className="h-full w-full object-contain"
+                            
                             onError={(e) => {
                               console.error(
                                 "❌ Image failed to load:",
@@ -638,7 +641,7 @@ const handleDelete = async (id: number) => {
                         )}
                       </div>
                     </Td>
-                    <Td className="py-4 font-medium text-gray-900 dark:text-white">
+                    <Td className="py-4 font-medium text-gray-900 dark:text-gray-400">
                       {item.brandName || item.name || "N/A"}
                     </Td>
                     <Td className="dark:text-dark-200 py-4 text-gray-600">
@@ -998,7 +1001,7 @@ const handleDelete = async (id: number) => {
                         <img
                           src={formImageValue}
                           alt="Preview"
-                          className="dark:border-dark-500 mt-3 h-20 w-20 rounded-xl border border-gray-200 object-cover"
+                          className="dark:border-dark-500 mt-3 h-20 w-20 rounded-xl border border-gray-200 object-contain"
                         />
                         {editId && (
                           <p className="mt-1 text-xs text-gray-400">

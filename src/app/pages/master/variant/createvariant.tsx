@@ -29,15 +29,27 @@ import { Button, Checkbox, Input } from "@/components/ui";
 import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/Table";
 import { Listbox } from "@/components/shared/form/StyledListbox";
 
-type ModelType = {
+type VariantType = {
   id: number;
-  image: string;
+
   category: string;
   categoryId?: number;
+
   brand: string;
   brandId?: number;
-  modelName: string;
-  status: string; // Changed from boolean
+
+  model: string;
+  modelId?: number;
+
+  modelYear: string;
+  modelYearId?: number;
+
+  variantCode: string;
+  variantName: string;
+
+  image?: string;
+
+  status: string;
   createdAt: string;
 };
 
@@ -46,9 +58,14 @@ type FormValues = {
   categoryId: number | string;
   brand: string;
   brandId: number | string;
-  modelName: string;
-  status: string; // Changed from boolean
+  model: string;
+  modelId: number | string;
+  modelYear: string;
+  modelYearId: number | string;
+  variantCode: string;
+  variantName: string;
   image: string;
+  status: string;
 };
 
 const entriesOptions = [
@@ -65,100 +82,116 @@ const statusOptions = [
   { id: "INACTIVE", name: "Off" },
 ];
 
-export default function Model() {
+export default function Createvariant() {
   const [showDrawer, setShowDrawer] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
-  const [models, setModels] = useState<ModelType[]>([]);
-  const [categories, setCategories] = useState<{ id: number; name: string }[]>(
+  const [modelYears, setModelYears] = useState<{ id: number; name: string }[]>(
     [],
   );
-  const [brands, setBrands] = useState<{ id: number; name: string }[]>([]);
-  const [loading, setLoading] = useState(false);
-
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [filteredBrands, setFilteredBrands] = useState<
-    { id: number; name: string }[]
-  >([]);
 
-  // Change from id: number to id: string
+  const [variants, setVariants] = useState<VariantType[]>([]);
+  const [categories, setCategories] = useState<{ id: number; name: string }[]>(
+    [],
+  );
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  const [brands, setBrands] = useState<{ id: number; name: string }[]>([]);
+  const [models, setModels] = useState<{ id: number; name: string }[]>([]);
+  const [loading, setLoading] = useState(false);
+
   const categoryOptions = categories.map((cat) => ({
     id: String(cat.id),
     name: cat.name,
   }));
-  const brandOptions = filteredBrands.map((br) => ({
+  const brandOptions = brands.map((br) => ({
     id: String(br.id),
     name: br.name,
+  }));
+  const modelOptions = models.map((md) => ({
+    id: String(md.id),
+    name: md.name,
+  }));
+  const modelYearOptions = modelYears.map((yr) => ({
+    id: String(yr.id),
+    name: yr.name,
   }));
 
   const [search, setSearch] = useState("");
   const [showFilterBar, setShowFilterBar] = useState(false);
 
-  // Four distinct filter dropdown states
-  const [selectedNameFilter, setSelectedNameFilter] = useState("All");
-  const [selectedBrandFilter, setSelectedBrandFilter] = useState("All");
+  // Filter dropdown states - Added selectedYearFilter
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState("All");
-  const [selectedStatusFilter, setSelectedStatusFilter] = useState("All"); // Status filter state
-
+  const [selectedBrandFilter, setSelectedBrandFilter] = useState("All");
+  const [selectedModelFilter, setSelectedModelFilter] = useState("All");
+  const [selectedYearFilter, setSelectedYearFilter] = useState("All");
+  const [selectedStatusFilter, setSelectedStatusFilter] = useState("All");
+  // const [years, setYears] = useState<YearDataType[]>([]);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
   useEffect(() => {
-    getModels();
     getCategories();
     getBrands();
+    getModels();
+    getModelYears();
   }, []);
-
-  const getModels = async () => {
+  const getModelYears = async () => {
     try {
-      setLoading(true);
-      const response = await apiHelper.get("/model");
-      let modelsData = response?.data || response;
-      if (!Array.isArray(modelsData)) modelsData = [];
+      const response = await apiHelper.get("/model-year");
+      const data = response?.data || response;
 
-      const mappedData = modelsData.map((item: any) => ({
-        ...item,
-        image: apiHelper.getImageUrl(item.image),
-        category:
-          typeof item.category === "object"
-            ? item.category?.categoryName || item.category?.name || ""
-            : item.category || "",
-        categoryId:
-          typeof item.category === "object"
-            ? item.category?.id
-            : item.categoryId,
-        brand:
-          typeof item.brand === "object"
-            ? item.brand?.brandName || item.brand?.name || ""
-            : item.brand || "",
-        brandId: typeof item.brand === "object" ? item.brand?.id : item.brandId,
-        id: item.id || item._id,
-        createdAt: item.createdAt
-          ? new Date(item.createdAt).toLocaleDateString("en-GB", {
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-            })
-          : "",
-      }));
-      setModels(mappedData);
-    } catch (error) {
-      console.error(error);
-      setModels([]);
-    } finally {
-      setLoading(false);
+      setModelYears(
+        (Array.isArray(data) ? data : []).map((item: any) => ({
+          id: item.id || item._id,
+          name: item.modelYear,
+        })),
+      );
+    } catch {
+      setModelYears([]);
     }
   };
+  const getVariants = async () => {
+    try {
+      const response = await apiHelper.get("/variant");
+      const data = response?.data || response;
 
+      setVariants(
+        (Array.isArray(data) ? data : []).map((item: any) => ({
+          id: item.id,
+          category: item.category?.categoryName || "",
+          categoryId: item.categoryId,
+          brand: item.brand?.brandName || "",
+          brandId: item.brandId,
+          model: item.model?.modelName || "",
+          modelId: item.modelId,
+          modelYear: item.modelYear?.modelYear || "",
+          modelYearId: item.modelYearId,
+          variantCode: item.variantCode,
+          variantName: item.variantName,
+          image: item.image,
+          status: item.status,
+          createdAt: item.createdAt,
+        })),
+      );
+    } catch (err) {
+      setVariants([]);
+    }
+  };
+  useEffect(() => {
+    getVariants();
+  }, []);
   const getCategories = async () => {
     try {
       const response = await apiHelper.get("/category");
       const data = response?.data || response;
-      const list = (Array.isArray(data) ? data : []).map((item: any) => ({
-        id: item.id || item._id,
-        name: item.categoryName || item.name,
-      }));
-      setCategories(list);
+      setCategories(
+        (Array.isArray(data) ? data : []).map((item: any) => ({
+          id: item.id || item._id,
+          name: item.categoryName || item.name,
+        })),
+      );
     } catch (error) {
       setCategories([]);
     }
@@ -168,19 +201,29 @@ export default function Model() {
     try {
       const response = await apiHelper.get("/brand");
       const data = response?.data || response;
-      const list = (Array.isArray(data) ? data : []).map((item: any) => ({
-        id: item.id || item._id,
-        name: item.brandName || item.name,
-        categoryId:
-          typeof item.category === "object"
-            ? item.category?.id
-            : item.categoryId, // ✅ Include categoryId
-      }));
-      setBrands(list);
-      setFilteredBrands(list); // Initially show all brands
+      setBrands(
+        (Array.isArray(data) ? data : []).map((item: any) => ({
+          id: item.id || item._id,
+          name: item.brandName || item.name,
+        })),
+      );
     } catch (error) {
       setBrands([]);
-      setFilteredBrands([]);
+    }
+  };
+
+  const getModels = async () => {
+    try {
+      const response = await apiHelper.get("/model");
+      const data = response?.data || response;
+      setModels(
+        (Array.isArray(data) ? data : []).map((item: any) => ({
+          id: item.id || item._id,
+          name: item.modelName || item.name,
+        })),
+      );
+    } catch (error) {
+      setModels([]);
     }
   };
 
@@ -196,45 +239,63 @@ export default function Model() {
     defaultValues: {
       category: "",
       categoryId: "",
+
       brand: "",
       brandId: "",
-      modelName: "",
-      status: "ACTIVE",
+
+      model: "",
+      modelId: "",
+
+      modelYear: "",
+      modelYearId: "",
+
+      variantCode: "",
+      variantName: "",
       image: "",
+      status: "ACTIVE",
     },
   });
 
   const formStatusValue = useWatch({ control, name: "status" });
   const formCategoryValue = useWatch({ control, name: "category" });
   const formBrandValue = useWatch({ control, name: "brand" });
+  const formModelValue = useWatch({ control, name: "model" });
   const formImageValue = useWatch({ control, name: "image" });
+  // const formValidationRules = {
+  //   category: { required: "Category is required" },
+  //   brand: { required: "Brand is required" },
+  //   model: { required: "Model is required" },
+  //   variantCode: { required: "Variant Code is required" },
+  //   variantName: { required: "Variant Name is required" },
+  // };
 
-  const formValidationRules = {
-    modelName: { required: "Model name is required" },
-    category: { required: "Category selection is required" },
-    brand: { required: "Brand selection is required" },
-  };
+  //   // Filter options
+  //   const categoryFilterOptions = [
+  //     { id: "All", name: "All Categories" },
+  //     ...categories.map((c) => ({ id: c, name: c })),
+  //   ];
 
-  // Dropdown filtering layer data definitions
-  const nameFilterOptions = [
-    { id: "All", name: "All Models" },
-    ...Array.from(new Set(models.map((m) => m.modelName))).map((mName) => ({
-      id: mName,
-      name: mName,
-    })),
+  //   const brandFilterOptions = [
+  //     { id: "All", name: "All Brands" },
+  //     ...brands.map((b) => ({ id: b, name: b })),
+  //   ];
+
+  //   const modelFilterOptions = [
+  //     { id: "All", name: "All Models" },
+  //     ...models.map((m) => ({ id: m, name: m })),
+  //   ];
+
+  // Year filter options - dynamically generated from existing data
+  const yearFilterOptions = [
+    { id: "All", name: "All Years" },
+    ...Array.from(new Set(variants.map((v) => v.modelYear)))
+      .filter(Boolean)
+      .map((yr) => ({
+        id: String(yr),
+        name: String(yr),
+      })),
   ];
 
-  const brandFilterOptions = [
-    { id: "All", name: "All Brands" },
-    ...brands.map((b) => ({ id: b.name, name: b.name })),
-  ];
-
-  const categoryFilterOptions = [
-    { id: "All", name: "All Categories" },
-    ...categories.map((c) => ({ id: c.name, name: c.name })),
-  ];
-
-  // Status Filter Options
   const statusFilterOptions = [
     { id: "All", name: "All Statuses" },
     { id: "ACTIVE", name: "On" },
@@ -243,40 +304,69 @@ export default function Model() {
 
   const handleOpenAddDrawer = () => {
     setEditId(null);
-    setFilteredBrands(brands); // Reset to all brands
     const firstCategory = categories[0] || { id: "", name: "" };
     const firstBrand = brands[0] || { id: "", name: "" };
+    const firstModel = models[0] || { id: "", name: "" };
     reset({
       category: firstCategory.name,
       categoryId: firstCategory.id,
+
       brand: firstBrand.name,
       brandId: firstBrand.id,
-      modelName: "",
-      status: "ACTIVE",
+
+      model: firstModel.name,
+      modelId: firstModel.id,
+
+      modelYear: "",
+      modelYearId: "",
+
+      variantCode: "",
+      variantName: "",
+
       image: "",
+      status: "ACTIVE",
     });
     setShowDrawer(true);
   };
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
 
-  const handleOpenEditDrawer = (item: ModelType) => {
+    if (!file) return;
+
+    setSelectedFile(file);
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setValue("image", reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+  const handleOpenEditDrawer = (item: VariantType) => {
+    // ✅ YearDataType
     setEditId(item.id);
-    setFilteredBrands(brands); // Reset to all brands for editing
     reset({
       category: item.category,
       categoryId: item.categoryId || "",
       brand: item.brand,
       brandId: item.brandId || "",
-      modelName: item.modelName,
+      model: item.model,
+      modelId: item.modelId || "",
+      modelYear: item.modelYear,
+      modelYearId: item.modelYearId || "",
+      variantCode: item.variantCode || "",
+      variantName: item.variantName || "",
+        image: item.image
+      ? apiHelper.getImageUrl(item.image)
+      : "",
       status: item.status,
-      image: item.image || "",
     });
     setShowDrawer(true);
   };
 
   const handleDelete = async (id: number) => {
     try {
-      await apiHelper.delete(`/model/${id}`);
-      getModels();
+      await apiHelper.delete(`/variant/${id}`);
+      getVariants();
     } catch (error) {
       console.error(error);
     }
@@ -285,9 +375,9 @@ export default function Model() {
   const handleBulkDelete = async () => {
     try {
       await Promise.all(
-        selectedIds.map((id) => apiHelper.delete(`/model/${id}`)),
+        selectedIds.map((id) => apiHelper.delete(`/variant/${id}`)),
       );
-      await getModels();
+      await getVariants();
       setSelectedIds([]);
       setCurrentPage(1);
     } catch (error) {
@@ -296,96 +386,88 @@ export default function Model() {
   };
 
   const handleToggleTableStatus = async (id: number) => {
-    const model = models.find((item) => item.id === id);
-    if (!model) return;
+    const item = variants.find((v) => v.id === id);
+    if (!item) return;
     try {
-      const newStatus = model.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
-      await apiHelper.put(`/model/${id}`, {
-        modelName: model.modelName,
-        categoryId: model.categoryId,
-        brandId: model.brandId,
+      const newStatus = item.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
+      await apiHelper.put(`/variant/${id}`, {
+        categoryId: item.categoryId,
+        brandId: item.brandId,
+        modelId: item.modelId,
+        modelYearId: item.modelYearId,
+        variantCode: item.variantCode,
+        variantName: item.variantName,
         status: newStatus,
       });
-      setModels((prev) =>
-        prev.map((item) =>
-          item.id === id ? { ...item, status: newStatus } : item,
-        ),
+      setVariants((prev) =>
+        prev.map((v) => (v.id === id ? { ...v, status: newStatus } : v)),
       );
-      await getModels();
+      await getVariants();
     } catch (error) {
-      await getModels();
+      await getVariants();
     }
   };
 
   const onFormSubmit = async (data: FormValues) => {
     try {
       const hasNewImage = data.image && data.image.startsWith("data:");
+
       if (hasNewImage) {
         const formData = new FormData();
-        formData.append("modelName", data.modelName);
+
         formData.append("categoryId", String(data.categoryId));
         formData.append("brandId", String(data.brandId));
+        formData.append("modelId", String(data.modelId));
+        formData.append("modelYearId", String(data.modelYearId));
+        formData.append("variantCode", data.variantCode);
+        formData.append("variantName", data.variantName);
         formData.append("status", data.status);
+
         const response = await fetch(data.image);
         const blob = await response.blob();
-        formData.append("image", blob, "model-image.jpg");
+
+        formData.append("image", blob, "variant-image.jpg");
+
         if (editId !== null)
-          await apiHelper.upload(`/model/${editId}`, formData);
-        else await apiHelper.upload("/model", formData);
-      } else {
-        const payload: any = {
-          modelName: data.modelName,
-          categoryId: Number(data.categoryId),
-          brandId: Number(data.brandId),
-          status: data.status,
-        };
-        if (data.image && !data.image.startsWith("data:"))
-          payload.image = data.image;
-        if (editId !== null) await apiHelper.put(`/model/${editId}`, payload);
-        else await apiHelper.post("/model", payload);
+          await apiHelper.put(`/variant/${editId}`, formData);
+        else await apiHelper.post("/variant", formData);
       }
-      await getModels();
+      await getVariants();
       setShowDrawer(false);
       reset();
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
     }
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setValue("image", reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  // Filter evaluation matching Model fields including status matching logic
-  const filteredData = models.filter((item) => {
+  // Filter logic - Added year filter matching
+  const filteredData = variants.filter((item) => {
     const matchesSearch =
-      item.modelName.toLowerCase().includes(search.toLowerCase()) ||
+      item.category.toLowerCase().includes(search.toLowerCase()) ||
       item.brand.toLowerCase().includes(search.toLowerCase()) ||
-      item.category.toLowerCase().includes(search.toLowerCase());
+      item.model.toLowerCase().includes(search.toLowerCase()) ||
+      item.modelYear.toString().includes(search.toLowerCase());
 
-    const matchesNameDropdown =
-      selectedNameFilter === "All" || item.modelName === selectedNameFilter;
-    const matchesBrandDropdown =
-      selectedBrandFilter === "All" || item.brand === selectedBrandFilter;
     const matchesCategoryDropdown =
       selectedCategoryFilter === "All" ||
       item.category === selectedCategoryFilter;
+    const matchesBrandDropdown =
+      selectedBrandFilter === "All" || item.brand === selectedBrandFilter;
+    const matchesModelDropdown =
+      selectedModelFilter === "All" || item.model === selectedModelFilter;
+    const matchesYearDropdown =
+      selectedYearFilter === "All" ||
+      item.modelYear.toString() === selectedYearFilter;
     const matchesStatusDropdown =
       selectedStatusFilter === "All" ||
       String(item.status) === selectedStatusFilter;
 
     return (
       matchesSearch &&
-      matchesNameDropdown &&
-      matchesBrandDropdown &&
       matchesCategoryDropdown &&
+      matchesBrandDropdown &&
+      matchesModelDropdown &&
+      matchesYearDropdown &&
       matchesStatusDropdown
     );
   });
@@ -430,10 +512,10 @@ export default function Model() {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-xl font-semibold text-gray-900 md:text-2xl dark:text-white">
-            Model Management
+            Create Variant
           </h1>
           <p className="dark:text-dark-300 mt-1 text-sm text-gray-500">
-            Manage all product variants and models
+            Manage all Variant from here
           </p>
         </div>
 
@@ -472,7 +554,7 @@ export default function Model() {
             onClick={handleOpenAddDrawer}
             className="w-full sm:w-auto"
           >
-            Add Model
+            Add Variant
           </Button>
         </div>
       </div>
@@ -482,7 +564,7 @@ export default function Model() {
         <MagnifyingGlassIcon className="absolute top-1/2 left-3 size-4.5 -translate-y-1/2 text-gray-400" />
         <input
           type="text"
-          placeholder="Search model, brand or category..."
+          placeholder="Search year, model or brand..."
           value={search}
           onChange={(e) => {
             setSearch(e.target.value);
@@ -492,74 +574,85 @@ export default function Model() {
         />
       </div>
 
-      {/* Four Dropdown Filters: Model Name, Brand, Category, and Status */}
+      {/* Five Dropdown Filters - Added Year Filter */}
       {showFilterBar && (
         <div className="dark:bg-dark-700 dark:border-dark-500 animate-in fade-in slide-in-from-top-2 rounded-xl border border-gray-200 bg-white p-4 transition-all duration-150">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
-            {/* Filter 1: Model Name */}
-            <div className="flex flex-col gap-1">
-              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
-                Model Name
-              </span>
-              <Listbox
-                data={nameFilterOptions}
-                value={
-                  nameFilterOptions.find((o) => o.id === selectedNameFilter) ||
-                  nameFilterOptions[0]
-                }
-                placeholder="All Models"
-                onChange={(opt: any) => {
-                  setSelectedNameFilter(opt.id);
-                  setCurrentPage(1);
-                }}
-                displayField="name"
-              />
-            </div>
-
-            {/* Filter 2: Brand */}
-            <div className="flex flex-col gap-1">
-              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
-                Brand
-              </span>
-              <Listbox
-                data={brandFilterOptions}
-                value={
-                  brandFilterOptions.find(
-                    (o) => o.id === selectedBrandFilter,
-                  ) || brandFilterOptions[0]
-                }
-                placeholder="All Brands"
-                onChange={(opt: any) => {
-                  setSelectedBrandFilter(opt.id);
-                  setCurrentPage(1);
-                }}
-                displayField="name"
-              />
-            </div>
-
-            {/* Filter 3: Category */}
-            {/* Filter 3: Category - use filter state, NOT form values */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
             <div className="flex flex-col gap-1">
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
                 Category
               </span>
               <Listbox
-                data={categoryFilterOptions}
+                data={categoryOptions}
                 value={
-                  categoryFilterOptions.find(
-                    (o) => o.id === selectedCategoryFilter,
-                  ) || categoryFilterOptions[0]
+                  categoryOptions.find(
+                    (opt) => opt.name === formCategoryValue,
+                  ) || categoryOptions[0]
                 }
-                placeholder="All Categories"
                 onChange={(opt: any) => {
-                  setSelectedCategoryFilter(opt.id);
+                  setValue("category", opt.name);
+                  setValue("categoryId", opt.id);
+                }}
+                displayField="name"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
+                Brand
+              </span>
+              <Listbox
+                data={brandOptions}
+                value={
+                  brandOptions.find((opt) => opt.name === formBrandValue) ||
+                  brandOptions[0]
+                }
+                onChange={(opt: any) => {
+                  setValue("brand", opt.name);
+                  setValue("brandId", opt.id);
+                }}
+                displayField="name"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
+                Model
+              </span>
+              <Listbox
+                data={modelOptions}
+                value={
+                  modelOptions.find((opt) => opt.name === formModelValue) ||
+                  modelOptions[0]
+                }
+                onChange={(opt: any) => {
+                  setValue("model", opt.name);
+                  setValue("modelId", opt.id);
+                }}
+                displayField="name"
+              />
+            </div>
+
+            {/* New Year Filter */}
+            <div className="flex flex-col gap-1">
+              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
+                Year
+              </span>
+              <Listbox
+                data={yearFilterOptions}
+                value={
+                  yearFilterOptions.find((o) => o.id === selectedYearFilter) ||
+                  yearFilterOptions[0]
+                }
+                placeholder="All Years"
+                onChange={(opt: any) => {
+                  setSelectedYearFilter(opt.id);
                   setCurrentPage(1);
                 }}
                 displayField="name"
               />
             </div>
 
-            {/* Filter 4: Status */}
             <div className="flex flex-col gap-1">
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
                 Status
@@ -602,17 +695,27 @@ export default function Model() {
                 <Th className="w-16 py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   S.No
                 </Th>
-                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                <Th className="w-16 py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Image
                 </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  Model Name
+                  Category
                 </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Brand
                 </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  Category
+                  Model
+                </Th>
+                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                  Model Year
+                </Th>
+                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                  Variant Code
+                </Th>
+
+                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                  Variant Name
                 </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Status
@@ -648,45 +751,52 @@ export default function Model() {
                       <div className="dark:border-dark-500 flex h-15 w-15 items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
                         {item.image ? (
                           <img
-                            src={item.image}
-                            alt=""
+                            src={apiHelper.getImageUrl(item.image)}
+                            alt={item.variantName}
                             className="h-full w-full object-contain"
+                            onError={(e) => {
+                              console.log("Image Error:", item.image);
+                            }}
                           />
                         ) : (
                           <span className="text-xs font-bold text-gray-400 uppercase">
-                            {item.modelName.substring(0, 2)}
+                            {item.variantName.substring(0, 2)}
                           </span>
                         )}
                       </div>
                     </Td>
-                    <Td className="py-4 font-medium text-gray-900 dark:text-gray-400">
-                      {item.modelName}
+                    <Td className="dark:text-dark-200 py-4 text-gray-600">
+                      {item.category}
                     </Td>
                     <Td className="dark:text-dark-200 py-4 text-gray-600">
                       {item.brand}
                     </Td>
-                    <Td className="dark:text-dark-200 py-4 text-gray-600">
-                      {item.category}
+                    <Td className="py-4 font-medium text-gray-900 dark:text-gray-400">
+                      {item.model}
                     </Td>
+                    <Td className="py-4 font-medium text-gray-900 dark:text-gray-400">
+                      {item.modelYear}
+                    </Td>
+                    <Td className="py-4 font-medium text-gray-900 dark:text-gray-400">
+                      {item.variantCode}
+                    </Td>
+                    <Td className="py-4 font-medium text-gray-900 dark:text-gray-400">
+                      {item.variantName}
+                    </Td>
+
                     <Td className="py-4">
                       <button
                         type="button"
                         onClick={() => handleToggleTableStatus(item.id)}
-                        className={`relative h-6 w-12 rounded-full transition-all ${
-                          item.status === "ACTIVE"
-                            ? "bg-primary-500"
-                            : "dark:bg-dark-600 bg-gray-300"
-                        }`}
+                        className={`relative h-6 w-12 rounded-full transition-all ${item.status === "ACTIVE" ? "bg-primary-500" : "dark:bg-dark-600 bg-gray-300"}`}
                       >
                         <span
-                          className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${
-                            item.status === "ACTIVE" ? "left-6.5" : "left-0.5"
-                          }`}
+                          className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${item.status === "ACTIVE" ? "left-6.5" : "left-0.5"}`}
                         />
                       </button>
                     </Td>
                     <Td className="py-4 text-gray-500 dark:text-gray-400">
-                      {item.createdAt}
+                        {new Date(item.createdAt).toLocaleDateString("en-IN")}
                     </Td>
                     <Td className="py-4 text-center">
                       <Menu
@@ -755,7 +865,7 @@ export default function Model() {
                     colSpan={9}
                     className="py-12 text-center text-gray-400 dark:text-gray-500"
                   >
-                    No models found
+                    No variants found
                   </Td>
                 </Tr>
               )}
@@ -766,7 +876,7 @@ export default function Model() {
         {/* Premium Three-Column Footer System */}
         {totalItems > 0 && (
           <div className="dark:border-dark-700 dark:bg-dark-800 flex flex-col gap-4 rounded-b-xl border-t border-gray-200 bg-white px-4 py-4 md:flex-row md:items-center">
-            {/* Column 1: Row Limits Selection Dropdown Menu */}
+            {/* Column 1: Row Limits Selection */}
             <div className="order-1 flex items-center justify-center gap-2 text-sm text-gray-600 md:w-1/3 md:justify-start dark:text-gray-400">
               <span>Show</span>
               <div className="w-20">
@@ -845,7 +955,7 @@ export default function Model() {
               <span>entries</span>
             </div>
 
-            {/* Column 2: Page Navigation Bar controls */}
+            {/* Column 2: Page Navigation */}
             <div className="order-2 flex justify-center md:w-1/3">
               <div className="dark:border-dark-700 dark:bg-dark-800 inline-flex items-center space-x-1 rounded-lg border border-gray-200 bg-white p-1 shadow-sm">
                 <button
@@ -889,7 +999,7 @@ export default function Model() {
               </div>
             </div>
 
-            {/* Column 3: Stats Summary Metadata Counter info */}
+            {/* Column 3: Stats Summary */}
             <div className="order-3 flex items-center justify-center text-sm text-gray-500 select-none md:w-1/3 md:justify-end dark:text-gray-400">
               <span>
                 {totalItems === 0 ? 0 : indexOfFirstItem + 1} -{" "}
@@ -924,7 +1034,7 @@ export default function Model() {
         </div>
       )}
 
-      {/* Slide Transition Form Drawer Wrapper with Validation Rules */}
+      {/* Slide Transition Form Drawer */}
       <Transition appear show={showDrawer} as={Fragment}>
         <Dialog
           as="div"
@@ -960,7 +1070,7 @@ export default function Model() {
                 {/* Header */}
                 <div className="dark:border-dark-500 flex items-center justify-between border-b border-gray-200 px-5 py-4">
                   <h2 className="dark:text-dark-50 text-lg font-semibold text-gray-800">
-                    {editId !== null ? "Edit Model" : "Add Model"}
+                    {editId !== null ? "Edit Variant" : "Add Variant"}
                   </h2>
                   <Button
                     onClick={() => setShowDrawer(false)}
@@ -973,13 +1083,12 @@ export default function Model() {
                   </Button>
                 </div>
 
-                {/* Content Input Fields Body */}
+                {/* Content Input Fields */}
                 <div className="grow space-y-5 overflow-y-auto p-5">
                   <div>
                     <span className="mb-2 block text-sm font-medium">
                       Category
                     </span>
-                    {/* Category dropdown in DRAWER */}
                     <Listbox
                       data={categoryOptions}
                       value={
@@ -988,16 +1097,9 @@ export default function Model() {
                         ) || categoryOptions[0]
                       }
                       placeholder="Select Category"
-                      onChange={(selectedOpt: any) => {
-                        setValue("category", selectedOpt.name);
-                        setValue("categoryId", selectedOpt.id);
-                        setValue("brand", ""); // ✅ Reset brand when category changes
-                        setValue("brandId", ""); // ✅ Reset brandId
-
-                        // ✅ Filter brands by selected category
-                        const catId = Number(selectedOpt.id);
-                        const filtered = brands.filter((b) => b.id === catId);
-                        setFilteredBrands(filtered.length > 0 ? filtered : []);
+                      onChange={(opt: any) => {
+                        setValue("category", opt.name);
+                        setValue("categoryId", opt.id);
                       }}
                       displayField="name"
                     />
@@ -1015,9 +1117,29 @@ export default function Model() {
                         ) || brandOptions[0]
                       }
                       placeholder="Select Brand"
-                      onChange={(selectedOpt: any) => {
-                        setValue("brand", selectedOpt.name);
-                        setValue("brandId", selectedOpt.id);
+                      onChange={(opt: any) => {
+                        setValue("brand", opt.name);
+                        setValue("brandId", opt.id);
+                      }}
+                      displayField="name"
+                    />
+                  </div>
+
+                  <div>
+                    <span className="mb-2 block text-sm font-medium">
+                      Model
+                    </span>
+                    <Listbox
+                      data={modelOptions}
+                      value={
+                        modelOptions.find(
+                          (opt) => opt.name === formModelValue,
+                        ) || brandOptions[0]
+                      }
+                      placeholder="Select Model"
+                      onChange={(opt: any) => {
+                        setValue("model", opt.name);
+                        setValue("modelId", opt.id);
                       }}
                       displayField="name"
                     />
@@ -1025,19 +1147,43 @@ export default function Model() {
 
                   <div>
                     <label className="mb-2 block text-sm font-medium">
-                      Model Name
+                      Year
                     </label>
-                    <Input
-                      type="text"
-                      placeholder="Enter model name"
-                      {...register("modelName", formValidationRules.modelName)}
-                      error={errors?.modelName && errors.modelName.message}
+                    <Listbox
+                      data={modelYearOptions}
+                      placeholder="Select Model Year"
+                      onChange={(opt: any) => {
+                        setValue("modelYear", opt.name);
+                        setValue("modelYearId", opt.id);
+                      }}
+                      displayField="name"
                     />
                   </div>
-
                   <div>
                     <label className="mb-2 block text-sm font-medium">
-                      Model Image
+                      Variant Code
+                    </label>
+                    <Input
+                      placeholder="Enter Variant Code"
+                      {...register("variantCode", {
+                        required: "Variant Code is required",
+                      })}
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium">
+                      Variant Name
+                    </label>
+                    <Input
+                      placeholder="Enter Variant Name"
+                      {...register("variantName", {
+                        required: "Variant Name is required",
+                      })}
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium">
+                      Variant Image
                     </label>
                     <input
                       type="file"
@@ -1050,10 +1196,10 @@ export default function Model() {
                         src={formImageValue}
                         alt="Preview"
                         className="dark:border-dark-500 mt-3 h-20 w-20 rounded-xl border border-gray-200 object-contain"
+                        
                       />
                     )}
                   </div>
-
                   <div>
                     <span className="mb-2 block text-sm font-medium">
                       Status
@@ -1074,7 +1220,7 @@ export default function Model() {
                   </div>
                 </div>
 
-                {/* Footer Submit layout controls */}
+                {/* Footer */}
                 <div className="dark:border-dark-500 flex items-center justify-end gap-3 border-t border-gray-200 p-5">
                   <Button
                     variant="outlined"

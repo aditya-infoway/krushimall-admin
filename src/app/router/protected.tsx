@@ -84,23 +84,49 @@ const protectedRoutes: RouteObject = {
           }),
         },
 
-        {
-          path: "variant",
-          lazy: async () => ({
-            Component: (
-              await import("@/app/pages/master/variant/KYCForm")
-            ).default,
-          }),
-        },
+      {
+  path: "variant",
+  children: [
+    {
+      index: true,
+      element: <Navigate to="create" replace />,
+    },
 
-          {
-          path: "showroomvariant",
-          lazy: async () => ({
-            Component: (
-              await import("@/app/pages/master/showroomvariant")
-            ).default,
-          }),
-        },
+    {
+      path: "create",
+      lazy: async () => ({
+        Component: (
+          await import("@/app/pages/master/variant/createvariant")
+        ).default,
+      }),
+    },
+
+    {
+      path: "website",
+      lazy: async () => ({
+        Component: (
+          await import("@/app/pages/master/variant/WebsiteVariant")
+        ).default,
+      }),
+    },
+
+    {
+      path: "showroom",
+      lazy: async () => ({
+        Component: (
+          await import("@/app/pages/master/variant/showroomvariant")
+        ).default,
+      }),
+    },
+  ],
+},        //   {
+        //   path: "showroomvariant",
+        //   lazy: async () => ({
+        //     Component: (
+        //       await import("@/app/pages/master/variant/showroomvariant")
+        //     ).default,
+        //   }),
+        // },
 
       ],
     },  
