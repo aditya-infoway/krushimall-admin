@@ -34,6 +34,13 @@ export const master: NavigationTree = {
       path: "/master/year",
       icon: "year",
     },
+     {
+      id: "color",
+      type: "item",
+      title: "Colour",
+      path: "/master/color",
+      icon: "color",
+    },
 
     // Dropdown
     {

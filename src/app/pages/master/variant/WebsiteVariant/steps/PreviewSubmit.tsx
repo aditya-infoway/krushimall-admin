@@ -1,7 +1,7 @@
 // Import Dependencies
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CheckCircleIcon } from "@heroicons/react/24/outline";
-
+import apiHelper from "@/utils/apiHelper";
 // Local Imports
 import { Button } from "@/components/ui";
 import { useKYCFormContext } from "../KYCFormContext";
@@ -17,6 +17,7 @@ import {
   Save,
   Send,
 } from "lucide-react";
+import { data } from "react-router";
 // ----------------------------------------------------------------------
 
 export function PreviewSubmit({
@@ -26,54 +27,168 @@ export function PreviewSubmit({
   setCurrentStep: React.Dispatch<React.SetStateAction<number>>;
   setFinished: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
-  const kycFormCtx = useKYCFormContext();
+  // const kycFormCtx = useKYCFormContext();
   const [loading, setLoading] = useState(false);
   const [agreed, setAgreed] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  // const formData = kycFormCtx.state.formData;
+  const [showGallery, setShowGallery] = useState(false);
+  const [tractorData, setTractorData] = useState<any>(null);
+  useEffect(() => {
+    if (images.length > 0) {
+      setSelectedIndex(0);
+    }
+  }, [tractorData]);
 
-  const formData = kycFormCtx.state.formData;
+  const images = [
+    tractorData?.frontView,
+    tractorData?.leftView,
+    tractorData?.rightView,
+    tractorData?.rearView,
+    tractorData?.engineView,
+    tractorData?.dashboardView,
+    tractorData?.tyreView,
+    tractorData?.hydraulicView,
+    tractorData?.ptoView,
+    tractorData?.additionalImage1,
+    tractorData?.additionalImage2,
+    tractorData?.additionalImage3,
+    tractorData?.additionalImage4,
+    tractorData?.additionalImage5,
+  ].filter(Boolean);
+  const selectedImage = images[selectedIndex];
+  //   const images = [...new Set([
+  //   tractorData?.frontView,
+  //   tractorData?.leftView,
+  //   tractorData?.rightView,
+  //   tractorData?.rearView,
+  //   tractorData?.engineView,
+  //   tractorData?.dashboardView,
+  //   tractorData?.tyreView,
+  //   tractorData?.hydraulicView,
+  //   tractorData?.ptoView,
+  //   tractorData?.additionalImage1,
+  //   tractorData?.additionalImage2,
+  //   tractorData?.additionalImage3,
+  //   tractorData?.additionalImage4,
+  //   tractorData?.additionalImage5,
+  // ].filter(Boolean))];
+  const documentFiles = [
+    tractorData?.brochure,
+    tractorData?.invoice,
+    tractorData?.insuranceCertificate,
+    tractorData?.rcBook,
+    tractorData?.warrantyCard,
+    tractorData?.others,
+  ].filter(Boolean);
+  useEffect(() => {
+    loadData();
+  }, []);
 
-  const handleSubmit = () => {
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+  const loadData = async () => {
+    try {
+      const id = localStorage.getItem("websiteVariantId");
+
+      if (!id) return;
+
+      const res = await apiHelper.get(`/website-variants/${id}`);
+
+      console.log("Full API Response =>", res.data);
+      console.log("Variant Data =>", res.data.data);
+
+      setTractorData(res.data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+  const handleSubmit = async () => {
+    try {
+      setLoading(true);
+
+      const websiteVariantId = localStorage.getItem("websiteVariantId");
+
+      if (!websiteVariantId) {
+        alert("Website Variant ID not found");
+        return;
+      }
+
+      await apiHelper.put(`/website-variants/${websiteVariantId}/submit`, {
+        agreed,
+      });
+
       setFinished(true);
-    }, 2000);
+
+      localStorage.removeItem("websiteVariantId");
+    } catch (error) {
+      console.error("Submit Error:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSaveDraft = () => {
-    console.log("Saving draft...", formData);
+    console.log("Saving draft...", tractorData);
   };
 
   return (
-    <div className="mt-6 ">
+    <div className="mt-6">
       {/* Breadcrumb */}
       <div className="mb-6 text-sm text-gray-500">
         Dashboard &gt; New Tractor &gt; Add New Tractor &gt;{" "}
-        <span className="text-primary-600 font-medium">Preview &amp; Submit</span>
+        <span className="text-primary-600 font-medium">
+          Preview &amp; Submit
+        </span>
       </div>
 
       {/* Tractor Overview Header - Redesigned to match image */}
-      <div className="mb-8 rounded-xl border border-gray-200  p-6 shadow-sm">
-        <h3 className="mb-6 text-lg font-semibold text-gray-800">Tractor Overview</h3>
+      <div className="mb-8 rounded-xl border border-gray-200 p-6 shadow-sm">
+        <h3 className="mb-6 text-lg font-semibold text-gray-800">
+          Tractor Overview
+        </h3>
 
         <div className="grid gap-6 lg:grid-cols-12">
           {/* Left - Images */}
           <div className="lg:col-span-4">
-            <div className="relative overflow-hidden rounded-lg bg-gray-100" style={{ minHeight: "200px" }}>
-              <div className="flex h-48 w-full items-center justify-center bg-gradient-to-br from-blue-50 to-gray-100">
-                <Tractor className="h-20 w-20 text-gray-400" />
-              </div>
+            <div
+              className="relative overflow-hidden rounded-lg bg-gray-100"
+              style={{ minHeight: "250px" }}
+            >
+              {selectedImage ? (
+                <img
+                  src={apiHelper.getImageUrl(selectedImage)}
+                  alt="Tractor"
+                  className="h-65 w-full object-cover"
+                />
+              ) : (
+                <div className="flex h-65 w-full items-center justify-center">
+                  <Tractor className="h-20 w-20 text-gray-400" />
+                </div>
+              )}
             </div>
-            <div className="mt-3 flex gap-2">
-              {[1, 2, 3, 4].map((_, index) => (
-                <div
+            <div className="mt-3 flex gap-2 overflow-x-auto">
+              {images.slice(0, 5).map((img, index) => (
+                <img
                   key={index}
-                  className="h-14 w-14 rounded border border-gray-200  object-cover"
+                  src={apiHelper.getImageUrl(img)}
+                  alt={`thumb-${index}`}
+                  onClick={() => setSelectedIndex(index)}
+                  className={`h-14 w-14 cursor-pointer rounded object-cover transition-all ${
+                    selectedIndex === index
+                      ? "border-2 border-blue-500 ring-2 ring-blue-200"
+                      : "border border-gray-300 hover:border-blue-300"
+                  }`}
                 />
               ))}
-              <div className="flex h-14 w-14 items-center justify-center rounded border border-gray-200 b text-sm font-medium text-gray-600">
-                +6
-              </div>
+
+             {images.length > 5 && (
+  <button
+    type="button"
+    onClick={() => setShowGallery(true)}
+    className="flex h-14 w-14 items-center justify-center rounded border border-gray-300 text-sm font-medium"
+  >
+    +{images.length - 5}
+  </button>
+)}
             </div>
           </div>
 
@@ -81,7 +196,7 @@ export function PreviewSubmit({
           <div className="lg:col-span-5">
             <div className="flex items-center gap-3">
               <h2 className="text-2xl font-bold text-gray-800">
-                {formData.BasicInformation?.brandName || "Swaraj"} {formData.BasicInformation?.modelName || "744 FE"}
+                {tractorData?.productName || "Swaraj"}
               </h2>
               <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700">
                 New Tractor
@@ -91,7 +206,9 @@ export function PreviewSubmit({
             <div className="mt-4 flex flex-wrap gap-5 text-sm">
               <div className="flex items-center gap-1.5">
                 <Gauge className="h-4 w-4 text-gray-500" />
-                <span className="text-gray-700">{formData.Enginedetails?.horsePower || 45} HP</span>
+                <span className="text-gray-700">
+                  {tractorData?.horsePower} HP
+                </span>
               </div>
               <div className="flex items-center gap-1.5">
                 <Tractor className="h-4 w-4 text-gray-500" />
@@ -99,44 +216,49 @@ export function PreviewSubmit({
               </div>
               <div className="flex items-center gap-1.5">
                 <Fuel className="h-4 w-4 text-gray-500" />
-                <span className="text-gray-700">{formData.Enginedetails?.fuelType || "Diesel"}</span>
+                <span className="text-gray-700">{tractorData?.fuelType}</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <CalendarDays className="h-4 w-4 text-gray-500" />
-                <span className="text-gray-700">{formData.BasicInformation?.modelYear || 2024}</span>
+                <span className="text-gray-700">
+                  {tractorData?.modelYear?.modelYear}
+                </span>
               </div>
             </div>
 
             <div className="mt-6 border-t border-gray-100 pt-4">
-              <p className="text-xs font-medium uppercase tracking-wider text-gray-400">
+              <p className="text-xs font-medium tracking-wider text-gray-400 uppercase">
                 Ex-Showroom Price
               </p>
-              <h3 className="mt-1 text-3xl font-bold text-primary-600">
-                ₹ {formData.PriceLocation?.exShowroomPrice?.toLocaleString() || "8,20,000"}
+              <h3 className="text-primary-600 mt-1 text-3xl font-bold">
+                ₹ {tractorData?.exShowroomPrice?.toLocaleString()}
               </h3>
             </div>
           </div>
 
           {/* Right - Highlights */}
           <div className="lg:col-span-3">
-            <div className="rounded-lg bg-gray-50 p-4 border border-gray-100">
-              <h4 className="mb-3 text-sm font-semibold text-gray-700">Key Highlights</h4>
+            <div className="rounded-lg border border-gray-100 bg-gray-50 p-4">
+              <h4 className="mb-3 text-sm font-semibold text-gray-700">
+                Key Highlights
+              </h4>
               <ul className="space-y-2 text-sm text-gray-600">
-                <li className="flex items-center gap-2">
-                  <span className="text-green-500">✓</span> Power Steering
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-green-500">✓</span> Oil Immersed Brakes
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-green-500">✓</span> Multi Speed PTO
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-green-500">✓</span> High Lifting Capacity
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-green-500">✓</span> Fuel Efficient Engine
-                </li>
+                <ul className="space-y-2 text-sm">
+                  {[
+                    tractorData?.highlight1,
+                    tractorData?.highlight2,
+                    tractorData?.highlight3,
+                    tractorData?.highlight4,
+                    tractorData?.highlight5,
+                  ]
+                    .filter(Boolean)
+                    .map((highlight, index) => (
+                      <li key={index} className="flex items-center gap-2">
+                        <span className="text-green-500">✓</span>
+                        {highlight}
+                      </li>
+                    ))}
+                </ul>
               </ul>
             </div>
           </div>
@@ -146,143 +268,433 @@ export function PreviewSubmit({
       {/* Information Sections - Updated styling */}
       <div className="space-y-6">
         {/* Basic Information */}
-        <PreviewSection title="Basic Information" >
-          
-          <PreviewRow label="Brand" value={formData.BasicInformation?.brandName || "Swaraj"} />
-          <PreviewRow label="Category" value="Utility Tractor" />
-          <PreviewRow label="Model" value={formData.BasicInformation?.modelName || "744 FE"} />
-          <PreviewRow label="Launch Year" value={formData.BasicInformation?.modelYear?.toString() || "2024"} />
-          <PreviewRow label="Variant" value="Standard" />
-          <PreviewRow label="Country of Origin" value={formData.BasicInformation?.country || "India"} />
+        <PreviewSection title="Basic Information">
+          <PreviewRow
+            label="Brand"
+            value={tractorData?.brand?.brandName || "-"}
+          />
+
+          <PreviewRow
+            label="Category"
+            value={tractorData?.category?.categoryName || "-"}
+          />
+
+          <PreviewRow
+            label="Model"
+            value={tractorData?.model?.modelName || "-"}
+          />
+
+          <PreviewRow
+            label="Launch Year"
+            value={
+              tractorData?.launchYear
+                ? new Date(tractorData.launchYear).toLocaleDateString("en-IN")
+                : "-"
+            }
+          />
+
+          <PreviewRow
+            label="Variant"
+            value={tractorData?.variant?.variantName || "-"}
+          />
+          <PreviewRow
+            label="Country of Origin"
+            value={tractorData?.country || "India"}
+          />
         </PreviewSection>
 
         {/* Engine Details */}
         <PreviewSection title="Engine Details">
-          <PreviewRow label="Engine Type" value={formData.Enginedetails?.engineType || "4 Stroke, Direct Injection"} />
-          <PreviewRow label="Fuel Type" value={formData.Enginedetails?.fuelType || "Diesel"} />
-          <PreviewRow label="Rated RPM" value={formData.Enginedetails?.ratedRpm ? `${formData.Enginedetails.ratedRpm} RPM` : "2000 RPM"} />
-          <PreviewRow label="Engine Capacity" value={formData.Enginedetails?.horsePower ? `${formData.Enginedetails.horsePower} HP` : "45 HP"} />
-          <PreviewRow label="HP Category" value={formData.Enginedetails?.horsePower ? `${formData.Enginedetails.horsePower} HP` : "45 HP"} />
-          <PreviewRow label="Cooling System" value={formData.Enginedetails?.coolingSystem || "Water Cooled"} />
-          <PreviewRow label="Max Torque" value={formData.Enginedetails?.maximumTorque ? `${formData.Enginedetails.maximumTorque} Nm` : "185 Nm"} />
-          <PreviewRow label="Torque Backup" value={formData.Enginedetails?.torqueBackup ? `${formData.Enginedetails.torqueBackup}%` : "20%"} />
+          <PreviewRow
+            label="Horse Power"
+            value={`${tractorData?.horsePower || "-"} HP`}
+          />
+
+          <PreviewRow
+            label="No. Of Cylinders"
+            value={tractorData?.numberOfCylinders || "-"}
+          />
+
+          <PreviewRow
+            label="Cubic Capacity"
+            value={tractorData?.cubicCapacity || "-"}
+          />
+
+          <PreviewRow
+            label="Aspirated Type"
+            value={tractorData?.aspiratedType || "-"}
+          />
+
+          <PreviewRow
+            label="Air Filter"
+            value={tractorData?.airFilterType || "-"}
+          />
+
+          <PreviewRow
+            label="Torque RPM"
+            value={tractorData?.torqueRpm || "-"}
+          />
+
+          <PreviewRow
+            label="Emission Norms"
+            value={tractorData?.emissionNorms || "-"}
+          />
         </PreviewSection>
 
         {/* Transmission Details */}
         <PreviewSection title="Transmission Details">
-          <PreviewRow label="Clutch Type" value={formData.Transmission?.clutchType || "Single Clutch"} />
-          <PreviewRow label="Gear Box" value={formData.Transmission?.gearBox || "8 Forward + 2 Reverse"} />
-          <PreviewRow label="PTO HP" value={formData.Transmission?.ptoHp ? `${formData.Transmission.ptoHp} HP` : "39 HP"} />
-          <PreviewRow label="PTO RPM" value={formData.Transmission?.ptoRpm ? `${formData.Transmission.ptoRpm} RPM` : "540 RPM"} />
-          <PreviewRow label="Gear Type" value={formData.Transmission?.gearType || "Side Shift"} />
-          <PreviewRow label="Reverse PTO" value={formData.Transmission?.reversePto ? "Yes" : "No"} />
-          <PreviewRow label="Transmission Type" value={formData.Transmission?.transmissionType || "Constant Mesh"} />
-          <PreviewRow label="PTO Type" value={formData.Transmission?.ptoType || "Independent"} />
+          <PreviewRow label="Clutch Type" value={tractorData?.clutchType} />
+
+          <PreviewRow label="Forward Gears" value={tractorData?.forwardGears} />
+
+          <PreviewRow label="Reverse Gears" value={tractorData?.reverseGears} />
+
+          <PreviewRow label="Gear Type" value={tractorData?.gearType} />
+
+          <PreviewRow
+            label="Transmission Type"
+            value={tractorData?.transmissionType}
+          />
+
+          <PreviewRow label="PTO HP" value={tractorData?.ptoHp} />
+
+          <PreviewRow label="PTO RPM" value={tractorData?.ptoRpm} />
+
+          <PreviewRow label="PTO Type" value={tractorData?.ptoType} />
+
+          <PreviewRow label="PTO Position" value={tractorData?.ptoPosition} />
+
+          {/* <PreviewRow
+    label="Reverse PTO"
+    value={tractorData?.reversePto ? "Yes" : "No"}
+  />
+
+  <PreviewRow
+    label="Multi Speed PTO"
+    value={tractorData?.multiSpeedPto ? "Yes" : "No"}
+  />
+
+  <PreviewRow
+    label="Creeper Gears"
+    value={tractorData?.creeperGears ? "Yes" : "No"}
+  />
+
+  <PreviewRow
+    label="Hi-Lo Gears"
+    value={tractorData?.hiLoGears ? "Yes" : "No"}
+  />
+
+  <PreviewRow
+    label="Power Shuttle"
+    value={tractorData?.powerShuttle ? "Yes" : "No"}
+  />
+
+  <PreviewRow
+    label="Shuttle Shift"
+    value={tractorData?.shuttleShift ? "Yes" : "No"}
+  />
+
+  <PreviewRow
+    label="Side Shift Gear"
+    value={tractorData?.sideShiftGear ? "Yes" : "No"}
+  />
+
+  <PreviewRow
+    label="Super Reducer"
+    value={tractorData?.superReducer ? "Yes" : "No"}
+  /> */}
         </PreviewSection>
 
         {/* Hydraulic & Tyres */}
-        <PreviewSection title="Hydraulic &amp; Tyres">
-          <PreviewRow 
-            label="Lifting Capacity" 
-            value={formData.HydraulicTyres?.liftingCapacity ? `${formData.HydraulicTyres.liftingCapacity} kg` : "1800 kg"} 
+        <PreviewSection title="Hydraulic & Tyres">
+          <PreviewRow
+            label="Lifting Capacity"
+            value={tractorData?.liftingCapacity}
           />
-          <PreviewRow label="Hydraulic Type" value={formData.HydraulicTyres?.addc ? "ADDC" : formData.HydraulicTyres?.hydraulicType || "Standard"} />
-          <PreviewRow label="3 Point Linkage" value="Cat II" />
-          <PreviewRow label="Remote Valve" value={formData.HydraulicTyres?.remoteValveType === "double_acting" ? "1 Double Acting" : "1 Single Acting"} />
-          <PreviewRow label="Front Tyre" value={formData.Tyres?.frontTyre || "6.00 x 16"} />
-          <PreviewRow label="Rear Tyre" value={formData.Tyres?.rearTyre || "14.9 x 28"} /> 
+
+          <PreviewRow
+            label="Lifting Capacity @610mm"
+            value={tractorData?.liftingCapacityAt610mm}
+          />
+
+          <PreviewRow
+            label="Hydraulic Type"
+            value={tractorData?.hydraulicType}
+          />
+
+          <PreviewRow label="Control Type" value={tractorData?.controlType} />
+
+          <PreviewRow
+            label="Remote Valve Type"
+            value={tractorData?.remoteValveType}
+          />
+
+          <PreviewRow
+            label="Number Of Remote Valves"
+            value={tractorData?.numberOfRemoteValves}
+          />
+
+          <PreviewRow
+            label="3 Point Linkage"
+            value={tractorData?.threePointLinkage}
+          />
+
+          <PreviewRow
+            label="Linkage Category"
+            value={tractorData?.linkageCategory}
+          />
+
+          <PreviewRow label="Top Link" value={tractorData?.topLink} />
+
+          {/* <PreviewRow
+    label="Load Sensing"
+    value={tractorData?.loadSensing ? "Yes" : "No"}
+  />
+
+  <PreviewRow
+    label="Flow Control"
+    value={tractorData?.flowControl ? "Yes" : "No"}
+  />
+
+  <PreviewRow
+    label="Position Control"
+    value={tractorData?.positionControl ? "Yes" : "No"}
+  />
+
+  <PreviewRow
+    label="Draft Control"
+    value={tractorData?.draftControl ? "Yes" : "No"}
+  /> */}
+
+          <PreviewRow
+            label="Draft Sensitivity"
+            value={tractorData?.draftSensitivity}
+          />
+
+          {/* <PreviewRow
+    label="Down Position Control"
+    value={tractorData?.downPositionControl ? "Yes" : "No"}
+  />
+
+  <PreviewRow
+    label="Return To Depth"
+    value={tractorData?.returnToDepth ? "Yes" : "No"}
+  />
+
+  <PreviewRow
+    label="Self Levelling"
+    value={tractorData?.selfLevelling ? "Yes" : "No"}
+  />
+
+  <PreviewRow
+    label="Quick Hitch"
+    value={tractorData?.quickHitch ? "Yes" : "No"}
+  />
+
+  <PreviewRow
+    label="External Hydraulic Cylinder"
+    value={tractorData?.externalHydraulicCylinder ? "Yes" : "No"}
+  />
+
+  <PreviewRow
+    label="Transport Lock"
+    value={tractorData?.transportLock ? "Yes" : "No"}
+  /> */}
         </PreviewSection>
 
         {/* Price & Location */}
         <PreviewSection title="Price &amp; Location">
-          <PreviewRow 
-            label="Ex-Showroom Price" 
-            value={formData.PriceLocation?.exShowroomPrice ? `₹ ${formData.PriceLocation.exShowroomPrice.toLocaleString()}` : "₹ 8,20,000"} 
+          <PreviewRow
+            label="Ex-Showroom Price"
+            value={`₹ ${tractorData?.exShowroomPrice.toLocaleString()}`}
           />
-          <PreviewRow 
-            label="On-Road Price" 
-            value={formData.PriceLocation?.onRoadPrice ? `₹ ${formData.PriceLocation.onRoadPrice.toLocaleString()}` : "₹ 9,35,000"} 
+          <PreviewRow
+            label="On-Road Price"
+            value={`₹ ${tractorData?.onRoadPrice.toLocaleString()}`}
           />
-          <PreviewRow label="Finance Available" value={formData.PriceLocation?.financeAvailable ? "Yes" : "No"} />
-          <PreviewRow label="EMI Available" value={formData.PriceLocation?.emiAvailable ? "Yes" : "No"} />
-          <PreviewRow label="Location" value={formData.PriceLocation?.location || "Haryana, India"} />
-          <PreviewRow label="Pincode" value={formData.PriceLocation?.pincode || "122001"} />
+          <PreviewRow
+            label="Finance Available"
+            value={tractorData?.financeAvailable}
+          />
+          <PreviewRow
+            label="EMI Available"
+            value={tractorData?.emiAvailable ? "Yes" : "No"}
+          />
+          <PreviewRow label="State" value={tractorData?.state} />
+          <PreviewRow label="District" value={tractorData?.district} />
+          <PreviewRow label="Taluka" value={tractorData?.taluka} />
+          <PreviewRow label="City" value={tractorData?.city} />
+          <PreviewRow label="Landmark" value={tractorData?.landmark} />
+          <PreviewRow label="Address" value={tractorData?.fullAddress} />
+          <PreviewRow label="Pincode" value={tractorData?.pincode} />
         </PreviewSection>
 
         {/* Media & Documents - Redesigned to match image */}
-        <div className="rounded-xl border border-gray-200  p-6 shadow-sm">
-          <h3 className="mb-4 text-lg font-semibold text-gray-800">Media &amp; Documents</h3>
-          <div className="flex flex-wrap gap-8">
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50">
-                <ImageIcon className="h-6 w-6 text-blue-500" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-gray-800">10 Images</p>
-                <p className="text-xs text-gray-400">+6</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-green-50">
-                <Video className="h-6 w-6 text-green-500" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-gray-800">2 Videos</p>
-                <p className="text-xs text-gray-400">+6</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-purple-50">
-                <FileText className="h-6 w-6 text-purple-500" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-gray-800">3 Documents</p>
-                <p className="text-xs text-gray-400">+2</p>
-              </div>
-            </div>
+       <div className="rounded-xl border border-gray-200 p-6 shadow-sm">
+  <div className="mb-4 flex items-center justify-between">
+    <h3 className="text-lg font-semibold text-gray-800">
+      Media & Documents
+    </h3>
+
+    <button
+      type="button"
+      className="text-primary-600 text-sm font-medium"
+      onClick={() => setCurrentStep(5)}
+    >
+      Edit
+    </button>
+  </div>
+
+  <div className="grid gap-6 md:grid-cols-3">
+    
+    {/* Images */}
+    <div>
+      <h4 className="mb-2 text-sm font-medium text-gray-700">
+        Images ({images.length})
+      </h4>
+
+      <div className="flex flex-wrap gap-2">
+        {images.slice(0, 5).map((img, index) => (
+          <img
+            key={index}
+            src={apiHelper.getImageUrl(img)}
+            alt={`img-${index}`}
+            className="h-16 w-16 rounded border object-cover"
+          />
+        ))}
+
+       {images.length > 5 && (
+  <button
+    type="button"
+    onClick={() => setShowGallery(true)}
+    className="flex h-16 w-14 items-center justify-center rounded border border-gray-300 text-sm font-medium"
+  >
+    +{images.length - 5}
+  </button>
+)}
+      </div>
+    </div>
+
+    {/* Videos */}
+    {/* <div>
+      <h4 className="mb-2 text-sm font-medium text-gray-700">
+        Videos ({videoFiles.length})
+      </h4>
+
+      <div className="flex flex-wrap gap-2">
+        {videoFiles.slice(0, 2).map((video, index) => (
+          <video
+            key={index}
+            src={apiHelper.getImageUrl(video)}
+            className="h-16 w-24 rounded border object-cover"
+          />
+        ))}
+      </div>
+    </div> */}
+
+    {/* Documents */}
+    <div>
+      <h4 className="mb-2 text-sm font-medium text-gray-700">
+        Documents ({documentFiles.length})
+      </h4>
+
+      <div className="flex flex-wrap gap-2">
+        {documentFiles.slice(0, 3).map((doc, index) => (
+          <a
+            key={index}
+            href={apiHelper.getImageUrl(doc)}
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-2 rounded border px-3 py-2 text-sm"
+          >
+            <FileText className="h-4 w-4" />
+            PDF
+          </a>
+        ))}
+
+        {documentFiles.length > 3 && (
+          <div className="flex items-center rounded border px-3 py-2">
+            +{documentFiles.length - 3}
           </div>
-        </div>
+        )}
+      </div>
+    </div>
+
+  </div>
+</div>
       </div>
 
       {/* Confirmation Section - Redesigned */}
-      <div className="mt-8 rounded-xl border border-gray-200  p-5">
+      <div className="mt-8 rounded-xl border border-gray-200 p-5">
         <label className="flex cursor-pointer items-start gap-3">
           <input
             type="checkbox"
             checked={agreed}
             onChange={(e) => setAgreed(e.target.checked)}
-            className="mt-0.5 h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+            className="text-primary-600 focus:ring-primary-500 mt-0.5 h-4 w-4 rounded border-gray-300"
           />
           <span className="text-sm text-gray-700">
-            I confirm that all the information provided is correct to the best of my knowledge. 
-            I agree to the <a href="#" className="text-primary-600 hover:underline">Terms &amp; Conditions</a> and{" "}
-            <a href="#" className="text-primary-600 hover:underline">Listing Policy</a> of Tractor Junction.
+            I confirm that all the information provided is correct to the best
+            of my knowledge. I agree to the{" "}
+            <a href="#" className="text-primary-600 hover:underline">
+              Terms &amp; Conditions
+            </a>{" "}
+            and{" "}
+            <a href="#" className="text-primary-600 hover:underline">
+              Listing Policy
+            </a>{" "}
+            of Tractor Junction.
           </span>
         </label>
       </div>
+{showGallery && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+    <div className="max-h-[80vh] w-[50vw] overflow-auto rounded-lg bg-dark-600 p-4">
+      <div className="mb-4 flex justify-between">
+        <h3 className="text-lg font-semibold">All Images</h3>
+        <button onClick={() => setShowGallery(false)} className=" cursor-pointer">✕</button>
+      </div>
 
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-6">
+        {images.map((img, index) => (
+          <img
+            key={index}
+            src={apiHelper.getImageUrl(img)}
+            alt={`image-${index}`}
+            className="h-32 w-full cursor-pointer rounded border object-cover"
+            onClick={() => {
+              setSelectedIndex(index);
+              setShowGallery(false);
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  </div>
+)}
       {/* Info Note - Redesigned */}
-      <div className="mt-4 rounded-xl bg-blue-50 p-4 text-center text-sm text-blue-700 border border-blue-100">
+      <div className="mt-4 rounded-xl border border-blue-100 bg-blue-50 p-4 text-center text-sm text-blue-700">
         <CheckCircleIcon className="mr-2 inline h-5 w-5" />
-        Once submitted, our team will review your tractor details. You will get notified via email / SMS.
+        Once submitted, our team will review your tractor details. You will get
+        notified via email / SMS.
       </div>
 
       {/* Action Buttons - Redesigned */}
-      <div className="mt-8 flex flex-col sm:flex-row justify-between gap-4">
+      <div className="mt-8 flex flex-col justify-between gap-4 sm:flex-row">
         <Button
           type="button"
           variant="outlined"
-          className="min-w-[7rem] flex items-center gap-2"
+          className="flex min-w-[7rem] items-center gap-2"
           onClick={() => setCurrentStep(5)}
         >
           <ChevronLeft className="h-4 w-4" />
           Previous
         </Button>
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row">
           <Button
             type="button"
             variant="outlined"
-            className="min-w-[7rem] flex items-center gap-2"
+            className="flex min-w-[7rem] items-center gap-2"
             onClick={handleSaveDraft}
           >
             <Save className="h-4 w-4" />
@@ -290,7 +702,7 @@ export function PreviewSubmit({
           </Button>
           <Button
             type="button"
-            className="min-w-[7rem] flex items-center gap-2"
+            className="flex min-w-[7rem] items-center gap-2"
             color="primary"
             disabled={!agreed || loading}
             onClick={handleSubmit}
@@ -305,10 +717,16 @@ export function PreviewSubmit({
 }
 
 // Helper Components - Improved styling
-function PreviewSection({ title, children }: { title: string; children: React.ReactNode }) {
+function PreviewSection({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
-    <div className="rounded-xl border border-gray-200  shadow-sm overflow-hidden">
-      <h3 className="border-b border-gray-100  px-5 py-3 text-sm font-semibold text-gray-700 uppercase tracking-wider">
+    <div className="overflow-hidden rounded-xl border border-gray-200 shadow-sm">
+      <h3 className="border-b border-gray-100 px-5 py-3 text-sm font-semibold tracking-wider text-gray-700 uppercase">
         {title}
       </h3>
       <div className="grid gap-4 p-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -321,7 +739,9 @@ function PreviewSection({ title, children }: { title: string; children: React.Re
 function PreviewRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="space-y-0.5">
-      <p className="text-xs font-medium uppercase tracking-wider text-gray-400">{label}</p>
+      <p className="text-xs font-medium tracking-wider text-gray-400 uppercase">
+        {label}
+      </p>
       <p className="text-sm font-medium text-gray-800">{value}</p>
     </div>
   );

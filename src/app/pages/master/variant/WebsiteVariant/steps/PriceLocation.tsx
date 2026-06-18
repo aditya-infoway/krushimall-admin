@@ -14,7 +14,7 @@ import { MapPinned } from "lucide-react";
 import Select from "react-select";
 import { Country, State, City } from "country-state-city";
 // Options for select fields
-
+import apiHelper from "@/utils/apiHelper";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 
@@ -79,17 +79,108 @@ export function PriceLocation({
   const [city, setCity] = useState("");
   const [district, setDistrict] = useState("");
   const [stateCode, setStateCode] = useState("");
-  const onSubmit = (data: PriceLocationType) => {
+  const onSubmit = async (
+  data: PriceLocationType
+) => {
+  try {
+    const websiteVariantId =
+      localStorage.getItem("websiteVariantId");
+
+    if (!websiteVariantId) {
+      return;
+    }
+
+    const payload = {
+      exShowroomPrice: data.exShowroomPrice
+        ? Number(data.exShowroomPrice)
+        : null,
+
+      onRoadPrice: data.onRoadPrice
+        ? Number(data.onRoadPrice)
+        : null,
+
+      currency: data.currency,
+
+      gst: data.gst
+        ? Number(data.gst)
+        : null,
+
+      tcsApplicable:
+        data.tcsApplicable,
+
+      tcsPercentage:
+        data.tcsPercentage
+          ? Number(data.tcsPercentage)
+          : null,
+
+      financeAvailable:
+        data.financeAvailable,
+
+      emiAvailable:
+        data.emiAvailable,
+
+      downPayment:
+        data.downPayment
+          ? Number(data.downPayment)
+          : null,
+
+      exchangeOffer:
+        data.exchangeOffer,
+
+      offerPrice:
+        data.offerPrice
+          ? Number(data.offerPrice)
+          : null,
+
+      negotiable:
+        data.negotiable,
+
+      country: data.country,
+      state: data.state,
+      district: data.district,
+      taluka: data.taluka,
+      city: data.city,
+
+      pincode: data.pincode,
+      landmark: data.landmark,
+      fullAddress:
+        data.fullAddress,
+
+      latitude: position[0],
+      longitude: position[1],
+
+      currentStep: 5,
+    };
+
+    await apiHelper.put(
+      `/website-variants/${websiteVariantId}/save-step`,
+      payload
+    );
+
     kycFormCtx.dispatch({
       type: "SET_FORM_DATA",
-      payload: { PriceLocation: { ...data } },
+      payload: {
+        PriceLocation: data,
+      },
     });
+
     kycFormCtx.dispatch({
       type: "SET_STEP_STATUS",
-      payload: { PriceLocation: { isDone: true } },
+      payload: {
+        PriceLocation: {
+          isDone: true,
+        },
+      },
     });
-    setCurrentStep(4);
-  };
+
+    setCurrentStep(5);
+  } catch (error) {
+    console.error(
+      "Price Location Save Error:",
+      error
+    );
+  }
+};
   const countryOptions = Country.getAllCountries().map((country) => ({
     value: country.isoCode,
     label: country.name,
