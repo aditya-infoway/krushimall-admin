@@ -8,6 +8,7 @@ import { useKYCFormContext } from "../KYCFormContext";
 import { TransmissionSchema, TransmissionType } from "../schema";
 import { Listbox } from "@/components/shared/form/StyledListbox";
 // ----------------------------------------------------------------------
+import apiHelper from "@/utils/apiHelper";
 import {
   Disc3,
   Settings,
@@ -120,18 +121,108 @@ export function Transmission({
   resolver: yupResolver(TransmissionSchema) as Resolver<TransmissionType>,
   defaultValues: kycFormCtx.state.formData.Transmission,
 });
+const onSubmit = async (
+  data: TransmissionType
+) => {
+  try {
+    const websiteVariantId =
+      localStorage.getItem("websiteVariantId");
 
-  const onSubmit = (data: TransmissionType) => {
+    if (!websiteVariantId) {
+      return;
+    }
+
+    const payload = {
+      clutchType: data.clutchType,
+
+      forwardGears: data.forwardGears
+        ? Number(data.forwardGears)
+        : null,
+
+      reverseGears: data.reverseGears
+        ? Number(data.reverseGears)
+        : null,
+
+      gearType: data.gearType,
+
+      transmissionType:
+        data.transmissionType,
+
+      ptoHp: data.ptoHp
+        ? Number(data.ptoHp)
+        : null,
+
+      ptoRpm: data.ptoRpm
+        ? Number(data.ptoRpm)
+        : null,
+
+      ptoType: data.ptoType,
+      ptoPosition: data.ptoPosition,
+
+      creeperGears:
+        data.features?.creeperGears ??
+        false,
+
+      shuttleShift:
+        data.features?.shuttleShift ??
+        false,
+
+      sideShiftGear:
+        data.features?.sideShiftGear ??
+        false,
+
+      powerShuttle:
+        data.features?.powerShuttle ??
+        false,
+
+      hiLoGears:
+        data.features?.hiLoGears ??
+        false,
+
+      multiSpeedPto:
+        data.features?.multiSpeedPto ??
+        false,
+
+      reversePto:
+        data.features?.reversePto ??
+        false,
+
+      superReducer:
+        data.features?.superReducer ??
+        false,
+
+      currentStep: 3,
+    };
+
+    await apiHelper.put(
+      `/website-variants/${websiteVariantId}/save-step`,
+      payload
+    );
+
     kycFormCtx.dispatch({
       type: "SET_FORM_DATA",
-      payload: { Transmission: { ...data } },
+      payload: {
+        Transmission: data,
+      },
     });
+
     kycFormCtx.dispatch({
       type: "SET_STEP_STATUS",
-      payload: { Transmission: { isDone: true } },
+      payload: {
+        Transmission: {
+          isDone: true,
+        },
+      },
     });
-    setCurrentStep(2);
-  };
+
+    setCurrentStep(3);
+  } catch (error) {
+    console.error(
+      "Transmission Save Error:",
+      error
+    );
+  }
+};
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">

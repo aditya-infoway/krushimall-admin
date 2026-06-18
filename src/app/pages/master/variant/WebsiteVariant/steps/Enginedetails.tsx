@@ -9,6 +9,7 @@ import { EnginedetailsSchema, EnginedetailsType } from "../schema";
 import { Droplets, Filter, Cog, CheckCircle, Thermometer } from "lucide-react";
 // ----------------------------------------------------------------------
 import { Listbox } from "@/components/shared/form/StyledListbox";
+import apiHelper from "@/utils/apiHelper";
 // Options for various select fields
 const engineTypeOptions = [
   { label: "Diesel", value: "diesel" },
@@ -111,17 +112,84 @@ export function Enginedetails({
     defaultValues: kycFormCtx.state.formData.Enginedetails,
   });
 
-  const onSubmit = (data: EnginedetailsType) => {
+  const onSubmit = async (
+  data: EnginedetailsType
+) => {
+  try {
+    const websiteVariantId =
+      localStorage.getItem("websiteVariantId");
+
+    if (!websiteVariantId) {
+      return;
+    }
+
+    const payload = {
+      engineType: data.engineType,
+      fuelType: data.fuelType,
+
+      horsePower: data.horsePower
+        ? Number(data.horsePower)
+        : null,
+
+    numberOfCylinders: data.numberOfCylinders,
+
+      cubicCapacity: data.cubicCapacity
+        ? Number(data.cubicCapacity)
+        : null,
+
+      ratedRpm: data.ratedRpm
+        ? Number(data.ratedRpm)
+        : null,
+
+      aspiratedType: data.aspiratedType,
+      emissionNorms: data.emissionNorms,
+      coolingSystem: data.coolingSystem,
+      airFilterType: data.airFilterType,
+
+      maximumTorque: data.maximumTorque
+        ? Number(data.maximumTorque)
+        : null,
+
+      torqueRpm: data.torqueRpm
+        ? Number(data.torqueRpm)
+        : null,
+
+      torqueBackup: data.torqueBackup
+        ? Number(data.torqueBackup)
+        : null,
+
+      engineCondition:
+        data.engineCondition,
+
+      currentStep: 1,
+    };
+
+    await apiHelper.put(
+      `/website-variants/${websiteVariantId}/save-step`,
+      payload
+    );
+
     kycFormCtx.dispatch({
-      type: "SET_FORM_DATA",
-      payload: { Enginedetails: { ...data } },
-    });
-    kycFormCtx.dispatch({
-      type: "SET_STEP_STATUS",
-      payload: { Enginedetails: { isDone: true } },
-    });
-    setCurrentStep(1);
-  };
+  type: "SET_FORM_DATA",
+  payload: {
+    Enginedetails: data,
+  },
+});
+
+kycFormCtx.dispatch({
+  type: "SET_STEP_STATUS",
+  payload: {
+    Enginedetails: {
+      isDone: true,
+    },
+  },
+});
+
+setCurrentStep(2);
+  } catch (error) {
+    console.error(error);
+  }
+};
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">

@@ -2,7 +2,7 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useState } from "react";
 import { Controller, Resolver, useForm } from "react-hook-form";
-
+import apiHelper from "@/utils/apiHelper";
 // Local Imports
 import { Button, Input } from "@/components/ui";
 import { useKYCFormContext } from "../KYCFormContext";
@@ -117,21 +117,117 @@ export function HydraulicTyres({
     defaultValues: kycFormCtx.state.formData.HydraulicTyres,
   });
 
-  const onSubmit = (data: HydraulicTyresType) => {
+ const onSubmit = async (
+  data: HydraulicTyresType
+) => {
+  try {
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      kycFormCtx.dispatch({
-        type: "SET_FORM_DATA",
-        payload: { HydraulicTyres: { ...data } },
-      });
-      kycFormCtx.dispatch({
-        type: "SET_STEP_STATUS",
-        payload: { HydraulicTyres: { isDone: true } },
-      });
-      setCurrentStep(3);
-    }, 500);
-  };
+
+    const websiteVariantId =
+      localStorage.getItem("websiteVariantId");
+
+    if (!websiteVariantId) {
+      return;
+    }
+
+    const payload = {
+      liftingCapacity: data.liftingCapacity
+        ? Number(data.liftingCapacity)
+        : null,
+
+      liftingCapacityAt610mm:
+        data.liftingCapacityAt610mm
+          ? Number(data.liftingCapacityAt610mm)
+          : null,
+
+      hydraulicType: data.hydraulicType,
+      controlType: data.controlType,
+
+      remoteValveType:
+        data.remoteValveType,
+
+      numberOfRemoteValves:
+        data.numberOfRemoteValves,
+
+      threePointLinkage:
+        data.threePointLinkage,
+
+      linkageCategory:
+        data.linkageCategory,
+
+      topLink: data.topLink,
+
+      draftSensitivity:
+        data.draftSensitivity,
+
+      externalHydraulicCylinder:
+        data.features
+          ?.externalHydraulicCylinder ??
+        false,
+
+      selfLevelling:
+        data.features?.selfLevelling ??
+        false,
+
+      quickHitch:
+        data.features?.quickHitch ??
+        false,
+
+      downPositionControl:
+        data.features
+          ?.downPositionControl ??
+        false,
+
+      loadSensing:
+        data.features?.loadSensing ??
+        false,
+
+      flowControl:
+        data.features?.flowControl ??
+        false,
+
+      returnToDepth:
+        data.features?.returnToDepth ??
+        false,
+
+      transportLock:
+        data.features?.transportLock ??
+        false,
+
+      currentStep: 4,
+    };
+
+    await apiHelper.put(
+      `/website-variants/${websiteVariantId}/save-step`,
+      payload
+    );
+
+    kycFormCtx.dispatch({
+      type: "SET_FORM_DATA",
+      payload: {
+        HydraulicTyres: data,
+      },
+    });
+
+    kycFormCtx.dispatch({
+      type: "SET_STEP_STATUS",
+      payload: {
+        HydraulicTyres: {
+          isDone: true,
+        },
+      },
+    });
+
+    setCurrentStep(4);
+  } catch (error) {
+    console.error(
+      "Hydraulic Save Error:",
+      error
+    );
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">

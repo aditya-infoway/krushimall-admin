@@ -63,9 +63,7 @@ export function BasicInformation({
     watch,
     setValue,
   } = useForm({
-    resolver: yupResolver(
-      BasicInformationSchema,
-    ) as Resolver<BasicInformationType>,
+resolver: yupResolver(BasicInformationSchema) as unknown as Resolver<BasicInformationType>,
     defaultValues: kycFormCtx.state.formData.BasicInformation,
   });
   const [country, setCountry] = useState("");
@@ -81,17 +79,107 @@ export function BasicInformation({
   const [variants, setVariants] = useState([]);
   const showCustomColorInput = watch("showCustomColor");
   const [highlightCount, setHighlightCount] = useState(5);
-  const onSubmit = (data: BasicInformationType) => {
-    kycFormCtx.dispatch({
-      type: "SET_FORM_DATA",
-      payload: { BasicInformation: { ...data } },
-    });
-    kycFormCtx.dispatch({
-      type: "SET_STEP_STATUS",
-      payload: { BasicInformation: { isDone: true } },
-    });
+const onSubmit = async (
+  data: BasicInformationType
+) => {
+  try {
+    const payload = {
+    categoryId: data.categoryId
+    ? Number(data.categoryId)
+    : null,
+
+  brandId: data.brandId
+    ? Number(data.brandId)
+    : null,
+
+  modelId: data.modelId
+    ? Number(data.modelId)
+    : null,
+
+  modelYearId: data.modelYearId
+    ? Number(data.modelYearId)
+    : null,
+
+  variantId: data.variantId
+    ? Number(data.variantId)
+    : null,
+
+      variantCode: data.variantCode,
+      productName: data.productName,
+      productCode: data.productCode,
+      skuCode: data.skuCode,
+
+      launchYear: data.launchYear
+  ? new Date(data.launchYear).toISOString()
+  : null,
+
+      country: data.country,
+      tractorStatus: data.tractorStatus,
+
+      shortDescription: data.shortDescription,
+
+      highlight1: data.highlights?.highlight1,
+      highlight2: data.highlights?.highlight2,
+      highlight3: data.highlights?.highlight3,
+      highlight4: data.highlights?.highlight4,
+      highlight5: data.highlights?.highlight5,
+
+      customColorName: data.customColorName,
+      customColorCode: data.customColorCode,
+
+      availableStates: data.availableStates,
+      availableDistricts:
+        data.availableDistricts,
+      availableDealers:
+        data.availableDealers,
+
+      stockStatus: data.stockStatus,
+
+      seoTitle: data.seoTitle,
+      seoUrl: data.seoUrl,
+      metaDescription:
+        data.metaDescription,
+      keywords: data.keywords,
+
+      currentStep: 0,
+    };
+
+    const res = await apiHelper.post(
+      "/website-variants",
+      payload
+    );
+
+    const websiteVariantId =
+      res.data.id;
+
+    localStorage.setItem(
+      "websiteVariantId",
+      websiteVariantId.toString()
+    );
+
+   kycFormCtx.dispatch({
+  type: "SET_FORM_DATA",
+  payload: {
+    BasicInformation: data,
+  },
+});
+
+kycFormCtx.dispatch({
+  type: "SET_STEP_STATUS",
+  payload: {
+    BasicInformation: {
+      isDone: true,
+    },
+  },
+});
+
+setCurrentStep(1);
+
     setCurrentStep(1);
-  };
+  } catch (error) {
+    console.error(error);
+  }
+};
   const countryOptions = Country.getAllCountries().map((country) => ({
     value: country.isoCode,
     label: country.name,
