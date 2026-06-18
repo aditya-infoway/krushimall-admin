@@ -9,7 +9,7 @@ import { useKYCFormContext } from "../KYCFormContext";
 import { MediaDocumnetSchema, MediaDocumnetType } from "../schema";
 import { Upload, Trash2, FileText } from "lucide-react";
 // ----------------------------------------------------------------------
-
+import apiHelper from "@/utils/apiHelper";
 // Image upload fields
 const imageUploads = [
   { key: "frontView", label: "Front View", required: true },
@@ -116,21 +116,63 @@ export function MediaDocumnet({
   //   setValue(`${key}Link` as any, link);
   // };
 
-  const onSubmit = (data: MediaDocumnetType) => {
+ const onSubmit = async (
+  data: MediaDocumnetType
+) => {
+  try {
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      kycFormCtx.dispatch({
-        type: "SET_FORM_DATA",
-        payload: { MediaDocumnet: { ...data } },
-      });
-      kycFormCtx.dispatch({
-        type: "SET_STEP_STATUS",
-        payload: { MediaDocumnet: { isDone: true } },
-      });
-      setCurrentStep(5);
-    }, 500);
-  };
+
+    const websiteVariantId =
+      localStorage.getItem("websiteVariantId");
+
+    if (!websiteVariantId) return;
+
+    const formData = new FormData();
+
+    Object.entries(data).forEach(
+      ([key, value]) => {
+        if (value instanceof File) {
+          formData.append(key, value);
+        }
+      }
+    );
+
+  
+
+    await apiHelper.put(
+      `/website-variants/${websiteVariantId}/save-step`,
+      formData,
+      {
+        headers: {
+          "Content-Type":
+            "multipart/form-data",
+        },
+      }
+    );
+
+    kycFormCtx.dispatch({
+      type: "SET_FORM_DATA",
+      payload: {
+        MediaDocumnet: data,
+      },
+    });
+
+    kycFormCtx.dispatch({
+      type: "SET_STEP_STATUS",
+      payload: {
+        MediaDocumnet: {
+          isDone: true,
+        },
+      },
+    });
+
+    setCurrentStep(6);
+  } catch (error) {
+    console.error(error);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleSaveDraft = () => {
     const formData = watch();

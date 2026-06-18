@@ -109,15 +109,32 @@ const protectedRoutes: RouteObject = {
         ).default,
       }),
     },
-
+ {
+  path: "website",
+  children: [
     {
-      path: "website",
+      index: true,
       lazy: async () => ({
         Component: (
-          await import("@/app/pages/master/variant/WebsiteVariant")
+          await import(
+            "@/app/pages/master/variant/WebsiteVariantList"
+          )
         ).default,
       }),
     },
+
+    {
+      path: "create",
+      lazy: async () => ({
+        Component: (
+          await import(
+            "@/app/pages/master/variant/WebsiteVariant"
+          )
+        ).default,
+      }),
+    },
+  ],
+},
 
     {
       path: "showroom",

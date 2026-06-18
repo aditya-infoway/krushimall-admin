@@ -17,7 +17,7 @@ import { PriceLocation } from "./steps/PriceLocation";
 import { MediaDocumnet } from "./steps/MediaDocumnet.tsx"
 import {PreviewSubmit } from "./steps/PreviewSubmit.tsx"
 // ----------------------------------------------------------------------
-
+import { useNavigate } from "react-router";
 export interface Step {
   key: keyof FormState["formData"];
   component: React.ComponentType<any>;
@@ -82,7 +82,7 @@ const KYCForm = () => {
   const [finished, setFinished] = useState(false);
 
   const ActiveForm = steps[currentStep].component;
-
+const navigate = useNavigate();
   const stepsNode = (
   <div className="col-span-12">
 
@@ -117,11 +117,21 @@ const KYCForm = () => {
 );
 
   return (
-    <Page title="eKYC Form">
+    <Page title="WebSite Variant">
       <div className="transition-content grid w-full grid-rows-[auto_1fr] px-(--margin-x) pb-8">
-        <h2 className="dark:text-dark-50 py-5 text-xl font-medium tracking-wide text-gray-800 lg:py-6 lg:text-2xl">
-          Variant
-        </h2>
+     <div className="flex items-center justify-between py-5 lg:py-6">
+  <h2 className="dark:text-dark-50 text-xl font-medium tracking-wide text-gray-800 lg:text-2xl">
+    Website Variant
+  </h2>
+
+  <button
+    type="button"
+    onClick={() => navigate("/master/variant/website")}
+    className="rounded-lg border border-gray-300 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-dark-600"
+  >
+    ← Back to List
+  </button>
+</div>
 
         <KYCFormProvider>
           <div
