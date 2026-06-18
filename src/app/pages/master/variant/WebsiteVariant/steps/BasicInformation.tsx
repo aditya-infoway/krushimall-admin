@@ -63,9 +63,7 @@ export function BasicInformation({
     watch,
     setValue,
   } = useForm({
-    resolver: yupResolver(
-      BasicInformationSchema,
-    ) as Resolver<BasicInformationType>,
+resolver: yupResolver(BasicInformationSchema) as unknown as Resolver<BasicInformationType>,
     defaultValues: kycFormCtx.state.formData.BasicInformation,
   });
   const [country, setCountry] = useState("");

@@ -315,28 +315,28 @@ export default function LeadBuilder() {
                       {/* Follow-up: Red border */}
                       <button
                         onClick={() => handleFollowUp(lead.id)}
-                        className="w-full rounded-full border border-red-500 py-[2px] text-[10px] text-red-600"
+                        className="w-full rounded-full border border-red-500 py-[2px] text-[12px] text-red-600"
                       >
                         Follow-up
                       </button>
                       {/* Payment: Green border */}
                       <button
                         onClick={() => handlePayment(lead.id)}
-                        className="w-full rounded-full border border-green-500 py-[2px] text-[10px] text-green-600"
+                        className="w-full rounded-full border border-green-500 py-[2px] text-[12px] text-green-600"
                       >
                         Payment
                       </button>
                       {/* Send Quotation: Yellow/Orange border */}
                       <button
                         onClick={() => handleSendQuotation(lead.id)}
-                        className="w-full rounded-full border border-yellow-500 py-[2px] text-[10px] text-yellow-600"
+                        className="w-full rounded-full border border-yellow-500 py-[2px] text-[12px] text-yellow-600"
                       >
                         Send Quotation
                       </button>
                       {/* Test Drive: Red border */}
                       <button
                         onClick={() => handleTestDrive(lead.id)}
-                        className="w-full rounded-full border border-red-500 py-[2px] text-[10px] text-red-600"
+                        className="w-full rounded-full border border-red-500 py-[2px] text-[12px] text-red-600"
                       >
                         Test Drive
                       </button>
@@ -347,26 +347,26 @@ export default function LeadBuilder() {
                     <div className="flex w-full flex-col gap-1.5">
                       <button
                         onClick={() => handleCreateOrder(lead.id)}
-                        className="w-full rounded-md border border-emerald-500 py-[2px] text-[10px] text-emerald-600"
+                        className="w-full rounded-md border border-emerald-500 py-[2px] text-[12px] text-emerald-600"
                       >
                         Create Order
                       </button>
                       <button
                         onClick={() => handleCreateBooking(lead.id)}
-                        className="w-full rounded-md border border-red-500 py-[2px] text-[10px] text-red-600"
+                        className="w-full rounded-md border border-red-500 py-[2px] text-[12px] text-red-600"
                       >
                         Create Booking
                       </button>
                       <button
                         onClick={() => handleCancel(lead.id)}
-                        className="w-full rounded-md border border-blue-900 py-[2px] text-[10px] text-blue-900"
+                        className="w-full rounded-md border border-blue-900 py-[2px] text-[12px] text-blue-900"
                       >
                         Cancel
                       </button>
                       {/* Solid Red Button */}
                       <button
                         onClick={() => handleOrderBill(lead.id)}
-                        className="w-full rounded-md border border-red-600 py-[2px] text-[10px] text-red-600"
+                        className="w-full rounded-md border border-red-600 py-[2px] text-[12px] text-red-600"
                       >
                         Order Bill
                       </button>
@@ -376,7 +376,7 @@ export default function LeadBuilder() {
                   {/* Status Column - Vertical */}
                   <Td>
                     <div className="space-y-1">
-                      <div className="flex items-center text-[10px]">
+                      <div className="flex items-center text-[12px] gap-3">
                         <span className="w-14 shrink-0 font-medium text-gray-600 dark:text-gray-400">
                           Payment:
                         </span>
@@ -386,7 +386,7 @@ export default function LeadBuilder() {
                           {lead.payment}
                         </span>
                       </div>
-                      <div className="flex items-center text-[10px]">
+                      <div className="flex items-center text-[12px] gap-3">
                         <span className="w-14 shrink-0 font-medium text-gray-600 dark:text-gray-400">
                           Follow-up:
                         </span>
@@ -396,7 +396,7 @@ export default function LeadBuilder() {
                           {lead.followUp}
                         </span>
                       </div>
-                      <div className="flex items-center text-[10px]">
+                      <div className="flex items-center text-[12px] gap-3">
                         <span className="w-14 shrink-0 font-medium text-gray-600 dark:text-gray-400">
                           Finance:
                         </span>
@@ -406,7 +406,7 @@ export default function LeadBuilder() {
                           {lead.finance}
                         </span>
                       </div>
-                      <div className="flex items-center text-[10px]">
+                      <div className="flex items-center text-[12px] gap-3">
                         <span className="w-14 shrink-0 font-medium text-gray-600 dark:text-gray-400">
                           Feedback:
                         </span>

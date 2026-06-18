@@ -84,6 +84,15 @@ const protectedRoutes: RouteObject = {
           }),
         },
 
+         {
+          path: "color",
+          lazy: async () => ({
+            Component: (
+              await import("@/app/pages/master/colour")
+            ).default,
+          }),
+        },
+
       {
   path: "variant",
   children: [
@@ -145,10 +154,108 @@ const protectedRoutes: RouteObject = {
   ],
 },
     
-    
 
 
 
+    {
+  path: "usermaster",
+  children: [
+    {
+      path: "account",
+      lazy: async () => ({
+        Component: (
+          await import("@/app/pages/usermaster/account")
+        ).default,
+      }),
+    },
+     {
+      path: "newaccount",
+      lazy: async () => ({
+        Component: (
+          await import("@/app/pages/usermaster/newaccount")
+        ).default,
+      }),
+    },
+    {
+      path: "newaccount/:id", // For edit with ID param
+      lazy: async () => ({
+        Component: (
+          await import("@/app/pages/usermaster/newaccount")
+        ).default,
+      }),
+    },
+    {
+      path: "employee",
+      lazy: async () => ({
+        Component: (
+          await import("@/app/pages/usermaster/employee")
+        ).default,
+      }),
+    },
+    // {
+    //   path: "broker",
+    //   lazy: async () => ({
+    //     Component: (
+    //       await import("@/app/pages/usermaster/broker")
+    //     ).default,
+    //   }),
+    // },
+  ],
+},
+
+{
+  path: "enquirysettings",
+  children: [
+    {
+      path: "enquirytype",
+      lazy: async () => ({
+        Component: (
+          await import("@/app/pages/enquirysettings/enquirytype")
+        ).default,
+      }),
+    },
+    {
+      path: "enquirysource",
+      lazy: async () => ({
+        Component: (
+          await import("@/app/pages/enquirysettings/enquirysource")
+        ).default,
+      }),
+    },
+    {
+      path: "profession",
+      lazy: async () => ({
+        Component: (
+          await import("@/app/pages/enquirysettings/profession")
+        ).default,
+      }),
+    },
+    {
+      path: "banker",
+      lazy: async () => ({
+        Component: (
+          await import("@/app/pages/enquirysettings/banker")
+        ).default,
+      }),
+    },
+    {
+      path: "finance",
+      lazy: async () => ({
+        Component: (
+          await import("@/app/pages/enquirysettings/finance")
+        ).default,
+      }),
+    },
+     {
+      path: "enquirystatus",
+      lazy: async () => ({
+        Component: (
+          await import("@/app/pages/enquirysettings/enquirystatus")
+        ).default,
+      }),
+    },
+  ],
+},
 
       ],
     },
