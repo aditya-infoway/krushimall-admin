@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import {
   Dialog,
@@ -25,7 +25,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/Table";
 import { Button, Checkbox, Input } from "@/components/ui";
-import { Combobox } from "@/components/shared/form/StyledCombobox";
+import apiHelper from "@/utils/apiHelper";
 import { Listbox } from "@/components/shared/form/StyledListbox";
 
 type Finance = {
@@ -41,38 +41,6 @@ type FormValues = {
 };
 
 // Sample data
-const initialData: Finance[] = [
-  {
-    id: 1,
-    finance: "Home Loan",
-    status: "ACTIVE",
-    createdAt: "15 Jan 2025"
-  },
-  {
-    id: 2,
-    finance: "Car Loan",
-    status: "ACTIVE",
-    createdAt: "20 Jan 2025"
-  },
-  {
-    id: 3,
-    finance: "Personal Loan",
-    status: "INACTIVE",
-    createdAt: "25 Jan 2025"
-  },
-  {
-    id: 4,
-    finance: "Business Loan",
-    status: "ACTIVE",
-    createdAt: "28 Jan 2025"
-  },
-  {
-    id: 5,
-    finance: "Education Loan",
-    status: "ACTIVE",
-    createdAt: "30 Jan 2025"
-  }
-];
 
 const entriesOptions = [
   { id: 10, name: "10" },
@@ -97,7 +65,7 @@ const statusFilterOptions = [
 const Finance = () => {
   const [showDrawer, setShowDrawer] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
-  const [finances, setFinances] = useState<Finance[]>(initialData);
+  const [finances, setFinances] = useState<Finance[]>([]);
   const [search, setSearch] = useState("");
   const [showFilterBar, setShowFilterBar] = useState(false);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
@@ -122,13 +90,24 @@ const Finance = () => {
   const formStatusValue = useWatch({
     control,
     name: "status",
-    defaultValue: "ACTIVE"
+    defaultValue: "ACTIVE",
   });
 
   const formValidationRules = {
     finance: { required: "Finance name is required" },
   };
+  const getFinances = async () => {
+    try {
+      const response = await apiHelper.get("/finances");
+      setFinances(response.data || []);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
+  useEffect(() => {
+    getFinances();
+  }, []);
   const handleOpenAddDrawer = () => {
     setEditId(null);
     reset({
@@ -147,62 +126,71 @@ const Finance = () => {
     setShowDrawer(true);
   };
 
-  const handleDelete = (id: number) => {
-    if (window.confirm("Are you sure you want to delete this finance?")) {
-      setFinances(finances.filter((item) => item.id !== id));
+  const handleDelete = async (id: number) => {
+    try {
+      await apiHelper.delete(`/finances/${id}`);
+      getFinances();
+    } catch (error) {
+      console.log(error);
     }
   };
 
-  const handleBulkDelete = () => {
-    if (window.confirm("Are you sure you want to delete selected finances?")) {
-      setFinances(finances.filter((item) => !selectedIds.includes(item.id)));
-      setSelectedIds([]);
-    }
-  };
-
-  const handleToggleStatus = (id: number) => {
-    setFinances(
-      finances.map((item) =>
-        item.id === id
-          ? { ...item, status: item.status === "ACTIVE" ? "INACTIVE" : "ACTIVE" }
-          : item
-      )
-    );
-  };
-
-  const onFormSubmit = (data: FormValues) => {
-    if (editId) {
-      // Edit existing
-      setFinances(
-        finances.map((item) =>
-          item.id === editId
-            ? { ...item, ...data, id: editId }
-            : item
+  const handleBulkDelete = async () => {
+    try {
+      if (
+        window.confirm(
+          "Are you sure you want to delete selected enquiry types?",
         )
-      );
-    } else {
-      // Add new
-      const newId = Math.max(...finances.map((item) => item.id)) + 1;
-      setFinances([
-        ...finances,
-        {
-          ...data,
-          id: newId,
-          createdAt: new Date().toLocaleDateString("en-GB", {
-            day: "numeric",
-            month: "short",
-            year: "numeric",
-          }),
-        },
-      ]);
+      ) {
+        await Promise.all(
+          selectedIds.map((id) => apiHelper.delete(`/finances/${id}`)),
+        );
+
+        setSelectedIds([]);
+        getFinances();
+      }
+    } catch (error) {
+      console.log(error);
     }
-    setShowDrawer(false);
+  };
+
+  const handleToggleStatus = async (id: number) => {
+    try {
+      await apiHelper.patch(`/finances/toggle-status/${id}`, {});
+
+      getFinances();
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const onFormSubmit = async (data: FormValues) => {
+    try {
+      if (editId) {
+        await apiHelper.put(`/finances/${editId}`, data);
+      } else {
+        await apiHelper.post("/finances", data);
+      }
+
+      getFinances();
+
+      setShowDrawer(false);
+      setEditId(null);
+
+      reset({
+        finance: "",
+        status: "ACTIVE",
+      });
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   // Filter data
   const filteredData = finances.filter((item) => {
-    const matchesSearch =
-      item.finance.toLowerCase().includes(search.toLowerCase());
+    const matchesSearch = item.finance
+      .toLowerCase()
+      .includes(search.toLowerCase());
 
     const matchesStatus =
       selectedStatusFilter === "All" || item.status === selectedStatusFilter;
@@ -234,7 +222,7 @@ const Finance = () => {
     setSelectedIds((prev) =>
       prev.includes(id)
         ? prev.filter((selectedId) => selectedId !== id)
-        : [...prev, id]
+        : [...prev, id],
     );
   };
 
@@ -273,8 +261,12 @@ const Finance = () => {
             Excel
           </button>
 
-          <Button color="primary" onClick={handleOpenAddDrawer} className="w-full sm:w-auto">
-            <PlusIcon className="size-4.5 mr-1.5" />
+          <Button
+            color="primary"
+            onClick={handleOpenAddDrawer}
+            className="w-full sm:w-auto"
+          >
+            <PlusIcon className="mr-1.5 size-4.5" />
             Add Finance
           </Button>
         </div>
@@ -307,7 +299,7 @@ const Finance = () => {
                 data={statusFilterOptions}
                 value={
                   statusFilterOptions.find(
-                    (o) => o.id === selectedStatusFilter
+                    (o) => o.id === selectedStatusFilter,
                   ) || statusFilterOptions[0]
                 }
                 placeholder="All Statuses"
@@ -397,7 +389,7 @@ const Finance = () => {
                       </button>
                     </Td>
                     <Td className="py-4 text-gray-500 dark:text-gray-400">
-                      {item.createdAt}
+                      {new Date(item.createdAt).toLocaleDateString("en-IN")}
                     </Td>
                     <Td className="py-4 text-center">
                       <Menu
@@ -582,7 +574,7 @@ const Finance = () => {
                     >
                       {page}
                     </button>
-                  )
+                  ),
                 )}
 
                 <button
@@ -693,13 +685,23 @@ const Finance = () => {
                   </div>
 
                   <div>
-                  <Combobox
-  label="Status"
-  placeholder="Select Status"
-  data={statusOptions}
-  value={formStatusValue}
-  onChange={(val: string) => setValue("status", val)}
-/>
+                    <label className="mb-2 block text-sm font-medium">
+                      Status
+                    </label>
+
+                    <Listbox
+                      data={statusOptions}
+                      value={
+                        statusOptions.find(
+                          (item) => item.value === formStatusValue,
+                        ) || statusOptions[0]
+                      }
+                      placeholder="Select Status"
+                      onChange={(option: any) => {
+                        setValue("status", option.value);
+                      }}
+                      displayField="label"
+                    />
                   </div>
                 </div>
 

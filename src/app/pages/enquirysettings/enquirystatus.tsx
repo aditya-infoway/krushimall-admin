@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import {
   Dialog,
@@ -25,7 +25,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/Table";
 import { Button, Checkbox, Input } from "@/components/ui";
-import { Combobox } from "@/components/shared/form/StyledCombobox";
+import apiHelper from "@/utils/apiHelper";
 import { Listbox } from "@/components/shared/form/StyledListbox";
 
 type EnquiryStatus = {
@@ -41,32 +41,7 @@ type FormValues = {
 };
 
 // Sample data
-const initialData: EnquiryStatus[] = [
-  {
-    id: 1,
-    enquiryStatus: "New",
-    status: "ACTIVE",
-    createdAt: "15 Jan 2025"
-  },
-  {
-    id: 2,
-    enquiryStatus: "In Progress",
-    status: "ACTIVE",
-    createdAt: "20 Jan 2025"
-  },
-  {
-    id: 3,
-    enquiryStatus: "Converted",
-    status: "INACTIVE",
-    createdAt: "25 Jan 2025"
-  },
-  {
-    id: 4,
-    enquiryStatus: "Lost",
-    status: "ACTIVE",
-    createdAt: "28 Jan 2025"
-  }
-];
+
 
 const entriesOptions = [
   { id: 10, name: "10" },
@@ -91,7 +66,8 @@ const statusFilterOptions = [
 const EnquiryStatus = () => {
   const [showDrawer, setShowDrawer] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
-  const [enquiryStatuses, setEnquiryStatuses] = useState<EnquiryStatus[]>(initialData);
+const [enquiryStatuses, setEnquiryStatuses] =
+  useState<EnquiryStatus[]>([]);
   const [search, setSearch] = useState("");
   const [showFilterBar, setShowFilterBar] = useState(false);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
@@ -116,13 +92,27 @@ const EnquiryStatus = () => {
   const formStatusValue = useWatch({
     control,
     name: "status",
-    defaultValue: "ACTIVE"
+    defaultValue: "ACTIVE",
   });
 
   const formValidationRules = {
     enquiryStatus: { required: "Enquiry status is required" },
   };
+const getEnquiryStatuses = async () => {
+  try {
+    const response = await apiHelper.get(
+      "/enquiry-statuses"
+    );
 
+    setEnquiryStatuses(response.data || []);
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+useEffect(() => {
+  getEnquiryStatuses();
+}, []);
   const handleOpenAddDrawer = () => {
     setEditId(null);
     reset({
@@ -141,62 +131,89 @@ const EnquiryStatus = () => {
     setShowDrawer(true);
   };
 
-  const handleDelete = (id: number) => {
-    if (window.confirm("Are you sure you want to delete this enquiry status?")) {
-      setEnquiryStatuses(enquiryStatuses.filter((item) => item.id !== id));
-    }
-  };
-
-  const handleBulkDelete = () => {
-    if (window.confirm("Are you sure you want to delete selected enquiry statuses?")) {
-      setEnquiryStatuses(enquiryStatuses.filter((item) => !selectedIds.includes(item.id)));
-      setSelectedIds([]);
-    }
-  };
-
-  const handleToggleStatus = (id: number) => {
-    setEnquiryStatuses(
-      enquiryStatuses.map((item) =>
-        item.id === id
-          ? { ...item, status: item.status === "ACTIVE" ? "INACTIVE" : "ACTIVE" }
-          : item
-      )
+ const handleDelete = async (id: number) => {
+  try {
+    await apiHelper.delete(
+      `/enquiry-statuses/${id}`
     );
-  };
 
-  const onFormSubmit = (data: FormValues) => {
-    if (editId) {
-      // Edit existing
-      setEnquiryStatuses(
-        enquiryStatuses.map((item) =>
-          item.id === editId
-            ? { ...item, ...data, id: editId }
-            : item
+    getEnquiryStatuses();
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+ const handleBulkDelete = async () => {
+  try {
+    if (
+      window.confirm(
+        "Are you sure you want to delete selected enquiry types?"
+      )
+    ) {
+      await Promise.all(
+        selectedIds.map((id) =>
+          apiHelper.delete(`/enquiry-statuses/${id}`)
         )
       );
-    } else {
-      // Add new
-      const newId = Math.max(...enquiryStatuses.map((item) => item.id)) + 1;
-      setEnquiryStatuses([
-        ...enquiryStatuses,
-        {
-          ...data,
-          id: newId,
-          createdAt: new Date().toLocaleDateString("en-GB", {
-            day: "numeric",
-            month: "short",
-            year: "numeric",
-          }),
-        },
-      ]);
+
+      setSelectedIds([]);
+      getEnquiryStatuses();
     }
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+ const handleToggleStatus = async (
+  id: number
+) => {
+  try {
+    await apiHelper.patch(
+      `/enquiry-statuses/toggle-status/${id}`,
+      {}
+    );
+
+    getEnquiryStatuses();
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+ const onFormSubmit = async (
+  data: FormValues
+) => {
+  try {
+    if (editId) {
+      await apiHelper.put(
+        `/enquiry-statuses/${editId}`,
+        data
+      );
+    } else {
+      await apiHelper.post(
+        "/enquiry-statuses",
+        data
+      );
+    }
+
+    getEnquiryStatuses();
+
     setShowDrawer(false);
-  };
+    setEditId(null);
+
+    reset({
+      enquiryStatus: "",
+      status: "ACTIVE",
+    });
+  } catch (error) {
+    console.log(error);
+  }
+};
 
   // Filter data
   const filteredData = enquiryStatuses.filter((item) => {
-    const matchesSearch =
-      item.enquiryStatus.toLowerCase().includes(search.toLowerCase());
+    const matchesSearch = item.enquiryStatus
+      .toLowerCase()
+      .includes(search.toLowerCase());
 
     const matchesStatus =
       selectedStatusFilter === "All" || item.status === selectedStatusFilter;
@@ -228,7 +245,7 @@ const EnquiryStatus = () => {
     setSelectedIds((prev) =>
       prev.includes(id)
         ? prev.filter((selectedId) => selectedId !== id)
-        : [...prev, id]
+        : [...prev, id],
     );
   };
 
@@ -267,8 +284,12 @@ const EnquiryStatus = () => {
             Excel
           </button>
 
-          <Button color="primary" onClick={handleOpenAddDrawer} className="w-full sm:w-auto">
-            <PlusIcon className="size-4.5 mr-1.5" />
+          <Button
+            color="primary"
+            onClick={handleOpenAddDrawer}
+            className="w-full sm:w-auto"
+          >
+            <PlusIcon className="mr-1.5 size-4.5" />
             Add Enquiry Status
           </Button>
         </div>
@@ -301,7 +322,7 @@ const EnquiryStatus = () => {
                 data={statusFilterOptions}
                 value={
                   statusFilterOptions.find(
-                    (o) => o.id === selectedStatusFilter
+                    (o) => o.id === selectedStatusFilter,
                   ) || statusFilterOptions[0]
                 }
                 placeholder="All Statuses"
@@ -391,7 +412,7 @@ const EnquiryStatus = () => {
                       </button>
                     </Td>
                     <Td className="py-4 text-gray-500 dark:text-gray-400">
-                      {item.createdAt}
+                      {new Date(item.createdAt).toLocaleDateString("en-IN")}
                     </Td>
                     <Td className="py-4 text-center">
                       <Menu
@@ -576,7 +597,7 @@ const EnquiryStatus = () => {
                     >
                       {page}
                     </button>
-                  )
+                  ),
                 )}
 
                 <button
@@ -662,7 +683,9 @@ const EnquiryStatus = () => {
                 {/* Header */}
                 <div className="dark:border-dark-500 flex items-center justify-between border-b border-gray-200 px-5 py-4">
                   <h2 className="dark:text-dark-50 text-lg font-semibold text-gray-800">
-                    {editId !== null ? "Edit Enquiry Status" : "Add Enquiry Status"}
+                    {editId !== null
+                      ? "Edit Enquiry Status"
+                      : "Add Enquiry Status"}
                   </h2>
                   <Button
                     onClick={() => setShowDrawer(false)}
@@ -681,19 +704,34 @@ const EnquiryStatus = () => {
                     <Input
                       label="Enquiry Status *"
                       placeholder="Enter enquiry status"
-                      {...register("enquiryStatus", formValidationRules.enquiryStatus)}
-                      error={errors?.enquiryStatus && errors.enquiryStatus.message}
+                      {...register(
+                        "enquiryStatus",
+                        formValidationRules.enquiryStatus,
+                      )}
+                      error={
+                        errors?.enquiryStatus && errors.enquiryStatus.message
+                      }
                     />
                   </div>
 
                   <div>
-                   <Combobox
-  label="Status"
-  placeholder="Select Status"
-  data={statusOptions}
-  value={formStatusValue}
-  onChange={(val: string) => setValue("status", val)}
-/>
+                    <label className="mb-2 block text-sm font-medium">
+                      Status
+                    </label>
+
+                    <Listbox
+                      data={statusOptions}
+                      value={
+                        statusOptions.find(
+                          (item) => item.value === formStatusValue,
+                        ) || statusOptions[0]
+                      }
+                      placeholder="Select Status"
+                      onChange={(option: any) => {
+                        setValue("status", option.value);
+                      }}
+                      displayField="label"
+                    />
                   </div>
                 </div>
 

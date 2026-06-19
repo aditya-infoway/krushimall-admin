@@ -3,6 +3,8 @@ import { master } from "./segments/master";
 import { leadmaster } from "./segments/leadmaster";
 import { usermaster } from "./segments/usermaster";
 import { enquirysettings } from "./segments/enquirysettings";
+import { item } from "./segments/item";
+import { purchase } from "./segments/purchase";
 
 
 
@@ -12,4 +14,6 @@ export const navigation = [
   leadmaster,
   usermaster,
   enquirysettings,
+  item,
+  purchase,
 ];

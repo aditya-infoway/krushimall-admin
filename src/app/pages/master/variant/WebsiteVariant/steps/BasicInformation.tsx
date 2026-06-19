@@ -192,15 +192,18 @@ setCurrentStep(1);
  const selectedStates =
   watch("availableStates") || [];
 
-const cityOptions = selectedStates.flatMap(
-  (stateCode: string) =>
-    City.getCitiesOfState(country, stateCode).map(
-      (city) => ({
-        value: city.name,
-        label: city.name,
-      })
+const cityOptions = Array.isArray(selectedStates) 
+  ? selectedStates.flatMap((stateCode: string) =>
+      City.getCitiesOfState(country, stateCode).map(
+        (city) => ({
+          value: city.name,
+          label: city.name,
+        })
+      )
     )
-);
+  : [];
+
+  
   const customSelectStyles = {
     control: (provided: any, state: any) => ({
       ...provided,
@@ -592,7 +595,7 @@ const cityOptions = selectedStates.flatMap(
             {Array.from({ length: highlightCount }, (_, index) => (
               <Input
                 key={index}
-                {...register(`highlights.highlight${index + 1}` as const)}
+                {...register(`highlights.highlight${index + 1}` as any)}
                 label={`Highlight ${index + 1}`}
                 placeholder="Enter highlight"
               />

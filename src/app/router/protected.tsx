@@ -117,7 +117,7 @@ const protectedRoutes: RouteObject = {
       lazy: async () => ({
         Component: (
           await import(
-            "@/app/pages/master/variant/WebsiteVariantList"
+            "@/app/pages/master/variant/websitevariantList"
           )
         ).default,
       }),
@@ -273,6 +273,99 @@ const protectedRoutes: RouteObject = {
     },
   ],
 },
+
+
+
+{
+  path: "item",
+  children: [
+    {
+      path: "tractor",
+      lazy: async () => ({
+        Component: (
+          await import("@/app/pages/item/tractor")
+        ).default,
+      }),
+    },
+    // {
+    //   path: "accessories",
+    //   lazy: async () => ({
+    //     Component: (
+    //       await import("@/app/pages/item/accessories")
+    //     ).default,
+    //   }),
+    // },
+  ],
+},
+
+
+{
+  path: "purchase",
+  children: [
+    {
+      path: "tractor",
+      children: [
+        {
+          index: true,
+          lazy: async () => ({
+            Component: (
+              await import("@/app/pages/purchase/tractor")
+            ).default,
+          }),
+        },
+    
+     {
+          path: "add",  // Add this route
+          lazy: async () => ({
+            Component: (
+              await import("@/app/pages/purchase/purchasebill")
+            ).default,
+          }),
+        },
+        // {
+        //   path: ":id",
+        //   lazy: async () => ({
+        //     Component: (
+        //       await import("@/app/pages/purchase/tractor/edit")
+        //     ).default,
+        //   }),
+        // },
+      ],
+    },
+    {
+      path: "accessories",
+      children: [
+        // {
+        //   index: true,
+        //   lazy: async () => ({
+        //     Component: (
+        //       await import("@/app/pages/purchase/accessories/register")
+        //     ).default,
+        //   }),
+        // },
+        // {
+        //   path: "add",
+        //   lazy: async () => ({
+        //     Component: (
+        //       await import("@/app/pages/purchase/accessories/add")
+        //     ).default,
+        //   }),
+        // },
+        // {
+        //   path: ":id",
+        //   lazy: async () => ({
+        //     Component: (
+        //       await import("@/app/pages/purchase/accessories/edit")
+        //     ).default,
+        //   }),
+        // },
+      ],
+    },
+  ],
+},
+
+
+
 
       ],
     },

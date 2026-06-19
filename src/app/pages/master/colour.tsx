@@ -32,13 +32,22 @@ import apiHelper from "@/utils/apiHelper";
 // ─── Types ──────────────────────────────────────────────────────────────────
 interface Colour {
   id: number;
-  model: string;
-  modelId?: number;
-  variant: string;
-  variantId?: number;
+
+  modelId: number;
+  variantId: number;
+
+  model?: {
+    modelName: string;
+  };
+
+  variant?: {
+    variantName: string;
+  };
+
   colourName: string;
   colourCode: string;
   status: "ACTIVE" | "INACTIVE";
+
   createdAt: string;
 }
 
@@ -58,6 +67,27 @@ interface OptionType {
   modelId?: number;
 }
 
+<<<<<<< HEAD
+// ─── Helper Functions ──────────────────────────────────────────────────────
+const formatDate = (dateString: string) => {
+  if (!dateString) return "-";
+
+  try {
+    const date = new Date(dateString);
+    // Check if date is valid
+    if (isNaN(date.getTime())) return dateString;
+
+    // Format as: 15 Jan 2025
+    return date.toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  } catch {
+    return dateString;
+  }
+};
+=======
 // ─── Sample Data ──────────────────────────────────────────────────────────
 const initialData: Colour[] = [
   {
@@ -69,7 +99,7 @@ const initialData: Colour[] = [
     colourName: "Pearl Mirage White",
     colourCode: "#F5F5F5",
     status: "ACTIVE",
-    createdAt: "15 Jan 2025"
+    createdAt: "15 Jan 2025",
   },
   {
     id: 2,
@@ -80,7 +110,7 @@ const initialData: Colour[] = [
     colourName: "Metallic Sonic Silver",
     colourCode: "#C0C0C0",
     status: "ACTIVE",
-    createdAt: "20 Jan 2025"
+    createdAt: "20 Jan 2025",
   },
   {
     id: 3,
@@ -91,9 +121,10 @@ const initialData: Colour[] = [
     colourName: "Glass Sparkle Black",
     colourCode: "#1A1A1A",
     status: "INACTIVE",
-    createdAt: "25 Jan 2025"
-  }
+    createdAt: "25 Jan 2025",
+  },
 ];
+>>>>>>> b70da58 (usermaster enquiry)
 
 // ─── Options ──────────────────────────────────────────────────────────────
 const entriesOptions = [
@@ -120,7 +151,7 @@ const statusFilterOptions = [
 const Colour = () => {
   const [showDrawer, setShowDrawer] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
-  const [colours, setColours] = useState<Colour[]>(initialData);
+  const [colours, setColours] = useState<Colour[]>([]);
   const [search, setSearch] = useState("");
   const [showFilterBar, setShowFilterBar] = useState(false);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
@@ -134,8 +165,7 @@ const Colour = () => {
   const [variants, setVariants] = useState<OptionType[]>([]);
   const [filteredVariants, setFilteredVariants] = useState<OptionType[]>([]);
 
-
-   // ─── Form State ─────────────────────────────────────────────────────────
+  // ─── Form State ─────────────────────────────────────────────────────────
   const [formData, setFormData] = useState<FormValues>({
     model: "",
     modelId: "",
@@ -147,10 +177,24 @@ const Colour = () => {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // ─── Color Picker State ──────────────────────────────────────────────────
+  const [colorPickerState, setColorPickerState] = useState<{
+    isOpen: boolean;
+    id: number | null;
+    color: string;
+    position: { x: number; y: number };
+  }>({
+    isOpen: false,
+    id: null,
+    color: "#000000",
+    position: { x: 0, y: 0 },
+  });
+
   // ─── Fetch Models ──────────────────────────────────────────────────────
   useEffect(() => {
     getModels();
     getVariants();
+    getColours();
   }, []);
 
   const getModels = async () => {
@@ -159,7 +203,7 @@ const Colour = () => {
       const response = await apiHelper.get("/model");
       let modelsData = response?.data || response;
       if (!Array.isArray(modelsData)) modelsData = [];
-      
+
       const mappedModels = modelsData.map((item: any) => ({
         id: item.id || item._id,
         name: item.modelName || item.name || "Unknown",
@@ -178,7 +222,7 @@ const Colour = () => {
       const response = await apiHelper.get("/variant");
       let variantsData = response?.data || response;
       if (!Array.isArray(variantsData)) variantsData = [];
-      
+
       const mappedVariants = variantsData.map((item: any) => ({
         id: item.id || item._id,
         name: item.variantName || item.name || "Unknown",
@@ -192,18 +236,63 @@ const Colour = () => {
       setFilteredVariants([]);
     }
   };
+  const getColours = async () => {
+    try {
+      setLoading(true);
 
+      const response = await apiHelper.get("/colours");
+
+      // FIX
+      const data = Array.isArray(response.data)
+        ? response.data
+        : response.data.data || [];
+
+      setColours(data);
+    } catch (error) {
+      console.error("Failed to fetch colours:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
   // ─── Filter Variants by Model ─────────────────────────────────────────
-   useEffect(() => {
+  useEffect(() => {
     if (formData.modelId) {
-      const filtered = variants.filter((v) => v.modelId === Number(formData.modelId));
+      const filtered = variants.filter(
+        (v) => v.modelId === Number(formData.modelId),
+      );
       setFilteredVariants(filtered);
     } else {
       setFilteredVariants(variants);
     }
   }, [formData.modelId, variants]);
 
- 
+  // ─── Color Picker Effects ──────────────────────────────────────────────
+  // Close color picker when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (colorPickerState.isOpen) {
+        const target = e.target as HTMLElement;
+        if (!target.closest(".color-picker-popover")) {
+          closeColorPicker();
+        }
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [colorPickerState.isOpen]);
+
+  // Close color picker on Escape key
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && colorPickerState.isOpen) {
+        closeColorPicker();
+      }
+    };
+
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [colorPickerState.isOpen]);
 
   // ─── Handlers ───────────────────────────────────────────────────────────
   const handleInputChange = (field: keyof FormValues, value: any) => {
@@ -232,121 +321,224 @@ const Colour = () => {
 
   const handleOpenEditDrawer = (item: Colour) => {
     setEditId(item.id);
+
     setFormData({
-      model: item.model,
+      model: item.model?.modelName || "",
       modelId: item.modelId || "",
-      variant: item.variant,
+
+      variant: item.variant?.variantName || "",
       variantId: item.variantId || "",
+
       colourName: item.colourName,
       colourCode: item.colourCode,
       status: item.status,
     });
-    setErrors({});
+
     setShowDrawer(true);
   };
 
-  const handleDelete = (id: number) => {
-    if (window.confirm("Are you sure you want to delete this colour?")) {
-      setColours(colours.filter((item) => item.id !== id));
+  const handleDelete = async (id: number) => {
+    try {
+      if (!window.confirm("Are you sure you want to delete this colour?"))
+        return;
+
+      await apiHelper.delete(`/colours/${id}`);
+
+      // Refresh the list
+      await getColours();
+    } catch (error) {
+      console.error("Failed to delete:", error);
     }
   };
 
-  const handleBulkDelete = () => {
-    if (window.confirm("Are you sure you want to delete selected colours?")) {
-      setColours(colours.filter((item) => !selectedIds.includes(item.id)));
-      setSelectedIds([]);
-    }
-  };
-
-  const handleToggleStatus = (id: number) => {
-    setColours(
-      colours.map((item) =>
-        item.id === id
-          ? { ...item, status: item.status === "ACTIVE" ? "INACTIVE" : "ACTIVE" }
-          : item
+  const handleBulkDelete = async () => {
+    if (
+      !window.confirm(
+        `Are you sure you want to delete ${selectedIds.length} selected colours?`,
       )
-    );
+    )
+      return;
+
+    try {
+      setLoading(true);
+      // Delete each selected colour
+      await Promise.all(
+        selectedIds.map((id) => apiHelper.delete(`/colours/${id}`)),
+      );
+
+      setSelectedIds([]);
+      await getColours();
+    } catch (error) {
+      console.error("Failed to delete colours:", error);
+    } finally {
+      setLoading(false);
+    }
   };
+
+
+
+const handleToggleStatus = async (id: number) => {
+  const colour = colours.find((item) => item.id === id);
+  if (!colour) return;
+
+  const newStatus = colour.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
+
+  // Optimistic update for instant feedback
+  setColours((prev) =>
+    prev.map((item) =>
+      item.id === id ? { ...item, status: newStatus } : item,
+    ),
+  );
+
+  try {
+    await apiHelper.put(`/colours/${id}`, { status: newStatus });
+  } catch (error) {
+    console.error("Failed to toggle status:", error);
+    // Revert on failure
+    await getColours();
+  }
+};
 
   // ─── Handle Colour Picker Click (Direct Edit) ──────────────────────────
-  const handleColourPickerClick = (id: number, currentColour: string) => {
-    // You can open a color picker dialog or use an input
-    const input = document.createElement('input');
-    input.type = 'color';
-    input.value = currentColour;
-    input.addEventListener('input', (e) => {
-      const target = e.target as HTMLInputElement;
-      setColours(
-        colours.map((item) =>
-          item.id === id
-            ? { ...item, colourCode: target.value }
+  const handleOpenColorPicker = (
+    id: number,
+    currentColor: string,
+    event: React.MouseEvent<HTMLButtonElement>,
+  ) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+
+    // Calculate position to ensure it stays within viewport
+    let x = rect.left;
+    let y = rect.bottom + 8;
+
+    // If it would go off the right side, align to the right
+    if (x + 220 > window.innerWidth) {
+      x = rect.right - 200;
+    }
+
+    // If it would go off the bottom, show above instead
+    if (y + 250 > window.innerHeight) {
+      y = rect.top - 250;
+    }
+
+    setColorPickerState({
+      isOpen: true,
+      id: id,
+      color: currentColor,
+      position: { x, y },
+    });
+<<<<<<< HEAD
+=======
+  };
+
+const handleColorChange = async (newColor: string) => {
+  try {
+    if (colorPickerState.id !== null) {
+
+      // Update DB
+      await apiHelper.patch(
+        `/colours/${colorPickerState.id}/colour-code`,
+        {
+          colourCode: newColor,
+        }
+      );
+
+      // Update UI
+      setColours((prevColours) =>
+        prevColours.map((item) =>
+          item.id === colorPickerState.id
+            ? { ...item, colourCode: newColor }
             : item
         )
       );
-    });
-    input.click();
+
+      setColorPickerState((prev) => ({
+        ...prev,
+        color: newColor,
+      }));
+    }
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+  const closeColorPicker = () => {
+    setColorPickerState((prev) => ({ ...prev, isOpen: false }));
+>>>>>>> b70da58 (usermaster enquiry)
   };
 
+  const handleColorChange = (newColor: string) => {
+    if (colorPickerState.id !== null) {
+      setColours(
+        colours.map((item) =>
+          item.id === colorPickerState.id
+            ? { ...item, colourCode: newColor }
+            : item,
+        ),
+      );
+      setColorPickerState((prev) => ({ ...prev, color: newColor }));
+    }
+  };
+
+const closeColorPicker = async () => {
+  const { id, color } = colorPickerState;
+
+  if (id !== null) {
+    try {
+      await apiHelper.put(`/colours/${id}`, { colourCode: color });
+    } catch (error) {
+      console.error("Failed to update colour:", error);
+      await getColours();
+    }
+  }
+
+  setColorPickerState((prev) => ({ ...prev, isOpen: false }));
+};
+
+  
   const validate = () => {
     const newErrors: Record<string, string> = {};
     if (!formData.model) newErrors.model = "Model is required";
     if (!formData.variant) newErrors.variant = "Variant is required";
-    if (!formData.colourName.trim()) newErrors.colourName = "Colour Name is required";
+    if (!formData.colourName.trim())
+      newErrors.colourName = "Colour Name is required";
     if (!formData.colourCode) newErrors.colourCode = "Colour Code is required";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!validate()) return;
 
-    if (editId) {
-      setColours(
-        colours.map((item) =>
-          item.id === editId
-            ? {
-                ...item,
-                model: formData.model,
-                modelId: Number(formData.modelId),
-                variant: formData.variant,
-                variantId: Number(formData.variantId),
-                colourName: formData.colourName,
-                colourCode: formData.colourCode,
-                status: formData.status,
-              }
-            : item
-        )
-      );
-    } else {
-      const newId = Math.max(...colours.map((item) => item.id)) + 1;
-      setColours([
-        ...colours,
-        {
-          id: newId,
-          model: formData.model,
-          modelId: Number(formData.modelId),
-          variant: formData.variant,
-          variantId: Number(formData.variantId),
-          colourName: formData.colourName,
-          colourCode: formData.colourCode,
-          status: formData.status,
-          createdAt: new Date().toLocaleDateString("en-GB", {
-            day: "numeric",
-            month: "short",
-            year: "numeric",
-          }),
-        },
-      ]);
+    try {
+      const payload = {
+        modelId: Number(formData.modelId),
+        variantId: Number(formData.variantId),
+        colourName: formData.colourName,
+        colourCode: formData.colourCode,
+        status: formData.status,
+      };
+
+      if (editId) {
+        await apiHelper.put(`/colours/${editId}`, payload);
+      } else {
+        await apiHelper.post("/colours", payload);
+      }
+
+      await getColours();
+
+      setShowDrawer(false);
+    } catch (error) {
+      console.error("Save failed:", error);
     }
-    setShowDrawer(false);
   };
 
   // ─── Filter Data ────────────────────────────────────────────────────────
   const filteredData = colours.filter((item) => {
     const matchesSearch =
       item.colourName.toLowerCase().includes(search.toLowerCase()) ||
-      item.model.toLowerCase().includes(search.toLowerCase()) ||
-      item.variant.toLowerCase().includes(search.toLowerCase());
+      item.model?.modelName?.toLowerCase().includes(search.toLowerCase()) ||
+      item.variant?.variantName?.toLowerCase().includes(search.toLowerCase());
 
     const matchesStatus =
       selectedStatusFilter === "All" || item.status === selectedStatusFilter;
@@ -378,7 +570,7 @@ const Colour = () => {
     setSelectedIds((prev) =>
       prev.includes(id)
         ? prev.filter((selectedId) => selectedId !== id)
-        : [...prev, id]
+        : [...prev, id],
     );
   };
 
@@ -417,8 +609,12 @@ const Colour = () => {
             Excel
           </button>
 
-          <Button color="primary" onClick={handleOpenAddDrawer} className="w-full sm:w-auto">
-            <PlusIcon className="size-4.5 mr-1.5" />
+          <Button
+            color="primary"
+            onClick={handleOpenAddDrawer}
+            className="w-full sm:w-auto"
+          >
+            <PlusIcon className="mr-1.5 size-4.5" />
             Add Colour
           </Button>
         </div>
@@ -451,7 +647,7 @@ const Colour = () => {
                 data={statusFilterOptions}
                 value={
                   statusFilterOptions.find(
-                    (o) => o.id === selectedStatusFilter
+                    (o) => o.id === selectedStatusFilter,
                   ) || statusFilterOptions[0]
                 }
                 placeholder="All Statuses"
@@ -509,136 +705,142 @@ const Colour = () => {
               </Tr>
             </THead>
 
-         <TBody className="dark:divide-dark-700 divide-y divide-gray-200">
-  {currentItems.map((item, index) => {
-    const isRowSelected = selectedIds.includes(item.id);
-    return (
-      <Tr
-        key={item.id}
-        className={`${
-          isRowSelected ? "dark:bg-dark-600/30 bg-gray-50/50" : ""
-        } dark:hover:bg-dark-700/40 transition-colors hover:bg-gray-50/30`}
-      >
-        <Td className="py-4 text-center">
-          <Checkbox
-            className="size-4.5"
-            checked={isRowSelected}
-            onChange={() => handleSelectRow(item.id)}
-          />
-        </Td>
-        <Td className="py-4 font-medium text-gray-500">
-          {indexOfFirstItem + index + 1}
-        </Td>
-        <Td className="py-4 font-medium text-gray-900 dark:text-gray-400">
-          {item.model}
-        </Td>
-        <Td className="dark:text-dark-200 py-4 text-gray-600">
-          {item.variant}
-        </Td>
-        <Td className="dark:text-dark-200 py-4 text-gray-600">
-          {item.colourName}
-        </Td>
-        <Td className="py-4">
-          <button
-            type="button"
-            onClick={() => handleColourPickerClick(item.id, item.colourCode)}
-            className="w-10 h-10 rounded border border-gray-300 dark:border-gray-600 hover:ring-2 hover:ring-blue-500 transition-all cursor-pointer"
-            style={{ backgroundColor: item.colourCode }}
-            title="Click to change colour"
-          />
-        </Td>
-        <Td className="py-4">
-          <button
-            type="button"
-            onClick={() => handleToggleStatus(item.id)}
-            className={`relative h-6 w-12 rounded-full transition-all ${
-              item.status === "ACTIVE"
-                ? "bg-primary-500"
-                : "dark:bg-dark-600 bg-gray-300"
-            }`}
-          >
-            <span
-              className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${
-                item.status === "ACTIVE" ? "left-6.5" : "left-0.5"
-              }`}
-            />
-          </button>
-        </Td>
-        <Td className="py-4 text-gray-500 dark:text-gray-400">
-          {item.createdAt}
-        </Td>
-        <Td className="py-4 text-center">
-          <Menu
-            as="div"
-            className="relative inline-block text-left"
-          >
-            <MenuButton className="dark:hover:bg-dark-600 dark:text-dark-200 inline-flex size-8 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-100">
-              <EllipsisHorizontalIcon className="size-5" />
-            </MenuButton>
-            <Transition
-              as={Fragment}
-              enter="transition ease-out duration-100"
-              enterFrom="transform opacity-0 scale-95"
-              enterTo="transform opacity-100 scale-100"
-              leave="transition ease-in duration-75"
-              leaveFrom="transform opacity-100 scale-100"
-              leaveTo="transform opacity-0 scale-95"
-            >
-              <MenuItems
-                anchor="bottom end"
-                className="dark:bg-dark-800 dark:ring-dark-500 dark:border-dark-500 z-[100] w-36 rounded-lg border border-gray-100 bg-white p-1 shadow-lg ring-1 ring-black/5 [--anchor-gap:4px] focus:outline-none"
-              >
-                <MenuItem>
-                  {({ active }) => (
-                    <button
-                      type="button"
-                      onClick={() => handleOpenEditDrawer(item)}
-                      className={`${
-                        active
-                          ? "dark:bg-dark-600 text-primary-600 bg-gray-50 dark:text-white"
-                          : "dark:text-dark-200 text-gray-700"
-                      } flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium`}
-                    >
-                      <PencilIcon className="size-4" />
-                      Edit
-                    </button>
-                  )}
-                </MenuItem>
-                <MenuItem>
-                  {({ active }) => (
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(item.id)}
-                      className={`${
-                        active
-                          ? "bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-400"
-                          : "dark:text-dark-200 text-gray-700"
-                      } flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium`}
-                    >
-                      <TrashIcon className="size-4" />
-                      Delete
-                    </button>
-                  )}
-                </MenuItem>
-              </MenuItems>
-            </Transition>
-          </Menu>
-        </Td>
-      </Tr>
-    );
-  })}
+            <TBody className="dark:divide-dark-700 divide-y divide-gray-200">
+              {currentItems.map((item, index) => {
+                const isRowSelected = selectedIds.includes(item.id);
+                return (
+                  <Tr
+                    key={item.id}
+                    className={`${
+                      isRowSelected ? "dark:bg-dark-600/30 bg-gray-50/50" : ""
+                    } dark:hover:bg-dark-700/40 transition-colors hover:bg-gray-50/30`}
+                  >
+                    <Td className="py-4 text-center">
+                      <Checkbox
+                        className="size-4.5"
+                        checked={isRowSelected}
+                        onChange={() => handleSelectRow(item.id)}
+                      />
+                    </Td>
+                    <Td className="py-4 font-medium text-gray-500">
+                      {indexOfFirstItem + index + 1}
+                    </Td>
+                    <Td className="py-4 font-medium text-gray-900 dark:text-gray-400">
+                      {item.model?.modelName}
+                    </Td>
+                    <Td className="dark:text-dark-200 py-4 text-gray-600">
+                      {item.variant?.variantName}
+                    </Td>
+                    <Td className="dark:text-dark-200 py-4 text-gray-600">
+                      {item.colourName}
+                    </Td>
+                    <Td className="py-4">
+                      <button
+                        type="button"
+                        onClick={(e) =>
+                          handleOpenColorPicker(item.id, item.colourCode, e)
+                        }
+                        className="relative h-10 w-10 cursor-pointer rounded border border-gray-300 transition-all hover:ring-2 hover:ring-blue-500 dark:border-gray-600"
+                        style={{ backgroundColor: item.colourCode }}
+                        title="Click to change colour"
+                      />
+                    </Td>
+                    <Td className="py-4">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleStatus(item.id)}
+                        className={`relative h-6 w-12 rounded-full transition-all ${
+                          item.status === "ACTIVE"
+                            ? "bg-primary-500"
+                            : "dark:bg-dark-600 bg-gray-300"
+                        }`}
+                      >
+                        <span
+                          className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${
+                            item.status === "ACTIVE" ? "left-6.5" : "left-0.5"
+                          }`}
+                        />
+                      </button>
+                    </Td>
+                    <Td className="py-4 text-gray-500 dark:text-gray-400">
+<<<<<<< HEAD
+                      {formatDate(item.createdAt)}
+=======
+                         {new Date(item.createdAt).toLocaleDateString("en-IN")}
+>>>>>>> b70da58 (usermaster enquiry)
+                    </Td>
+                    <Td className="py-4 text-center">
+                      <Menu
+                        as="div"
+                        className="relative inline-block text-left"
+                      >
+                        <MenuButton className="dark:hover:bg-dark-600 dark:text-dark-200 inline-flex size-8 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-100">
+                          <EllipsisHorizontalIcon className="size-5" />
+                        </MenuButton>
+                        <Transition
+                          as={Fragment}
+                          enter="transition ease-out duration-100"
+                          enterFrom="transform opacity-0 scale-95"
+                          enterTo="transform opacity-100 scale-100"
+                          leave="transition ease-in duration-75"
+                          leaveFrom="transform opacity-100 scale-100"
+                          leaveTo="transform opacity-0 scale-95"
+                        >
+                          <MenuItems
+                            anchor="bottom end"
+                            className="dark:bg-dark-800 dark:ring-dark-500 dark:border-dark-500 z-[100] w-36 rounded-lg border border-gray-100 bg-white p-1 shadow-lg ring-1 ring-black/5 [--anchor-gap:4px] focus:outline-none"
+                          >
+                            <MenuItem>
+                              {({ active }) => (
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenEditDrawer(item)}
+                                  className={`${
+                                    active
+                                      ? "dark:bg-dark-600 text-primary-600 bg-gray-50 dark:text-white"
+                                      : "dark:text-dark-200 text-gray-700"
+                                  } flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium`}
+                                >
+                                  <PencilIcon className="size-4" />
+                                  Edit
+                                </button>
+                              )}
+                            </MenuItem>
+                            <MenuItem>
+                              {({ active }) => (
+                                <button
+                                  type="button"
+                                  onClick={() => handleDelete(item.id)}
+                                  className={`${
+                                    active
+                                      ? "bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-400"
+                                      : "dark:text-dark-200 text-gray-700"
+                                  } flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium`}
+                                >
+                                  <TrashIcon className="size-4" />
+                                  Delete
+                                </button>
+                              )}
+                            </MenuItem>
+                          </MenuItems>
+                        </Transition>
+                      </Menu>
+                    </Td>
+                  </Tr>
+                );
+              })}
 
-  {currentItems.length === 0 && (
-    <Tr>
-      <Td
-        colSpan={9}
-        className="py-12 text-center text-gray-400 dark:text-gray-500"
-      >
-        No colours found
-      </Td>
-    </Tr>
-  )}
-</TBody>
+              {currentItems.length === 0 && (
+                <Tr>
+                  <Td
+                    colSpan={9}
+                    className="py-12 text-center text-gray-400 dark:text-gray-500"
+                  >
+                    No colours found
+                  </Td>
+                </Tr>
+              )}
+            </TBody>
           </Table>
         </div>
 
@@ -750,7 +952,7 @@ const Colour = () => {
                     >
                       {page}
                     </button>
-                  )
+                  ),
                 )}
 
                 <button
@@ -796,6 +998,56 @@ const Colour = () => {
               <TrashIcon className="size-4" />
               <span className="text-xs font-semibold">Delete Selected</span>
             </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Color Picker Popover */}
+      {colorPickerState.isOpen && (
+        <div
+          className="color-picker-popover fixed z-[9999]"
+          style={{
+            left: colorPickerState.position.x,
+            top: colorPickerState.position.y,
+          }}
+        >
+          <div className="min-w-[200px] rounded-lg border border-gray-200 bg-white p-4 shadow-2xl dark:border-gray-700 dark:bg-gray-800">
+            <div className="mb-3 flex items-center justify-between">
+              <span className="text-sm font-medium dark:text-white">
+                Choose Color
+              </span>
+              <button
+                onClick={closeColorPicker}
+                className="text-gray-400 transition-colors hover:text-gray-600 dark:hover:text-gray-200"
+              >
+                <XMarkIcon className="h-4 w-4" />
+              </button>
+            </div>
+
+            <input
+              type="color"
+              value={colorPickerState.color}
+              onChange={(e) => handleColorChange(e.target.value)}
+              className="h-48 w-full cursor-pointer rounded-lg border-2 border-gray-200 dark:border-gray-600"
+            />
+
+            <div className="mt-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div
+                  className="h-6 w-6 rounded border border-gray-200 dark:border-gray-600"
+                  style={{ backgroundColor: colorPickerState.color }}
+                />
+                <span className="font-mono text-xs text-gray-500 dark:text-gray-400">
+                  {colorPickerState.color}
+                </span>
+              </div>
+              <button
+                onClick={closeColorPicker}
+                className="rounded-lg bg-blue-500 px-3 py-1.5 text-xs text-white transition-colors hover:bg-blue-600"
+              >
+                Done
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -850,13 +1102,16 @@ const Colour = () => {
                 <div className="grow space-y-5 overflow-y-auto p-5">
                   {/* Select Model */}
                   <div>
-                    <label className="dark:text-dark-200 block text-sm font-medium text-gray-700 mb-1">
+                    <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
                       Select Model <span className="text-red-500">*</span>
                     </label>
                     <Combobox
                       data={models}
                       displayField="name"
-                      value={models.find((m) => m.id === Number(formData.modelId)) || null}
+                      value={
+                        models.find((m) => m.id === Number(formData.modelId)) ||
+                        null
+                      }
                       onChange={(val: OptionType | null) => {
                         handleInputChange("model", val?.name || "");
                         handleInputChange("modelId", val?.id || "");
@@ -865,19 +1120,25 @@ const Colour = () => {
                       searchFields={["name"]}
                     />
                     {errors.model && (
-                      <span className="text-xs text-orange-500">{errors.model}</span>
+                      <span className="text-xs text-orange-500">
+                        {errors.model}
+                      </span>
                     )}
                   </div>
 
                   {/* Select Variant */}
                   <div>
-                    <label className="dark:text-dark-200 block text-sm font-medium text-gray-700 mb-1">
+                    <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
                       Select Variant <span className="text-red-500">*</span>
                     </label>
                     <Combobox
                       data={filteredVariants}
                       displayField="name"
-                      value={filteredVariants.find((v) => v.id === Number(formData.variantId)) || null}
+                      value={
+                        filteredVariants.find(
+                          (v) => v.id === Number(formData.variantId),
+                        ) || null
+                      }
                       onChange={(val: OptionType | null) => {
                         handleInputChange("variant", val?.name || "");
                         handleInputChange("variantId", val?.id || "");
@@ -887,13 +1148,15 @@ const Colour = () => {
                       disabled={!formData.modelId}
                     />
                     {errors.variant && (
-                      <span className="text-xs text-orange-500">{errors.variant}</span>
+                      <span className="text-xs text-orange-500">
+                        {errors.variant}
+                      </span>
                     )}
                   </div>
 
                   {/* Colour Name */}
                   <div>
-                    <label className="dark:text-dark-200 block text-sm font-medium text-gray-700 mb-1">
+                    <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
                       Colour Name <span className="text-red-500">*</span>
                     </label>
                     <Input
@@ -905,13 +1168,15 @@ const Colour = () => {
                       }
                     />
                     {errors.colourName && (
-                      <span className="text-xs text-orange-500">{errors.colourName}</span>
+                      <span className="text-xs text-orange-500">
+                        {errors.colourName}
+                      </span>
                     )}
                   </div>
 
                   {/* Colour Picker */}
                   <div>
-                    <label className="dark:text-dark-200 block text-sm font-medium text-gray-700 mb-1">
+                    <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
                       Colour Picker <span className="text-red-500">*</span>
                     </label>
                     <div className="flex items-center gap-4">
@@ -921,27 +1186,50 @@ const Colour = () => {
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                           handleInputChange("colourCode", e.target.value)
                         }
-                        className="w-16 h-16 rounded border border-gray-300 dark:border-gray-600 cursor-pointer"
+                        className="h-16 w-16 cursor-pointer rounded border border-gray-300 dark:border-gray-600"
                       />
                     </div>
                     {errors.colourCode && (
-                      <span className="text-xs text-orange-500">{errors.colourCode}</span>
+                      <span className="text-xs text-orange-500">
+                        {errors.colourCode}
+                      </span>
                     )}
                   </div>
 
                   {/* Status - Dropdown */}
                   <div>
-                    <label className="dark:text-dark-200 block text-sm font-medium text-gray-700 mb-1">
+                    <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
                       Status <span className="text-red-500">*</span>
                     </label>
-                    <Combobox
+
+                    <Listbox
                       data={statusOptions}
+<<<<<<< HEAD
                       displayField="label"
-                      value={statusOptions.find((s) => s.value === formData.status) || null}
-                      onChange={(val: { label: string; value: "ACTIVE" | "INACTIVE" } | null) =>
-                        handleInputChange("status", val?.value || "ACTIVE")
+=======
+>>>>>>> b70da58 (usermaster enquiry)
+                      value={
+                        (statusOptions.find(
+                          (s) => s.value === formData.status,
+                        ) as {
+                          label: string;
+                          value: "ACTIVE" | "INACTIVE";
+                        } | null) || null
                       }
+                      onChange={(
+                        val: {
+                          label: string;
+                          value: "ACTIVE" | "INACTIVE";
+                        } | null,
+                      ) => handleInputChange("status", val?.value || "ACTIVE")}
                       placeholder="Select Status"
+                      onChange={(
+                        val: {
+                          label: string;
+                          value: "ACTIVE" | "INACTIVE";
+                        } | null,
+                      ) => handleInputChange("status", val?.value || "ACTIVE")}
+                      displayField="label"
                     />
                   </div>
                 </div>
@@ -957,7 +1245,12 @@ const Colour = () => {
                   >
                     Cancel
                   </Button>
-                  <Button color="primary" type="button" onClick={handleSave} className="h-10 w-1/2">
+                  <Button
+                    color="primary"
+                    type="button"
+                    onClick={handleSave}
+                    className="h-10 w-1/2"
+                  >
                     {editId !== null ? "Update" : "Save"}
                   </Button>
                 </div>

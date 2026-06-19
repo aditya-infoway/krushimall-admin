@@ -1,12 +1,9 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import apiHelper from "@/utils/apiHelper";
-import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/solid";
-import { LockClosedIcon } from "@heroicons/react/24/outline";
-import { useForm, useWatch } from "react-hook-form";
+// src/app/pages/item/tractor.tsx
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogPanel,
+  DialogTitle,
   Transition,
   TransitionChild,
   Menu,
@@ -31,38 +28,71 @@ import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/Table";
 import { Button, Checkbox, Input } from "@/components/ui";
 import { Combobox } from "@/components/shared/form/StyledCombobox";
 import { Listbox } from "@/components/shared/form/StyledListbox";
+import apiHelper from "@/utils/apiHelper";
 
-type Employee = {
+// ─── Types ──────────────────────────────────────────────────────────────────
+interface Tractor {
   id: number;
-  department: string;
-  branch: string;
-  role: string;
-  employeeName: string;
-  mobileNumber: string;
-  alternateNumber: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-  status: string;
+  modelId: number;
+  variantId: number;
+  colourId: number;
+  model?: { modelName: string };
+  variant?: { variantName: string };
+  colour?: { colourName: string; colourCode: string };
+  itemName: string;
+  codeNo: string;
+  shortName: string;
+  hsnCode: string;
+  taxSlab: string;
+  listOfGroup: string;
+  typeOfFuel: string;
+  fuelCapacity: string;
+  purchasePriceNoGST: number;
+  purchasePriceTaxable: number;
+  status: "ACTIVE" | "INACTIVE";
   createdAt: string;
+}
+
+interface FormValues {
+  modelId: number | string;
+  variantId: number | string;
+  colourId: number | string;
+  itemName: string;
+  codeNo: string;
+  shortName: string;
+  hsnCode: string;
+  taxSlab: string;
+  listOfGroup: string;
+  typeOfFuel: string;
+  fuelCapacity: string;
+  purchasePriceNoGST: number | string;
+  purchasePriceTaxable: number | string;
+  status: "ACTIVE" | "INACTIVE";
+}
+
+interface OptionType {
+  id: number;
+  name: string;
+  modelId?: number;
+}
+
+// ─── Helper Functions ──────────────────────────────────────────────────────
+const formatDate = (dateString: string) => {
+  if (!dateString) return "-";
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return dateString;
+    return date.toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  } catch {
+    return dateString;
+  }
 };
 
-type FormValues = {
-  id?: number;
-  department: string;
-  branch: string;
-  role: string;
-  employeeName: string;
-  mobileNumber: string;
-  alternateNumber: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-  status: string;
-};
-
-// Sample data
-
+// ─── Options ──────────────────────────────────────────────────────────────
 const entriesOptions = [
   { id: 10, name: "10" },
   { id: 20, name: "20" },
@@ -77,286 +107,297 @@ const statusOptions = [
   { label: "Inactive", value: "INACTIVE" },
 ];
 
-// Change from { id, name } to { label, value } format for Combobox
-const departmentOptions = [
-  { label: "Sales", value: "Sales" },
-  { label: "Marketing", value: "Marketing" },
-  { label: "HR", value: "HR" },
-  { label: "IT", value: "IT" },
-  { label: "Finance", value: "Finance" },
+const statusFilterOptions = [
+  { id: "All", name: "All Statuses" },
+  { id: "ACTIVE", name: "Active" },
+  { id: "INACTIVE", name: "Inactive" },
 ];
 
-const branchOptions = [
-  { label: "Mumbai", value: "Mumbai" },
-  { label: "Delhi", value: "Delhi" },
-  { label: "Bangalore", value: "Bangalore" },
-  { label: "Chennai", value: "Chennai" },
-  { label: "Pune", value: "Pune" },
-];
-
-const roleOptions = [
-  { label: "Manager", value: "Manager" },
-  { label: "Executive", value: "Executive" },
-  { label: "Associate", value: "Associate" },
-  { label: "Intern", value: "Intern" },
-  { label: "Team Lead", value: "Team Lead" },
-];
-
-const Employee = () => {
+// ─── Main Component ──────────────────────────────────────────────────────
+const Tractor = () => {
   const [showDrawer, setShowDrawer] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
-  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [tractors, setTractors] = useState<Tractor[]>([]);
   const [search, setSearch] = useState("");
   const [showFilterBar, setShowFilterBar] = useState(false);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [selectedDepartmentFilter, setSelectedDepartmentFilter] =
-    useState("All");
-  const [selectedRoleFilter, setSelectedRoleFilter] = useState("All");
   const [selectedStatusFilter, setSelectedStatusFilter] = useState("All");
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  // Add this after your useForm declaration
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    control,
-    reset,
-    formState: { errors },
-  } = useForm<FormValues>({
-    defaultValues: {
-      department: "",
-      branch: "",
-      role: "",
-      employeeName: "",
-      mobileNumber: "",
-      alternateNumber: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-      status: "ACTIVE",
-    },
+  const [loading, setLoading] = useState(false);
+
+  // ─── Dynamic Data from API ─────────────────────────────────────────────
+  const [models, setModels] = useState<OptionType[]>([]);
+  const [variants, setVariants] = useState<OptionType[]>([]);
+  const [colours, setColours] = useState<OptionType[]>([]);
+  const [filteredVariants, setFilteredVariants] = useState<OptionType[]>([]);
+
+  // ─── Form State ─────────────────────────────────────────────────────────
+  const [formData, setFormData] = useState<FormValues>({
+    modelId: "",
+    variantId: "",
+    colourId: "",
+    itemName: "",
+    codeNo: "",
+    shortName: "",
+    hsnCode: "",
+    taxSlab: "",
+    listOfGroup: "",
+    typeOfFuel: "",
+    fuelCapacity: "",
+    purchasePriceNoGST: "",
+    purchasePriceTaxable: "",
+    status: "ACTIVE",
   });
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Add these useWatch hooks to track form values
-  const formDepartmentValue = useWatch({ control, name: "department" });
-  const formBranchValue = useWatch({ control, name: "branch" });
-  const formRoleValue = useWatch({ control, name: "role" });
-  const formStatusValue = useWatch({ control, name: "status" });
+  // ─── Fetch Data ──────────────────────────────────────────────────────
+  useEffect(() => {
+    getModels();
+    getVariants();
+    getColours();
+    getTractors();
+  }, []);
 
-  const formValidationRules = {
-    department: { required: "Department is required" },
-    branch: { required: "Branch is required" },
-    role: { required: "Role is required" },
-    employeeName: { required: "Employee name is required" },
-    mobileNumber: {
-      required: "Mobile number is required",
-      pattern: {
-        value: /^[0-9]{10}$/,
-        message: "Mobile number must be 10 digits",
-      },
-    },
-    email: {
-      required: "Email is required",
-      pattern: {
-        value: /\S+@\S+\.\S+/,
-        message: "Email is invalid",
-      },
-    },
-    password: {
-      required: !editId ? "Password is required" : false,
-      minLength: {
-        value: 6,
-        message: "Password must be at least 6 characters",
-      },
-    },
-    confirmPassword: {
-      required: !editId ? "Confirm password is required " : false,
-      validate: (value: string, formValues: any) =>
-        value === formValues.password || "Passwords do not match",
-    },
-  };
-
-  // Keep these as { id, name } format for Listbox
-  const departmentFilterOptions = [
-    { id: "All", name: "All Departments" },
-    { id: "Sales", name: "Sales" },
-    { id: "Marketing", name: "Marketing" },
-    { id: "HR", name: "HR" },
-    { id: "IT", name: "IT" },
-    { id: "Finance", name: "Finance" },
-  ];
-
-  const roleFilterOptions = [
-    { id: "All", name: "All Roles" },
-    { id: "Manager", name: "Manager" },
-    { id: "Executive", name: "Executive" },
-    { id: "Associate", name: "Associate" },
-    { id: "Intern", name: "Intern" },
-    { id: "Team Lead", name: "Team Lead" },
-  ];
-
-  const statusFilterOptions = [
-    { id: "All", name: "All Statuses" },
-    { id: "ACTIVE", name: "Active" },
-    { id: "INACTIVE", name: "Inactive" },
-  ];
-  const getEmployees = async () => {
+  const getModels = async () => {
     try {
-      const response = await apiHelper.get("/employees");
-
-      setEmployees(response.data || []);
+      const response = await apiHelper.get("/model");
+      let data = response?.data || response;
+      if (!Array.isArray(data)) data = [];
+      const mapped = data.map((item: any) => ({
+        id: item.id || item._id,
+        name: item.modelName || item.name || "Unknown",
+      }));
+      setModels(mapped);
     } catch (error) {
-      console.log(error);
+      console.error("Failed to fetch models:", error);
+      setModels([]);
     }
   };
 
+  const getVariants = async () => {
+    try {
+      const response = await apiHelper.get("/variant");
+      let data = response?.data || response;
+      if (!Array.isArray(data)) data = [];
+      const mapped = data.map((item: any) => ({
+        id: item.id || item._id,
+        name: item.variantName || item.name || "Unknown",
+        modelId: item.modelId || item.model?.id || null,
+      }));
+      setVariants(mapped);
+      setFilteredVariants(mapped);
+    } catch (error) {
+      console.error("Failed to fetch variants:", error);
+      setVariants([]);
+      setFilteredVariants([]);
+    }
+  };
+
+  const getColours = async () => {
+    try {
+      const response = await apiHelper.get("/colours");
+      let data = response?.data || response;
+      if (!Array.isArray(data)) data = [];
+      const mapped = data.map((item: any) => ({
+        id: item.id || item._id,
+        name: item.colourName || item.name || "Unknown",
+      }));
+      setColours(mapped);
+    } catch (error) {
+      console.error("Failed to fetch colours:", error);
+      setColours([]);
+    }
+  };
+
+  const getTractors = async () => {
+    try {
+      setLoading(true);
+      const response = await apiHelper.get("/tractors");
+      let data = response?.data?.data || response?.data || response;
+      if (!Array.isArray(data)) data = [];
+      setTractors(data);
+    } catch (error) {
+      console.error("Failed to fetch tractors:", error);
+      setTractors([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ─── Filter Variants by Model ─────────────────────────────────────────
   useEffect(() => {
-    getEmployees();
-  }, []);
+    if (formData.modelId) {
+      const filtered = variants.filter(
+        (v) => v.modelId === Number(formData.modelId),
+      );
+      setFilteredVariants(filtered);
+    } else {
+      setFilteredVariants(variants);
+    }
+  }, [formData.modelId, variants]);
+
+  // ─── Handlers ───────────────────────────────────────────────────────────
+  const handleInputChange = (field: keyof FormValues, value: any) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      const newErrors = { ...errors };
+      delete newErrors[field];
+      setErrors(newErrors);
+    }
+  };
+
   const handleOpenAddDrawer = () => {
     setEditId(null);
-    reset({
-      department: "",
-      branch: "",
-      role: "",
-      employeeName: "",
-      mobileNumber: "",
-      alternateNumber: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
+    setFormData({
+      modelId: "",
+      variantId: "",
+      colourId: "",
+      itemName: "",
+      codeNo: "",
+      shortName: "",
+      hsnCode: "",
+      taxSlab: "",
+      listOfGroup: "",
+      typeOfFuel: "",
+      fuelCapacity: "",
+      purchasePriceNoGST: "",
+      purchasePriceTaxable: "",
       status: "ACTIVE",
+    });
+    setErrors({});
+    setShowDrawer(true);
+  };
+
+  const handleOpenEditDrawer = (item: Tractor) => {
+    setEditId(item.id);
+    setFormData({
+      modelId: item.modelId || "",
+      variantId: item.variantId || "",
+      colourId: item.colourId || "",
+      itemName: item.itemName,
+      codeNo: item.codeNo,
+      shortName: item.shortName,
+      hsnCode: item.hsnCode,
+      taxSlab: item.taxSlab,
+      listOfGroup: item.listOfGroup,
+      typeOfFuel: item.typeOfFuel,
+      fuelCapacity: item.fuelCapacity,
+      purchasePriceNoGST: item.purchasePriceNoGST,
+      purchasePriceTaxable: item.purchasePriceTaxable,
+      status: item.status,
     });
     setShowDrawer(true);
   };
 
-  const handleOpenEditDrawer = async (item: Employee) => {
-    try {
-      const response = await apiHelper.get(`/employees/${item.id}`);
-
-      const employee = response.data;
-
-      setEditId(employee.id);
-
-      reset({
-        department: employee.department,
-        branch: employee.branch,
-        role: employee.role,
-        employeeName: employee.employeeName,
-        mobileNumber: employee.mobileNumber,
-        alternateNumber: employee.alternateNumber || "",
-        email: employee.email,
-        password: "",
-        confirmPassword: "",
-        status: employee.status,
-      });
-
-      setShowDrawer(true);
-    } catch (error) {
-      console.log(error);
-    }
-  };
   const handleDelete = async (id: number) => {
     try {
-      if (window.confirm("Are you sure you want to delete this employee?")) {
-        await apiHelper.delete(`/employees/${id}`);
-
-        getEmployees();
-      }
+      if (!window.confirm("Are you sure you want to delete this tractor?"))
+        return;
+      await apiHelper.delete(`/tractors/${id}`);
+      await getTractors();
     } catch (error) {
-      console.log(error);
+      console.error("Failed to delete:", error);
     }
   };
 
   const handleBulkDelete = async () => {
+    if (
+      !window.confirm(
+        `Are you sure you want to delete ${selectedIds.length} selected tractors?`,
+      )
+    )
+      return;
     try {
-      if (
-        window.confirm("Are you sure you want to delete selected employees?")
-      ) {
-        await Promise.all(
-          selectedIds.map((id) => apiHelper.delete(`/employees/${id}`)),
-        );
-
-        setSelectedIds([]);
-        getEmployees();
-      }
+      setLoading(true);
+      await Promise.all(
+        selectedIds.map((id) => apiHelper.delete(`/tractors/${id}`)),
+      );
+      setSelectedIds([]);
+      await getTractors();
     } catch (error) {
-      console.log(error);
+      console.error("Failed to delete:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleToggleStatus = async (id: number) => {
-    try {
-      await apiHelper.patch(`/employees/toggle-status/${id}`, {});
+    const tractor = tractors.find((item) => item.id === id);
+    if (!tractor) return;
 
-      getEmployees();
+    const newStatus = tractor.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
+
+    setTractors((prev) =>
+      prev.map((item) =>
+        item.id === id ? { ...item, status: newStatus } : item,
+      ),
+    );
+
+    try {
+      await apiHelper.put(`/tractors/${id}`, { status: newStatus });
     } catch (error) {
-      console.log(error);
+      console.error("Failed to toggle status:", error);
+      await getTractors();
     }
   };
-  const onFormSubmit = async (data: FormValues) => {
+
+  const validate = () => {
+    const newErrors: Record<string, string> = {};
+    if (!formData.modelId) newErrors.modelId = "Model is required";
+    if (!formData.variantId) newErrors.variantId = "Variant is required";
+    if (!formData.colourId) newErrors.colourId = "Colour is required";
+    if (!formData.itemName.trim()) newErrors.itemName = "Item Name is required";
+    if (!formData.codeNo.trim()) newErrors.codeNo = "Code No is required";
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSave = async () => {
+    if (!validate()) return;
+
     try {
       const payload = {
-        department: data.department,
-        branch: data.branch,
-        role: data.role,
-        employeeName: data.employeeName,
-        mobileNumber: data.mobileNumber,
-        alternateNumber: data.alternateNumber,
-        email: data.email,
-        password: data.password,
-        status: data.status,
+        modelId: Number(formData.modelId),
+        variantId: Number(formData.variantId),
+        colourId: Number(formData.colourId),
+        itemName: formData.itemName,
+        codeNo: formData.codeNo,
+        shortName: formData.shortName,
+        hsnCode: formData.hsnCode,
+        taxSlab: formData.taxSlab,
+        listOfGroup: formData.listOfGroup,
+        typeOfFuel: formData.typeOfFuel,
+        fuelCapacity: formData.fuelCapacity,
+        purchasePriceNoGST: Number(formData.purchasePriceNoGST),
+        purchasePriceTaxable: Number(formData.purchasePriceTaxable),
+        status: formData.status,
       };
 
       if (editId) {
-        await apiHelper.put(`/employees/${editId}`, payload);
+        await apiHelper.put(`/tractors/${editId}`, payload);
       } else {
-        await apiHelper.post("/employees", payload);
+        await apiHelper.post("/tractors", payload);
       }
 
-      getEmployees();
-
+      await getTractors();
       setShowDrawer(false);
-      setEditId(null);
-
-      reset({
-        department: "",
-        branch: "",
-        role: "",
-        employeeName: "",
-        mobileNumber: "",
-        alternateNumber: "",
-        email: "",
-        password: "",
-        confirmPassword: "",
-        status: "ACTIVE",
-      });
-    } catch (error: any) {
-      console.log(error);
-
-      alert(error?.response?.data?.message || "Something went wrong");
+    } catch (error) {
+      console.error("Save failed:", error);
     }
   };
-  // Filter data
-  const filteredData = employees.filter((item) => {
-    const matchesSearch =
-      item.employeeName.toLowerCase().includes(search.toLowerCase()) ||
-      item.email.toLowerCase().includes(search.toLowerCase()) ||
-      item.mobileNumber.includes(search) ||
-      item.department.toLowerCase().includes(search.toLowerCase());
 
-    const matchesDepartment =
-      selectedDepartmentFilter === "All" ||
-      item.department === selectedDepartmentFilter;
-    const matchesRole =
-      selectedRoleFilter === "All" || item.role === selectedRoleFilter;
+  // ─── Filter Data ────────────────────────────────────────────────────────
+  const filteredData = tractors.filter((item) => {
+    const matchesSearch =
+      item.itemName.toLowerCase().includes(search.toLowerCase()) ||
+      item.model?.modelName?.toLowerCase().includes(search.toLowerCase()) ||
+      item.variant?.variantName?.toLowerCase().includes(search.toLowerCase());
+
     const matchesStatus =
       selectedStatusFilter === "All" || item.status === selectedStatusFilter;
 
-    return matchesSearch && matchesDepartment && matchesRole && matchesStatus;
+    return matchesSearch && matchesStatus;
   });
 
   const totalItems = filteredData.length;
@@ -393,10 +434,10 @@ const Employee = () => {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-xl font-semibold text-gray-900 md:text-2xl dark:text-white">
-            Employee Management
+            Tractor Management
           </h1>
           <p className="dark:text-dark-300 mt-1 text-sm text-gray-500">
-            Manage all employees from here
+            Manage all tractors from here
           </p>
         </div>
 
@@ -428,7 +469,7 @@ const Employee = () => {
             className="w-full sm:w-auto"
           >
             <PlusIcon className="mr-1.5 size-4.5" />
-            Add Employee
+            Add Tractor
           </Button>
         </div>
       </div>
@@ -438,7 +479,7 @@ const Employee = () => {
         <MagnifyingGlassIcon className="absolute top-1/2 left-3 size-4.5 -translate-y-1/2 text-gray-400" />
         <input
           type="text"
-          placeholder="Search employee, email or mobile..."
+          placeholder="Search tractor, model or variant..."
           value={search}
           onChange={(e) => {
             setSearch(e.target.value);
@@ -451,44 +492,7 @@ const Employee = () => {
       {/* Filter Bar */}
       {showFilterBar && (
         <div className="dark:bg-dark-700 dark:border-dark-500 animate-in fade-in slide-in-from-top-2 rounded-xl border border-gray-200 bg-white p-4 transition-all duration-150">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <div className="flex flex-col gap-1">
-              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
-                Department
-              </span>
-              <Listbox
-                data={departmentFilterOptions}
-                value={
-                  departmentFilterOptions.find(
-                    (o) => o.id === selectedDepartmentFilter,
-                  ) || departmentFilterOptions[0]
-                }
-                placeholder="All Departments"
-                onChange={(opt: any) => {
-                  setSelectedDepartmentFilter(opt.id);
-                  setCurrentPage(1);
-                }}
-                displayField="name"
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
-                Role
-              </span>
-              <Listbox
-                data={roleFilterOptions}
-                value={
-                  roleFilterOptions.find((o) => o.id === selectedRoleFilter) ||
-                  roleFilterOptions[0]
-                }
-                placeholder="All Roles"
-                onChange={(opt: any) => {
-                  setSelectedRoleFilter(opt.id);
-                  setCurrentPage(1);
-                }}
-                displayField="name"
-              />
-            </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
             <div className="flex flex-col gap-1">
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
                 Status
@@ -517,7 +521,7 @@ const Employee = () => {
         <div className="overflow-x-auto">
           <Table
             hoverable
-            className="w-full min-w-[800px] text-left [&_.table-th]:font-semibold"
+            className="w-full min-w-[900px] text-left [&_.table-th]:font-semibold"
           >
             <THead className="dark:bg-dark-700/60 dark:border-dark-600 border-b border-gray-200 bg-gray-100">
               <Tr>
@@ -532,22 +536,19 @@ const Employee = () => {
                   S.No
                 </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  Employee Name
+                  Model
                 </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  Department
+                  Variant
                 </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  Branch
+                  Colour
                 </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  Role
+                  Item Name
                 </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  Mobile
-                </Th>
-                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  Email
+                  Code
                 </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Status
@@ -582,22 +583,25 @@ const Employee = () => {
                       {indexOfFirstItem + index + 1}
                     </Td>
                     <Td className="py-4 font-medium text-gray-900 dark:text-gray-400">
-                      {item.employeeName}
+                      {item.model?.modelName}
                     </Td>
                     <Td className="dark:text-dark-200 py-4 text-gray-600">
-                      {item.department}
+                      {item.variant?.variantName}
                     </Td>
                     <Td className="dark:text-dark-200 py-4 text-gray-600">
-                      {item.branch}
+                      <span className="inline-flex items-center gap-2">
+                        <span
+                          className="inline-block h-4 w-4 rounded-full border"
+                          style={{ backgroundColor: item.colour?.colourCode }}
+                        />
+                        {item.colour?.colourName}
+                      </span>
                     </Td>
                     <Td className="dark:text-dark-200 py-4 text-gray-600">
-                      {item.role}
+                      {item.itemName}
                     </Td>
                     <Td className="dark:text-dark-200 py-4 text-gray-600">
-                      {item.mobileNumber}
-                    </Td>
-                    <Td className="dark:text-dark-200 py-4 text-gray-600">
-                      {item.email}
+                      {item.codeNo}
                     </Td>
                     <Td className="py-4">
                       <button
@@ -617,7 +621,7 @@ const Employee = () => {
                       </button>
                     </Td>
                     <Td className="py-4 text-gray-500 dark:text-gray-400">
-                      {new Date(item.createdAt).toLocaleDateString("en-IN")}
+                      {formatDate(item.createdAt)}
                     </Td>
                     <Td className="py-4 text-center">
                       <Menu
@@ -643,7 +647,6 @@ const Employee = () => {
                             <MenuItem>
                               {({ active }) => (
                                 <button
-                                  type="button"
                                   onClick={() => handleOpenEditDrawer(item)}
                                   className={`${
                                     active
@@ -651,15 +654,13 @@ const Employee = () => {
                                       : "dark:text-dark-200 text-gray-700"
                                   } flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium`}
                                 >
-                                  <PencilIcon className="size-4" />
-                                  Edit
+                                  <PencilIcon className="size-4" /> Edit
                                 </button>
                               )}
                             </MenuItem>
                             <MenuItem>
                               {({ active }) => (
                                 <button
-                                  type="button"
                                   onClick={() => handleDelete(item.id)}
                                   className={`${
                                     active
@@ -667,8 +668,7 @@ const Employee = () => {
                                       : "dark:text-dark-200 text-gray-700"
                                   } flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium`}
                                 >
-                                  <TrashIcon className="size-4" />
-                                  Delete
+                                  <TrashIcon className="size-4" /> Delete
                                 </button>
                               )}
                             </MenuItem>
@@ -686,7 +686,7 @@ const Employee = () => {
                     colSpan={10}
                     className="py-12 text-center text-gray-400 dark:text-gray-500"
                   >
-                    No employees found
+                    No tractors found
                   </Td>
                 </Tr>
               )}
@@ -735,7 +735,6 @@ const Employee = () => {
                         <MenuItem key={opt.id}>
                           {({ active }) => (
                             <button
-                              type="button"
                               onClick={() => {
                                 setItemsPerPage(opt.id);
                                 setCurrentPage(1);
@@ -778,7 +777,6 @@ const Employee = () => {
             <div className="order-2 flex justify-center md:w-1/3">
               <div className="dark:border-dark-700 dark:bg-dark-800 inline-flex items-center space-x-1 rounded-lg border border-gray-200 bg-white p-1 shadow-sm">
                 <button
-                  type="button"
                   onClick={() =>
                     setCurrentPage((prev) => Math.max(prev - 1, 1))
                   }
@@ -787,12 +785,10 @@ const Employee = () => {
                 >
                   <ChevronLeftIcon className="size-4" />
                 </button>
-
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map(
                   (page) => (
                     <button
                       key={page}
-                      type="button"
                       onClick={() => setCurrentPage(page)}
                       className={`inline-flex size-8 items-center justify-center rounded-md text-sm font-medium transition-colors ${
                         page === currentPage
@@ -804,9 +800,7 @@ const Employee = () => {
                     </button>
                   ),
                 )}
-
                 <button
-                  type="button"
                   onClick={() =>
                     setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                   }
@@ -880,15 +874,12 @@ const Employee = () => {
             leaveFrom="translate-x-0"
             leaveTo="translate-x-full"
           >
-            <DialogPanel className="dark:bg-dark-700 fixed top-0 right-0 flex h-full w-full max-w-2xl transform-gpu flex-col bg-white shadow-2xl transition-transform duration-200">
-              <form
-                onSubmit={handleSubmit(onFormSubmit)}
-                className="flex h-full flex-col"
-              >
+            <DialogPanel className="dark:bg-dark-700 fixed top-0 right-0 flex h-full w-full max-w-full transform-gpu flex-col bg-white shadow-2xl transition-transform duration-200 sm:max-w-xl md:max-w-2xl lg:max-w-3xl xl:max-w-4xl">
+              <div className="flex h-full flex-col">
                 {/* Header */}
-                <div className="dark:border-dark-500 flex items-center justify-between border-b border-gray-200 px-5 py-4">
-                  <h2 className="dark:text-dark-50 text-lg font-semibold text-gray-800">
-                    {editId !== null ? "Edit Employee" : "Add Employee"}
+                <div className="dark:border-dark-500 flex items-center justify-between border-b border-gray-200 px-4 py-3 sm:px-5 sm:py-4">
+                  <h2 className="dark:text-dark-50 text-base font-semibold text-gray-800 sm:text-lg">
+                    {editId !== null ? "Edit Tractor" : "Add Tractor"}
                   </h2>
                   <Button
                     onClick={() => setShowDrawer(false)}
@@ -902,176 +893,291 @@ const Employee = () => {
                 </div>
 
                 {/* Content */}
-                <div className="grow space-y-5 overflow-y-auto p-5">
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="grow space-y-4 overflow-y-auto p-4 sm:space-y-5 sm:p-5">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
+                    {/* Select Model */}
                     <div>
-                     <Combobox
-  label="Type of Department *"
-  placeholder="Select Department"
-  data={departmentOptions}
-  value={formDepartmentValue}
-  onChange={(val: any) => setValue("department", val)}
-  error={errors?.department && errors.department.message}
-/>
-                    </div>
-                    <div>
-                     <Combobox
-  label="Branch *"
-  placeholder="Select Branch"
-  data={branchOptions}
-  value={formBranchValue}
-  onChange={(val: any) => setValue("branch", val)}
-  error={errors?.branch && errors.branch.message}
-/>
-                    </div>
-                  </div>
-
-                  <div>
-                    <Combobox
-  label="Role *"
-  placeholder="Select Role"
-  data={roleOptions}
-  value={formRoleValue}
-  onChange={(val: any) => setValue("role", val)}
-  error={errors?.role && errors.role.message}
-/>
-                  </div>
-
-                  <div>
-                    <Input
-                      label="Employee Name *"
-                      placeholder="Enter employee name"
-                      {...register(
-                        "employeeName",
-                        formValidationRules.employeeName,
+                      <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
+                        Select Model <span className="text-red-500">*</span>
+                      </label>
+                      <Combobox
+                        data={models}
+                        displayField="name"
+                        value={
+                          models.find(
+                            (m) => m.id === Number(formData.modelId),
+                          ) || null
+                        }
+                        onChange={(val: OptionType | null) => {
+                          handleInputChange("modelId", val?.id || "");
+                        }}
+                        placeholder="Select Model"
+                        searchFields={["name"]}
+                      />
+                      {errors.modelId && (
+                        <span className="text-xs text-orange-500">
+                          {errors.modelId}
+                        </span>
                       )}
-                      error={
-                        errors?.employeeName && errors.employeeName.message
-                      }
-                    />
-                  </div>
+                    </div>
 
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    {/* Select Variant */}
                     <div>
+                      <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
+                        Select Variant <span className="text-red-500">*</span>
+                      </label>
+                      <Combobox
+                        data={filteredVariants}
+                        displayField="name"
+                        value={
+                          filteredVariants.find(
+                            (v) => v.id === Number(formData.variantId),
+                          ) || null
+                        }
+                        onChange={(val: OptionType | null) => {
+                          handleInputChange("variantId", val?.id || "");
+                        }}
+                        placeholder="Select Variant"
+                        searchFields={["name"]}
+                        disabled={!formData.modelId}
+                      />
+                      {errors.variantId && (
+                        <span className="text-xs text-orange-500">
+                          {errors.variantId}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Select Colour */}
+                    <div>
+                      <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
+                        Select Colour <span className="text-red-500">*</span>
+                      </label>
+                      <Combobox
+                        data={colours}
+                        displayField="name"
+                        value={
+                          colours.find(
+                            (c) => c.id === Number(formData.colourId),
+                          ) || null
+                        }
+                        onChange={(val: OptionType | null) => {
+                          handleInputChange("colourId", val?.id || "");
+                        }}
+                        placeholder="Select Colour"
+                        searchFields={["name"]}
+                      />
+                      {errors.colourId && (
+                        <span className="text-xs text-orange-500">
+                          {errors.colourId}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  {/* Input Grid */}
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
+                    <div>
+                      <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
+                        Item Name <span className="text-red-500">*</span>
+                      </label>
                       <Input
-                        label="Mobile Number *"
-                        placeholder="Enter mobile number"
-                        {...register(
-                          "mobileNumber",
-                          formValidationRules.mobileNumber,
-                        )}
-                        error={
-                          errors?.mobileNumber && errors.mobileNumber.message
+                        type="text"
+                        placeholder="Item Name"
+                        value={formData.itemName}
+                        onChange={(e) =>
+                          handleInputChange("itemName", e.target.value)
+                        }
+                      />
+                      {errors.itemName && (
+                        <span className="text-xs text-orange-500">
+                          {errors.itemName}
+                        </span>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
+                        Code No <span className="text-red-500">*</span>
+                      </label>
+                      <Input
+                        type="text"
+                        placeholder="Code No"
+                        value={formData.codeNo}
+                        onChange={(e) =>
+                          handleInputChange("codeNo", e.target.value)
+                        }
+                      />
+                      {errors.codeNo && (
+                        <span className="text-xs text-orange-500">
+                          {errors.codeNo}
+                        </span>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
+                        Short Name
+                      </label>
+                      <Input
+                        type="text"
+                        placeholder="Short Name"
+                        value={formData.shortName}
+                        onChange={(e) =>
+                          handleInputChange("shortName", e.target.value)
                         }
                       />
                     </div>
+
                     <div>
+                      <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
+                        HSN Code
+                      </label>
                       <Input
-                        label="Alternate Number"
-                        placeholder="Enter alternate number"
-                        {...register("alternateNumber")}
+                        type="text"
+                        placeholder="HSN Code"
+                        value={formData.hsnCode}
+                        onChange={(e) =>
+                          handleInputChange("hsnCode", e.target.value)
+                        }
+                      />
+                    </div>
+
+                    <div>
+                      <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
+                        Tax Slab
+                      </label>
+                      <Input
+                        type="text"
+                        placeholder="Tax Slab"
+                        value={formData.taxSlab}
+                        onChange={(e) =>
+                          handleInputChange("taxSlab", e.target.value)
+                        }
+                      />
+                    </div>
+
+                    <div>
+                      <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
+                        List of Group
+                      </label>
+                      <Input
+                        type="text"
+                        placeholder="List of Group"
+                        value={formData.listOfGroup}
+                        onChange={(e) =>
+                          handleInputChange("listOfGroup", e.target.value)
+                        }
+                      />
+                    </div>
+
+                    <div>
+                      <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
+                        Type of Fuel
+                      </label>
+                      <Input
+                        type="text"
+                        placeholder="Type of Fuel"
+                        value={formData.typeOfFuel}
+                        onChange={(e) =>
+                          handleInputChange("typeOfFuel", e.target.value)
+                        }
+                      />
+                    </div>
+
+                    <div>
+                      <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
+                        Fuel Capacity
+                      </label>
+                      <Input
+                        type="text"
+                        placeholder="Fuel Capacity"
+                        value={formData.fuelCapacity}
+                        onChange={(e) =>
+                          handleInputChange("fuelCapacity", e.target.value)
+                        }
+                      />
+                    </div>
+
+                    <div>
+                      <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
+                        Purchase Price (Without GST)
+                      </label>
+                      <Input
+                        type="number"
+                        placeholder="Purchase Price (Without GST)"
+                        value={formData.purchasePriceNoGST}
+                        onChange={(e) =>
+                          handleInputChange(
+                            "purchasePriceNoGST",
+                            e.target.value,
+                          )
+                        }
+                      />
+                    </div>
+
+                    <div>
+                      <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
+                        Purchase Price (Taxable)
+                      </label>
+                      <Input
+                        type="number"
+                        placeholder="Purchase Price (Taxable)"
+                        value={formData.purchasePriceTaxable}
+                        onChange={(e) =>
+                          handleInputChange(
+                            "purchasePriceTaxable",
+                            e.target.value,
+                          )
+                        }
                       />
                     </div>
                   </div>
 
-                  <div>
-                    <Input
-                      label="Email *"
-                      placeholder="Enter email address"
-                      type="email"
-                      {...register("email", formValidationRules.email)}
-                      error={errors?.email && errors.email.message}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <div>
-                      <Input
-                        label="Password *"
-                        placeholder="Enter password"
-                        type={showPassword ? "text" : "password"}
-                        prefix={
-                          <LockClosedIcon className="size-5 text-gray-400" />
-                        }
-                        suffix={
-                          <Button
-                            type="button"
-                            variant="flat"
-                            className="pointer-events-auto size-6 shrink-0 rounded-full p-0"
-                            onClick={() => setShowPassword(!showPassword)}
-                          >
-                            {showPassword ? (
-                              <EyeSlashIcon className="size-5 text-gray-400" />
-                            ) : (
-                              <EyeIcon className="size-5 text-gray-400" />
-                            )}
-                          </Button>
-                        }
-                        {...register("password", formValidationRules.password)}
-                        error={errors?.password?.message}
-                      />
-                    </div>
-                    <div>
-                      <Input
-                        label="Confirm Password *"
-                        placeholder="Confirm password"
-                        type={showConfirmPassword ? "text" : "password"}
-                        prefix={
-                          <LockClosedIcon className="size-5 text-gray-400" />
-                        }
-                        suffix={
-                          <Button
-                            type="button"
-                            variant="flat"
-                            className="pointer-events-auto size-6 shrink-0 rounded-full p-0"
-                            onClick={() =>
-                              setShowConfirmPassword(!showConfirmPassword)
-                            }
-                          >
-                            {showConfirmPassword ? (
-                              <EyeSlashIcon className="size-5 text-gray-400" />
-                            ) : (
-                              <EyeIcon className="size-5 text-gray-400" />
-                            )}
-                          </Button>
-                        }
-                        {...register(
-                          "confirmPassword",
-                          formValidationRules.confirmPassword,
-                        )}
-                        error={errors?.confirmPassword?.message}
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="mb-2 block text-sm font-medium">
+                  {/* Status */}
+                  <div className="sm:col-span-2 lg:col-span-3">
+                    <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
                       Status
                     </label>
-
-                    <Listbox
+                    <Combobox
                       data={statusOptions}
-                      onChange={(val: any) => setValue("status", val)}
+                      displayField="label"
+                      value={
+                        statusOptions.find(
+                          (s) => s.value === formData.status,
+                        ) || null
+                      }
+                      onChange={(
+                        val: {
+                          label: string;
+                          value: "ACTIVE" | "INACTIVE";
+                        } | null,
+                      ) => handleInputChange("status", val?.value || "ACTIVE")}
+                      placeholder="Select Status"
                     />
                   </div>
                 </div>
 
                 {/* Footer */}
-                <div className="dark:border-dark-500 flex items-center justify-end gap-3 border-t border-gray-200 p-5">
+                <div className="dark:border-dark-500 flex flex-col-reverse items-center justify-end gap-3 border-t border-gray-200 p-4 sm:flex-row sm:p-5">
                   <Button
                     variant="outlined"
                     color="neutral"
                     type="button"
                     onClick={() => setShowDrawer(false)}
-                    className="h-10 w-1/2"
+                    className="h-10 w-full sm:w-auto sm:min-w-[100px]"
                   >
                     Cancel
                   </Button>
-                  <Button color="primary" type="submit" className="h-10 w-1/2">
+                  <Button
+                    color="primary"
+                    type="button"
+                    onClick={handleSave}
+                    className="h-10 w-full sm:w-auto sm:min-w-[100px]"
+                  >
                     {editId !== null ? "Update" : "Save"}
                   </Button>
                 </div>
-              </form>
+              </div>
             </DialogPanel>
           </TransitionChild>
         </Dialog>
@@ -1080,4 +1186,4 @@ const Employee = () => {
   );
 };
 
-export default Employee;
+export default Tractor;
