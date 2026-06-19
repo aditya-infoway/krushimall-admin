@@ -1146,7 +1146,7 @@ onChange={(val: { label: string; value: string } | null) =>
                 ? { label: form.profession, value: form.profession }
                 : null
             }
-            onChange={(val) => handleChange("profession", val?.value || "")}
+           onChange={(val: any) => handleChange("profession", val?.value || "")}
             placeholder="Select Profession"
           />
           {errors.profession && (
@@ -1167,7 +1167,7 @@ onChange={(val: { label: string; value: string } | null) =>
                 ? { label: form.enquiryType, value: form.enquiryType }
                 : null
             }
-            onChange={(val) => handleChange("enquiryType", val?.value || "")}
+            onChange={(val: any) => handleChange("enquiryType", val?.value || "")}
             placeholder="Select Enquiry Type"
           />
           {errors.enquiryType && (
@@ -1190,7 +1190,7 @@ onChange={(val: { label: string; value: string } | null) =>
                 ? { label: form.enquirySource, value: form.enquirySource }
                 : null
             }
-            onChange={(val) => handleChange("enquirySource", val?.value || "")}
+           onChange={(val: any) => handleChange("enquirySource", val?.value || "")}
             placeholder="Select Enquiry Source"
           />
           {errors.enquirySource && (
@@ -1256,7 +1256,7 @@ onChange={(val: { label: string; value: string } | null) =>
                 ? { label: form.enquiryStatus, value: form.enquiryStatus }
                 : null
             }
-            onChange={(val) => handleChange("enquiryStatus", val?.value || "")}
+            onChange={(val: any) => handleChange("enquiryStatus", val?.value || "")}
             placeholder="Select Enquiry Status"
           />
           {errors.enquiryStatus && (

@@ -139,17 +139,15 @@ export function MediaDocumnet({
 
   
 
-    await apiHelper.put(
-      `/website-variants/${websiteVariantId}/save-step`,
-      formData,
-      {
-        headers: {
-          "Content-Type":
-            "multipart/form-data",
-        },
-      }
-    );
-
+await apiHelper.put(
+  `/website-variants/${websiteVariantId}/save-step`,
+  {
+    data: formData,
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  }
+);
     kycFormCtx.dispatch({
       type: "SET_FORM_DATA",
       payload: {

@@ -11,6 +11,11 @@ import {
   UserCircleIcon,
   DocumentTextIcon,
   CheckCircleIcon,
+    TruckIcon,
+  WrenchScrewdriverIcon,
+  ClipboardDocumentListIcon,
+  PlusCircleIcon,
+  ShoppingCartIcon
   
 } from "@heroicons/react/24/outline";
 import { ElementType } from "react";
@@ -22,7 +27,11 @@ import {
   TbCoin,
   TbPalette, 
   TbColorSwatch, 
-  TbBrush
+  TbBrush,
+   TbTruck,
+  TbTools,
+  TbList,
+  TbPlus,
   
 } from "react-icons/tb";
 
@@ -32,6 +41,7 @@ import SettingIcon from "@/assets/dualicons/setting.svg?react";
 
 export const navigationIcons: Record<string, ElementType> = {
   dashboards: DashboardsIcon,
+  user: TbBriefcase,
   settings: SettingIcon,
   "dashboards.home": HomeIcon,
   "settings.general": HiUserIcon,
@@ -55,4 +65,10 @@ export const navigationIcons: Record<string, ElementType> = {
   banker: HomeIcon, 
   finance: TbCoin, 
 enquirystatus: CheckCircleIcon,
+ item: ClipboardDocumentListIcon, 
+  tractor: TruckIcon,               
+  accessories: WrenchScrewdriverIcon, 
+    purchase: ShoppingCartIcon,
+    "purchase-tractor": TbTruck,
+  "purchase-accessories": TbTools,
 };

@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState,useEffect  } from "react";
 import { useForm, useWatch } from "react-hook-form";
+import apiHelper from "@/utils/apiHelper";
 import {
   Dialog,
   DialogPanel,
@@ -41,38 +42,6 @@ type FormValues = {
 };
 
 // Sample data
-const initialData: Profession[] = [
-  {
-    id: 1,
-    profession: "Doctor",
-    status: "ACTIVE",
-    createdAt: "15 Jan 2025"
-  },
-  {
-    id: 2,
-    profession: "Engineer",
-    status: "ACTIVE",
-    createdAt: "20 Jan 2025"
-  },
-  {
-    id: 3,
-    profession: "Teacher",
-    status: "INACTIVE",
-    createdAt: "25 Jan 2025"
-  },
-  {
-    id: 4,
-    profession: "Lawyer",
-    status: "ACTIVE",
-    createdAt: "28 Jan 2025"
-  },
-  {
-    id: 5,
-    profession: "Business Owner",
-    status: "ACTIVE",
-    createdAt: "30 Jan 2025"
-  }
-];
 
 const entriesOptions = [
   { id: 10, name: "10" },
@@ -97,7 +66,8 @@ const statusFilterOptions = [
 const Profession = () => {
   const [showDrawer, setShowDrawer] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
-  const [professions, setProfessions] = useState<Profession[]>(initialData);
+const [professions, setProfessions] =
+  useState<Profession[]>([]);
   const [search, setSearch] = useState("");
   const [showFilterBar, setShowFilterBar] = useState(false);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
@@ -128,7 +98,21 @@ const Profession = () => {
   const formValidationRules = {
     profession: { required: "Profession is required" },
   };
+const getProfessions = async () => {
+  try {
+    const response = await apiHelper.get(
+      "/professions"
+    );
 
+    setProfessions(response.data || []);
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+useEffect(() => {
+  getProfessions();
+}, []);
   const handleOpenAddDrawer = () => {
     setEditId(null);
     reset({
@@ -147,57 +131,78 @@ const Profession = () => {
     setShowDrawer(true);
   };
 
-  const handleDelete = (id: number) => {
-    if (window.confirm("Are you sure you want to delete this profession?")) {
-      setProfessions(professions.filter((item) => item.id !== id));
-    }
-  };
+ const handleDelete = async (id: number) => {
+  try {
+    await apiHelper.delete(`/professions/${id}`);
+    getProfessions();
+  } catch (error) {
+    console.log(error);
+  }
+};
 
-  const handleBulkDelete = () => {
-    if (window.confirm("Are you sure you want to delete selected professions?")) {
-      setProfessions(professions.filter((item) => !selectedIds.includes(item.id)));
-      setSelectedIds([]);
-    }
-  };
-
-  const handleToggleStatus = (id: number) => {
-    setProfessions(
-      professions.map((item) =>
-        item.id === id
-          ? { ...item, status: item.status === "ACTIVE" ? "INACTIVE" : "ACTIVE" }
-          : item
+ 
+ const handleBulkDelete = async () => {
+  try {
+    if (
+      window.confirm(
+        "Are you sure you want to delete selected enquiry types?"
       )
-    );
-  };
-
-  const onFormSubmit = (data: FormValues) => {
-    if (editId) {
-      // Edit existing
-      setProfessions(
-        professions.map((item) =>
-          item.id === editId
-            ? { ...item, ...data, id: editId }
-            : item
+    ) {
+      await Promise.all(
+        selectedIds.map((id) =>
+          apiHelper.delete(`/professions/${id}`)
         )
       );
-    } else {
-      // Add new
-      const newId = Math.max(...professions.map((item) => item.id)) + 1;
-      setProfessions([
-        ...professions,
-        {
-          ...data,
-          id: newId,
-          createdAt: new Date().toLocaleDateString("en-GB", {
-            day: "numeric",
-            month: "short",
-            year: "numeric",
-          }),
-        },
-      ]);
+
+      setSelectedIds([]);
+      getProfessions();
     }
+  } catch (error) {
+    console.log(error);
+  }
+};
+ const handleToggleStatus = async (id: number) => {
+  try {
+    await apiHelper.patch(
+      `/professions/toggle-status/${id}`,
+      {}
+    );
+
+    getProfessions();
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+  const onFormSubmit = async (
+  data: FormValues
+) => {
+  try {
+    if (editId) {
+      await apiHelper.put(
+        `/professions/${editId}`,
+        data
+      );
+    } else {
+      await apiHelper.post(
+        "/professions",
+        data
+      );
+    }
+
+    getProfessions();
+
     setShowDrawer(false);
-  };
+    setEditId(null);
+
+    reset({
+      profession: "",
+      status: "ACTIVE",
+    });
+  } catch (error) {
+    console.log(error);
+  }
+};
 
   // Filter data
   const filteredData = professions.filter((item) => {
@@ -397,7 +402,7 @@ const Profession = () => {
                       </button>
                     </Td>
                     <Td className="py-4 text-gray-500 dark:text-gray-400">
-                      {item.createdAt}
+                         {new Date(item.createdAt).toLocaleDateString("en-IN")}
                     </Td>
                     <Td className="py-4 text-center">
                       <Menu
@@ -693,13 +698,23 @@ const Profession = () => {
                   </div>
 
                   <div>
-                  <Combobox
-  label="Status"
-  placeholder="Select Status"
-  data={statusOptions}
-  value={formStatusValue}
-  onChange={(val: string) => setValue("status", val)}
-/>
+                    <label className="mb-2 block text-sm font-medium">
+                      Status
+                    </label>
+                  
+                    <Listbox
+                      data={statusOptions}
+                      value={
+                        statusOptions.find(
+                          (item) => item.value === formStatusValue
+                        ) || statusOptions[0]
+                      }
+                      placeholder="Select Status"
+                      onChange={(option: any) => {
+                        setValue("status", option.value);
+                      }}
+                      displayField="label"
+                    />
                   </div>
                 </div>
 

@@ -13,41 +13,52 @@ import { Group } from "./Group";
 // ----------------------------------------------------------------------
 
 export function Menu() {
-  const { pathname } = useLocation();
-  const ref = useRef<HTMLDivElement | null>(null);
+ const { pathname } = useLocation();
+ const ref = useRef<HTMLDivElement | null>(null);
 
-  const activeGroup = navigation.find((item) => {
-    if (item.path) return isRouteActive(item.path, pathname);
-  });
+ const activeGroup = navigation.find((item) => {
+  if (item.path) return isRouteActive(item.path, pathname);
+ });
 
-  const activeCollapsible = activeGroup?.childs?.find((item) => {
-    if (item.path) return isRouteActive(item.path, pathname);
-  });
+ const activeCollapsible = activeGroup?.childs?.find((item) => {
+  if (item.path) return isRouteActive(item.path, pathname);
+ });
 
-  const [expanded, setExpanded] = useState<string | null>(
-    activeCollapsible?.path || null,
-  );
+ const [expanded, setExpanded] = useState<string | null>(
+  activeCollapsible?.path || null,
+ );
+const [openedGroup, setOpenedGroup] = useState<string | null>(
+ navigation[0]?.id || null,
+);
+ useDidUpdate(() => {
+  if (activeCollapsible?.path !== expanded)
+   setExpanded(activeCollapsible?.path || null);
+ }, [activeCollapsible?.path]);
 
-  useDidUpdate(() => {
-    if (activeCollapsible?.path !== expanded)
-      setExpanded(activeCollapsible?.path || null);
-  }, [activeCollapsible?.path]);
+ useLayoutEffect(() => {
+  const activeItem = ref.current?.querySelector("[data-menu-active=true]");
+  activeItem?.scrollIntoView({ block: "center" });
+ }, []);
 
-  useLayoutEffect(() => {
-    const activeItem = ref.current?.querySelector("[data-menu-active=true]");
-    activeItem?.scrollIntoView({ block: "center" });
-  }, []);
-
-  return (
-    <SimpleBar
-      scrollableNodeProps={{ ref }}
-      className="h-full overflow-x-hidden pb-6"
-    >
-      <Accordion value={expanded} onChange={setExpanded} className="space-y-1">
-        {navigation.map((nav) => (
-          <Group key={nav.id} data={nav} />
-        ))}
-      </Accordion>
-    </SimpleBar>
-  );
+ return (
+  <SimpleBar
+   scrollableNodeProps={{ ref }}
+   className="h-full overflow-x-hidden pb-6"
+  >
+   <Accordion value={expanded} onChange={setExpanded} className="space-y-1">
+    {navigation.map((nav) => (
+ <Group
+  key={nav.id}
+  data={nav}
+  isOpened={openedGroup === nav.id}
+  onToggle={() =>
+   setOpenedGroup(
+    openedGroup === nav.id ? null : nav.id
+   )
+  }
+ />
+))}
+   </Accordion>
+  </SimpleBar>
+ );
 }

@@ -7,11 +7,13 @@ import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { useForm, Controller } from "react-hook-form";
 import { Country, State, City } from "country-state-city";
 import Select from "react-select";
-
+import apiHelper from "@/utils/apiHelper";
+import { Listbox } from "@/components/shared/form/StyledListbox";
 type FormValues = {
-  id: string;
+
   accountName: string;
   printName: string;
+  group: string;
   openingBalance: string;
   drCr: string;
   country: string;
@@ -59,10 +61,10 @@ const NewAccount = () => {
     formState: { errors },
   } = useForm<FormValues>({
     defaultValues: {
-      id: "",
       accountName: "",
       printName: "",
       openingBalance: "",
+      group: "",
       drCr: "",
       country: "",
       countryCode: "",
@@ -94,7 +96,20 @@ const NewAccount = () => {
   // Watch values
   const watchedCountryCode = watch("countryCode");
   const watchedStateCode = watch("stateCode");
-
+  const groupOptions = [
+    { label: "Sundry Debtors", value: "Sundry Debtors" },
+    { label: "Sundry Creditors", value: "Sundry Creditors" },
+    { label: "Cash-in-Hand", value: "Cash-in-Hand" },
+    { label: "Bank Accounts", value: "Bank Accounts" },
+    { label: "Direct Expenses", value: "Direct Expenses" },
+    { label: "Indirect Expenses", value: "Indirect Expenses" },
+    { label: "Direct Income", value: "Direct Income" },
+    { label: "Indirect Income", value: "Indirect Income" },
+  ];
+  const drCrOptions = [
+    { label: "Dr", value: "Dr" },
+    { label: "Cr", value: "Cr" },
+  ];
   useEffect(() => {
     if (isEditMode && editData) {
       // Reset form with edit data
@@ -108,6 +123,7 @@ const NewAccount = () => {
     accountName: { required: "Account name is required" },
     printName: { required: "Print name is required" },
     openingBalance: { required: "Opening balance is required" },
+    group: { required: "Group is required" },
     drCr: { required: "Dr./Cr. is required" },
     country: { required: "Country is required" },
     state: { required: "State is required" },
@@ -132,10 +148,33 @@ const NewAccount = () => {
     navigate("/usermaster/account");
   };
 
-  const onFormSubmit = (data: FormValues) => {
-    console.log("Saving account:", data);
+const onFormSubmit = async (data: FormValues) => {
+  try {
+    const finalPayload = {
+      ...data,
+      
+      birthday: data.birthday || null,
+      anniversary: data.anniversary || null,
+      openingBalance: Number(data.openingBalance) || 0,
+    };
+
+    if (isEditMode) {
+      await apiHelper.put(
+        `/accounts/${editData.id}`,
+        finalPayload
+      );
+    } else {
+      await apiHelper.post(
+        "/accounts",
+        finalPayload
+      );
+    }
+
     navigate("/usermaster/account");
-  };
+  } catch (error) {
+    console.log(error);
+  }
+};
 
   // ─── Dynamic Location Data ──────────────────────────────────────────────────
   const countryOptions = useMemo(() => {
@@ -272,7 +311,31 @@ const NewAccount = () => {
                 error={errors?.printName && errors.printName.message}
               />
             </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium">Group</label>
+              <Controller
+                name="group"
+                control={control}
+                rules={{ required: "Group is required" }}
+                render={({ field }) => (
+                  <Listbox
+                    data={groupOptions}
+                    value={
+                      groupOptions.find((item) => item.value === field.value) ||
+                      null
+                    }
+                    onChange={(val: any) => field.onChange(val?.value || "")}
+                    placeholder="Select Group"
+                  />
+                )}
+              />
 
+              {errors.group && (
+                <span className="text-xs text-red-500">
+                  {errors.group.message}
+                </span>
+              )}
+            </div>
             <div>
               <Input
                 label="Opening Balance"
@@ -286,12 +349,30 @@ const NewAccount = () => {
             </div>
 
             <div>
-              <Input
-                label="Dr./Cr."
-                placeholder="DR"
-                {...register("drCr", formValidationRules.drCr)}
-                error={errors?.drCr && errors.drCr.message}
+              <label className="mb-2 block text-sm font-medium">Dr / Cr</label>
+
+              <Controller
+                name="drCr"
+                control={control}
+                rules={{ required: "Dr / Cr is required" }}
+                render={({ field }) => (
+                  <Listbox
+                    data={drCrOptions}
+                    value={
+                      drCrOptions.find((item) => item.value === field.value) ||
+                      null
+                    }
+                    onChange={(val: any) => field.onChange(val?.value || "")}
+                    placeholder="Select Dr / Cr"
+                  />
+                )}
               />
+
+              {errors.drCr && (
+                <span className="text-xs text-red-500">
+                  {errors.drCr.message}
+                </span>
+              )}
             </div>
 
             {/* Country */}
@@ -551,7 +632,7 @@ const NewAccount = () => {
               <DatePicker
                 label="Birthday On"
                 placeholder="Select Date"
-                onChange={(val) => setValue("birthday", val)}
+                onChange={(val: Date[]) => setValue("birthday", val[0]?.toISOString() || "")}
               />
             </div>
 
@@ -559,7 +640,7 @@ const NewAccount = () => {
               <DatePicker
                 label="Anniversary"
                 placeholder="Select Date"
-                onChange={(val) => setValue("anniversary", val)}
+                onChange={(val: Date[]) => setValue("anniversary", val[0]?.toISOString() || "")}
               />
             </div>
 

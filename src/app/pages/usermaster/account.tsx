@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   PlusIcon,
@@ -22,70 +22,9 @@ import { Fragment } from "react";
 import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/Table";
 import { Button, Checkbox } from "@/components/ui";
 import { Listbox } from "@/components/shared/form/StyledListbox";
-
+import apiHelper from "@/utils/apiHelper";
 // Sample data
-const initialData = [
-  {
-    id: 1,
-    accountName: "Cash Account",
-    printName: "Cash Account",
-    openingBalance: "100000",
-    drCr: "DR",
-    country: "India",
-    state: "Maharashtra",
-    stateCode: "MH",
-    district: "Jalgaon",
-    taluka: "Jalgaon",
-    city: "Jalgaon Jamod",
-    area: "Jalgaon",
-    address1: "123 Main Street",
-    address2: "Near Bus Stand",
-    pincode: "382220",
-    phone: "9081549995",
-    mobile: "9381540777",
-    email: "cash@example.com",
-    contactPerson: "John Doe",
-    birthday: "1990-01-15",
-    anniversary: "2015-06-20",
-    bankAccountNo: "1234567890",
-    bankName: "SBI",
-    ifscCode: "SBIN0001234",
-    branch: "Main Branch",
-    gstNo: "22AAAAA0000A1Z5",
-    panCard: "ABCDE1234F",
-    aadharNo: "123456789012"
-  },
-  {
-    id: 2,
-    accountName: "Bank Account",
-    printName: "Bank Account",
-    openingBalance: "500000",
-    drCr: "DR",
-    country: "India",
-    state: "Gujarat",
-    stateCode: "GJ",
-    district: "Ahmedabad",
-    taluka: "Ahmedabad",
-    city: "Ahmedabad",
-    area: "Satellite",
-    address1: "456 Park Avenue",
-    address2: "Near Mall",
-    pincode: "380015",
-    phone: "9876543210",
-    mobile: "9876543211",
-    email: "bank@example.com",
-    contactPerson: "Jane Smith",
-    birthday: "1985-03-25",
-    anniversary: "2010-12-10",
-    bankAccountNo: "0987654321",
-    bankName: "HDFC",
-    ifscCode: "HDFC0001234",
-    branch: "Satellite Branch",
-    gstNo: "24BBBBB0000B1Z5",
-    panCard: "FGHIJ5678K",
-    aadharNo: "987654321098"
-  }
-];
+
 
 const entriesOptions = [
   { id: 10, name: "10" },
@@ -98,7 +37,7 @@ const entriesOptions = [
 
 const Account = () => {
   const navigate = useNavigate();
-  const [data, setData] = useState(initialData);
+const [data, setData] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -127,15 +66,27 @@ const Account = () => {
   };
 
   // Filter data based on search
-  const filteredData = data.filter((item) => {
-    const matchesSearch =
-      item.accountName.toLowerCase().includes(search.toLowerCase()) ||
-      item.printName.toLowerCase().includes(search.toLowerCase()) ||
-      item.email.toLowerCase().includes(search.toLowerCase()) ||
-      item.mobile.includes(search);
-    return matchesSearch;
-  });
+const filteredData = data.filter((item: any) => {
+  if (!search.trim()) return true;
 
+
+  return (
+    String(item.accountName || "")
+      .toLowerCase()
+      .includes(search.toLowerCase()) ||
+
+    String(item.printName || "")
+      .toLowerCase()
+      .includes(search.toLowerCase()) ||
+
+    String(item.email || "")
+      .toLowerCase()
+      .includes(search.toLowerCase()) ||
+
+    String(item.mobile || "")
+      .includes(search)
+  );
+});
   const totalItems = filteredData.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -163,6 +114,23 @@ const Account = () => {
         : [...prev, id]
     );
   };
+const getAccounts = async () => {
+  try {
+    const response = await apiHelper.get("/accounts");
+
+
+
+    // Check actual structure
+
+
+    setData([...response.data]);
+  } catch (error) {
+    console.log(error);
+  }
+};
+useEffect(() => {
+  getAccounts();
+}, []);
 
   return (
     <div className="relative min-h-screen space-y-6 p-4 pb-28 text-gray-900 md:p-6 dark:text-gray-100">
@@ -300,7 +268,7 @@ const Account = () => {
             </THead>
 
             <TBody className="dark:divide-dark-700 divide-y divide-gray-200">
-              {currentItems.map((item, index) => {
+              {currentItems.map((item : any, index) => {
                 const isRowSelected = selectedIds.includes(item.id);
                 return (
                   <Tr
@@ -316,6 +284,7 @@ const Account = () => {
                         onChange={() => handleSelectRow(item.id)}
                       />
                     </Td>
+                  
                     <Td className="py-4 font-medium text-gray-500">
                       {indexOfFirstItem + index + 1}
                     </Td>

@@ -233,6 +233,8 @@ export default function ShowroomVariantPage() {
       let data = response?.data || response;
       if (!Array.isArray(data)) data = [];
       setVariants(data);
+       console.log("", data);
+    console.log("Accessories:", accessories);
     } catch (error) {
       console.error(error);
       setVariants([]);
@@ -361,7 +363,10 @@ export default function ShowroomVariantPage() {
     taxOptions.find((o) => o.id === exShowroomTaxPercent) || taxOptions[3];
   const currentInsTax =
     taxOptions.find((o) => o.id === insuranceTaxPercent) || taxOptions[3];
-
+  const displayRtoTotal = (
+    Number(rtoCharge || 0) +
+    (Number(rtoCharge || 0) * Number(rtoTaxPercent || 0)) / 100
+  ).toFixed(2);
   // Auto-calculate Sales Price
   useEffect(() => {
     const pur = Number(purPrice || 0);
@@ -525,8 +530,7 @@ export default function ShowroomVariantPage() {
   // ─── Form Submit with Validation ───────────────────────────────────
   // ─── Form Submit with Validation ───────────────────────────────────
   const onFormSubmit = async (data: FormValues) => {
-    console.log("Form submitted", data);
-    console.log("Accessories:", accessories);
+   
 
     // Validate accessories - make name required if row has any data
     const accessoryErrors: { [key: number]: string } = {};
@@ -660,7 +664,7 @@ export default function ShowroomVariantPage() {
             <FunnelIcon className="size-4.5" /> Filter
           </button>
           <Button color="primary" onClick={handleOpenAddDrawer}>
-            <PlusIcon className="mr-1 size-4.5" /> Add Variant
+            <PlusIcon className="mr-1 size-4.5" /> Add Showroom Variant
           </Button>
         </div>
       </div>
@@ -1146,6 +1150,16 @@ export default function ShowroomVariantPage() {
                         <div className="dark:border-dark-600 dark:bg-dark-800 dark:text-dark-200 flex h-10 items-center rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm font-semibold text-gray-700">
                           {formRtoTaxType === "Commercial" ? "10%" : "1%"}
                         </div>
+                      </div>
+                      <div>
+                        <label className="mb-2 block text-sm font-medium">
+                          RTO Total (Charge + Tax)
+                        </label>
+                        <Input
+                          type="text"
+                          readOnly
+                          value={`₹ ${displayRtoTotal}`}
+                        />
                       </div>
                     </div>
                   </div>

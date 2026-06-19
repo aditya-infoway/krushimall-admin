@@ -74,13 +74,13 @@ const apiHelper = {
   },
 
   // PATCH
-  patch: async (
-    url: string,
-    data: Record<string, any>
-  ) => {
-    const response = await api.patch(url, data);
-    return response.data;
-  },
+patch: async (
+  url: string,
+  data?: Record<string, any>
+) => {
+  const response = await api.patch(url, data);
+  return response.data;
+},
 
   // DELETE
   delete: async (url: string) => {
