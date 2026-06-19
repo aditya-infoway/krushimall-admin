@@ -551,7 +551,7 @@ const NewAccount = () => {
               <DatePicker
                 label="Birthday On"
                 placeholder="Select Date"
-                onChange={(val) => setValue("birthday", val)}
+                onChange={(val: Date[]) => setValue("birthday", val[0]?.toISOString() || "")}
               />
             </div>
 
@@ -559,7 +559,7 @@ const NewAccount = () => {
               <DatePicker
                 label="Anniversary"
                 placeholder="Select Date"
-                onChange={(val) => setValue("anniversary", val)}
+                onChange={(val: Date[]) => setValue("anniversary", val[0]?.toISOString() || "")}
               />
             </div>
 

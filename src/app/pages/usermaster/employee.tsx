@@ -874,7 +874,7 @@ const statusFilterOptions = [
   placeholder="Select Department"
   data={departmentOptions}
   value={formDepartmentValue}
-  onChange={(val) => setValue("department", val)}
+  onChange={(val: any) => setValue("department", val)}
   error={errors?.department && errors.department.message}
 />
                     </div>
@@ -884,7 +884,7 @@ const statusFilterOptions = [
   placeholder="Select Branch"
   data={branchOptions}
   value={formBranchValue}
-  onChange={(val) => setValue("branch", val)}
+  onChange={(val: any) => setValue("branch", val)}
   error={errors?.branch && errors.branch.message}
 />
                     </div>
@@ -896,7 +896,7 @@ const statusFilterOptions = [
   placeholder="Select Role"
   data={roleOptions}
   value={formRoleValue}
-  onChange={(val) => setValue("role", val)}
+  onChange={(val: any) => setValue("role", val)}
   error={errors?.role && errors.role.message}
 />
                   </div>
@@ -963,7 +963,7 @@ const statusFilterOptions = [
                     <Combobox
                       label="Status"
                       data={statusOptions}
-                      onChange={(val) => setValue("status", val)}
+                      onChange={(val: any) => setValue("status", val)}
                     />
                   </div>
                 </div>

@@ -8,11 +8,11 @@ interface TimepickerProps {
   className?: string;
 }
 
-const Timepicker = ({ 
-  value, 
-  onChange, 
+const Timepicker = ({
+  value,
+  onChange,
   placeholder = "Select time...",
-  className = ""
+  className = "",
 }: TimepickerProps) => {
   return (
     <div className={`max-w-xl ${className}`}>
@@ -32,7 +32,11 @@ const Timepicker = ({
         }}
         placeholder={placeholder}
         value={value}
-        onChange={onChange}
+        onChange={(selectedDates: Date[]) => {
+          const value = selectedDates[0]?.toLocaleTimeString() || "";
+          // Call your onChange with the string value
+          if (onChange) onChange(value);
+        }}
       />
     </div>
   );

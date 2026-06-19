@@ -1,4 +1,5 @@
-import React, { useState, useMemo, useEffect } from "react";
+// src/app/pages/item/tractor.tsx
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogPanel,
@@ -30,34 +31,42 @@ import { Listbox } from "@/components/shared/form/StyledListbox";
 import apiHelper from "@/utils/apiHelper";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
-interface Colour {
+interface Tractor {
   id: number;
-
   modelId: number;
   variantId: number;
-
-  model?: {
-    modelName: string;
-  };
-
-  variant?: {
-    variantName: string;
-  };
-
-  colourName: string;
-  colourCode: string;
+  colourId: number;
+  model?: { modelName: string };
+  variant?: { variantName: string };
+  colour?: { colourName: string; colourCode: string };
+  itemName: string;
+  codeNo: string;
+  shortName: string;
+  hsnCode: string;
+  taxSlab: string;
+  listOfGroup: string;
+  typeOfFuel: string;
+  fuelCapacity: string;
+  purchasePriceNoGST: number;
+  purchasePriceTaxable: number;
   status: "ACTIVE" | "INACTIVE";
-
   createdAt: string;
 }
 
 interface FormValues {
-  model: string;
   modelId: number | string;
-  variant: string;
   variantId: number | string;
-  colourName: string;
-  colourCode: string;
+  colourId: number | string;
+  itemName: string;
+  codeNo: string;
+  shortName: string;
+  hsnCode: string;
+  taxSlab: string;
+  listOfGroup: string;
+  typeOfFuel: string;
+  fuelCapacity: string;
+  purchasePriceNoGST: number | string;
+  purchasePriceTaxable: number | string;
   status: "ACTIVE" | "INACTIVE";
 }
 
@@ -70,13 +79,9 @@ interface OptionType {
 // ─── Helper Functions ──────────────────────────────────────────────────────
 const formatDate = (dateString: string) => {
   if (!dateString) return "-";
-
   try {
     const date = new Date(dateString);
-    // Check if date is valid
     if (isNaN(date.getTime())) return dateString;
-
-    // Format as: 15 Jan 2025
     return date.toLocaleDateString("en-GB", {
       day: "numeric",
       month: "short",
@@ -109,10 +114,10 @@ const statusFilterOptions = [
 ];
 
 // ─── Main Component ──────────────────────────────────────────────────────
-const Colour = () => {
+const Tractor = () => {
   const [showDrawer, setShowDrawer] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
-  const [colours, setColours] = useState<Colour[]>([]);
+  const [tractors, setTractors] = useState<Tractor[]>([]);
   const [search, setSearch] = useState("");
   const [showFilterBar, setShowFilterBar] = useState(false);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
@@ -124,97 +129,102 @@ const Colour = () => {
   // ─── Dynamic Data from API ─────────────────────────────────────────────
   const [models, setModels] = useState<OptionType[]>([]);
   const [variants, setVariants] = useState<OptionType[]>([]);
+  const [colours, setColours] = useState<OptionType[]>([]);
   const [filteredVariants, setFilteredVariants] = useState<OptionType[]>([]);
 
   // ─── Form State ─────────────────────────────────────────────────────────
   const [formData, setFormData] = useState<FormValues>({
-    model: "",
     modelId: "",
-    variant: "",
     variantId: "",
-    colourName: "",
-    colourCode: "#000000",
+    colourId: "",
+    itemName: "",
+    codeNo: "",
+    shortName: "",
+    hsnCode: "",
+    taxSlab: "",
+    listOfGroup: "",
+    typeOfFuel: "",
+    fuelCapacity: "",
+    purchasePriceNoGST: "",
+    purchasePriceTaxable: "",
     status: "ACTIVE",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // ─── Color Picker State ──────────────────────────────────────────────────
-  const [colorPickerState, setColorPickerState] = useState<{
-    isOpen: boolean;
-    id: number | null;
-    color: string;
-    position: { x: number; y: number };
-  }>({
-    isOpen: false,
-    id: null,
-    color: "#000000",
-    position: { x: 0, y: 0 },
-  });
-
-  // ─── Fetch Models ──────────────────────────────────────────────────────
+  // ─── Fetch Data ──────────────────────────────────────────────────────
   useEffect(() => {
     getModels();
     getVariants();
     getColours();
+    getTractors();
   }, []);
 
   const getModels = async () => {
     try {
-      setLoading(true);
       const response = await apiHelper.get("/model");
-      let modelsData = response?.data || response;
-      if (!Array.isArray(modelsData)) modelsData = [];
-
-      const mappedModels = modelsData.map((item: any) => ({
+      let data = response?.data || response;
+      if (!Array.isArray(data)) data = [];
+      const mapped = data.map((item: any) => ({
         id: item.id || item._id,
         name: item.modelName || item.name || "Unknown",
       }));
-      setModels(mappedModels);
+      setModels(mapped);
     } catch (error) {
       console.error("Failed to fetch models:", error);
       setModels([]);
-    } finally {
-      setLoading(false);
     }
   };
 
   const getVariants = async () => {
     try {
       const response = await apiHelper.get("/variant");
-      let variantsData = response?.data || response;
-      if (!Array.isArray(variantsData)) variantsData = [];
-
-      const mappedVariants = variantsData.map((item: any) => ({
+      let data = response?.data || response;
+      if (!Array.isArray(data)) data = [];
+      const mapped = data.map((item: any) => ({
         id: item.id || item._id,
         name: item.variantName || item.name || "Unknown",
         modelId: item.modelId || item.model?.id || null,
       }));
-      setVariants(mappedVariants);
-      setFilteredVariants(mappedVariants);
+      setVariants(mapped);
+      setFilteredVariants(mapped);
     } catch (error) {
       console.error("Failed to fetch variants:", error);
       setVariants([]);
       setFilteredVariants([]);
     }
   };
+
   const getColours = async () => {
     try {
-      setLoading(true);
-
       const response = await apiHelper.get("/colours");
-
-      // FIX
-      const data = Array.isArray(response.data)
-        ? response.data
-        : response.data.data || [];
-
-      setColours(data);
+      let data = response?.data || response;
+      if (!Array.isArray(data)) data = [];
+      const mapped = data.map((item: any) => ({
+        id: item.id || item._id,
+        name: item.colourName || item.name || "Unknown",
+      }));
+      setColours(mapped);
     } catch (error) {
       console.error("Failed to fetch colours:", error);
+      setColours([]);
+    }
+  };
+
+  const getTractors = async () => {
+    try {
+      setLoading(true);
+      const response = await apiHelper.get("/tractors");
+      let data = response?.data?.data || response?.data || response;
+      if (!Array.isArray(data)) data = [];
+      setTractors(data);
+    } catch (error) {
+      console.error("Failed to fetch tractors:", error);
+      setTractors([]);
     } finally {
       setLoading(false);
     }
   };
+
   // ─── Filter Variants by Model ─────────────────────────────────────────
   useEffect(() => {
     if (formData.modelId) {
@@ -226,34 +236,6 @@ const Colour = () => {
       setFilteredVariants(variants);
     }
   }, [formData.modelId, variants]);
-
-  // ─── Color Picker Effects ──────────────────────────────────────────────
-  // Close color picker when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (colorPickerState.isOpen) {
-        const target = e.target as HTMLElement;
-        if (!target.closest(".color-picker-popover")) {
-          closeColorPicker();
-        }
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [colorPickerState.isOpen]);
-
-  // Close color picker on Escape key
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && colorPickerState.isOpen) {
-        closeColorPicker();
-      }
-    };
-
-    document.addEventListener("keydown", handleEscape);
-    return () => document.removeEventListener("keydown", handleEscape);
-  }, [colorPickerState.isOpen]);
 
   // ─── Handlers ───────────────────────────────────────────────────────────
   const handleInputChange = (field: keyof FormValues, value: any) => {
@@ -268,45 +250,52 @@ const Colour = () => {
   const handleOpenAddDrawer = () => {
     setEditId(null);
     setFormData({
-      model: "",
       modelId: "",
-      variant: "",
       variantId: "",
-      colourName: "",
-      colourCode: "#000000",
+      colourId: "",
+      itemName: "",
+      codeNo: "",
+      shortName: "",
+      hsnCode: "",
+      taxSlab: "",
+      listOfGroup: "",
+      typeOfFuel: "",
+      fuelCapacity: "",
+      purchasePriceNoGST: "",
+      purchasePriceTaxable: "",
       status: "ACTIVE",
     });
     setErrors({});
     setShowDrawer(true);
   };
 
-  const handleOpenEditDrawer = (item: Colour) => {
+  const handleOpenEditDrawer = (item: Tractor) => {
     setEditId(item.id);
-
     setFormData({
-      model: item.model?.modelName || "",
       modelId: item.modelId || "",
-
-      variant: item.variant?.variantName || "",
       variantId: item.variantId || "",
-
-      colourName: item.colourName,
-      colourCode: item.colourCode,
+      colourId: item.colourId || "",
+      itemName: item.itemName,
+      codeNo: item.codeNo,
+      shortName: item.shortName,
+      hsnCode: item.hsnCode,
+      taxSlab: item.taxSlab,
+      listOfGroup: item.listOfGroup,
+      typeOfFuel: item.typeOfFuel,
+      fuelCapacity: item.fuelCapacity,
+      purchasePriceNoGST: item.purchasePriceNoGST,
+      purchasePriceTaxable: item.purchasePriceTaxable,
       status: item.status,
     });
-
     setShowDrawer(true);
   };
 
   const handleDelete = async (id: number) => {
     try {
-      if (!window.confirm("Are you sure you want to delete this colour?"))
+      if (!window.confirm("Are you sure you want to delete this tractor?"))
         return;
-
-      await apiHelper.delete(`/colours/${id}`);
-
-      // Refresh the list
-      await getColours();
+      await apiHelper.delete(`/tractors/${id}`);
+      await getTractors();
     } catch (error) {
       console.error("Failed to delete:", error);
     }
@@ -315,117 +304,51 @@ const Colour = () => {
   const handleBulkDelete = async () => {
     if (
       !window.confirm(
-        `Are you sure you want to delete ${selectedIds.length} selected colours?`,
+        `Are you sure you want to delete ${selectedIds.length} selected tractors?`,
       )
     )
       return;
-
     try {
       setLoading(true);
-      // Delete each selected colour
       await Promise.all(
-        selectedIds.map((id) => apiHelper.delete(`/colours/${id}`)),
+        selectedIds.map((id) => apiHelper.delete(`/tractors/${id}`)),
       );
-
       setSelectedIds([]);
-      await getColours();
+      await getTractors();
     } catch (error) {
-      console.error("Failed to delete colours:", error);
+      console.error("Failed to delete:", error);
     } finally {
       setLoading(false);
     }
   };
 
+  const handleToggleStatus = async (id: number) => {
+    const tractor = tractors.find((item) => item.id === id);
+    if (!tractor) return;
 
+    const newStatus = tractor.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
 
-const handleToggleStatus = async (id: number) => {
-  const colour = colours.find((item) => item.id === id);
-  if (!colour) return;
+    setTractors((prev) =>
+      prev.map((item) =>
+        item.id === id ? { ...item, status: newStatus } : item,
+      ),
+    );
 
-  const newStatus = colour.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
-
-  // Optimistic update for instant feedback
-  setColours((prev) =>
-    prev.map((item) =>
-      item.id === id ? { ...item, status: newStatus } : item,
-    ),
-  );
-
-  try {
-    await apiHelper.put(`/colours/${id}`, { status: newStatus });
-  } catch (error) {
-    console.error("Failed to toggle status:", error);
-    // Revert on failure
-    await getColours();
-  }
-};
-
-  // ─── Handle Colour Picker Click (Direct Edit) ──────────────────────────
-  const handleOpenColorPicker = (
-    id: number,
-    currentColor: string,
-    event: React.MouseEvent<HTMLButtonElement>,
-  ) => {
-    const rect = event.currentTarget.getBoundingClientRect();
-
-    // Calculate position to ensure it stays within viewport
-    let x = rect.left;
-    let y = rect.bottom + 8;
-
-    // If it would go off the right side, align to the right
-    if (x + 220 > window.innerWidth) {
-      x = rect.right - 200;
-    }
-
-    // If it would go off the bottom, show above instead
-    if (y + 250 > window.innerHeight) {
-      y = rect.top - 250;
-    }
-
-    setColorPickerState({
-      isOpen: true,
-      id: id,
-      color: currentColor,
-      position: { x, y },
-    });
-  };
-
-  const handleColorChange = (newColor: string) => {
-    if (colorPickerState.id !== null) {
-      setColours(
-        colours.map((item) =>
-          item.id === colorPickerState.id
-            ? { ...item, colourCode: newColor }
-            : item,
-        ),
-      );
-      setColorPickerState((prev) => ({ ...prev, color: newColor }));
-    }
-  };
-
-const closeColorPicker = async () => {
-  const { id, color } = colorPickerState;
-
-  if (id !== null) {
     try {
-      await apiHelper.put(`/colours/${id}`, { colourCode: color });
+      await apiHelper.put(`/tractors/${id}`, { status: newStatus });
     } catch (error) {
-      console.error("Failed to update colour:", error);
-      await getColours();
+      console.error("Failed to toggle status:", error);
+      await getTractors();
     }
-  }
+  };
 
-  setColorPickerState((prev) => ({ ...prev, isOpen: false }));
-};
-
-  
   const validate = () => {
     const newErrors: Record<string, string> = {};
-    if (!formData.model) newErrors.model = "Model is required";
-    if (!formData.variant) newErrors.variant = "Variant is required";
-    if (!formData.colourName.trim())
-      newErrors.colourName = "Colour Name is required";
-    if (!formData.colourCode) newErrors.colourCode = "Colour Code is required";
+    if (!formData.modelId) newErrors.modelId = "Model is required";
+    if (!formData.variantId) newErrors.variantId = "Variant is required";
+    if (!formData.colourId) newErrors.colourId = "Colour is required";
+    if (!formData.itemName.trim()) newErrors.itemName = "Item Name is required";
+    if (!formData.codeNo.trim()) newErrors.codeNo = "Code No is required";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -437,19 +360,27 @@ const closeColorPicker = async () => {
       const payload = {
         modelId: Number(formData.modelId),
         variantId: Number(formData.variantId),
-        colourName: formData.colourName,
-        colourCode: formData.colourCode,
+        colourId: Number(formData.colourId),
+        itemName: formData.itemName,
+        codeNo: formData.codeNo,
+        shortName: formData.shortName,
+        hsnCode: formData.hsnCode,
+        taxSlab: formData.taxSlab,
+        listOfGroup: formData.listOfGroup,
+        typeOfFuel: formData.typeOfFuel,
+        fuelCapacity: formData.fuelCapacity,
+        purchasePriceNoGST: Number(formData.purchasePriceNoGST),
+        purchasePriceTaxable: Number(formData.purchasePriceTaxable),
         status: formData.status,
       };
 
       if (editId) {
-        await apiHelper.put(`/colours/${editId}`, payload);
+        await apiHelper.put(`/tractors/${editId}`, payload);
       } else {
-        await apiHelper.post("/colours", payload);
+        await apiHelper.post("/tractors", payload);
       }
 
-      await getColours();
-
+      await getTractors();
       setShowDrawer(false);
     } catch (error) {
       console.error("Save failed:", error);
@@ -457,9 +388,9 @@ const closeColorPicker = async () => {
   };
 
   // ─── Filter Data ────────────────────────────────────────────────────────
-  const filteredData = colours.filter((item) => {
+  const filteredData = tractors.filter((item) => {
     const matchesSearch =
-      item.colourName.toLowerCase().includes(search.toLowerCase()) ||
+      item.itemName.toLowerCase().includes(search.toLowerCase()) ||
       item.model?.modelName?.toLowerCase().includes(search.toLowerCase()) ||
       item.variant?.variantName?.toLowerCase().includes(search.toLowerCase());
 
@@ -503,10 +434,10 @@ const closeColorPicker = async () => {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-xl font-semibold text-gray-900 md:text-2xl dark:text-white">
-            Colour Management
+            Tractor Management
           </h1>
           <p className="dark:text-dark-300 mt-1 text-sm text-gray-500">
-            Manage all colours from here
+            Manage all tractors from here
           </p>
         </div>
 
@@ -538,7 +469,7 @@ const closeColorPicker = async () => {
             className="w-full sm:w-auto"
           >
             <PlusIcon className="mr-1.5 size-4.5" />
-            Add Colour
+            Add Tractor
           </Button>
         </div>
       </div>
@@ -548,7 +479,7 @@ const closeColorPicker = async () => {
         <MagnifyingGlassIcon className="absolute top-1/2 left-3 size-4.5 -translate-y-1/2 text-gray-400" />
         <input
           type="text"
-          placeholder="Search colour, model or variant..."
+          placeholder="Search tractor, model or variant..."
           value={search}
           onChange={(e) => {
             setSearch(e.target.value);
@@ -611,16 +542,19 @@ const closeColorPicker = async () => {
                   Variant
                 </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  Colour Name
+                  Colour
                 </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  Colour
+                  Item Name
+                </Th>
+                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                  Code
                 </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Status
                 </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  Created Date
+                  Created
                 </Th>
                 <Th className="w-20 py-3.5 text-center text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Actions
@@ -655,18 +589,19 @@ const closeColorPicker = async () => {
                       {item.variant?.variantName}
                     </Td>
                     <Td className="dark:text-dark-200 py-4 text-gray-600">
-                      {item.colourName}
+                      <span className="inline-flex items-center gap-2">
+                        <span
+                          className="inline-block h-4 w-4 rounded-full border"
+                          style={{ backgroundColor: item.colour?.colourCode }}
+                        />
+                        {item.colour?.colourName}
+                      </span>
                     </Td>
-                    <Td className="py-4">
-                      <button
-                        type="button"
-                        onClick={(e) =>
-                          handleOpenColorPicker(item.id, item.colourCode, e)
-                        }
-                        className="relative h-10 w-10 cursor-pointer rounded border border-gray-300 transition-all hover:ring-2 hover:ring-blue-500 dark:border-gray-600"
-                        style={{ backgroundColor: item.colourCode }}
-                        title="Click to change colour"
-                      />
+                    <Td className="dark:text-dark-200 py-4 text-gray-600">
+                      {item.itemName}
+                    </Td>
+                    <Td className="dark:text-dark-200 py-4 text-gray-600">
+                      {item.codeNo}
                     </Td>
                     <Td className="py-4">
                       <button
@@ -712,7 +647,6 @@ const closeColorPicker = async () => {
                             <MenuItem>
                               {({ active }) => (
                                 <button
-                                  type="button"
                                   onClick={() => handleOpenEditDrawer(item)}
                                   className={`${
                                     active
@@ -720,15 +654,13 @@ const closeColorPicker = async () => {
                                       : "dark:text-dark-200 text-gray-700"
                                   } flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium`}
                                 >
-                                  <PencilIcon className="size-4" />
-                                  Edit
+                                  <PencilIcon className="size-4" /> Edit
                                 </button>
                               )}
                             </MenuItem>
                             <MenuItem>
                               {({ active }) => (
                                 <button
-                                  type="button"
                                   onClick={() => handleDelete(item.id)}
                                   className={`${
                                     active
@@ -736,8 +668,7 @@ const closeColorPicker = async () => {
                                       : "dark:text-dark-200 text-gray-700"
                                   } flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium`}
                                 >
-                                  <TrashIcon className="size-4" />
-                                  Delete
+                                  <TrashIcon className="size-4" /> Delete
                                 </button>
                               )}
                             </MenuItem>
@@ -752,10 +683,10 @@ const closeColorPicker = async () => {
               {currentItems.length === 0 && (
                 <Tr>
                   <Td
-                    colSpan={9}
+                    colSpan={10}
                     className="py-12 text-center text-gray-400 dark:text-gray-500"
                   >
-                    No colours found
+                    No tractors found
                   </Td>
                 </Tr>
               )}
@@ -804,7 +735,6 @@ const closeColorPicker = async () => {
                         <MenuItem key={opt.id}>
                           {({ active }) => (
                             <button
-                              type="button"
                               onClick={() => {
                                 setItemsPerPage(opt.id);
                                 setCurrentPage(1);
@@ -847,7 +777,6 @@ const closeColorPicker = async () => {
             <div className="order-2 flex justify-center md:w-1/3">
               <div className="dark:border-dark-700 dark:bg-dark-800 inline-flex items-center space-x-1 rounded-lg border border-gray-200 bg-white p-1 shadow-sm">
                 <button
-                  type="button"
                   onClick={() =>
                     setCurrentPage((prev) => Math.max(prev - 1, 1))
                   }
@@ -856,12 +785,10 @@ const closeColorPicker = async () => {
                 >
                   <ChevronLeftIcon className="size-4" />
                 </button>
-
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map(
                   (page) => (
                     <button
                       key={page}
-                      type="button"
                       onClick={() => setCurrentPage(page)}
                       className={`inline-flex size-8 items-center justify-center rounded-md text-sm font-medium transition-colors ${
                         page === currentPage
@@ -873,9 +800,7 @@ const closeColorPicker = async () => {
                     </button>
                   ),
                 )}
-
                 <button
-                  type="button"
                   onClick={() =>
                     setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                   }
@@ -921,56 +846,6 @@ const closeColorPicker = async () => {
         </div>
       )}
 
-      {/* Color Picker Popover */}
-      {colorPickerState.isOpen && (
-        <div
-          className="color-picker-popover fixed z-[9999]"
-          style={{
-            left: colorPickerState.position.x,
-            top: colorPickerState.position.y,
-          }}
-        >
-          <div className="min-w-[200px] rounded-lg border border-gray-200 bg-white p-4 shadow-2xl dark:border-gray-700 dark:bg-gray-800">
-            <div className="mb-3 flex items-center justify-between">
-              <span className="text-sm font-medium dark:text-white">
-                Choose Color
-              </span>
-              <button
-                onClick={closeColorPicker}
-                className="text-gray-400 transition-colors hover:text-gray-600 dark:hover:text-gray-200"
-              >
-                <XMarkIcon className="h-4 w-4" />
-              </button>
-            </div>
-
-            <input
-              type="color"
-              value={colorPickerState.color}
-              onChange={(e) => handleColorChange(e.target.value)}
-              className="h-48 w-full cursor-pointer rounded-lg border-2 border-gray-200 dark:border-gray-600"
-            />
-
-            <div className="mt-3 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div
-                  className="h-6 w-6 rounded border border-gray-200 dark:border-gray-600"
-                  style={{ backgroundColor: colorPickerState.color }}
-                />
-                <span className="font-mono text-xs text-gray-500 dark:text-gray-400">
-                  {colorPickerState.color}
-                </span>
-              </div>
-              <button
-                onClick={closeColorPicker}
-                className="rounded-lg bg-blue-500 px-3 py-1.5 text-xs text-white transition-colors hover:bg-blue-600"
-              >
-                Done
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Right Side Drawer */}
       <Transition appear show={showDrawer} as={Fragment}>
         <Dialog
@@ -999,12 +874,12 @@ const closeColorPicker = async () => {
             leaveFrom="translate-x-0"
             leaveTo="translate-x-full"
           >
-            <DialogPanel className="dark:bg-dark-700 fixed top-0 right-0 flex h-full w-full max-w-md transform-gpu flex-col bg-white shadow-2xl transition-transform duration-200">
+            <DialogPanel className="dark:bg-dark-700 fixed top-0 right-0 flex h-full w-full max-w-full transform-gpu flex-col bg-white shadow-2xl transition-transform duration-200 sm:max-w-xl md:max-w-2xl lg:max-w-3xl xl:max-w-4xl">
               <div className="flex h-full flex-col">
                 {/* Header */}
-                <div className="dark:border-dark-500 flex items-center justify-between border-b border-gray-200 px-5 py-4">
-                  <h2 className="dark:text-dark-50 text-lg font-semibold text-gray-800">
-                    {editId !== null ? "Edit Colour" : "Add Colour"}
+                <div className="dark:border-dark-500 flex items-center justify-between border-b border-gray-200 px-4 py-3 sm:px-5 sm:py-4">
+                  <h2 className="dark:text-dark-50 text-base font-semibold text-gray-800 sm:text-lg">
+                    {editId !== null ? "Edit Tractor" : "Add Tractor"}
                   </h2>
                   <Button
                     onClick={() => setShowDrawer(false)}
@@ -1018,118 +893,258 @@ const closeColorPicker = async () => {
                 </div>
 
                 {/* Content */}
-                <div className="grow space-y-5 overflow-y-auto p-5">
-                  {/* Select Model */}
-                  <div>
-                    <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
-                      Select Model <span className="text-red-500">*</span>
-                    </label>
-                    <Combobox
-                      data={models}
-                      displayField="name"
-                      value={
-                        models.find((m) => m.id === Number(formData.modelId)) ||
-                        null
-                      }
-                      onChange={(val: OptionType | null) => {
-                        handleInputChange("model", val?.name || "");
-                        handleInputChange("modelId", val?.id || "");
-                      }}
-                      placeholder="Select Model"
-                      searchFields={["name"]}
-                    />
-                    {errors.model && (
-                      <span className="text-xs text-orange-500">
-                        {errors.model}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Select Variant */}
-                  <div>
-                    <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
-                      Select Variant <span className="text-red-500">*</span>
-                    </label>
-                    <Combobox
-                      data={filteredVariants}
-                      displayField="name"
-                      value={
-                        filteredVariants.find(
-                          (v) => v.id === Number(formData.variantId),
-                        ) || null
-                      }
-                      onChange={(val: OptionType | null) => {
-                        handleInputChange("variant", val?.name || "");
-                        handleInputChange("variantId", val?.id || "");
-                      }}
-                      placeholder="Select Variant"
-                      searchFields={["name"]}
-                      disabled={!formData.modelId}
-                    />
-                    {errors.variant && (
-                      <span className="text-xs text-orange-500">
-                        {errors.variant}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Colour Name */}
-                  <div>
-                    <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
-                      Colour Name <span className="text-red-500">*</span>
-                    </label>
-                    <Input
-                      type="text"
-                      placeholder="Enter Colour Name"
-                      value={formData.colourName}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                        handleInputChange("colourName", e.target.value)
-                      }
-                    />
-                    {errors.colourName && (
-                      <span className="text-xs text-orange-500">
-                        {errors.colourName}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Colour Picker */}
-                  <div>
-                    <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
-                      Colour Picker <span className="text-red-500">*</span>
-                    </label>
-                    <div className="flex items-center gap-4">
-                      <input
-                        type="color"
-                        value={formData.colourCode}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                          handleInputChange("colourCode", e.target.value)
+                <div className="grow space-y-4 overflow-y-auto p-4 sm:space-y-5 sm:p-5">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
+                    {/* Select Model */}
+                    <div>
+                      <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
+                        Select Model <span className="text-red-500">*</span>
+                      </label>
+                      <Combobox
+                        data={models}
+                        displayField="name"
+                        value={
+                          models.find(
+                            (m) => m.id === Number(formData.modelId),
+                          ) || null
                         }
-                        className="h-16 w-16 cursor-pointer rounded border border-gray-300 dark:border-gray-600"
+                        onChange={(val: OptionType | null) => {
+                          handleInputChange("modelId", val?.id || "");
+                        }}
+                        placeholder="Select Model"
+                        searchFields={["name"]}
+                      />
+                      {errors.modelId && (
+                        <span className="text-xs text-orange-500">
+                          {errors.modelId}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Select Variant */}
+                    <div>
+                      <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
+                        Select Variant <span className="text-red-500">*</span>
+                      </label>
+                      <Combobox
+                        data={filteredVariants}
+                        displayField="name"
+                        value={
+                          filteredVariants.find(
+                            (v) => v.id === Number(formData.variantId),
+                          ) || null
+                        }
+                        onChange={(val: OptionType | null) => {
+                          handleInputChange("variantId", val?.id || "");
+                        }}
+                        placeholder="Select Variant"
+                        searchFields={["name"]}
+                        disabled={!formData.modelId}
+                      />
+                      {errors.variantId && (
+                        <span className="text-xs text-orange-500">
+                          {errors.variantId}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Select Colour */}
+                    <div>
+                      <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
+                        Select Colour <span className="text-red-500">*</span>
+                      </label>
+                      <Combobox
+                        data={colours}
+                        displayField="name"
+                        value={
+                          colours.find(
+                            (c) => c.id === Number(formData.colourId),
+                          ) || null
+                        }
+                        onChange={(val: OptionType | null) => {
+                          handleInputChange("colourId", val?.id || "");
+                        }}
+                        placeholder="Select Colour"
+                        searchFields={["name"]}
+                      />
+                      {errors.colourId && (
+                        <span className="text-xs text-orange-500">
+                          {errors.colourId}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  {/* Input Grid */}
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
+                    <div>
+                      <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
+                        Item Name <span className="text-red-500">*</span>
+                      </label>
+                      <Input
+                        type="text"
+                        placeholder="Item Name"
+                        value={formData.itemName}
+                        onChange={(e) =>
+                          handleInputChange("itemName", e.target.value)
+                        }
+                      />
+                      {errors.itemName && (
+                        <span className="text-xs text-orange-500">
+                          {errors.itemName}
+                        </span>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
+                        Code No <span className="text-red-500">*</span>
+                      </label>
+                      <Input
+                        type="text"
+                        placeholder="Code No"
+                        value={formData.codeNo}
+                        onChange={(e) =>
+                          handleInputChange("codeNo", e.target.value)
+                        }
+                      />
+                      {errors.codeNo && (
+                        <span className="text-xs text-orange-500">
+                          {errors.codeNo}
+                        </span>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
+                        Short Name
+                      </label>
+                      <Input
+                        type="text"
+                        placeholder="Short Name"
+                        value={formData.shortName}
+                        onChange={(e) =>
+                          handleInputChange("shortName", e.target.value)
+                        }
                       />
                     </div>
-                    {errors.colourCode && (
-                      <span className="text-xs text-orange-500">
-                        {errors.colourCode}
-                      </span>
-                    )}
+
+                    <div>
+                      <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
+                        HSN Code
+                      </label>
+                      <Input
+                        type="text"
+                        placeholder="HSN Code"
+                        value={formData.hsnCode}
+                        onChange={(e) =>
+                          handleInputChange("hsnCode", e.target.value)
+                        }
+                      />
+                    </div>
+
+                    <div>
+                      <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
+                        Tax Slab
+                      </label>
+                      <Input
+                        type="text"
+                        placeholder="Tax Slab"
+                        value={formData.taxSlab}
+                        onChange={(e) =>
+                          handleInputChange("taxSlab", e.target.value)
+                        }
+                      />
+                    </div>
+
+                    <div>
+                      <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
+                        List of Group
+                      </label>
+                      <Input
+                        type="text"
+                        placeholder="List of Group"
+                        value={formData.listOfGroup}
+                        onChange={(e) =>
+                          handleInputChange("listOfGroup", e.target.value)
+                        }
+                      />
+                    </div>
+
+                    <div>
+                      <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
+                        Type of Fuel
+                      </label>
+                      <Input
+                        type="text"
+                        placeholder="Type of Fuel"
+                        value={formData.typeOfFuel}
+                        onChange={(e) =>
+                          handleInputChange("typeOfFuel", e.target.value)
+                        }
+                      />
+                    </div>
+
+                    <div>
+                      <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
+                        Fuel Capacity
+                      </label>
+                      <Input
+                        type="text"
+                        placeholder="Fuel Capacity"
+                        value={formData.fuelCapacity}
+                        onChange={(e) =>
+                          handleInputChange("fuelCapacity", e.target.value)
+                        }
+                      />
+                    </div>
+
+                    <div>
+                      <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
+                        Purchase Price (Without GST)
+                      </label>
+                      <Input
+                        type="number"
+                        placeholder="Purchase Price (Without GST)"
+                        value={formData.purchasePriceNoGST}
+                        onChange={(e) =>
+                          handleInputChange(
+                            "purchasePriceNoGST",
+                            e.target.value,
+                          )
+                        }
+                      />
+                    </div>
+
+                    <div>
+                      <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
+                        Purchase Price (Taxable)
+                      </label>
+                      <Input
+                        type="number"
+                        placeholder="Purchase Price (Taxable)"
+                        value={formData.purchasePriceTaxable}
+                        onChange={(e) =>
+                          handleInputChange(
+                            "purchasePriceTaxable",
+                            e.target.value,
+                          )
+                        }
+                      />
+                    </div>
                   </div>
 
-                  {/* Status - Dropdown */}
-                  <div>
+                  {/* Status */}
+                  <div className="sm:col-span-2 lg:col-span-3">
                     <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
-                      Status <span className="text-red-500">*</span>
+                      Status
                     </label>
                     <Combobox
                       data={statusOptions}
                       displayField="label"
                       value={
-                        (statusOptions.find(
+                        statusOptions.find(
                           (s) => s.value === formData.status,
-                        ) as {
-                          label: string;
-                          value: "ACTIVE" | "INACTIVE";
-                        } | null) || null
+                        ) || null
                       }
                       onChange={(
                         val: {
@@ -1143,13 +1158,13 @@ const closeColorPicker = async () => {
                 </div>
 
                 {/* Footer */}
-                <div className="dark:border-dark-500 flex items-center justify-end gap-3 border-t border-gray-200 p-5">
+                <div className="dark:border-dark-500 flex flex-col-reverse items-center justify-end gap-3 border-t border-gray-200 p-4 sm:flex-row sm:p-5">
                   <Button
                     variant="outlined"
                     color="neutral"
                     type="button"
                     onClick={() => setShowDrawer(false)}
-                    className="h-10 w-1/2"
+                    className="h-10 w-full sm:w-auto sm:min-w-[100px]"
                   >
                     Cancel
                   </Button>
@@ -1157,7 +1172,7 @@ const closeColorPicker = async () => {
                     color="primary"
                     type="button"
                     onClick={handleSave}
-                    className="h-10 w-1/2"
+                    className="h-10 w-full sm:w-auto sm:min-w-[100px]"
                   >
                     {editId !== null ? "Update" : "Save"}
                   </Button>
@@ -1171,4 +1186,4 @@ const closeColorPicker = async () => {
   );
 };
 
-export default Colour;
+export default Tractor;
