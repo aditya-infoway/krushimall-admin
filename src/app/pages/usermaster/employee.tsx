@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import apiHelper from "@/utils/apiHelper";
+import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/solid";
+import { LockClosedIcon } from "@heroicons/react/24/outline";
 import { useForm, useWatch } from "react-hook-form";
 import {
   Dialog,
@@ -59,36 +62,6 @@ type FormValues = {
 };
 
 // Sample data
-const initialData: Employee[] = [
-  {
-    id: 1,
-    department: "Sales",
-    branch: "Mumbai",
-    role: "Manager",
-    employeeName: "John Doe",
-    mobileNumber: "9876543210",
-    alternateNumber: "9876543211",
-    email: "john@example.com",
-    password: "password123",
-    confirmPassword: "password123",
-    status: "ACTIVE",
-    createdAt: "15 Jan 2025"
-  },
-  {
-    id: 2,
-    department: "Marketing",
-    branch: "Delhi",
-    role: "Executive",
-    employeeName: "Jane Smith",
-    mobileNumber: "9876543212",
-    alternateNumber: "9876543213",
-    email: "jane@example.com",
-    password: "password456",
-    confirmPassword: "password456",
-    status: "ACTIVE",
-    createdAt: "20 Jan 2025"
-  }
-];
 
 const entriesOptions = [
   { id: 10, name: "10" },
@@ -132,37 +105,46 @@ const roleOptions = [
 const Employee = () => {
   const [showDrawer, setShowDrawer] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
-  const [employees, setEmployees] = useState<Employee[]>(initialData);
+  const [employees, setEmployees] = useState<Employee[]>([]);
   const [search, setSearch] = useState("");
   const [showFilterBar, setShowFilterBar] = useState(false);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [selectedDepartmentFilter, setSelectedDepartmentFilter] = useState("All");
+  const [selectedDepartmentFilter, setSelectedDepartmentFilter] =
+    useState("All");
   const [selectedRoleFilter, setSelectedRoleFilter] = useState("All");
   const [selectedStatusFilter, setSelectedStatusFilter] = useState("All");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  // Add this after your useForm declaration
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    control,
+    reset,
+    formState: { errors },
+  } = useForm<FormValues>({
+    defaultValues: {
+      department: "",
+      branch: "",
+      role: "",
+      employeeName: "",
+      mobileNumber: "",
+      alternateNumber: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+      status: "ACTIVE",
+    },
+  });
 
-// Add this after your useForm declaration
-const { register, handleSubmit, setValue, control, reset, formState: { errors } } = useForm<FormValues>({
-  defaultValues: {
-    department: "",
-    branch: "",
-    role: "",
-    employeeName: "",
-    mobileNumber: "",
-    alternateNumber: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    status: "ACTIVE",
-  },
-});
-
-// Add these useWatch hooks to track form values
-const formDepartmentValue = useWatch({ control, name: "department" });
-const formBranchValue = useWatch({ control, name: "branch" });
-const formRoleValue = useWatch({ control, name: "role" });
-const formStatusValue = useWatch({ control, name: "status" });
+  // Add these useWatch hooks to track form values
+  const formDepartmentValue = useWatch({ control, name: "department" });
+  const formBranchValue = useWatch({ control, name: "branch" });
+  const formRoleValue = useWatch({ control, name: "role" });
+  const formStatusValue = useWatch({ control, name: "status" });
 
   const formValidationRules = {
     department: { required: "Department is required" },
@@ -184,44 +166,56 @@ const formStatusValue = useWatch({ control, name: "status" });
       },
     },
     password: {
-      required: "Password is required",
+      required: !editId ? "Password is required" : false,
       minLength: {
         value: 6,
         message: "Password must be at least 6 characters",
       },
     },
     confirmPassword: {
-      required: "Confirm password is required",
+      required: !editId ? "Confirm password is required " : false,
       validate: (value: string, formValues: any) =>
         value === formValues.password || "Passwords do not match",
     },
   };
 
- // Keep these as { id, name } format for Listbox
-const departmentFilterOptions = [
-  { id: "All", name: "All Departments" },
-  { id: "Sales", name: "Sales" },
-  { id: "Marketing", name: "Marketing" },
-  { id: "HR", name: "HR" },
-  { id: "IT", name: "IT" },
-  { id: "Finance", name: "Finance" },
-];
+  // Keep these as { id, name } format for Listbox
+  const departmentFilterOptions = [
+    { id: "All", name: "All Departments" },
+    { id: "Sales", name: "Sales" },
+    { id: "Marketing", name: "Marketing" },
+    { id: "HR", name: "HR" },
+    { id: "IT", name: "IT" },
+    { id: "Finance", name: "Finance" },
+  ];
 
-const roleFilterOptions = [
-  { id: "All", name: "All Roles" },
-  { id: "Manager", name: "Manager" },
-  { id: "Executive", name: "Executive" },
-  { id: "Associate", name: "Associate" },
-  { id: "Intern", name: "Intern" },
-  { id: "Team Lead", name: "Team Lead" },
-];
+  const roleFilterOptions = [
+    { id: "All", name: "All Roles" },
+    { id: "Manager", name: "Manager" },
+    { id: "Executive", name: "Executive" },
+    { id: "Associate", name: "Associate" },
+    { id: "Intern", name: "Intern" },
+    { id: "Team Lead", name: "Team Lead" },
+  ];
 
-const statusFilterOptions = [
-  { id: "All", name: "All Statuses" },
-  { id: "ACTIVE", name: "Active" },
-  { id: "INACTIVE", name: "Inactive" },
-];
+  const statusFilterOptions = [
+    { id: "All", name: "All Statuses" },
+    { id: "ACTIVE", name: "Active" },
+    { id: "INACTIVE", name: "Inactive" },
+  ];
+  const getEmployees = async () => {
+    try {
+      const response = await apiHelper.get("/employees");
 
+      setEmployees(response.data || []);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  useEffect(() => {
+    getEmployees();
+  }, []);
   const handleOpenAddDrawer = () => {
     setEditId(null);
     reset({
@@ -239,76 +233,113 @@ const statusFilterOptions = [
     setShowDrawer(true);
   };
 
-  const handleOpenEditDrawer = (item: Employee) => {
-    setEditId(item.id);
-    reset({
-      department: item.department,
-      branch: item.branch,
-      role: item.role,
-      employeeName: item.employeeName,
-      mobileNumber: item.mobileNumber,
-      alternateNumber: item.alternateNumber,
-      email: item.email,
-      password: item.password,
-      confirmPassword: item.confirmPassword,
-      status: item.status,
-    });
-    setShowDrawer(true);
-  };
+  const handleOpenEditDrawer = async (item: Employee) => {
+    try {
+      const response = await apiHelper.get(`/employees/${item.id}`);
 
-  const handleDelete = (id: number) => {
-    if (window.confirm("Are you sure you want to delete this employee?")) {
-      setEmployees(employees.filter((item) => item.id !== id));
+      const employee = response.data;
+
+      setEditId(employee.id);
+
+      reset({
+        department: employee.department,
+        branch: employee.branch,
+        role: employee.role,
+        employeeName: employee.employeeName,
+        mobileNumber: employee.mobileNumber,
+        alternateNumber: employee.alternateNumber || "",
+        email: employee.email,
+        password: "",
+        confirmPassword: "",
+        status: employee.status,
+      });
+
+      setShowDrawer(true);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  const handleDelete = async (id: number) => {
+    try {
+      if (window.confirm("Are you sure you want to delete this employee?")) {
+        await apiHelper.delete(`/employees/${id}`);
+
+        getEmployees();
+      }
+    } catch (error) {
+      console.log(error);
     }
   };
 
-  const handleBulkDelete = () => {
-    if (window.confirm("Are you sure you want to delete selected employees?")) {
-      setEmployees(employees.filter((item) => !selectedIds.includes(item.id)));
-      setSelectedIds([]);
+  const handleBulkDelete = async () => {
+    try {
+      if (
+        window.confirm("Are you sure you want to delete selected employees?")
+      ) {
+        await Promise.all(
+          selectedIds.map((id) => apiHelper.delete(`/employees/${id}`)),
+        );
+
+        setSelectedIds([]);
+        getEmployees();
+      }
+    } catch (error) {
+      console.log(error);
     }
   };
 
-  const handleToggleStatus = (id: number) => {
-    setEmployees(
-      employees.map((item) =>
-        item.id === id
-          ? { ...item, status: item.status === "ACTIVE" ? "INACTIVE" : "ACTIVE" }
-          : item
-      )
-    );
-  };
+  const handleToggleStatus = async (id: number) => {
+    try {
+      await apiHelper.patch(`/employees/toggle-status/${id}`, {});
 
-  const onFormSubmit = (data: FormValues) => {
-    if (editId) {
-      // Edit existing
-      setEmployees(
-        employees.map((item) =>
-          item.id === editId
-            ? { ...item, ...data, id: editId }
-            : item
-        )
-      );
-    } else {
-      // Add new
-      const newId = Math.max(...employees.map((item) => item.id)) + 1;
-      setEmployees([
-        ...employees,
-        {
-          ...data,
-          id: newId,
-          status: "ACTIVE",
-          createdAt: new Date().toLocaleDateString("en-GB", {
-            day: "numeric",
-            month: "short",
-            year: "numeric",
-          }),
-        },
-      ]);
+      getEmployees();
+    } catch (error) {
+      console.log(error);
     }
-    setShowDrawer(false);
   };
+  const onFormSubmit = async (data: FormValues) => {
+    try {
+      const payload = {
+        department: data.department,
+        branch: data.branch,
+        role: data.role,
+        employeeName: data.employeeName,
+        mobileNumber: data.mobileNumber,
+        alternateNumber: data.alternateNumber,
+        email: data.email,
+        password: data.password,
+        status: data.status,
+      };
 
+      if (editId) {
+        await apiHelper.put(`/employees/${editId}`, payload);
+      } else {
+        await apiHelper.post("/employees", payload);
+      }
+
+      getEmployees();
+
+      setShowDrawer(false);
+      setEditId(null);
+
+      reset({
+        department: "",
+        branch: "",
+        role: "",
+        employeeName: "",
+        mobileNumber: "",
+        alternateNumber: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+        status: "ACTIVE",
+      });
+    } catch (error: any) {
+      console.log(error);
+
+      alert(error?.response?.data?.message || "Something went wrong");
+    }
+  };
   // Filter data
   const filteredData = employees.filter((item) => {
     const matchesSearch =
@@ -325,12 +356,7 @@ const statusFilterOptions = [
     const matchesStatus =
       selectedStatusFilter === "All" || item.status === selectedStatusFilter;
 
-    return (
-      matchesSearch &&
-      matchesDepartment &&
-      matchesRole &&
-      matchesStatus
-    );
+    return matchesSearch && matchesDepartment && matchesRole && matchesStatus;
   });
 
   const totalItems = filteredData.length;
@@ -357,7 +383,7 @@ const statusFilterOptions = [
     setSelectedIds((prev) =>
       prev.includes(id)
         ? prev.filter((selectedId) => selectedId !== id)
-        : [...prev, id]
+        : [...prev, id],
     );
   };
 
@@ -396,8 +422,12 @@ const statusFilterOptions = [
             Excel
           </button>
 
-          <Button color="primary" onClick={handleOpenAddDrawer} className="w-full sm:w-auto">
-            <PlusIcon className="size-4.5 mr-1.5" />
+          <Button
+            color="primary"
+            onClick={handleOpenAddDrawer}
+            className="w-full sm:w-auto"
+          >
+            <PlusIcon className="mr-1.5 size-4.5" />
             Add Employee
           </Button>
         </div>
@@ -430,7 +460,7 @@ const statusFilterOptions = [
                 data={departmentFilterOptions}
                 value={
                   departmentFilterOptions.find(
-                    (o) => o.id === selectedDepartmentFilter
+                    (o) => o.id === selectedDepartmentFilter,
                   ) || departmentFilterOptions[0]
                 }
                 placeholder="All Departments"
@@ -467,7 +497,7 @@ const statusFilterOptions = [
                 data={statusFilterOptions}
                 value={
                   statusFilterOptions.find(
-                    (o) => o.id === selectedStatusFilter
+                    (o) => o.id === selectedStatusFilter,
                   ) || statusFilterOptions[0]
                 }
                 placeholder="All Statuses"
@@ -506,6 +536,9 @@ const statusFilterOptions = [
                 </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Department
+                </Th>
+                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                  Branch
                 </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Role
@@ -555,6 +588,9 @@ const statusFilterOptions = [
                       {item.department}
                     </Td>
                     <Td className="dark:text-dark-200 py-4 text-gray-600">
+                      {item.branch}
+                    </Td>
+                    <Td className="dark:text-dark-200 py-4 text-gray-600">
                       {item.role}
                     </Td>
                     <Td className="dark:text-dark-200 py-4 text-gray-600">
@@ -581,7 +617,7 @@ const statusFilterOptions = [
                       </button>
                     </Td>
                     <Td className="py-4 text-gray-500 dark:text-gray-400">
-                      {item.createdAt}
+                      {new Date(item.createdAt).toLocaleDateString("en-IN")}
                     </Td>
                     <Td className="py-4 text-center">
                       <Menu
@@ -766,7 +802,7 @@ const statusFilterOptions = [
                     >
                       {page}
                     </button>
-                  )
+                  ),
                 )}
 
                 <button
@@ -867,7 +903,7 @@ const statusFilterOptions = [
 
                 {/* Content */}
                 <div className="grow space-y-5 overflow-y-auto p-5">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
                      <Combobox
   label="Type of Department *"
@@ -905,18 +941,28 @@ const statusFilterOptions = [
                     <Input
                       label="Employee Name *"
                       placeholder="Enter employee name"
-                      {...register("employeeName", formValidationRules.employeeName)}
-                      error={errors?.employeeName && errors.employeeName.message}
+                      {...register(
+                        "employeeName",
+                        formValidationRules.employeeName,
+                      )}
+                      error={
+                        errors?.employeeName && errors.employeeName.message
+                      }
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
                       <Input
                         label="Mobile Number *"
                         placeholder="Enter mobile number"
-                        {...register("mobileNumber", formValidationRules.mobileNumber)}
-                        error={errors?.mobileNumber && errors.mobileNumber.message}
+                        {...register(
+                          "mobileNumber",
+                          formValidationRules.mobileNumber,
+                        )}
+                        error={
+                          errors?.mobileNumber && errors.mobileNumber.message
+                        }
                       />
                     </div>
                     <div>
@@ -938,30 +984,72 @@ const statusFilterOptions = [
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
                       <Input
                         label="Password *"
                         placeholder="Enter password"
-                        type="password"
+                        type={showPassword ? "text" : "password"}
+                        prefix={
+                          <LockClosedIcon className="size-5 text-gray-400" />
+                        }
+                        suffix={
+                          <Button
+                            type="button"
+                            variant="flat"
+                            className="pointer-events-auto size-6 shrink-0 rounded-full p-0"
+                            onClick={() => setShowPassword(!showPassword)}
+                          >
+                            {showPassword ? (
+                              <EyeSlashIcon className="size-5 text-gray-400" />
+                            ) : (
+                              <EyeIcon className="size-5 text-gray-400" />
+                            )}
+                          </Button>
+                        }
                         {...register("password", formValidationRules.password)}
-                        error={errors?.password && errors.password.message}
+                        error={errors?.password?.message}
                       />
                     </div>
                     <div>
                       <Input
                         label="Confirm Password *"
                         placeholder="Confirm password"
-                        type="password"
-                        {...register("confirmPassword", formValidationRules.confirmPassword)}
-                        error={errors?.confirmPassword && errors.confirmPassword.message}
+                        type={showConfirmPassword ? "text" : "password"}
+                        prefix={
+                          <LockClosedIcon className="size-5 text-gray-400" />
+                        }
+                        suffix={
+                          <Button
+                            type="button"
+                            variant="flat"
+                            className="pointer-events-auto size-6 shrink-0 rounded-full p-0"
+                            onClick={() =>
+                              setShowConfirmPassword(!showConfirmPassword)
+                            }
+                          >
+                            {showConfirmPassword ? (
+                              <EyeSlashIcon className="size-5 text-gray-400" />
+                            ) : (
+                              <EyeIcon className="size-5 text-gray-400" />
+                            )}
+                          </Button>
+                        }
+                        {...register(
+                          "confirmPassword",
+                          formValidationRules.confirmPassword,
+                        )}
+                        error={errors?.confirmPassword?.message}
                       />
                     </div>
                   </div>
 
                   <div>
-                    <Combobox
-                      label="Status"
+                    <label className="mb-2 block text-sm font-medium">
+                      Status
+                    </label>
+
+                    <Listbox
                       data={statusOptions}
                       onChange={(val: any) => setValue("status", val)}
                     />

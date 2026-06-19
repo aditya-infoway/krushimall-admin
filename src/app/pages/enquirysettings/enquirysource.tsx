@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState,useEffect  } from "react";
+import apiHelper from "@/utils/apiHelper";
 import { useForm, useWatch } from "react-hook-form";
 import {
   Dialog,
@@ -25,7 +26,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/Table";
 import { Button, Checkbox, Input } from "@/components/ui";
-import { Combobox } from "@/components/shared/form/StyledCombobox";
+
 import { Listbox } from "@/components/shared/form/StyledListbox";
 
 type EnquirySource = {
@@ -41,32 +42,6 @@ type FormValues = {
 };
 
 // Sample data
-const initialData: EnquirySource[] = [
-  {
-    id: 1,
-    enquirySource: "Website",
-    status: "ACTIVE",
-    createdAt: "15 Jan 2025"
-  },
-  {
-    id: 2,
-    enquirySource: "Phone Call",
-    status: "ACTIVE",
-    createdAt: "20 Jan 2025"
-  },
-  {
-    id: 3,
-    enquirySource: "Email",
-    status: "INACTIVE",
-    createdAt: "25 Jan 2025"
-  },
-  {
-    id: 4,
-    enquirySource: "Social Media",
-    status: "ACTIVE",
-    createdAt: "28 Jan 2025"
-  }
-];
 
 const entriesOptions = [
   { id: 10, name: "10" },
@@ -91,7 +66,8 @@ const statusFilterOptions = [
 const EnquirySource = () => {
   const [showDrawer, setShowDrawer] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
-  const [enquirySources, setEnquirySources] = useState<EnquirySource[]>(initialData);
+const [enquirySources, setEnquirySources] =
+  useState<EnquirySource[]>([]);
   const [search, setSearch] = useState("");
   const [showFilterBar, setShowFilterBar] = useState(false);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
@@ -122,7 +98,21 @@ const EnquirySource = () => {
   const formValidationRules = {
     enquirySource: { required: "Enquiry source is required" },
   };
+const getEnquirySources = async () => {
+  try {
+    const response = await apiHelper.get(
+      "/enquiry-sources"
+    );
 
+    setEnquirySources(response.data || []);
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+useEffect(() => {
+  getEnquirySources();
+}, []);
   const handleOpenAddDrawer = () => {
     setEditId(null);
     reset({
@@ -141,57 +131,81 @@ const EnquirySource = () => {
     setShowDrawer(true);
   };
 
-  const handleDelete = (id: number) => {
-    if (window.confirm("Are you sure you want to delete this enquiry source?")) {
-      setEnquirySources(enquirySources.filter((item) => item.id !== id));
-    }
-  };
-
-  const handleBulkDelete = () => {
-    if (window.confirm("Are you sure you want to delete selected enquiry sources?")) {
-      setEnquirySources(enquirySources.filter((item) => !selectedIds.includes(item.id)));
-      setSelectedIds([]);
-    }
-  };
-
-  const handleToggleStatus = (id: number) => {
-    setEnquirySources(
-      enquirySources.map((item) =>
-        item.id === id
-          ? { ...item, status: item.status === "ACTIVE" ? "INACTIVE" : "ACTIVE" }
-          : item
-      )
+const handleDelete = async (id: number) => {
+  try {
+    await apiHelper.delete(
+      `/enquiry-sources/${id}`
     );
-  };
 
-  const onFormSubmit = (data: FormValues) => {
-    if (editId) {
-      // Edit existing
-      setEnquirySources(
-        enquirySources.map((item) =>
-          item.id === editId
-            ? { ...item, ...data, id: editId }
-            : item
+    getEnquirySources();
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+
+ const handleBulkDelete = async () => {
+  try {
+    if (
+      window.confirm(
+        "Are you sure you want to delete selected enquiry types?"
+      )
+    ) {
+      await Promise.all(
+        selectedIds.map((id) =>
+          apiHelper.delete(`/enquiry-sources/${id}`)
         )
       );
-    } else {
-      // Add new
-      const newId = Math.max(...enquirySources.map((item) => item.id)) + 1;
-      setEnquirySources([
-        ...enquirySources,
-        {
-          ...data,
-          id: newId,
-          createdAt: new Date().toLocaleDateString("en-GB", {
-            day: "numeric",
-            month: "short",
-            year: "numeric",
-          }),
-        },
-      ]);
+
+      setSelectedIds([]);
+      getEnquirySources();
     }
+  } catch (error) {
+    console.log(error);
+  }
+};
+ const handleToggleStatus = async (id: number) => {
+  try {
+    await apiHelper.patch(
+      `/enquiry-sources/toggle-status/${id}`,
+      {}
+    );
+
+    getEnquirySources();
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+ const onFormSubmit = async (
+  data: FormValues
+) => {
+  try {
+    if (editId) {
+      await apiHelper.put(
+        `/enquiry-sources/${editId}`,
+        data
+      );
+    } else {
+      await apiHelper.post(
+        "/enquiry-sources",
+        data
+      );
+    }
+
+    getEnquirySources();
     setShowDrawer(false);
-  };
+
+    reset({
+      enquirySource: "",
+      status: "ACTIVE",
+    });
+
+    setEditId(null);
+  } catch (error) {
+    console.log(error);
+  }
+};
 
   // Filter data
   const filteredData = enquirySources.filter((item) => {
@@ -391,7 +405,7 @@ const EnquirySource = () => {
                       </button>
                     </Td>
                     <Td className="py-4 text-gray-500 dark:text-gray-400">
-                      {item.createdAt}
+                     {new Date(item.createdAt).toLocaleDateString("en-IN")}
                     </Td>
                     <Td className="py-4 text-center">
                       <Menu
@@ -687,13 +701,23 @@ const EnquirySource = () => {
                   </div>
 
                   <div>
-                 <Combobox
-  label="Status"
-  placeholder="Select Status"
-  data={statusOptions}
-  value={formStatusValue}
-  onChange={(val: string) => setValue("status", val)}
-/>
+                    <label className="mb-2 block text-sm font-medium">
+                      Status
+                    </label>
+                  
+                    <Listbox
+                      data={statusOptions}
+                      value={
+                        statusOptions.find(
+                          (item) => item.value === formStatusValue
+                        ) || statusOptions[0]
+                      }
+                      placeholder="Select Status"
+                      onChange={(option: any) => {
+                        setValue("status", option.value);
+                      }}
+                      displayField="label"
+                    />
                   </div>
                 </div>
 

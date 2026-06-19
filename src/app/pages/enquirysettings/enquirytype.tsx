@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import apiHelper from "@/utils/apiHelper";
 import { useForm, useWatch } from "react-hook-form";
 import {
   Dialog,
@@ -26,7 +27,7 @@ import {
 import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/Table";
 import { Button, Checkbox, Input } from "@/components/ui";
 import { Listbox } from "@/components/shared/form/StyledListbox";
-import { Combobox } from "@/components/shared/form/StyledCombobox";
+
 
 type EnquiryType = {
   id: number;
@@ -41,26 +42,6 @@ type FormValues = {
 };
 
 // Sample data
-const initialData: EnquiryType[] = [
-  {
-    id: 1,
-    enquiryType: "General Inquiry",
-    status: "ACTIVE",
-    createdAt: "15 Jan 2025"
-  },
-  {
-    id: 2,
-    enquiryType: "Sales Inquiry",
-    status: "ACTIVE",
-    createdAt: "20 Jan 2025"
-  },
-  {
-    id: 3,
-    enquiryType: "Support Request",
-    status: "INACTIVE",
-    createdAt: "25 Jan 2025"
-  }
-];
 
 const entriesOptions = [
   { id: 10, name: "10" },
@@ -85,7 +66,8 @@ const statusFilterOptions = [
 const EnquiryType = () => {
   const [showDrawer, setShowDrawer] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
-  const [enquiryTypes, setEnquiryTypes] = useState<EnquiryType[]>(initialData);
+ const [enquiryTypes, setEnquiryTypes] =
+  useState<EnquiryType[]>([]);
   const [search, setSearch] = useState("");
   const [showFilterBar, setShowFilterBar] = useState(false);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
@@ -112,7 +94,19 @@ const EnquiryType = () => {
   const formValidationRules = {
     enquiryType: { required: "Enquiry type is required" },
   };
+const getEnquiryTypes = async () => {
+  try {
+    const response = await apiHelper.get("/enquiry-types");
 
+    setEnquiryTypes(response.data || []);
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+useEffect(() => {
+  getEnquiryTypes();
+}, []);
   const handleOpenAddDrawer = () => {
     setEditId(null);
     reset({
@@ -131,57 +125,84 @@ const EnquiryType = () => {
     setShowDrawer(true);
   };
 
-  const handleDelete = (id: number) => {
-    if (window.confirm("Are you sure you want to delete this enquiry type?")) {
-      setEnquiryTypes(enquiryTypes.filter((item) => item.id !== id));
-    }
-  };
-
-  const handleBulkDelete = () => {
-    if (window.confirm("Are you sure you want to delete selected enquiry types?")) {
-      setEnquiryTypes(enquiryTypes.filter((item) => !selectedIds.includes(item.id)));
-      setSelectedIds([]);
-    }
-  };
-
-  const handleToggleStatus = (id: number) => {
-    setEnquiryTypes(
-      enquiryTypes.map((item) =>
-        item.id === id
-          ? { ...item, status: item.status === "ACTIVE" ? "INACTIVE" : "ACTIVE" }
-          : item
+ const handleDelete = async (id: number) => {
+  try {
+    if (
+      window.confirm(
+        "Are you sure you want to delete this enquiry type?"
       )
-    );
-  };
+    ) {
+      await apiHelper.delete(
+        `/enquiry-types/${id}`
+      );
 
-  const onFormSubmit = (data: FormValues) => {
-    if (editId) {
-      // Edit existing
-      setEnquiryTypes(
-        enquiryTypes.map((item) =>
-          item.id === editId
-            ? { ...item, ...data, id: editId }
-            : item
+      getEnquiryTypes();
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+ const handleBulkDelete = async () => {
+  try {
+    if (
+      window.confirm(
+        "Are you sure you want to delete selected enquiry types?"
+      )
+    ) {
+      await Promise.all(
+        selectedIds.map((id) =>
+          apiHelper.delete(`/enquiry-types/${id}`)
         )
       );
-    } else {
-      // Add new
-      const newId = Math.max(...enquiryTypes.map((item) => item.id)) + 1;
-      setEnquiryTypes([
-        ...enquiryTypes,
-        {
-          ...data,
-          id: newId,
-          createdAt: new Date().toLocaleDateString("en-GB", {
-            day: "numeric",
-            month: "short",
-            year: "numeric",
-          }),
-        },
-      ]);
+
+      setSelectedIds([]);
+      getEnquiryTypes();
     }
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+ const handleToggleStatus = async (id: number) => {
+  try {
+    await apiHelper.patch(
+      `/enquiry-types/toggle-status/${id}`
+    );
+
+    getEnquiryTypes();
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+ const onFormSubmit = async (data: FormValues) => {
+  try {
+    if (editId) {
+      await apiHelper.put(
+        `/enquiry-types/${editId}`,
+        data
+      );
+    } else {
+      await apiHelper.post(
+        "/enquiry-types",
+        data
+      );
+    }
+
+    getEnquiryTypes();
     setShowDrawer(false);
-  };
+
+    reset({
+      enquiryType: "",
+      status: "ACTIVE",
+    });
+
+    setEditId(null);
+  } catch (error) {
+    console.log(error);
+  }
+};
 
   // Filter data
   const filteredData = enquiryTypes.filter((item) => {
@@ -381,7 +402,7 @@ const EnquiryType = () => {
                       </button>
                     </Td>
                     <Td className="py-4 text-gray-500 dark:text-gray-400">
-                      {item.createdAt}
+                     {new Date(item.createdAt).toLocaleDateString("en-IN")}
                     </Td>
                     <Td className="py-4 text-center">
                       <Menu
@@ -677,13 +698,25 @@ const EnquiryType = () => {
                   </div>
 
                <div>
-  <Combobox
-  label="Status"
-  placeholder="Select Status"
-  data={statusOptions}
-  value={formStatusValue}
-  onChange={(val: string) => setValue("status", val)}
-/>
+ <div>
+  <label className="mb-2 block text-sm font-medium">
+    Status
+  </label>
+
+  <Listbox
+    data={statusOptions}
+    value={
+      statusOptions.find(
+        (item) => item.value === formStatusValue
+      ) || statusOptions[0]
+    }
+    placeholder="Select Status"
+    onChange={(option: any) => {
+      setValue("status", option.value);
+    }}
+    displayField="label"
+  />
+</div>
 </div>
                 </div>
 

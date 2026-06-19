@@ -67,6 +67,7 @@ interface OptionType {
   modelId?: number;
 }
 
+<<<<<<< HEAD
 // ─── Helper Functions ──────────────────────────────────────────────────────
 const formatDate = (dateString: string) => {
   if (!dateString) return "-";
@@ -86,6 +87,44 @@ const formatDate = (dateString: string) => {
     return dateString;
   }
 };
+=======
+// ─── Sample Data ──────────────────────────────────────────────────────────
+const initialData: Colour[] = [
+  {
+    id: 1,
+    model: "Access 125",
+    modelId: 1,
+    variant: "Ride Connect Edition",
+    variantId: 1,
+    colourName: "Pearl Mirage White",
+    colourCode: "#F5F5F5",
+    status: "ACTIVE",
+    createdAt: "15 Jan 2025",
+  },
+  {
+    id: 2,
+    model: "Access 125",
+    modelId: 1,
+    variant: "Standard Edition",
+    variantId: 2,
+    colourName: "Metallic Sonic Silver",
+    colourCode: "#C0C0C0",
+    status: "ACTIVE",
+    createdAt: "20 Jan 2025",
+  },
+  {
+    id: 3,
+    model: "Burgman Street",
+    modelId: 2,
+    variant: "Special Edition",
+    variantId: 3,
+    colourName: "Glass Sparkle Black",
+    colourCode: "#1A1A1A",
+    status: "INACTIVE",
+    createdAt: "25 Jan 2025",
+  },
+];
+>>>>>>> b70da58 (usermaster enquiry)
 
 // ─── Options ──────────────────────────────────────────────────────────────
 const entriesOptions = [
@@ -388,6 +427,44 @@ const handleToggleStatus = async (id: number) => {
       color: currentColor,
       position: { x, y },
     });
+<<<<<<< HEAD
+=======
+  };
+
+const handleColorChange = async (newColor: string) => {
+  try {
+    if (colorPickerState.id !== null) {
+
+      // Update DB
+      await apiHelper.patch(
+        `/colours/${colorPickerState.id}/colour-code`,
+        {
+          colourCode: newColor,
+        }
+      );
+
+      // Update UI
+      setColours((prevColours) =>
+        prevColours.map((item) =>
+          item.id === colorPickerState.id
+            ? { ...item, colourCode: newColor }
+            : item
+        )
+      );
+
+      setColorPickerState((prev) => ({
+        ...prev,
+        color: newColor,
+      }));
+    }
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+  const closeColorPicker = () => {
+    setColorPickerState((prev) => ({ ...prev, isOpen: false }));
+>>>>>>> b70da58 (usermaster enquiry)
   };
 
   const handleColorChange = (newColor: string) => {
@@ -686,7 +763,11 @@ const closeColorPicker = async () => {
                       </button>
                     </Td>
                     <Td className="py-4 text-gray-500 dark:text-gray-400">
+<<<<<<< HEAD
                       {formatDate(item.createdAt)}
+=======
+                         {new Date(item.createdAt).toLocaleDateString("en-IN")}
+>>>>>>> b70da58 (usermaster enquiry)
                     </Td>
                     <Td className="py-4 text-center">
                       <Menu
@@ -1120,9 +1201,13 @@ const closeColorPicker = async () => {
                     <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
                       Status <span className="text-red-500">*</span>
                     </label>
-                    <Combobox
+
+                    <Listbox
                       data={statusOptions}
+<<<<<<< HEAD
                       displayField="label"
+=======
+>>>>>>> b70da58 (usermaster enquiry)
                       value={
                         (statusOptions.find(
                           (s) => s.value === formData.status,
@@ -1138,6 +1223,13 @@ const closeColorPicker = async () => {
                         } | null,
                       ) => handleInputChange("status", val?.value || "ACTIVE")}
                       placeholder="Select Status"
+                      onChange={(
+                        val: {
+                          label: string;
+                          value: "ACTIVE" | "INACTIVE";
+                        } | null,
+                      ) => handleInputChange("status", val?.value || "ACTIVE")}
+                      displayField="label"
                     />
                   </div>
                 </div>
