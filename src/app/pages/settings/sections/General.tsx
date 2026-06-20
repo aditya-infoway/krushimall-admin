@@ -3,7 +3,7 @@ import { PhoneIcon, XMarkIcon } from "@heroicons/react/20/solid";
 import { EnvelopeIcon, UserIcon } from "@heroicons/react/24/outline";
 import { useState, useEffect } from "react";
 import { HiPencil } from "react-icons/hi";
-
+import { PencilSquareIcon } from "@heroicons/react/24/outline";
 // Local Imports
 import { PreviewImg } from "@/components/shared/PreviewImg";
 import { Avatar, Button, Input, Upload } from "@/components/ui";
@@ -20,6 +20,12 @@ export default function General() {
   const [city, setCity] = useState("");
   const [district, setDistrict] = useState("");
   const [stateCode, setStateCode] = useState("");
+  const [prefixes, setPrefixes] = useState<any[]>([]);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [newPrefix, setNewPrefix] = useState({
+    prefixFor: "",
+    prefix: "",
+  });
   const countryOptions = Country.getAllCountries().map((country) => ({
     value: country.isoCode,
     label: country.name,
@@ -35,8 +41,17 @@ export default function General() {
   }));
   useEffect(() => {
     fetchCompany();
+    fetchPrefixes();
   }, []);
+  const fetchPrefixes = async () => {
+    try {
+      const res = await axios.get("/profile-prefix");
 
+      setPrefixes(res.data.data || []);
+    } catch (error) {
+      console.error(error);
+    }
+  };
   const fetchCompany = async () => {
     try {
       const response = await axios.get("/company");
@@ -54,6 +69,43 @@ export default function General() {
       console.error(error);
     }
   };
+  const handleSavePrefix = async () => {
+    try {
+      if (editingId) {
+        await axios.put(`/profile-prefix/${editingId}`, newPrefix);
+      } else {
+        await axios.post("/profile-prefix", newPrefix);
+      }
+
+      setNewPrefix({
+        prefixFor: "",
+        prefix: "",
+      });
+
+      setEditingId(null);
+
+      fetchPrefixes();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+  const handleEditPrefix = (item: any) => {
+    setEditingId(item.id);
+
+    setNewPrefix({
+      prefixFor: item.prefixFor,
+      prefix: item.prefix,
+    });
+  };
+  // const handleDeletePrefix = async (id: number) => {
+  //   try {
+  //     await axios.delete(`/profile-prefix/${id}`);
+
+  //     fetchPrefixes();
+  //   } catch (error) {
+  //     console.error(error);
+  //   }
+  // };
   const handleSave = async () => {
     try {
       const formData = new FormData();
@@ -84,66 +136,66 @@ export default function General() {
       console.error(error);
     }
   };
-const customSelectStyles = {
-  control: (provided: any, state: any) => ({
-    ...provided,
-    backgroundColor: "transparent",
+  const customSelectStyles = {
+    control: (provided: any, state: any) => ({
+      ...provided,
+      backgroundColor: "transparent",
 
-    borderColor: state.isFocused
-      ? "var(--color-primary-600)"
-      : "var(--color-dark-450)",
-
-    boxShadow: "none",
-    minHeight: "42px",
-
-    "&:hover": {
       borderColor: state.isFocused
         ? "var(--color-primary-600)"
-        : "var(--color-dark-400)",
-    },
-  }),
+        : "var(--color-dark-450)",
 
-  singleValue: (provided: any) => ({
-    ...provided,
-    color: "var(--color-dark-100)",
-  }),
+      boxShadow: "none",
+      minHeight: "42px",
 
-  input: (provided: any) => ({
-    ...provided,
-    color: "var(--color-dark-100)",
-  }),
+      "&:hover": {
+        borderColor: state.isFocused
+          ? "var(--color-primary-600)"
+          : "var(--color-dark-400)",
+      },
+    }),
 
-  placeholder: (provided: any) => ({
-    ...provided,
-    color: "var(--color-gray-400)",
-  }),
+    singleValue: (provided: any) => ({
+      ...provided,
+      color: "var(--color-dark-100)",
+    }),
 
-  menu: (provided: any) => ({
-    ...provided,
-    backgroundColor: "var(--color-dark-700)",
-    border: "1px solid var(--color-dark-450)",
-    borderRadius: "0.75rem",
-  }),
+    input: (provided: any) => ({
+      ...provided,
+      color: "var(--color-dark-100)",
+    }),
 
-  option: (provided: any, state: any) => ({
-    ...provided,
-    backgroundColor: state.isSelected
-      ? "var(--color-primary-600)"
-      : state.isFocused
-      ? "var(--color-dark-600)"
-      : "var(--color-dark-700)",
-    color: "#fff",
-  }),
+    placeholder: (provided: any) => ({
+      ...provided,
+      color: "var(--color-gray-400)",
+    }),
 
-  dropdownIndicator: (provided: any) => ({
-    ...provided,
-    color: "var(--color-gray-400)",
-  }),
+    menu: (provided: any) => ({
+      ...provided,
+      backgroundColor: "var(--color-dark-700)",
+      border: "1px solid var(--color-dark-450)",
+      borderRadius: "0.75rem",
+    }),
 
-  indicatorSeparator: () => ({
-    display: "none",
-  }),
-};
+    option: (provided: any, state: any) => ({
+      ...provided,
+      backgroundColor: state.isSelected
+        ? "var(--color-primary-600)"
+        : state.isFocused
+          ? "var(--color-dark-600)"
+          : "var(--color-dark-700)",
+      color: "#fff",
+    }),
+
+    dropdownIndicator: (provided: any) => ({
+      ...provided,
+      color: "var(--color-gray-400)",
+    }),
+
+    indicatorSeparator: () => ({
+      display: "none",
+    }),
+  };
   return (
     <div className="w-full max-w-3xl 2xl:max-w-5xl">
       <div className="flex items-center justify-between">
@@ -273,7 +325,7 @@ const customSelectStyles = {
           <label className="mb-1 inline-block">Country</label>
           <Select
             isDisabled={!isEditing}
-             classNamePrefix="react-select"
+            classNamePrefix="react-select"
             options={countryOptions}
             styles={customSelectStyles}
             value={countryOptions.find((c) => c.value === company?.country)}
@@ -295,7 +347,7 @@ const customSelectStyles = {
           <label className="mb-1 inline-block">State</label>
           <Select
             isDisabled={!isEditing}
-             classNamePrefix="react-select"
+            classNamePrefix="react-select"
             options={stateOptions}
             styles={customSelectStyles}
             value={stateOptions.find((s) => s.value === company?.state)}
@@ -323,7 +375,7 @@ const customSelectStyles = {
           <label className="mb-1 inline-block">District</label>
           <Select
             isDisabled={!isEditing}
-             classNamePrefix="react-select"
+            classNamePrefix="react-select"
             options={cityOptions}
             styles={customSelectStyles}
             value={cityOptions.find((d) => d.value === company?.district)}
@@ -342,7 +394,7 @@ const customSelectStyles = {
           <label className="mb-1 inline-block">City</label>
           <Select
             isDisabled={!isEditing}
-             classNamePrefix="react-select"
+            classNamePrefix="react-select"
             options={cityOptions}
             styles={customSelectStyles}
             value={cityOptions.find((c) => c.value === company?.city)}
@@ -464,7 +516,6 @@ const customSelectStyles = {
           className="rounded-xl"
         />
       </div>
-      <div className="dark:bg-dark-500 my-7 h-px bg-gray-200" />
 
       <div className="mt-8 flex justify-end gap-3">
         {!isEditing ? (
@@ -487,6 +538,78 @@ const customSelectStyles = {
             </Button>
           </>
         )}
+      </div>
+      <div className="dark:bg-dark-500 my-7 h-px bg-gray-200" />
+      <div className="mt-8">
+        <h3 className="mb-4 text-lg font-semibold">Prefix Settings</h3>
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <Input
+            label="Prefix For"
+            value={newPrefix.prefixFor}
+            onChange={(e) =>
+              setNewPrefix({
+                ...newPrefix,
+                prefixFor: e.target.value.toUpperCase(),
+              })
+            }
+            placeholder="CUSTOMER"
+          />
+
+          <Input
+            label="Prefix"
+            value={newPrefix.prefix}
+            onChange={(e) =>
+              setNewPrefix({
+                ...newPrefix,
+                prefix: e.target.value.toUpperCase(),
+              })
+            }
+            placeholder="CUS"
+          />
+
+          <div className="flex items-end">
+            <Button color="primary" onClick={handleSavePrefix}>
+              {editingId ? "Update Prefix" : "Add Prefix"}
+            </Button>
+          </div>
+        </div>
+      </div>
+      <div className="mt-6 overflow-x-auto">
+        <table className="w-full border border-gray-700">
+          <thead>
+            <tr>
+              <th className="border border-gray-700 p-3 text-left">
+                Prefix For
+              </th>
+
+              <th className="border border-gray-700 p-3 text-left">Prefix</th>
+
+              <th className="border border-gray-700 p-3 text-center">Action</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {prefixes.map((item) => (
+              <tr key={item.id}>
+                <td className="border border-gray-700 p-3">{item.prefixFor}</td>
+
+                <td className="border border-gray-700 p-3">{item.prefix}</td>
+
+                <td className="border border-gray-700 p-3 text-center">
+                  <Button
+                    isIcon
+                    color="primary"
+                    onClick={() => handleEditPrefix(item)}
+                    className="size-8 rounded-lg"
+                  >
+                    <PencilSquareIcon className="size-4" />
+                  </Button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );

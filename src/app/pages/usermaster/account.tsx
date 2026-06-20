@@ -44,11 +44,24 @@ const [data, setData] = useState<any[]>([]);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [showFilterBar, setShowFilterBar] = useState(false);
 
-  const handleDelete = (id: number) => {
-    if (window.confirm("Are you sure you want to delete this account?")) {
-      setData(data.filter(item => item.id !== id));
-    }
-  };
+const handleDelete = async (id: number) => {
+  const confirmDelete = window.confirm(
+    "Are you sure you want to delete this account?"
+  );
+
+  if (!confirmDelete) return;
+
+  try {
+    await apiHelper.delete(`/accounts/${id}`);
+
+    setData((prev) => prev.filter((item) => item.id !== id));
+
+    alert("Account deleted successfully");
+  } catch (error) {
+    console.error(error);
+    alert("Failed to delete account");
+  }
+};
 
   const handleAdd = () => {
     navigate("/usermaster/newaccount");
@@ -58,12 +71,32 @@ const [data, setData] = useState<any[]>([]);
     navigate(`/usermaster/newaccount/${item.id}`, { state: { item } });
   };
 
-  const handleBulkDelete = async () => {
-    if (window.confirm("Are you sure you want to delete selected accounts?")) {
-      setData(data.filter(item => !selectedIds.includes(item.id)));
-      setSelectedIds([]);
-    }
-  };
+ const handleBulkDelete = async () => {
+  const confirmDelete = window.confirm(
+    "Are you sure you want to delete selected accounts?"
+  );
+
+  if (!confirmDelete) return;
+
+  try {
+    await Promise.all(
+      selectedIds.map((id) =>
+        apiHelper.delete(`/accounts/${id}`)
+      )
+    );
+
+    setData((prev) =>
+      prev.filter((item) => !selectedIds.includes(item.id))
+    );
+
+    setSelectedIds([]);
+
+    alert("Selected accounts deleted successfully");
+  } catch (error) {
+    console.error(error);
+    alert("Failed to delete accounts");
+  }
+};
 
   // Filter data based on search
 const filteredData = data.filter((item: any) => {

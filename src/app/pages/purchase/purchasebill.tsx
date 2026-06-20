@@ -8,15 +8,15 @@ import {
   MagnifyingGlassIcon,
   BuildingOffice2Icon,
 } from "@heroicons/react/24/outline";
-import { Button, Input } from "@/components/ui";
+import { Input } from "@/components/ui";
 import { Listbox } from "@/components/shared/form/StyledListbox";
 import { DatePicker } from "@/components/shared/form/Datepicker";
-import { Combobox } from "@/components/shared/form/StyledCombobox";
+// import { Combobox } from "@/components/shared/form/StyledCombobox";
 import emptyStateImage from "@/assets/notfound.png";
 import { Country, State, City } from "country-state-city";
 import Select from "react-select";
 import { Radio } from "@/components/ui";
-
+import apiHelper from "@/utils/apiHelper";
 // ---------- Types ----------
 
 interface TractorPurchaseBillProps {
@@ -259,13 +259,14 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
     const d = new Date();
     return d.toISOString().split("T")[0];
   });
-
+  const [billNo, setBillNo] = useState("");
   const [terms, setTerms] = useState<TermsType>("Credit");
   const [cashAccount, setCashAccount] = useState("");
   const [bankAccount, setBankAccount] = useState("");
   const [partyId, setPartyId] = useState("");
-  const [parties, setParties] = useState<PartyOption[]>(PARTY_OPTIONS);
-  const [billNo] = useState("p/V/25-26/001");
+ const [parties, setParties] =
+  useState<PartyOption[]>([]);
+  // const [billNo] = useState("p/V/25-26/001");
   const [purchaseBillNo, setPurchaseBillNo] = useState("");
   const [purchaseDate, setPurchaseDate] = useState("");
   const [purchaseLocation, setPurchaseLocation] = useState("Main Branch");
@@ -287,7 +288,8 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
   // Account form state
   const [accountForm, setAccountForm] = useState<NewAccountData>(emptyAccount);
   const [accountTouched, setAccountTouched] = useState(false);
-
+  const [cashAccounts, setCashAccounts] = useState<any[]>([]);
+  const [bankAccounts, setBankAccounts] = useState<any[]>([]);
   const [bankDetailsModalOpen, setBankDetailsModalOpen] = useState(false);
   const [bankDetails, setBankDetails] =
     useState<BankDetailsData>(emptyBankDetails);
@@ -356,6 +358,37 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
   const freightInsuranceOther = freightNum + insuranceNum + otherNum;
   const newTaxableValue = totalAmount + freightInsuranceOther;
   const grandTotal = newTaxableValue + roundNum;
+ const getAccounts = async () => {
+  try {
+    const res = await apiHelper.get("/accounts");
+
+    const accounts = res.data || [];
+
+    setCashAccounts(
+      accounts.filter(
+        (acc: any) =>
+          acc.group === "Cash-in-Hand" ||
+          acc.group === "Cash Account"
+      )
+    );
+
+    setBankAccounts(
+      accounts.filter(
+        (acc: any) =>
+          acc.group === "Bank Accounts" ||
+          acc.group === "Bank Account"
+      )
+    );
+    
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+useEffect(() => {
+  getAccounts();
+}, []);
+
 
   const fmt = (n: number) =>
     n.toLocaleString("en-IN", {
@@ -434,7 +467,8 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
   const removeRow = (id: string) =>
     setRows((r) => r.filter((row) => row.id !== id));
 
-  const handleCreateAccount = () => {
+const handleCreateAccount = async () => {
+  try {
     const required: (keyof NewAccountData)[] = [
       "accountName",
       "mobile",
@@ -446,49 +480,141 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
       "panCard",
       "aadharCard",
     ];
-    const missing = required.filter((k) => !accountForm[k]?.trim());
+
+    const missing = required.filter(
+      (k) => !accountForm[k]?.trim()
+    );
+
     setAccountTouched(true);
+
     if (missing.length > 0) return;
 
-    const newParty: PartyOption = {
-      id: `p-${Date.now()}`,
-      name: accountForm.accountName.trim(),
-    };
-    setParties((p) => [...p, newParty]);
-    setPartyId(newParty.id);
+    const res = await apiHelper.post("/accounts", {
+      accountName: accountForm.accountName,
+      printName: accountForm.accountName,
+
+      mobile: accountForm.mobile,
+
+      country: accountForm.country,
+      countryCode: accountForm.countryCode,
+
+      state: accountForm.state,
+      stateCode: accountForm.stateCode,
+
+      district: accountForm.district,
+      city: accountForm.city,
+
+      address1: accountForm.address,
+
+      panCard: accountForm.panCard,
+      aadharNo: accountForm.aadharCard,
+
+      // drCr: "DR",
+      // openingBalance: 0,
+    });
+
+const account = res.data;
+
+console.log("API Response:", account);
+
+if (!account?.id) {
+  console.log("Invalid Response:", account);
+  return;
+}
+
+const newParty = {
+  id: account.id,
+  name: account.accountName,
+};
+
+    setParties((prev) => [...prev, newParty]);
+
+    setPartyId(account.id);
+
     setAccountModalOpen(false);
     setAccountForm(emptyAccount);
     setAccountTouched(false);
-  };
 
+  } catch (error) {
+    console.error(error);
+  }
+};
+const getParties = async () => {
+  try {
+    const res = await apiHelper.get("/accounts");
+
+  const accounts = Array.isArray(res.data?.data)
+  ? res.data.data
+  : Array.isArray(res.data)
+  ? res.data
+  : [];
+
+setParties(
+  accounts.map((acc: any) => ({
+    id: acc.id,
+    name: acc.accountName,
+  }))
+);
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+useEffect(() => {
+    getBillNo();
+  getParties();
+}, []);
   const updateAccountForm = (key: keyof NewAccountData, value: string) => {
     setAccountForm((f) => ({ ...f, [key]: value }));
   };
 
-  const handleSave = () => {
-    const selectedParty = parties.find((p) => p.id === partyId);
-    const row: PurchaseRegisterRow = {
-      id: `pr-${Date.now()}`,
+const handleSave = async () => {
+  try {
+    const payload = {
+      accountId: partyId,
       purchaseDate: purchaseDate || date,
-      terms,
-      supplierName: selectedParty?.name ?? "",
-      billNo,
       purchaseBillNo,
-      location: purchaseLocation,
-      totalQuantity,
+      terms,
+      narration,
+
+      freightCharge,
+      insurance,
+      otherCharge,
+      roundAmount,
+
+      totalQty: totalQuantity,
       totalAmount,
-      freightInsuranceOther,
-      cgstAmount: 0,
-      sgstAmount: 0,
-      igstAmount: 0,
       grandTotal,
-      transportName: "",
-      mobileNo: "",
-      vehicalNo: "",
-      status: billVerify === "verify" ? "Verified" : "Pending",
+
+      items: rows,
     };
-    onSaved?.(row);
-  };
+
+    const res = await apiHelper.post(
+      "/purchases",
+      payload
+    );
+
+    console.log(res);
+
+    alert("Purchase Saved Successfully");
+
+    // Generate next bill no
+    await getBillNo();
+
+    // Reset form
+    setRows([]);
+    setPurchaseBillNo("");
+    setNarration("");
+    setFreightCharge("");
+    setInsurance("");
+    setOtherCharge("");
+    setRoundAmount("");
+
+  } catch (error) {
+    console.error(error);
+    alert("Failed to save purchase");
+  }
+};
 
   const handleBack = () => {
     if (onBack) {
@@ -497,7 +623,19 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
       navigate("/purchase/tractor");
     }
   };
+const getBillNo = async () => {
+  try {
+    const res = await apiHelper.get(
+      "/purchases/generate-bill-no"
+    );
 
+   
+
+    setBillNo(res.billNo || "");
+  } catch (error) {
+    console.error(error);
+  }
+};
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="bg-white shadow-sm dark:bg-gray-800">
@@ -554,16 +692,25 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
               <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Cash Account
               </label>
+
               <Listbox
-                data={CASH_ACCOUNTS.map((a) => ({ label: a, value: a }))}
+                data={cashAccounts.map((acc) => ({
+                  label: acc.accountName,
+                  value: acc.id,
+                }))}
                 value={
-                  CASH_ACCOUNTS.find((a) => a === cashAccount)
-                    ? { label: cashAccount, value: cashAccount }
+                  cashAccounts.find((acc) => acc.id === cashAccount)
+                    ? {
+                        label:
+                          cashAccounts.find((acc) => acc.id === cashAccount)
+                            ?.accountName || "",
+                        value: cashAccount,
+                      }
                     : null
                 }
                 onChange={(val: any) => setCashAccount(val.value)}
                 displayField="label"
-                placeholder="Select cash account"
+                placeholder="Select Cash Account"
               />
             </div>
           )}
@@ -572,32 +719,29 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
               <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Bank Account
               </label>
-              <div className="flex w-full gap-2">
-                <div className="min-w-0 flex-1">
-                  <Listbox
-                    data={BANK_ACCOUNTS.map((a) => ({ label: a, value: a }))}
-                    value={
-                      BANK_ACCOUNTS.find((a) => a === bankAccount)
-                        ? { label: bankAccount, value: bankAccount }
-                        : null
-                    }
-                    onChange={(val: any) => {
-                      setBankAccount(val.value);
-                    }}
-                    displayField="label"
-                    placeholder="Select bank account"
-                  />
-                </div>
-                {bankAccount && (
-                  <button
-                    onClick={() => setBankDetailsModalOpen(true)}
-                    className="flex h-[38px] w-[38px] flex-shrink-0 items-center justify-center rounded-lg border border-gray-300 text-blue-600 hover:bg-gray-50 dark:border-gray-600 dark:text-blue-400 dark:hover:bg-gray-700"
-                    title="Add Bank Details"
-                  >
-                    <BuildingOffice2Icon className="h-5 w-5" />
-                  </button>
-                )}
-              </div>
+
+              <Listbox
+                data={bankAccounts.map((acc) => ({
+                  label: acc.accountName,
+                  value: acc.id,
+                }))}
+                value={
+                  bankAccounts.find((acc) => acc.id === bankAccount)
+                    ? {
+                        label:
+                          bankAccounts.find((acc) => acc.id === bankAccount)
+                            ?.accountName || "",
+                        value: bankAccount,
+                      }
+                    : null
+                }
+                onChange={(val: any) => {
+                  setBankAccount(val.value);
+                  setBankDetailsModalOpen(true);
+                }}
+                displayField="label"
+                placeholder="Select Bank Account"
+              />
             </div>
           )}
 
