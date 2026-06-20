@@ -287,14 +287,14 @@ const protectedRoutes: RouteObject = {
         ).default,
       }),
     },
-    // {
-    //   path: "accessories",
-    //   lazy: async () => ({
-    //     Component: (
-    //       await import("@/app/pages/item/accessories")
-    //     ).default,
-    //   }),
-    // },
+    {
+      path: "accessories",
+      lazy: async () => ({
+        Component: (
+          await import("@/app/pages/item/accessories")
+        ).default,
+      }),
+    },
   ],
 },
 
@@ -335,22 +335,22 @@ const protectedRoutes: RouteObject = {
     {
       path: "accessories",
       children: [
-        // {
-        //   index: true,
-        //   lazy: async () => ({
-        //     Component: (
-        //       await import("@/app/pages/purchase/accessories/register")
-        //     ).default,
-        //   }),
-        // },
-        // {
-        //   path: "add",
-        //   lazy: async () => ({
-        //     Component: (
-        //       await import("@/app/pages/purchase/accessories/add")
-        //     ).default,
-        //   }),
-        // },
+        {
+          index: true,
+          lazy: async () => ({
+            Component: (
+              await import("@/app/pages/purchase/accessories")
+            ).default,
+          }),
+        },
+        {
+          path: "add",
+          lazy: async () => ({
+            Component: (
+              await import("@/app/pages/purchase/puraccessories")
+            ).default,
+          }),
+        },
         // {
         //   path: ":id",
         //   lazy: async () => ({

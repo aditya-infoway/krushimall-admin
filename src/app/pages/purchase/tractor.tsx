@@ -1,6 +1,8 @@
 // src/app/pages/purchase/tractor/register.tsx
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import apiHelper from "@/utils/apiHelper";
 import {
   MagnifyingGlassIcon,
   FunnelIcon,
@@ -92,18 +94,13 @@ const columns = [
   "Status",
 ];
 
-const TractorPurchaseRegister: React.FC<TractorPurchaseRegisterProps> = ({
-  rows = [],
-  onAddPurchase,
-  onEditRow,
-  onDeleteRow,
-}) => {
+const TractorPurchaseRegister: React.FC = () => {
   const [search, setSearch] = useState("");
   const [rowsPerPage, setRowsPerPage] = useState(15);
   const [selectedStatusFilter, setSelectedStatusFilter] = useState("All");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-
+const [rows, setRows] = useState<PurchaseRegisterRow[]>([]);
   const navigate = useNavigate();
 
   // Filter rows
@@ -147,7 +144,45 @@ const TractorPurchaseRegister: React.FC<TractorPurchaseRegisterProps> = ({
   const isAllPageSelected =
     currentItems.length > 0 &&
     currentItems.every((item) => selectedIds.includes(item.id));
+const getPurchases = async () => {
+  try {
+    const res = await apiHelper.get("/purchases");
 
+    const purchases = res.data || [];
+
+    setRows(
+      purchases.map((item: any) => ({
+        id: item.id,
+        purchaseDate: item.purchaseDate?.split("T")[0] || "",
+        terms: item.terms,
+        supplierName: item.account?.accountName || "",
+        billNo: item.billNo,
+        purchaseBillNo: item.purchaseBillNo,
+        location: item.location || "",
+        totalQuantity: item.totalQty,
+        totalAmount: Number(item.totalAmount),
+        freightInsuranceOther:
+          Number(item.freightCharge || 0) +
+          Number(item.insurance || 0) +
+          Number(item.otherCharge || 0),
+        cgstAmount: 0,
+        sgstAmount: 0,
+        igstAmount: 0,
+        grandTotal: Number(item.grandTotal),
+        transportName: "",
+        mobileNo: "",
+        vehicalNo: "",
+        status: "Pending",
+      }))
+    );
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+useEffect(() => {
+  getPurchases();
+}, []);
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
       const pageIds = currentItems.map((item) => item.id);
