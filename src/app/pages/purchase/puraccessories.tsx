@@ -1,50 +1,46 @@
-// src/app/pages/purchase/tractor/add.tsx
-import React, { useState, useMemo, useEffect } from "react";
-import type { PurchaseRegisterRow } from "./register";
+// src/app/pages/purchase/accessoriesbill.tsx
+import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   XMarkIcon,
   CheckIcon,
   MagnifyingGlassIcon,
-  BuildingOffice2Icon,
+  PlusIcon,
+  BuildingOffice2Icon
 } from "@heroicons/react/24/outline";
 import { Button, Input } from "@/components/ui";
 import { Listbox } from "@/components/shared/form/StyledListbox";
 import { DatePicker } from "@/components/shared/form/Datepicker";
-import { Combobox } from "@/components/shared/form/StyledCombobox";
+import { Radio } from "@/components/ui";
 import emptyStateImage from "@/assets/notfound.png";
 import { Country, State, City } from "country-state-city";
 import Select from "react-select";
-import { Radio } from "@/components/ui";
 
 // ---------- Types ----------
 
-interface TractorPurchaseBillProps {
+interface AccessoriesPurchaseBillProps {
   onBack?: () => void;
-  onSaved?: (row: PurchaseRegisterRow) => void;
+  onSaved?: (row: any) => void;
 }
 
-interface VehicleOption {
+interface AccessoryOption {
   id: string;
   itemName: string;
-  model: string;
-  itemCode: string;
-  variant: string;
-  colour: string;
+  modalName: string;
+  itemCodeNo: string;
+  hsnCode: string;
 }
 
 interface ItemRow {
   id: string;
   item: string;
   itemCode: string;
-  color: string;
-  chassisNo: string;
-  engineNo: string;
+  hsn: string;
+  unit: string;
   qty: number;
-  ratePer: string;
+  pPrice: string;
   gstPercent: string;
-  amount: string;
-  saved: boolean;
+  netAmount: string;
 }
 
 interface PartyOption {
@@ -96,45 +92,29 @@ const paymentModeOptions: { label: string; value: PaymentMode }[] = [
 ];
 
 // ---------- Mock data ----------
-const VEHICLE_OPTIONS: VehicleOption[] = [
-  {
-    id: "v1",
-    itemName: "C12",
-    model: "C12",
-    itemCode: "001",
-    variant: "EX",
-    colour: "RED",
-  },
-  {
-    id: "v2",
-    itemName: "C14",
-    model: "C14",
-    itemCode: "002",
-    variant: "DX",
-    colour: "BLUE",
-  },
-  {
-    id: "v3",
-    itemName: "T20",
-    model: "T20",
-    itemCode: "003",
-    variant: "EX",
-    colour: "GREEN",
-  },
-  {
-    id: "v4",
-    itemName: "T20",
-    model: "T20",
-    itemCode: "004",
-    variant: "Base",
-    colour: "WHITE",
-  },
-];
 
-const PARTY_OPTIONS: PartyOption[] = [
-  { id: "p1", name: "Sharma Traders" },
-  { id: "p2", name: "Bharat Motors" },
-  { id: "p3", name: "Kisan Agro Supplies" },
+const ACCESSORY_OPTIONS: AccessoryOption[] = [
+  {
+    id: "a1",
+    itemName: "Hydraulic Filter",
+    modalName: "HF-200",
+    itemCodeNo: "ACC-001",
+    hsnCode: "8421",
+  },
+  {
+    id: "a2",
+    itemName: "Tractor Seat Cover",
+    modalName: "TSC-Std",
+    itemCodeNo: "ACC-002",
+    hsnCode: "8708",
+  },
+  {
+    id: "a3",
+    itemName: "Towing Hook",
+    modalName: "TH-Heavy",
+    itemCodeNo: "ACC-003",
+    hsnCode: "7326",
+  },
 ];
 
 const CASH_ACCOUNTS = ["Cash in Hand", "Petty Cash"];
@@ -150,24 +130,25 @@ const termsOptions = [
   { label: "Bank", value: "Bank" },
 ];
 
+const PARTY_OPTIONS: PartyOption[] = [
+  { id: "p1", name: "Sharma Traders" },
+  { id: "p2", name: "Bharat Motors" },
+  { id: "p3", name: "Kisan Agro Supplies" },
+];
+
 let rowIdSeq = 1;
 const nextRowId = () => `row-${rowIdSeq++}`;
-
-// ---------- Main component ----------
-const DEFAULT_QTY = 1;
 
 const emptyDraft = (): ItemRow => ({
   id: nextRowId(),
   item: "",
   itemCode: "",
-  color: "",
-  chassisNo: "",
-  engineNo: "",
-  qty: DEFAULT_QTY,
-  ratePer: "",
+  hsn: "",
+  unit: "",
+  qty: 1,
+  pPrice: "",
   gstPercent: "",
-  amount: "",
-  saved: false,
+  netAmount: "",
 });
 
 const emptyAccount: NewAccountData = {
@@ -184,7 +165,7 @@ const emptyAccount: NewAccountData = {
   aadharCard: "",
 };
 
-// ─── react-select custom styles ──────────────────────────────────────────
+// ─── react-select custom styles (matches tractor add.tsx) ───────────────
 const customSelectStyles = {
   control: (provided: any, state: any) => ({
     ...provided,
@@ -250,31 +231,36 @@ const customSelectStyles = {
   }),
 };
 
-const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
+// ---------- Main component ----------
+
+const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
   onBack,
   onSaved,
 }) => {
   const navigate = useNavigate();
+
   const [date, setDate] = useState(() => {
     const d = new Date();
     return d.toISOString().split("T")[0];
   });
-
   const [terms, setTerms] = useState<TermsType>("Credit");
   const [cashAccount, setCashAccount] = useState("");
   const [bankAccount, setBankAccount] = useState("");
   const [partyId, setPartyId] = useState("");
   const [parties, setParties] = useState<PartyOption[]>(PARTY_OPTIONS);
-  const [billNo] = useState("p/V/25-26/001");
+  const [billNo] = useState("p/A/25-26/001");
   const [purchaseBillNo, setPurchaseBillNo] = useState("");
   const [purchaseDate, setPurchaseDate] = useState("");
   const [purchaseLocation, setPurchaseLocation] = useState("Main Branch");
   const [dueDate, setDueDate] = useState("");
   const [narration, setNarration] = useState("");
+
   const [rows, setRows] = useState<ItemRow[]>([]);
   const [draft, setDraft] = useState<ItemRow>(emptyDraft());
-  const [vehicleModalOpen, setVehicleModalOpen] = useState(false);
-  const [accountModalOpen, setAccountModalOpen] = useState(false);
+
+  const [accessoryDrawerOpen, setAccessoryDrawerOpen] = useState(false);
+  const [accessorySearch, setAccessorySearch] = useState("");
+
   const [freightCharge, setFreightCharge] = useState("");
   const [insurance, setInsurance] = useState("");
   const [otherCharge, setOtherCharge] = useState("");
@@ -282,12 +268,8 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
   const [billVerify, setBillVerify] = useState<"not_verify" | "verify">(
     "not_verify",
   );
-  const [vehicleSearch, setVehicleSearch] = useState("");
-  const [draftErrors, setDraftErrors] = useState<Record<string, string>>({});
-  // Account form state
-  const [accountForm, setAccountForm] = useState<NewAccountData>(emptyAccount);
-  const [accountTouched, setAccountTouched] = useState(false);
 
+  // ── Bank Details drawer state ──────────────────────────────────────────
   const [bankDetailsModalOpen, setBankDetailsModalOpen] = useState(false);
   const [bankDetails, setBankDetails] =
     useState<BankDetailsData>(emptyBankDetails);
@@ -316,123 +298,14 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
     setBankAccount("");
   };
 
-  // ─── Dynamic Location Data ──────────────────────────────────────────────────
-  const countryOptions = useMemo(() => {
-    return Country.getAllCountries().map((c) => ({
-      value: c.isoCode,
-      label: c.name,
-    }));
-  }, []);
+  // ── Create Account drawer state ────────────────────────────────────────
+  const [accountModalOpen, setAccountModalOpen] = useState(false);
+  const [accountForm, setAccountForm] = useState<NewAccountData>(emptyAccount);
+  const [accountTouched, setAccountTouched] = useState(false);
 
-  const stateOptions = useMemo(() => {
-    if (!accountForm.countryCode) return [];
-    return State.getStatesOfCountry(accountForm.countryCode).map((s) => ({
-      value: s.isoCode,
-      label: s.name,
-    }));
-  }, [accountForm.countryCode]);
-
-  const cityOptions = useMemo(() => {
-    if (!accountForm.countryCode || !accountForm.stateCode) return [];
-    return City.getCitiesOfState(
-      accountForm.countryCode,
-      accountForm.stateCode,
-    ).map((c) => ({
-      value: c.name,
-      label: c.name,
-    }));
-  }, [accountForm.countryCode, accountForm.stateCode]);
-
-  // Use cityOptions for district as well
-  const districtOptions = cityOptions;
-
-  // ----- derived totals -----
-  const totalQuantity = rows.reduce((sum, r) => sum + (Number(r.qty) || 0), 0);
-  const totalAmount = rows.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
-  const freightNum = Number(freightCharge) || 0;
-  const insuranceNum = Number(insurance) || 0;
-  const otherNum = Number(otherCharge) || 0;
-  const roundNum = Number(roundAmount) || 0;
-  const freightInsuranceOther = freightNum + insuranceNum + otherNum;
-  const newTaxableValue = totalAmount + freightInsuranceOther;
-  const grandTotal = newTaxableValue + roundNum;
-
-  const fmt = (n: number) =>
-    n.toLocaleString("en-IN", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
-
-  const updateDraft = (key: keyof ItemRow, value: string | number) =>
-    setDraft((d) => ({ ...d, [key]: value }));
-
-  const filteredVehicles = useMemo(() => {
-    if (!vehicleSearch.trim()) return VEHICLE_OPTIONS;
-    const q = vehicleSearch.toLowerCase();
-    return VEHICLE_OPTIONS.filter((v) =>
-      `${v.itemName} ${v.model} ${v.itemCode} ${v.variant} ${v.colour}`
-        .toLowerCase()
-        .includes(q),
-    );
-  }, [vehicleSearch]);
-
-  const handleVehicleSelect = (v: VehicleOption) => {
-    setDraft((d) => ({
-      ...d,
-      item: v.itemName,
-      itemCode: v.itemCode,
-      color: v.colour,
-    }));
-    setVehicleModalOpen(false);
-    setVehicleSearch("");
+  const updateAccountForm = (key: keyof NewAccountData, value: string) => {
+    setAccountForm((f) => ({ ...f, [key]: value }));
   };
-
-  const saveDraftRow = () => {
-    // Validate all required fields
-    if (!draft.item.trim()) {
-      alert("Please select or enter an Item Name");
-      return;
-    }
-    if (!draft.itemCode.trim()) {
-      alert("Please enter Item Code");
-      return;
-    }
-    if (!draft.color.trim()) {
-      alert("Please enter Color");
-      return;
-    }
-    if (!draft.chassisNo.trim()) {
-      alert("Please enter Chassis No");
-      return;
-    }
-    if (!draft.engineNo.trim()) {
-      alert("Please enter Engine No");
-      return;
-    }
-    if (!draft.qty || draft.qty < 1) {
-      alert("Please enter a valid Quantity (minimum 1)");
-      return;
-    }
-    if (!draft.ratePer.trim()) {
-      alert("Please enter Rate Per");
-      return;
-    }
-    if (!draft.gstPercent.trim()) {
-      alert("Please enter GST %");
-      return;
-    }
-    if (!draft.amount.trim()) {
-      alert("Please enter Amount");
-      return;
-    }
-
-    // All validations passed, save the row
-    setRows((r) => [...r, { ...draft, saved: true }]);
-    setDraft(emptyDraft());
-  };
-
-  const removeRow = (id: string) =>
-    setRows((r) => r.filter((row) => row.id !== id));
 
   const handleCreateAccount = () => {
     const required: (keyof NewAccountData)[] = [
@@ -461,14 +334,132 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
     setAccountTouched(false);
   };
 
-  const updateAccountForm = (key: keyof NewAccountData, value: string) => {
-    setAccountForm((f) => ({ ...f, [key]: value }));
+  // ── Dynamic Location Data (matches tractor add.tsx) ───────────────────
+  const countryOptions = useMemo(() => {
+    return Country.getAllCountries().map((c) => ({
+      value: c.isoCode,
+      label: c.name,
+    }));
+  }, []);
+
+  const stateOptions = useMemo(() => {
+    if (!accountForm.countryCode) return [];
+    return State.getStatesOfCountry(accountForm.countryCode).map((s) => ({
+      value: s.isoCode,
+      label: s.name,
+    }));
+  }, [accountForm.countryCode]);
+
+  const cityOptions = useMemo(() => {
+    if (!accountForm.countryCode || !accountForm.stateCode) return [];
+    return City.getCitiesOfState(
+      accountForm.countryCode,
+      accountForm.stateCode,
+    ).map((c) => ({
+      value: c.name,
+      label: c.name,
+    }));
+  }, [accountForm.countryCode, accountForm.stateCode]);
+
+  const districtOptions = cityOptions;
+
+  const updateDraft = (key: keyof ItemRow, value: string | number) =>
+    setDraft((d) => ({ ...d, [key]: value }));
+
+  const filteredAccessories = useMemo(() => {
+    if (!accessorySearch.trim()) return ACCESSORY_OPTIONS;
+    const q = accessorySearch.toLowerCase();
+    return ACCESSORY_OPTIONS.filter((a) =>
+      `${a.itemName} ${a.modalName} ${a.itemCodeNo} ${a.hsnCode}`
+        .toLowerCase()
+        .includes(q),
+    );
+  }, [accessorySearch]);
+
+  const handleAccessorySelect = (a: AccessoryOption) => {
+    setDraft((d) => ({
+      ...d,
+      item: a.itemName,
+      itemCode: a.itemCodeNo,
+      hsn: a.hsnCode,
+    }));
+    setAccessoryDrawerOpen(false);
+    setAccessorySearch("");
+  };
+
+  const saveDraftRow = () => {
+    if (!draft.item.trim()) {
+      alert("Please select or enter an Item Name");
+      return;
+    }
+    if (!draft.itemCode.trim()) {
+      alert("Please enter Item Code");
+      return;
+    }
+    if (!draft.hsn.trim()) {
+      alert("Please enter HSN");
+      return;
+    }
+    if (!draft.unit.trim()) {
+      alert("Please enter Unit");
+      return;
+    }
+    if (!draft.qty || draft.qty < 1) {
+      alert("Please enter a valid Quantity (minimum 1)");
+      return;
+    }
+    if (!draft.pPrice.trim()) {
+      alert("Please enter Purchase Price");
+      return;
+    }
+    if (!draft.gstPercent.trim()) {
+      alert("Please enter GST %");
+      return;
+    }
+    if (!draft.netAmount.trim()) {
+      alert("Please enter Net Amount");
+      return;
+    }
+
+    setRows((r) => [...r, draft]);
+    setDraft(emptyDraft());
+  };
+
+  const removeRow = (id: string) =>
+    setRows((r) => r.filter((row) => row.id !== id));
+
+  // ----- derived totals -----
+  const totalQuantity = rows.reduce((sum, r) => sum + (Number(r.qty) || 0), 0);
+  const totalAmount = rows.reduce(
+    (sum, r) => sum + (Number(r.netAmount) || 0),
+    0,
+  );
+  const freightNum = Number(freightCharge) || 0;
+  const insuranceNum = Number(insurance) || 0;
+  const otherNum = Number(otherCharge) || 0;
+  const roundNum = Number(roundAmount) || 0;
+  const freightInsuranceOther = freightNum + insuranceNum + otherNum;
+  const newTaxableValue = totalAmount + freightInsuranceOther;
+  const grandTotal = newTaxableValue + roundNum;
+
+  const fmt = (n: number) =>
+    n.toLocaleString("en-IN", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+
+  const handleBack = () => {
+    if (onBack) {
+      onBack();
+    } else {
+      navigate("/purchase/accessories");
+    }
   };
 
   const handleSave = () => {
     const selectedParty = parties.find((p) => p.id === partyId);
-    const row: PurchaseRegisterRow = {
-      id: `pr-${Date.now()}`,
+    const row = {
+      id: `par-${Date.now()}`,
       purchaseDate: purchaseDate || date,
       terms,
       supplierName: selectedParty?.name ?? "",
@@ -478,24 +469,10 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
       totalQuantity,
       totalAmount,
       freightInsuranceOther,
-      cgstAmount: 0,
-      sgstAmount: 0,
-      igstAmount: 0,
       grandTotal,
-      transportName: "",
-      mobileNo: "",
-      vehicalNo: "",
       status: billVerify === "verify" ? "Verified" : "Pending",
     };
     onSaved?.(row);
-  };
-
-  const handleBack = () => {
-    if (onBack) {
-      onBack();
-    } else {
-      navigate("/purchase/tractor");
-    }
   };
 
   return (
@@ -504,7 +481,7 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
         {/* Header */}
         <div className="flex flex-col items-start justify-between gap-3 border-b border-gray-200 px-4 py-3 sm:flex-row sm:items-center sm:px-6 sm:py-4 dark:border-gray-700">
           <h1 className="text-lg font-bold text-blue-600 underline sm:text-xl dark:text-blue-400">
-            Tractor Purchase Bill
+            Accessories Purchase Bill
           </h1>
           <button
             onClick={handleBack}
@@ -567,39 +544,39 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
               />
             </div>
           )}
-          {terms === "Bank" && (
-            <div className="col-span-1">
-              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Bank Account
-              </label>
-              <div className="flex w-full gap-2">
-                <div className="min-w-0 flex-1">
-                  <Listbox
-                    data={BANK_ACCOUNTS.map((a) => ({ label: a, value: a }))}
-                    value={
-                      BANK_ACCOUNTS.find((a) => a === bankAccount)
-                        ? { label: bankAccount, value: bankAccount }
-                        : null
-                    }
-                    onChange={(val: any) => {
-                      setBankAccount(val.value);
-                    }}
-                    displayField="label"
-                    placeholder="Select bank account"
-                  />
-                </div>
-                {bankAccount && (
-                  <button
-                    onClick={() => setBankDetailsModalOpen(true)}
-                    className="flex h-[38px] w-[38px] flex-shrink-0 items-center justify-center rounded-lg border border-gray-300 text-blue-600 hover:bg-gray-50 dark:border-gray-600 dark:text-blue-400 dark:hover:bg-gray-700"
-                    title="Add Bank Details"
-                  >
-                    <BuildingOffice2Icon className="h-5 w-5" />
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
+        {terms === "Bank" && (
+  <div className="col-span-1">
+    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+      Bank Account
+    </label>
+    <div className="flex w-full gap-2">
+      <div className="min-w-0 flex-1">
+        <Listbox
+          data={BANK_ACCOUNTS.map((a) => ({ label: a, value: a }))}
+          value={
+            BANK_ACCOUNTS.find((a) => a === bankAccount)
+              ? { label: bankAccount, value: bankAccount }
+              : null
+          }
+          onChange={(val: any) => {
+            setBankAccount(val.value);
+          }}
+          displayField="label"
+          placeholder="Select bank account"
+        />
+      </div>
+      {bankAccount && (
+        <button
+          onClick={() => setBankDetailsModalOpen(true)}
+          className="flex h-[38px] w-[38px] flex-shrink-0 items-center justify-center rounded-lg border border-gray-300 text-blue-600 hover:bg-gray-50 dark:border-gray-600 dark:text-blue-400 dark:hover:bg-gray-700"
+          title="Add Bank Details"
+        >
+          <BuildingOffice2Icon className="h-5 w-5" />
+        </button>
+      )}
+    </div>
+  </div>
+)}
 
           <div className={terms === "Credit" ? "col-span-2" : "col-span-1"}>
             <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -631,6 +608,7 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
               </button>
             </div>
           </div>
+
           <div className="col-span-1">
             <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
               Bill No.
@@ -721,10 +699,10 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
           </div>
         </div>
 
-        {/* ========== ITEM TABLE ========== */}
+        {/* Item table */}
         <div className="px-3 pb-3 sm:px-4 sm:pb-4 md:px-6">
           <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-            <table className="w-full border-collapse text-sm">
+            <table className="w-full min-w-[900px] border-collapse text-sm">
               <thead className="bg-gray-100 dark:bg-gray-700">
                 <tr>
                   <th className="px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
@@ -737,25 +715,22 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
                     ITEM CODE
                   </th>
                   <th className="px-3 py-2.5 text-left text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
-                    COLOR
+                    HSN
                   </th>
                   <th className="px-3 py-2.5 text-left text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
-                    CHASSIS NO
-                  </th>
-                  <th className="px-3 py-2.5 text-left text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
-                    ENGINE NO
+                    UNIT
                   </th>
                   <th className="px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
                     QTY
                   </th>
                   <th className="px-3 py-2.5 text-left text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
-                    RATE PER
+                    P. PRICE
                   </th>
                   <th className="px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
                     GST %
                   </th>
                   <th className="px-3 py-2.5 text-right text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
-                    AMOUNT
+                    NET AMOUNT
                   </th>
                   <th className="px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
                     ACTION
@@ -764,11 +739,10 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
               </thead>
               <tbody>
                 {/* Draft row */}
-
                 <tr className="bg-gray-50 dark:bg-gray-700/50">
                   <td className="px-2 py-1.5 text-center">
                     <button
-                      onClick={() => setVehicleModalOpen(true)}
+                      onClick={() => setAccessoryDrawerOpen(true)}
                       className="rounded border border-blue-600 px-3 py-1 text-sm font-semibold text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20"
                     >
                       Add
@@ -792,25 +766,17 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
                   </td>
                   <td className="px-2 py-1.5">
                     <input
-                      placeholder="Color"
-                      value={draft.color}
-                      onChange={(e) => updateDraft("color", e.target.value)}
+                      placeholder="HSN"
+                      value={draft.hsn}
+                      onChange={(e) => updateDraft("hsn", e.target.value)}
                       className="w-full rounded border border-gray-300 px-2 py-1 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
                     />
                   </td>
                   <td className="px-2 py-1.5">
                     <input
-                      placeholder="Chassis"
-                      value={draft.chassisNo}
-                      onChange={(e) => updateDraft("chassisNo", e.target.value)}
-                      className="w-full rounded border border-gray-300 px-2 py-1 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
-                    />
-                  </td>
-                  <td className="px-2 py-1.5">
-                    <input
-                      placeholder="Engine"
-                      value={draft.engineNo}
-                      onChange={(e) => updateDraft("engineNo", e.target.value)}
+                      placeholder="Unit"
+                      value={draft.unit}
+                      onChange={(e) => updateDraft("unit", e.target.value)}
                       className="w-full rounded border border-gray-300 px-2 py-1 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
                     />
                   </td>
@@ -818,7 +784,7 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
                     <input
                       type="number"
                       min={1}
-                      value={draft.qty}
+                      value={draft.qty || ""}
                       onChange={(e) =>
                         updateDraft("qty", Number(e.target.value))
                       }
@@ -828,8 +794,8 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
                   <td className="px-2 py-1.5">
                     <input
                       placeholder="Rate"
-                      value={draft.ratePer}
-                      onChange={(e) => updateDraft("ratePer", e.target.value)}
+                      value={draft.pPrice}
+                      onChange={(e) => updateDraft("pPrice", e.target.value)}
                       className="w-full rounded border border-gray-300 px-2 py-1 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
                     />
                   </td>
@@ -846,8 +812,8 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
                   <td className="px-2 py-1.5">
                     <input
                       placeholder="Amount"
-                      value={draft.amount}
-                      onChange={(e) => updateDraft("amount", e.target.value)}
+                      value={draft.netAmount}
+                      onChange={(e) => updateDraft("netAmount", e.target.value)}
                       className="w-full rounded border border-gray-300 px-2 py-1 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
                     />
                   </td>
@@ -885,32 +851,23 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
                     <td className="px-3 py-2.5 text-gray-700 dark:text-gray-300">
                       {r.itemCode}
                     </td>
-                    <td className="px-3 py-2.5">
-                      <span className="inline-flex items-center gap-1.5">
-                        <span
-                          className="inline-block h-3 w-3 rounded-full border border-gray-300 dark:border-gray-600"
-                          style={{ backgroundColor: r.color || "#cccccc" }}
-                        />
-                        {r.color}
-                      </span>
+                    <td className="px-3 py-2.5 text-gray-700 dark:text-gray-300">
+                      {r.hsn}
                     </td>
-                    <td className="px-3 py-2.5 font-mono text-gray-700 dark:text-gray-300">
-                      {r.chassisNo}
-                    </td>
-                    <td className="px-3 py-2.5 font-mono text-gray-700 dark:text-gray-300">
-                      {r.engineNo}
+                    <td className="px-3 py-2.5 text-gray-700 dark:text-gray-300">
+                      {r.unit}
                     </td>
                     <td className="px-3 py-2.5 text-center font-semibold text-gray-900 dark:text-gray-200">
                       {r.qty}
                     </td>
                     <td className="px-3 py-2.5 text-gray-700 dark:text-gray-300">
-                      {r.ratePer}
+                      {r.pPrice}
                     </td>
                     <td className="px-3 py-2.5 text-center text-gray-700 dark:text-gray-300">
                       {r.gstPercent}%
                     </td>
                     <td className="px-3 py-2.5 text-right font-semibold text-gray-900 dark:text-gray-200">
-                      ₹{r.amount}
+                      ₹{r.netAmount}
                     </td>
                     <td className="px-3 py-2.5 text-center">
                       <button
@@ -926,7 +883,7 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
                 {/* Empty state */}
                 {rows.length === 0 && (
                   <tr>
-                    <td colSpan={11} className="py-12 text-center">
+                    <td colSpan={10} className="py-12 text-center">
                       <div className="flex flex-col items-center justify-center gap-3">
                         <img
                           src={emptyStateImage}
@@ -947,8 +904,7 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
                         <span className="text-sm text-gray-500 dark:text-gray-400">
                           No items added yet. Click{" "}
                           <span className="font-semibold text-blue-600">
-                            {" "}
-                            Add
+                             Add
                           </span>{" "}
                           to add items.
                         </span>
@@ -978,9 +934,7 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
         </div>
 
         {/* Charges and summary */}
-        {/* Charges and summary */}
         <div className="grid grid-cols-1 gap-4 px-3 pb-4 sm:px-4 sm:pb-6 md:px-6 lg:grid-cols-5">
-          {/* Charges Section - takes 3 columns */}
           <div className="lg:col-span-3">
             <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800/50">
               <h3 className="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
@@ -1060,7 +1014,6 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
             </div>
           </div>
 
-          {/* Summary Section - takes 2 columns */}
           <div className="lg:col-span-2">
             <div className="rounded-lg border border-gray-200 bg-gradient-to-br from-blue-50 to-white p-4 shadow-sm dark:border-gray-700 dark:from-gray-800 dark:to-gray-800/50">
               <h3 className="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
@@ -1117,83 +1070,84 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
 
       {/* ========== RIGHT SIDE DRAWER MODALS ========== */}
 
-      {/* Vehicle Details - Right Drawer */}
-      {vehicleModalOpen && (
+      {/* Accessories Details - Right Drawer */}
+      {accessoryDrawerOpen && (
         <div className="fixed inset-0 z-50 overflow-hidden">
           <div
             className="absolute inset-0 bg-black/50"
             onClick={() => {
-              setVehicleModalOpen(false);
-              setVehicleSearch("");
+              setAccessoryDrawerOpen(false);
+              setAccessorySearch("");
             }}
           />
           <div className="absolute top-0 right-0 h-full w-full max-w-2xl transform bg-white shadow-2xl transition-transform sm:w-3/4 lg:w-1/2 dark:bg-gray-800">
             <div className="flex h-full flex-col">
               <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 sm:px-6 sm:py-4 dark:border-gray-700">
                 <h2 className="text-lg font-bold text-blue-600 dark:text-blue-400">
-                  {" "}
-                  Vehicle Details
+                  Accessories Details
                 </h2>
                 <button
                   onClick={() => {
-                    setVehicleModalOpen(false);
-                    setVehicleSearch("");
+                    setAccessoryDrawerOpen(false);
+                    setAccessorySearch("");
                   }}
                   className="rounded-lg p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
                 >
                   <XMarkIcon className="h-6 w-6" />
                 </button>
               </div>
+
               <div className="flex-1 overflow-y-auto p-4 sm:p-6">
-                <div className="relative mb-4">
-                  <MagnifyingGlassIcon className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                  <input
-                    placeholder="Search vehicles..."
-                    value={vehicleSearch}
-                    onChange={(e) => setVehicleSearch(e.target.value)}
-                    className="w-full rounded-lg border border-red-500 bg-white px-4 py-2 pl-10 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
-                  />
+                <div className="mb-4 flex gap-2">
+                  <div className="relative flex-1">
+                    <MagnifyingGlassIcon className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                    <input
+                      placeholder="Search accessories..."
+                      value={accessorySearch}
+                      onChange={(e) => setAccessorySearch(e.target.value)}
+                      className="w-full rounded-lg border border-red-500 bg-white px-4 py-2 pl-10 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
+                    />
+                  </div>
+                  <button
+                    title="Add new accessory item"
+                    className="flex h-[42px] w-[42px] flex-shrink-0 items-center justify-center rounded-lg bg-blue-700 text-white hover:bg-blue-800"
+                  >
+                    <PlusIcon className="h-5 w-5" />
+                  </button>
                 </div>
+
                 <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
                   <table className="w-full border-collapse text-sm">
                     <thead>
                       <tr className="bg-gray-100 text-left dark:bg-gray-700">
                         <th className="w-12 p-2">#</th>
                         <th className="p-2">Item Name</th>
-                        <th className="p-2">Model</th>
-                        <th className="p-2">Item Code</th>
-                        <th className="p-2">Variant</th>
-                        <th className="p-2">Colour</th>
+                        <th className="p-2">Modal Name</th>
+                        <th className="p-2">Item Code No</th>
+                        <th className="p-2">HSN Code</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredVehicles.map((v) => (
+                      {filteredAccessories.map((a, idx) => (
                         <tr
-                          key={v.id}
-                          className="border-t border-gray-200 dark:border-gray-700"
+                          key={a.id}
+                          onClick={() => handleAccessorySelect(a)}
+                          className="cursor-pointer border-t border-gray-200 hover:bg-blue-50 dark:border-gray-700 dark:hover:bg-blue-900/20"
                         >
-                          <td className="p-2 text-center">
-                            <button
-                              onClick={() => handleVehicleSelect(v)}
-                              className="inline-flex h-6 w-6 items-center justify-center rounded bg-green-600 text-white hover:bg-green-700"
-                            >
-                              ✓
-                            </button>
-                          </td>
-                          <td className="p-2">{v.itemName}</td>
-                          <td className="p-2">{v.model}</td>
-                          <td className="p-2">{v.itemCode}</td>
-                          <td className="p-2">{v.variant}</td>
-                          <td className="p-2">{v.colour}</td>
+                          <td className="p-2 text-gray-500">{idx + 1}</td>
+                          <td className="p-2">{a.itemName}</td>
+                          <td className="p-2">{a.modalName}</td>
+                          <td className="p-2">{a.itemCodeNo}</td>
+                          <td className="p-2">{a.hsnCode}</td>
                         </tr>
                       ))}
-                      {filteredVehicles.length === 0 && (
+                      {filteredAccessories.length === 0 && (
                         <tr>
                           <td
-                            colSpan={6}
-                            className="p-4 text-center text-gray-500"
+                            colSpan={5}
+                            className="p-4 text-center text-gray-400 dark:text-gray-500"
                           >
-                            No vehicles match your search.
+                            No items found
                           </td>
                         </tr>
                       )}
@@ -1206,7 +1160,7 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
         </div>
       )}
 
-      {/* Bank Details - Right Drawer */}
+      {/* Bank Details - Right Drawer (matches tractor add.tsx) */}
       {bankDetailsModalOpen && (
         <div className="fixed inset-0 z-50 overflow-hidden">
           <div
@@ -1217,7 +1171,6 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
             <div className="flex h-full flex-col">
               <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 sm:px-6 sm:py-4 dark:border-gray-700">
                 <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-                  {" "}
                   Bank Details
                 </h2>
                 <button
@@ -1349,7 +1302,7 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
         </div>
       )}
 
-      {/* Create Account - Right Drawer WITH DYNAMIC LOCATION */}
+      {/* Create Account - Right Drawer WITH DYNAMIC LOCATION (matches tractor add.tsx) */}
       {accountModalOpen && (
         <div className="fixed inset-0 z-50 overflow-hidden">
           <div
@@ -1596,4 +1549,4 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
   );
 };
 
-export default TractorPurchaseBill;
+export default AccessoriesPurchaseBill;
