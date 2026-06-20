@@ -33,27 +33,11 @@ import { Listbox } from "@/components/shared/form/StyledListbox";
 // Dummy data structure matching the table design
 type WebsiteVariantType = {
   id: number;
-
-  category?: {
-    categoryName: string;
-  };
-
-  brand?: {
-    brandName: string;
-  };
-
-  model?: {
-    modelName: string;
-  };
-
-  variant?: {
-    variantName: string;
-  };
-
-  modelYear?: {
-    year: number;
-  };
-
+  category?: { categoryName: string };
+  brand?: { brandName: string };
+  model?: { modelName: string };
+  variant?: { variantName: string };
+  modelYear?: { year: number };
   productName: string;
   variantCode: string;
   status: string;
@@ -109,27 +93,27 @@ useEffect(() => {
   // Filter logic
 const filteredData = variants.filter((item) => {
    const matchesSearch =
-  item.websiteDisplayProductName
+  item.productName
     ?.toLowerCase()
     .includes(search.toLowerCase()) ||
-  item.variantName
+  item.variant?.variantName
     ?.toLowerCase()
     .includes(search.toLowerCase()) ||
   item.variantCode
     ?.toLowerCase()
     .includes(search.toLowerCase()) ||
-  item.brandName
+  item.brand?.brandName
     ?.toLowerCase()
     .includes(search.toLowerCase()) ||
-  item.modelName
+  item.model?.modelName
     ?.toLowerCase()
     .includes(search.toLowerCase());
 
   
     const matchesBrandDropdown =
-      selectedBrandFilter === "All" || item.brandName === selectedBrandFilter;
+      selectedBrandFilter === "All" || item.brand?.brandName === selectedBrandFilter;
     const matchesModelDropdown =
-      selectedModelFilter === "All" || item.modelName === selectedModelFilter;
+      selectedModelFilter === "All" || item.model?.modelName === selectedModelFilter;
    
     const matchesStatusDropdown =
       selectedStatusFilter === "All" ||
@@ -505,7 +489,7 @@ const filteredData = variants.filter((item) => {
 </Td>
 
 <Td className="text-gray-600 dark:text-dark-200 py-4">
-{item.modelYear?.modelYear || "-"}</Td>
+{item.modelYear?.year || "-"}</Td>
 
 <Td className="font-medium text-gray-900 dark:text-gray-400 py-4">
   {item.productName}

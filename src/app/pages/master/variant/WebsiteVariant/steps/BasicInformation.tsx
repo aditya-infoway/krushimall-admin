@@ -577,7 +577,7 @@ const cityOptions = Array.isArray(selectedStates)
             maxLength={200}
             rows={3}
             error={errors?.shortDescription?.message}
-            helperText="Max 200 characters"
+           description="Max 200 characters"
           />
         </div>
 
