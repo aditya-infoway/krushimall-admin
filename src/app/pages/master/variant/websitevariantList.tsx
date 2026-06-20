@@ -209,10 +209,31 @@ const filteredData = variants.filter((item) => {
   }
 };
 
-  const handleToggleStatus = (id: number) => {
-    console.log("Toggle status for item:", id);
-    // Add your toggle status logic here
-  };
+ const handleToggleStatus = async (id: number) => {
+  try {
+    setVariants((prev) =>
+      prev.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              status:
+                item.status === "ACTIVE"
+                  ? "INACTIVE"
+                  : "ACTIVE",
+            }
+          : item
+      )
+    );
+
+    await apiHelper.patch(
+      `/website-variants/${id}/toggle-status`
+    );
+  } catch (error) {
+    console.error("Toggle failed:", error);
+
+    fetchVariants(); // reload old data if API fails
+  }
+};
 
   return (
     <div className="relative min-h-screen space-y-6 p-4 pb-28 text-gray-900 md:p-6 dark:text-gray-100">

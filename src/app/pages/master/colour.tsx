@@ -390,39 +390,6 @@ const handleToggleStatus = async (id: number) => {
     });
   };
 
-const handleColorChange = async (newColor: string) => {
-  try {
-    if (colorPickerState.id !== null) {
-
-      // Update DB
-      await apiHelper.patch(
-        `/colours/${colorPickerState.id}/colour-code`,
-        {
-          colourCode: newColor,
-        }
-      );
-
-      // Update UI
-      setColours((prevColours) =>
-        prevColours.map((item) =>
-          item.id === colorPickerState.id
-            ? { ...item, colourCode: newColor }
-            : item
-        )
-      );
-
-      setColorPickerState((prev) => ({
-        ...prev,
-        color: newColor,
-      }));
-    }
-  } catch (error) {
-    console.error(error);
-  }
-};
-
-  
-
   // const handleColorChange = (newColor: string) => {
   //   if (colorPickerState.id !== null) {
   //     setColours(
@@ -719,7 +686,7 @@ const closeColorPicker = async () => {
                       </button>
                     </Td>
                     <Td className="py-4 text-gray-500 dark:text-gray-400">
-                         {new Date(item.createdAt).toLocaleDateString("en-IN")}
+                      {formatDate(item.createdAt)}
                     </Td>
                     <Td className="py-4 text-center">
                       <Menu
@@ -1156,6 +1123,7 @@ const closeColorPicker = async () => {
 
                     <Listbox
                       data={statusOptions}
+                      displayField="label"
                       value={
                         (statusOptions.find(
                           (s) => s.value === formData.status,

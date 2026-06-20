@@ -407,55 +407,80 @@ export default function ShowroomVariantPage() {
     setValue("rtoTaxPercent", RTO_TAX_MAP[type] ?? "1");
   };
 
-  const handleOpenAddDrawer = () => {
-    setEditId(null);
-    setAccessories([{ name: "", price: 0, taxPercent: 0, totalPrice: 0 }]);
-    setAccessoryErrors({});
-    reset({
-      modelId: "",
-      modelName: "",
-      variantName: "",
-      purPrice: "",
-      purTaxPercent: "18",
-      exShowroomPrice: "",
-      exShowroomTaxPercent: "18",
-      insurance: "",
-      insuranceTaxPercent: "18",
-      rtoCharge: "",
-      rtoTaxType: "Agriculture",
-      rtoTaxPercent: "1",
-      salesPrice: "",
-      status: "ACTIVE",
-    });
-    setShowDrawer(true);
+ const handleOpenAddDrawer = () => {
+  setEditId(null);
+
+  const firstModel = models[0] || {
+    id: "",
+    name: "",
   };
 
-  const handleOpenEditDrawer = (item: any) => {
-    setEditId(item.id);
-    setAccessories(
-      item.accessories?.length
-        ? item.accessories
-        : [{ name: "", price: 0, taxPercent: 0, totalPrice: 0 }],
-    );
-    setAccessoryErrors({});
-    reset({
-      modelId: item.modelId,
-      modelName: item.model || "",
-      variantName: item.variantName,
-      purPrice: String(item.purPrice || ""),
-      purTaxPercent: String(item.purTaxPercent || "18"),
-      exShowroomPrice: String(item.exShowroomPrice || ""),
-      exShowroomTaxPercent: String(item.exShowroomTaxPercent || "18"),
-      insurance: String(item.insurance || ""),
-      insuranceTaxPercent: String(item.insuranceTaxPercent || "18"),
-      rtoCharge: String(item.rtoCharge || ""),
-      rtoTaxType: item.rtoTaxType || "Agriculture",
-      rtoTaxPercent: String(item.rtoTaxPercent || "1"),
-      salesPrice: String(item.salesPrice || ""),
-      status: item.status,
-    });
-    setShowDrawer(true);
-  };
+  setAccessories([
+    {
+      name: "",
+      price: 0,
+      taxPercent: 0,
+      totalPrice: 0,
+    },
+  ]);
+
+  setAccessoryErrors({});
+
+  reset({
+    modelId: firstModel.id,
+    modelName: firstModel.name,
+    variantName: "",
+    purPrice: "",
+    purTaxPercent: "18",
+    exShowroomPrice: "",
+    exShowroomTaxPercent: "18",
+    insurance: "",
+    insuranceTaxPercent: "18",
+    rtoCharge: "",
+    rtoTaxType: "Agriculture",
+    rtoTaxPercent: "1",
+    salesPrice: "",
+    status: "ACTIVE",
+  });
+
+  setShowDrawer(true);
+};
+
+const handleOpenEditDrawer = (item: any) => {
+  setEditId(item.id);
+
+  setAccessories(
+    item.accessories?.length
+      ? item.accessories.map((acc: any) => ({
+          name: acc.accessoryName || "",
+          price: Number(acc.price) || 0,
+          taxPercent: Number(acc.taxPercent) || 0,
+          totalPrice: Number(acc.totalPrice) || 0,
+        }))
+      : [{ name: "", price: 0, taxPercent: 0, totalPrice: 0 }]
+  );
+
+  setAccessoryErrors({});
+
+  reset({
+    modelId: item.modelId,
+    modelName: item.model || "",
+    variantName: item.variantName,
+    purPrice: String(item.purPrice || ""),
+    purTaxPercent: String(item.purTaxPercent || "18"),
+    exShowroomPrice: String(item.exShowroomPrice || ""),
+    exShowroomTaxPercent: String(item.exShowroomTaxPercent || "18"),
+    insurance: String(item.insurance || ""),
+    insuranceTaxPercent: String(item.insuranceTaxPercent || "18"),
+    rtoCharge: String(item.rtoCharge || ""),
+    rtoTaxType: item.rtoTaxType || "Agriculture",
+    rtoTaxPercent: String(item.rtoTaxPercent || "1"),
+    salesPrice: String(item.salesPrice || ""),
+    status: item.status,
+  });
+
+  setShowDrawer(true);
+};
 
   const handleDelete = async (id: number) => {
     try {
@@ -541,9 +566,7 @@ export default function ShowroomVariantPage() {
       const hasPrice = acc.price > 0;
       const hasTax = acc.taxPercent > 0;
 
-      console.log(
-        `Accessory ${index}: name="${acc.name}", hasName=${hasName}, hasPrice=${hasPrice}, hasTax=${hasTax}`,
-      );
+     
 
       // If name is empty AND (price > 0 OR tax > 0), show error
       if (!hasName && (hasPrice || hasTax)) {
@@ -552,8 +575,7 @@ export default function ShowroomVariantPage() {
       }
     });
 
-    console.log("Accessory errors:", accessoryErrors);
-    console.log("Has accessory error:", hasAccessoryError);
+ 
 
     // Set accessory errors
     if (hasAccessoryError) {
@@ -564,8 +586,7 @@ export default function ShowroomVariantPage() {
 
     // Now check form validation
     const isValid = await trigger();
-    console.log("Form isValid:", isValid);
-    console.log("Form errors:", errors);
+   
 
     // If either form has errors or accessories have errors, stop submission
     if (!isValid || hasAccessoryError) {
@@ -601,10 +622,12 @@ export default function ShowroomVariantPage() {
         salesPrice: Number(data.salesPrice),
         status: data.status,
       };
+        console.log("Payload:", payload);
       if (editId !== null)
         await apiHelper.put(`/showroom-variant/${editId}`, payload);
       else await apiHelper.post("/showroom-variant", payload);
       await getVariants();
+    
       setShowDrawer(false);
       reset();
       setAccessoryErrors({});
@@ -782,22 +805,22 @@ export default function ShowroomVariantPage() {
                   <Td className="py-4 font-medium text-gray-500">
                     {(currentPage - 1) * itemsPerPage + index + 1}
                   </Td>
-                  <Td className="py-4 font-medium text-gray-900 dark:text-white">
+                  <Td className="py-4 font-medium text-gray-900 dark:text-gray-400">
                     {item.variantName}
                   </Td>
-                  <Td className="dark:text-dark-200 py-4 text-gray-600">
+                  <Td className="py-4 font-medium text-gray-900 dark:text-gray-400">
                     {item.model}
                   </Td>
-                  <Td className="py-4">
+                  <Td className="py-4 font-medium text-gray-900 dark:text-gray-400">
                     ₹{item.purPrice} ({item.purTaxPercent}%)
                   </Td>
-                  <Td className="py-4">
+                  <Td className="py-4 font-medium text-gray-900 dark:text-gray-400">
                     ₹{item.exShowroomPrice} ({item.exShowroomTaxPercent}%)
                   </Td>
-                  <Td className="py-4">
+                  <Td className="py-4 font-medium text-gray-900 dark:text-gray-400">
                     ₹{item.insurance} ({item.insuranceTaxPercent}%)
                   </Td>
-                  <Td className="py-4">
+                  <Td className="py-4 font-medium text-gray-900 dark:text-gray-400">
                     ₹{item.rtoCharge} ({item.rtoTaxType} {item.rtoTaxPercent}%)
                   </Td>
                   <Td className="text-primary-600 py-4 font-semibold">

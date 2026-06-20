@@ -74,6 +74,7 @@ interface OptionType {
   id: number;
   name: string;
   modelId?: number;
+  variantId?: number;
 }
 
 // ─── Helper Functions ──────────────────────────────────────────────────────
@@ -125,7 +126,7 @@ const Tractor = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [selectedStatusFilter, setSelectedStatusFilter] = useState("All");
   const [loading, setLoading] = useState(false);
-
+  const [filteredColours, setFilteredColours] = useState<OptionType[]>([]);
   // ─── Dynamic Data from API ─────────────────────────────────────────────
   const [models, setModels] = useState<OptionType[]>([]);
   const [variants, setVariants] = useState<OptionType[]>([]);
@@ -197,16 +198,22 @@ const Tractor = () => {
   const getColours = async () => {
     try {
       const response = await apiHelper.get("/colours");
+
       let data = response?.data || response;
       if (!Array.isArray(data)) data = [];
+
       const mapped = data.map((item: any) => ({
         id: item.id || item._id,
         name: item.colourName || item.name || "Unknown",
+        variantId: item.variantId || item.variant?.id || null,
       }));
+
       setColours(mapped);
+      setFilteredColours(mapped);
     } catch (error) {
       console.error("Failed to fetch colours:", error);
       setColours([]);
+      setFilteredColours([]);
     }
   };
 
@@ -236,7 +243,17 @@ const Tractor = () => {
       setFilteredVariants(variants);
     }
   }, [formData.modelId, variants]);
+  useEffect(() => {
+    if (formData.variantId) {
+      const filtered = colours.filter(
+        (c) => c.variantId === Number(formData.variantId),
+      );
 
+      setFilteredColours(filtered);
+    } else {
+      setFilteredColours([]);
+    }
+  }, [formData.variantId, colours]);
   // ─── Handlers ───────────────────────────────────────────────────────────
   const handleInputChange = (field: keyof FormValues, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -322,25 +339,28 @@ const Tractor = () => {
     }
   };
 
-  const handleToggleStatus = async (id: number) => {
-    const tractor = tractors.find((item) => item.id === id);
-    if (!tractor) return;
-
-    const newStatus = tractor.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
-
+const handleToggleStatus = async (id: number) => {
+  try {
     setTractors((prev) =>
       prev.map((item) =>
-        item.id === id ? { ...item, status: newStatus } : item,
-      ),
+        item.id === id
+          ? {
+              ...item,
+              status:
+                item.status === "ACTIVE"
+                  ? "INACTIVE"
+                  : "ACTIVE",
+            }
+          : item,
+      )
     );
 
-    try {
-      await apiHelper.put(`/tractors/${id}`, { status: newStatus });
-    } catch (error) {
-      console.error("Failed to toggle status:", error);
-      await getTractors();
-    }
-  };
+    await apiHelper.patch(`/tractors/${id}/status`);
+  } catch (error) {
+    console.error(error);
+    await getTractors();
+  }
+};
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
@@ -399,7 +419,19 @@ const Tractor = () => {
 
     return matchesSearch && matchesStatus;
   });
+  const groupOptions = [
+    { id: "TRACTOR", name: "Tractor" },
+    { id: "IMPLEMENT", name: "Implement" },
+    { id: "HARVESTER", name: "Harvester" },
+    { id: "POWER_TILLER", name: "Power Tiller" },
+  ];
 
+  const fuelOptions = [
+    { id: "DIESEL", name: "Diesel" },
+    { id: "PETROL", name: "Petrol" },
+    { id: "CNG", name: "CNG" },
+    { id: "ELECTRIC", name: "Electric" },
+  ];
   const totalItems = filteredData.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -896,10 +928,12 @@ const Tractor = () => {
                 <div className="grow space-y-4 overflow-y-auto p-4 sm:space-y-5 sm:p-5">
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
                     {/* Select Model */}
+                    {/* Select Model */}
                     <div>
                       <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
                         Select Model <span className="text-red-500">*</span>
                       </label>
+
                       <Combobox
                         data={models}
                         displayField="name"
@@ -909,11 +943,17 @@ const Tractor = () => {
                           ) || null
                         }
                         onChange={(val: OptionType | null) => {
-                          handleInputChange("modelId", val?.id || "");
+                          setFormData((prev) => ({
+                            ...prev,
+                            modelId: val?.id || "",
+                            variantId: "", // reset variant
+                            colourId: "", // reset colour
+                          }));
                         }}
                         placeholder="Select Model"
                         searchFields={["name"]}
                       />
+
                       {errors.modelId && (
                         <span className="text-xs text-orange-500">
                           {errors.modelId}
@@ -926,6 +966,7 @@ const Tractor = () => {
                       <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
                         Select Variant <span className="text-red-500">*</span>
                       </label>
+
                       <Combobox
                         data={filteredVariants}
                         displayField="name"
@@ -935,12 +976,17 @@ const Tractor = () => {
                           ) || null
                         }
                         onChange={(val: OptionType | null) => {
-                          handleInputChange("variantId", val?.id || "");
+                          setFormData((prev) => ({
+                            ...prev,
+                            variantId: val?.id || "",
+                            colourId: "", // reset colour
+                          }));
                         }}
                         placeholder="Select Variant"
                         searchFields={["name"]}
                         disabled={!formData.modelId}
                       />
+
                       {errors.variantId && (
                         <span className="text-xs text-orange-500">
                           {errors.variantId}
@@ -953,11 +999,12 @@ const Tractor = () => {
                       <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
                         Select Colour <span className="text-red-500">*</span>
                       </label>
+
                       <Combobox
-                        data={colours}
+                        data={filteredColours} // use filtered colours
                         displayField="name"
                         value={
-                          colours.find(
+                          filteredColours.find(
                             (c) => c.id === Number(formData.colourId),
                           ) || null
                         }
@@ -966,7 +1013,9 @@ const Tractor = () => {
                         }}
                         placeholder="Select Colour"
                         searchFields={["name"]}
+                        disabled={!formData.variantId} // disable until variant selected
                       />
+
                       {errors.colourId && (
                         <span className="text-xs text-orange-500">
                           {errors.colourId}
@@ -1060,13 +1109,18 @@ const Tractor = () => {
                       <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
                         List of Group
                       </label>
-                      <Input
-                        type="text"
-                        placeholder="List of Group"
-                        value={formData.listOfGroup}
-                        onChange={(e) =>
-                          handleInputChange("listOfGroup", e.target.value)
+                      <Listbox
+                        data={groupOptions}
+                        displayField="name"
+                        value={
+                          groupOptions.find(
+                            (g) => g.id === formData.listOfGroup,
+                          ) || null
                         }
+                        onChange={(val: any) =>
+                          handleInputChange("listOfGroup", val?.id || "")
+                        }
+                        placeholder="Select Group"
                       />
                     </div>
 
@@ -1074,13 +1128,18 @@ const Tractor = () => {
                       <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
                         Type of Fuel
                       </label>
-                      <Input
-                        type="text"
-                        placeholder="Type of Fuel"
-                        value={formData.typeOfFuel}
-                        onChange={(e) =>
-                          handleInputChange("typeOfFuel", e.target.value)
+                      <Listbox
+                        data={fuelOptions}
+                        displayField="name"
+                        value={
+                          fuelOptions.find(
+                            (f) => f.id === formData.typeOfFuel,
+                          ) || null
                         }
+                        onChange={(val: any) =>
+                          handleInputChange("typeOfFuel", val?.id || "")
+                        }
+                        placeholder="Select Fuel Type"
                       />
                     </div>
 
