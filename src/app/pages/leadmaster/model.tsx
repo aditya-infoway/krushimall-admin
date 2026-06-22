@@ -11,7 +11,7 @@ import { useMemo } from "react";
 import { Textarea } from "@/components/ui";
 import Select from "react-select";
 import { Controller, useForm } from "react-hook-form";
-
+import apiHelper from "@/utils/apiHelper";
 // ─── Types ──────────────────────────────────────────────────────────────────
 interface AccountForm {
   accountName: string;
@@ -28,6 +28,7 @@ interface AccountForm {
 }
 
 interface FinanceType {
+  wantsFinance: boolean;
   existingCustomerModel: string;
   existingCustomerVariant: string;
   existingVehicleYear: string;
@@ -50,7 +51,7 @@ interface ReviewSummaryType {
   enquiryType: string;
   enquirySource: string;
   bookingDate: string;
-  customerRating: string;
+  // customerRating: string;
   followUpDate: string;
   enquiryStatus: string;
   dmsEnquiryNo: string;
@@ -102,7 +103,9 @@ function CreateAccountModal({
 }) {
   const [country, setCountry] = useState("");
   const [state, setState] = useState("");
-
+  const [models, setModels] = useState([]);
+  const [variants, setVariants] = useState([]);
+  const [colors, setColors] = useState([]);
   // ─── React Hook Form ─────────────────────────────────────────────────────
   const {
     control,
@@ -305,7 +308,7 @@ function CreateAccountModal({
             onSubmit={handleSubmit(handleFormSubmit)}
             className="flex-1 overflow-y-auto p-6"
           >
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {/* Account Name */}
               <div className="flex flex-col gap-1">
                 <label className="dark:text-dark-200 text-sm font-medium text-gray-700">
@@ -522,7 +525,7 @@ function CreateAccountModal({
               </div>
 
               {/* Address */}
-              <div className="col-span-2 flex flex-col gap-1">
+              <div className="col-span-1 flex flex-col gap-1 md:col-span-2">
                 <label className="dark:text-dark-200 text-sm font-medium text-gray-700">
                   Address <span className="text-red-500">*</span>
                 </label>
@@ -608,7 +611,8 @@ function CreateAccountModal({
               Cancel
             </button>
             <button
-              type="submit"
+              type="button"
+              onClick={handleSubmit(handleFormSubmit)}
               className="rounded-lg bg-red-600 px-6 py-2 text-sm font-semibold text-white hover:bg-red-700"
             >
               Create Account
@@ -622,26 +626,19 @@ function CreateAccountModal({
 // ─── Step 3: Lead Info ──────────────────────────────────────────────────────
 // ─── Step 3: Lead Info ──────────────────────────────────────────────────────
 function LeadInfoStep({
+  financeData,
+  setFinanceData,
   onValidationChange,
 }: {
+  financeData: FinanceType;
+  setFinanceData: React.Dispatch<React.SetStateAction<FinanceType>>;
   onValidationChange: (fn: () => boolean) => void;
 }) {
   const [wantsFinance, setWantsFinance] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const [finance, setFinance] = useState<FinanceType>({
-    existingCustomerModel: "",
-    existingCustomerVariant: "",
-    existingVehicleYear: "",
-    customerExpectedPrice: "",
-    marketPrice: "",
-    exchangeBonus: "",
-    smiplShares: "",
-    dealerShares: "",
-    valueAddAccessories: "",
-    insurance: "",
-    totalValue: "0",
-  });
+  const finance = financeData;
+  const setFinance = setFinanceData;
 
   const handleFinance = (field: keyof FinanceType, value: any) => {
     setFinance((p) => ({ ...p, [field]: value }));
@@ -701,9 +698,16 @@ function LeadInfoStep({
       <label className="flex cursor-pointer items-center gap-1.5">
         <Checkbox
           checked={wantsFinance}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-            setWantsFinance(e.target.checked)
-          }
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+            const checked = e.target.checked;
+
+            setWantsFinance(checked);
+
+            setFinanceData((prev) => ({
+              ...prev,
+              wantsFinance: checked,
+            }));
+          }}
         />
         <span className="dark:text-dark-200 text-sm text-gray-700 select-none">
           Change Current Vehicle?
@@ -926,40 +930,16 @@ function LeadInfoStep({
 
 // ─── Review Lead Summary Step ──────────────────────────────────────────────
 function ReviewLeadSummaryStep({
+  reviewData,
+  setReviewData,
   onValidationChange,
 }: {
+  reviewData: ReviewSummaryType;
+  setReviewData: React.Dispatch<React.SetStateAction<ReviewSummaryType>>;
   onValidationChange: (fn: () => boolean) => void;
 }) {
-  const [form, setForm] = useState<ReviewSummaryType>({
-    expectedPurchaseDate: getTodayDate(), // ✅ Default to today in dd-mm-yyyy
-    expectedDeliveryDate: "",
-    expectedDeliveryTime: "",
-    purchaseType: "",
-    profession: "",
-    enquiryType: "",
-    enquirySource: "",
-    bookingDate: "",
-    customerRating: "",
-    followUpDate: "",
-    enquiryStatus: "",
-    dmsEnquiryNo: "",
-    dmsEnquiryDate: "",
-    otherModel: "",
-    competitorTestRide: "",
-    salesManagerRemarks: "",
-    dealerRemarks: "",
-    exWarranty23: false,
-    exWarranty28: false,
-    advancePayment: false,
-    listOfBooking: "",
-    paymentMode: "",
-    bankMode: "",
-    selectAccount: "",
-    narration: "",
-    chequeNo: "",
-    chequeDate: "",
-    chequeClearDate: "",
-  });
+  const form = reviewData;
+  const setForm = setReviewData;
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleChange = (field: keyof ReviewSummaryType, value: any) => {
@@ -987,8 +967,8 @@ function ReviewLeadSummaryStep({
     if (!form.enquirySource)
       newErrors.enquirySource = "Enquiry Source is required";
     if (!form.bookingDate) newErrors.bookingDate = "Booking Date is required";
-    if (!form.customerRating)
-      newErrors.customerRating = "Customer Rating is required";
+    // if (!form.customerRating)
+    //   newErrors.customerRating = "Customer Rating is required";
     if (!form.followUpDate)
       newErrors.followUpDate = "Follow Up Date is required";
     if (!form.enquiryStatus)
@@ -1016,33 +996,121 @@ function ReviewLeadSummaryStep({
     { label: "Exchange", value: "Exchange" },
   ];
 
-  const professionOptions = [
-    { label: "Salaried", value: "Salaried" },
-    { label: "Self Employed", value: "Self Employed" },
-    { label: "Business", value: "Business" },
-    { label: "Student", value: "Student" },
-  ];
+  const [professions, setProfessions] = useState([]);
+  const [enquiryTypes, setEnquiryTypes] = useState([]);
+  const [enquirySources, setEnquirySources] = useState([]);
+  const [enquiryStatuses, setEnquiryStatuses] = useState([]);
+  const [accounts, setAccounts] = useState([]);
+  const fetchProfessions = async () => {
+    const res = await apiHelper.get("/professions");
 
-  const enquiryTypeOptions = [
-    { label: "General", value: "General" },
-    { label: "Sales", value: "Sales" },
-    { label: "Support", value: "Support" },
-  ];
+    console.log("Profession Response:", res.data);
 
-  const enquirySourceOptions = [
-    { label: "Website", value: "Website" },
-    { label: "Phone Call", value: "Phone Call" },
-    { label: "Walk-in", value: "Walk-in" },
-    { label: "Social Media", value: "Social Media" },
-  ];
+    const data = Array.isArray(res.data?.data)
+      ? res.data.data
+      : Array.isArray(res.data)
+        ? res.data
+        : [];
 
-  const enquiryStatusOptions = [
-    { label: "New", value: "New" },
-    { label: "In Progress", value: "In Progress" },
-    { label: "Converted", value: "Converted" },
-    { label: "Lost", value: "Lost" },
-  ];
+    setProfessions(
+      data.map((item: any) => ({
+        id: item.id,
+        label: item.profession, // <-- FIX
+        value: item.id, // <-- FIX
+      })),
+    );
+  };
+  const fetchAccounts = async () => {
+    try {
+      const res = await apiHelper.get("/accounts");
 
+      const data = Array.isArray(res.data)
+        ? res.data
+        : Array.isArray(res.data?.data)
+          ? res.data.data
+          : [];
+
+      setAccounts(
+        data.map((item: any) => ({
+          id: item.id,
+          name: item.accountName,
+          group: item.group,
+        })),
+      );
+    } catch (error) {
+      console.error("Account Error:", error);
+    }
+  };
+  const fetchEnquiryTypes = async () => {
+    const res = await apiHelper.get("/enquiry-types");
+
+    const data = Array.isArray(res.data?.data)
+      ? res.data.data
+      : Array.isArray(res.data)
+        ? res.data
+        : [];
+
+    setEnquiryTypes(
+      data.map((item: any) => ({
+        id: item.id,
+        label: item.enquiryType,
+        value: item.id,
+      })),
+    );
+  };
+
+  const fetchEnquirySources = async () => {
+    const res = await apiHelper.get("/enquiry-sources");
+
+    const data = Array.isArray(res.data?.data)
+      ? res.data.data
+      : Array.isArray(res.data)
+        ? res.data
+        : [];
+    setEnquirySources(
+      data.map((item: any) => ({
+        id: item.id,
+        label: item.enquirySource,
+        value: item.id,
+      })),
+    );
+  };
+
+  const fetchEnquiryStatuses = async () => {
+    const res = await apiHelper.get("/enquiry-statuses");
+
+    const data = Array.isArray(res.data?.data)
+      ? res.data.data
+      : Array.isArray(res.data)
+        ? res.data
+        : [];
+
+    setEnquiryStatuses(
+      data.map((item: any) => ({
+        id: item.id,
+        label: item.enquiryStatus,
+        value: item.id,
+      })),
+    );
+  };
+  useEffect(() => {
+    fetchProfessions();
+    fetchEnquiryTypes();
+    fetchEnquirySources();
+    fetchEnquiryStatuses();
+    fetchAccounts();
+  }, []);
+  const filteredAccounts = accounts.filter((acc: any) => {
+    if (form.paymentMode === "CASH") {
+      return acc.group === "Cash-in-Hand";
+    }
+
+    if (form.paymentMode === "BANK") {
+      return acc.group === "Bank Accounts";
+    }
+
+    return false;
+  });
   return (
     <div className="space-y-6">
       <h3 className="dark:text-dark-50 text-lg font-bold text-gray-800">
@@ -1121,9 +1189,9 @@ function ReviewLeadSummaryStep({
                 ? { label: form.purchaseType, value: form.purchaseType }
                 : null
             }
-onChange={(val: { label: string; value: string } | null) => 
-  handleChange("purchaseType", val?.value || "")
-}
+            onChange={(val: { label: string; value: string } | null) =>
+              handleChange("purchaseType", val?.value || "")
+            }
             placeholder="Select Purchase Type"
           />
           {errors.purchaseType && (
@@ -1139,14 +1207,16 @@ onChange={(val: { label: string; value: string } | null) =>
             Profession <span className="text-red-500">*</span>
           </label>
           <Combobox
-            data={professionOptions}
+            data={professions}
             displayField="label"
             value={
               form.profession
-                ? { label: form.profession, value: form.profession }
+                ? professions.find((p: any) => p.value === form.profession)
                 : null
             }
-           onChange={(val: any) => handleChange("profession", val?.value || "")}
+            onChange={(val: any) =>
+              handleChange("profession", val?.value || "")
+            }
             placeholder="Select Profession"
           />
           {errors.profession && (
@@ -1160,14 +1230,16 @@ onChange={(val: { label: string; value: string } | null) =>
             Enquiry Type <span className="text-red-500">*</span>
           </label>
           <Combobox
-            data={enquiryTypeOptions}
+            data={enquiryTypes}
             displayField="label"
             value={
               form.enquiryType
-                ? { label: form.enquiryType, value: form.enquiryType }
+                ? enquiryTypes.find((p: any) => p.value === form.enquiryType)
                 : null
             }
-            onChange={(val: any) => handleChange("enquiryType", val?.value || "")}
+            onChange={(val: any) =>
+              handleChange("enquiryType", val?.value || "")
+            }
             placeholder="Select Enquiry Type"
           />
           {errors.enquiryType && (
@@ -1183,14 +1255,18 @@ onChange={(val: { label: string; value: string } | null) =>
             Enquiry Source <span className="text-red-500">*</span>
           </label>
           <Combobox
-            data={enquirySourceOptions}
+            data={enquirySources}
             displayField="label"
             value={
               form.enquirySource
-                ? { label: form.enquirySource, value: form.enquirySource }
+                ? enquirySources.find(
+                    (p: any) => p.value === form.enquirySource,
+                  )
                 : null
             }
-           onChange={(val: any) => handleChange("enquirySource", val?.value || "")}
+            onChange={(val: any) =>
+              handleChange("enquirySource", val?.value || "")
+            }
             placeholder="Select Enquiry Source"
           />
           {errors.enquirySource && (
@@ -1249,14 +1325,18 @@ onChange={(val: { label: string; value: string } | null) =>
             Enquiry Status <span className="text-red-500">*</span>
           </label>
           <Combobox
-            data={enquiryStatusOptions}
+            data={enquiryStatuses}
             displayField="label"
             value={
               form.enquiryStatus
-                ? { label: form.enquiryStatus, value: form.enquiryStatus }
+                ? enquiryStatuses.find(
+                    (p: any) => p.value === form.enquiryStatus,
+                  )
                 : null
             }
-            onChange={(val: any) => handleChange("enquiryStatus", val?.value || "")}
+            onChange={(val: any) =>
+              handleChange("enquiryStatus", val?.value || "")
+            }
             placeholder="Select Enquiry Status"
           />
           {errors.enquiryStatus && (
@@ -1450,17 +1530,19 @@ onChange={(val: { label: string; value: string } | null) =>
                   <label className="dark:text-dark-200 text-sm font-medium text-gray-700">
                     Select Account
                   </label>
-                  <select
-                    value={form.selectAccount || ""}
-                    onChange={(e) =>
-                      handleChange("selectAccount", e.target.value)
+                  <Combobox
+                    data={filteredAccounts}
+                    displayField="name"
+                    value={
+                      filteredAccounts.find(
+                        (a: any) => String(a.id) === String(form.selectAccount),
+                      ) || null
                     }
-                    className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 rounded-md border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  >
-                    <option value="">Select Account</option>
-                    <option value="account1">Account 1</option>
-                    <option value="account2">Account 2</option>
-                  </select>
+                    onChange={(val: any) =>
+                      handleChange("selectAccount", val?.id || "")
+                    }
+                    placeholder="Select Account"
+                  />
                 </div>
 
                 {/* Narration */}
@@ -1487,17 +1569,19 @@ onChange={(val: { label: string; value: string } | null) =>
                   <label className="dark:text-dark-200 text-sm font-medium text-gray-700">
                     Select Account
                   </label>
-                  <select
-                    value={form.selectAccount || ""}
-                    onChange={(e) =>
-                      handleChange("selectAccount", e.target.value)
+                  <Combobox
+                    data={filteredAccounts}
+                    displayField="name"
+                    value={
+                      filteredAccounts.find(
+                        (a: any) => String(a.id) === String(form.selectAccount),
+                      ) || null
                     }
-                    className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 rounded-md border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  >
-                    <option value="">Select Account</option>
-                    <option value="account1">Account 1</option>
-                    <option value="account2">Account 2</option>
-                  </select>
+                    onChange={(val: any) =>
+                      handleChange("selectAccount", val?.id || "")
+                    }
+                    placeholder="Select Account"
+                  />
                 </div>
 
                 {/* Bank Mode Radio Group */}
@@ -1649,43 +1733,87 @@ export function LeadDetailsModal({
   const reviewSummaryValidateRef = useRef<(() => boolean) | null>(null);
   const totalSteps = 4;
 
-  const models: OptionType[] = [
-    { id: 1, name: "Access 125" },
-    { id: 2, name: "Burgman Street" },
-    { id: 3, name: "Avenis 125" },
-    { id: 4, name: "Hayabusa" },
-  ];
+  const [models, setModels] = useState([]);
+  const [variants, setVariants] = useState([]);
+  const [colors, setColors] = useState([]);
 
-  const variants: OptionType[] = [
-    { id: 1, name: "Ride Connect Edition" },
-    { id: 2, name: "Standard Edition" },
-    { id: 3, name: "Special Edition" },
-    { id: 4, name: "Drum Brake" },
-    { id: 5, name: "Disc Brake" },
-  ];
+  const [filteredVariants, setFilteredVariants] = useState([]);
+  const [filteredColors, setFilteredColors] = useState([]);
+  const [customers, setCustomers] = useState<OptionType[]>([]);
 
-  const colors: OptionType[] = [
-    { id: 1, name: "Pearl Mirage White" },
-    { id: 2, name: "Metallic Sonic Silver" },
-    { id: 3, name: "Pearl Blaze Orange" },
-    { id: 4, name: "Glass Sparkle Black" },
-    { id: 5, name: "Candy Sonoma Red" },
-  ];
+  const [executives, setExecutives] = useState<OptionType[]>([]);
 
-  const customers: OptionType[] = [
-    { id: 1, name: "John Doe" },
-    { id: 2, name: "Jane Smith" },
-    { id: 3, name: "Robert Johnson" },
-    { id: 4, name: "Emily Davis" },
-  ];
+  const fetchExecutives = async () => {
+    try {
+      const res = await apiHelper.get("/employees");
 
-  const executives: OptionType[] = [
-    { id: 1, name: "Alex (Sales Mgr)" },
-    { id: 2, name: "Sarah (Executive)" },
-    { id: 3, name: "Mike (Senior Sales)" },
-    { id: 4, name: "Lisa (Sales Rep)" },
-  ];
+      const data = Array.isArray(res.data?.data)
+        ? res.data.data
+        : Array.isArray(res.data)
+          ? res.data
+          : [];
 
+      setExecutives(
+        data
+          .filter((item: any) => item.role === "Executive")
+          .map((item: any) => ({
+            id: item.id,
+            name: item.employeeName,
+          })),
+      );
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
+    fetchExecutives();
+  }, []);
+  const [financeData, setFinanceData] = useState<FinanceType>({
+    wantsFinance: false,
+    existingCustomerModel: "",
+    existingCustomerVariant: "",
+    existingVehicleYear: "",
+    customerExpectedPrice: "",
+    marketPrice: "",
+    exchangeBonus: "",
+    smiplShares: "",
+    dealerShares: "",
+    valueAddAccessories: "",
+    insurance: "",
+    totalValue: "",
+  });
+
+  const [reviewData, setReviewData] = useState<ReviewSummaryType>({
+    expectedPurchaseDate: "",
+    expectedDeliveryDate: "",
+    expectedDeliveryTime: "",
+    purchaseType: "",
+    profession: "",
+    enquiryType: "",
+    enquirySource: "",
+    bookingDate: "",
+    // customerRating: "",
+    followUpDate: "",
+    enquiryStatus: "",
+    dmsEnquiryNo: "",
+    dmsEnquiryDate: "",
+    otherModel: "",
+    competitorTestRide: "",
+    salesManagerRemarks: "",
+    dealerRemarks: "",
+    exWarranty23: false,
+    exWarranty28: false,
+    advancePayment: false,
+    listOfBooking: "",
+    paymentMode: "",
+    bankMode: "",
+    selectAccount: "",
+    narration: "",
+    chequeNo: "",
+    chequeDate: "",
+    chequeClearDate: "",
+  });
   const validateStep1And2 = (currentStep: number) => {
     const newErrors: Record<string, string> = {};
     if (currentStep === 1) {
@@ -1719,46 +1847,211 @@ export function LeadDetailsModal({
     if (step > 1) setStep(step - 1);
   };
 
-  const handleSubmit = () => {
-    // Validate review summary step
+  const handleSubmit = async () => {
+    console.log("SUBMIT CLICKED");
+
     if (reviewSummaryValidateRef.current) {
       const isValid = reviewSummaryValidateRef.current();
+
+      console.log("VALID:", isValid);
+
       if (!isValid) return;
     }
 
-    console.log("Lead submitted!", {
-      selectedModel,
-      selectedVariant,
-      selectedColor,
-      selectedCustomer,
-      selectedExecutive,
-    });
-    onClose();
-  };
+    console.log("AFTER VALIDATION");
 
-  const handleCreateAccount = (formData: AccountForm) => {
-    console.log("Account created:", formData);
-  };
+    try {
+      const payload = {
+        modelId: selectedModel?.id,
+        variantId: selectedVariant?.id,
+        colourId: selectedColor?.id,
+        customerId: selectedCustomer?.id,
+        executiveId: selectedExecutive?.id,
 
-  const handleModelChange = (val: OptionType | null) => {
-    setSelectedModel(val);
-    setSelectedVariant(null);
-    setSelectedColor(null);
-    if (errors.model) {
-      const newErrors = { ...errors };
-      delete newErrors.model;
-      setErrors(newErrors);
+        ...financeData,
+        ...reviewData,
+
+        customerExpectedPrice: financeData.customerExpectedPrice
+          ? Number(financeData.customerExpectedPrice)
+          : null,
+
+        marketPrice: financeData.marketPrice
+          ? Number(financeData.marketPrice)
+          : null,
+
+        exchangeBonus: financeData.exchangeBonus
+          ? Number(financeData.exchangeBonus)
+          : null,
+
+        smiplShares: financeData.smiplShares
+          ? Number(financeData.smiplShares)
+          : null,
+
+        dealerShares: financeData.dealerShares
+          ? Number(financeData.dealerShares)
+          : null,
+
+        insurance: financeData.insurance ? Number(financeData.insurance) : null,
+
+        totalValue: financeData.totalValue
+          ? Number(financeData.totalValue)
+          : null,
+        expectedPurchaseDate: reviewData.expectedPurchaseDate?.[0] || null,
+
+        expectedDeliveryDate: reviewData.expectedDeliveryDate?.[0] || null,
+
+        bookingDate: reviewData.bookingDate?.[0] || null,
+
+        followUpDate: reviewData.followUpDate?.[0] || null,
+
+        dmsEnquiryDate: reviewData.dmsEnquiryDate?.[0] || null,
+        chequeNo: reviewData.chequeNo,
+
+        chequeDate: reviewData.chequeDate?.[0] || null,
+
+        chequeClearDate: reviewData.chequeClearDate?.[0] || null,
+      };
+      console.log("PAYLOAD", payload);
+
+      const res = await apiHelper.post("/leads", payload);
+
+      console.log("SUCCESS", res.data);
+      onClose();
+    } catch (error) {
+      console.error("API ERROR", error);
     }
   };
 
-  const handleVariantChange = (val: OptionType | null) => {
-    setSelectedVariant(val);
-    setSelectedColor(null);
-    if (errors.variant) {
-      const newErrors = { ...errors };
-      delete newErrors.variant;
-      setErrors(newErrors);
+  const handleCreateAccount = async (formData: AccountForm) => {
+    try {
+      const res = await apiHelper.post("/accounts", {
+        accountName: formData.accountName,
+        printName: formData.accountName,
+
+        mobile: formData.mobile,
+
+        country: formData.countryName,
+        countryCode: formData.countryCode,
+
+        state: formData.stateName,
+        stateCode: formData.stateCode,
+
+        district: formData.district,
+        city: formData.city,
+
+        address1: formData.address,
+
+        panCard: formData.panCard,
+        aadharNo: formData.aadharCard,
+      });
+
+      console.log("Create Response:", res.data);
+
+      // Refresh customer list from API
+      await fetchCustomers();
+
+      // Close modal
+      setIsCreateAccountOpen(false);
+    } catch (error) {
+      console.error(error);
     }
+  };
+
+  const fetchCustomers = async () => {
+    try {
+      const res = await apiHelper.get("/accounts");
+
+      console.log("Accounts Response:", res.data);
+
+      const data = Array.isArray(res.data)
+        ? res.data
+        : Array.isArray(res.data?.data)
+          ? res.data.data
+          : [];
+
+      setCustomers(
+        data.map((item: any) => ({
+          id: item.id,
+          name: item.accountName,
+        })),
+      );
+    } catch (error) {
+      console.error("Failed to fetch customers:", error);
+    }
+  };
+  const fetchModels = async () => {
+    const res = await apiHelper.get("/model");
+    const data = Array.isArray(res.data) ? res.data : [];
+
+    setModels(
+      data.map((item: any) => ({
+        id: item.id,
+        name: item.modelName,
+      })),
+    );
+  };
+
+  const fetchVariants = async () => {
+    try {
+      const response = await apiHelper.get("/variant");
+
+      let variantsData = response?.data || response;
+
+      if (!Array.isArray(variantsData)) {
+        variantsData = variantsData?.data || [];
+      }
+
+      const mappedVariants = variantsData.map((item: any) => ({
+        id: item.id,
+        name: item.variantName,
+        modelId: item.modelId,
+      }));
+      setVariants(mappedVariants);
+    } catch (error) {
+      console.error("Failed to fetch variants:", error);
+      setVariants([]);
+    }
+  };
+  const fetchColors = async () => {
+    const res = await apiHelper.get("/colours");
+    const data = Array.isArray(res.data) ? res.data : [];
+
+    setColors(
+      data.map((item: any) => ({
+        id: item.id,
+        name: item.colourName,
+        variantId: item.variantId,
+      })),
+    );
+  };
+  useEffect(() => {
+    fetchModels();
+    fetchVariants();
+    fetchColors();
+    fetchCustomers();
+  }, []);
+  const handleModelChange = (model: any) => {
+    setSelectedModel(model);
+
+    const filtered = variants.filter(
+      (v: any) => Number(v.modelId) === Number(model.id),
+    );
+    setFilteredVariants(filtered);
+  };
+
+  const handleVariantChange = (variant: any) => {
+    setSelectedVariant(variant);
+
+    if (!variant) {
+      setFilteredColors([]);
+      return;
+    }
+
+    const filtered = colors.filter(
+      (c: any) => Number(c.variantId) === Number(variant.id),
+    );
+
+    setFilteredColors(filtered);
   };
 
   const handleColorChange = (val: OptionType | null) => {
@@ -1842,7 +2135,7 @@ export function LeadDetailsModal({
                         Select Variant
                       </label>
                       <Combobox
-                        data={variants}
+                        data={filteredVariants}
                         displayField="name"
                         value={selectedVariant}
                         onChange={handleVariantChange}
@@ -1863,7 +2156,7 @@ export function LeadDetailsModal({
                         Select Color
                       </label>
                       <Combobox
-                        data={colors}
+                        data={filteredColors}
                         displayField="name"
                         value={selectedColor}
                         onChange={handleColorChange}
@@ -1935,6 +2228,7 @@ export function LeadDetailsModal({
                       value={selectedExecutive}
                       onChange={(val: OptionType | null) => {
                         setSelectedExecutive(val);
+
                         if (errors.executive) {
                           const newErrors = { ...errors };
                           delete newErrors.executive;
@@ -1955,7 +2249,9 @@ export function LeadDetailsModal({
 
               {step === 3 && (
                 <LeadInfoStep
-                  onValidationChange={(validateFn: () => boolean) => {
+                  financeData={financeData}
+                  setFinanceData={setFinanceData}
+                  onValidationChange={(validateFn) => {
                     leadInfoValidateRef.current = validateFn;
                   }}
                 />
@@ -1963,7 +2259,9 @@ export function LeadDetailsModal({
 
               {step === 4 && (
                 <ReviewLeadSummaryStep
-                  onValidationChange={(validateFn: () => boolean) => {
+                  reviewData={reviewData}
+                  setReviewData={setReviewData}
+                  onValidationChange={(validateFn) => {
                     reviewSummaryValidateRef.current = validateFn;
                   }}
                 />
