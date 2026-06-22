@@ -6,7 +6,7 @@ import {
   CheckIcon,
   MagnifyingGlassIcon,
   PlusIcon,
-  BuildingOffice2Icon
+  BuildingOffice2Icon,
 } from "@heroicons/react/24/outline";
 import { Button, Input } from "@/components/ui";
 import { Listbox } from "@/components/shared/form/StyledListbox";
@@ -62,6 +62,83 @@ interface NewAccountData {
   aadharCard: string;
 }
 
+// Tractor type
+interface TractorData {
+  selectModel: string;
+  selectVariant: string;
+  selectColour: string;
+  itemName: string;
+  codeNo: string;
+  shortName: string;
+  hsnCode: string;
+  taxSlab: string;
+  selectGroup: string;
+  fuelType: string;
+  fuelCapacity: string;
+  purchasePriceWithoutGST: string;
+  purchasePriceTaxable: string;
+  status: "Active" | "Inactive";
+}
+
+// Options for dropdowns
+const modelOptions = [
+  { label: "Model A", value: "modelA" },
+  { label: "Model B", value: "modelB" },
+  { label: "Model C", value: "modelC" },
+];
+
+const variantOptions = [
+  { label: "Variant 1", value: "variant1" },
+  { label: "Variant 2", value: "variant2" },
+  { label: "Variant 3", value: "variant3" },
+];
+
+const colourOptions = [
+  { label: "Red", value: "red" },
+  { label: "Blue", value: "blue" },
+  { label: "Black", value: "black" },
+  { label: "White", value: "white" },
+  { label: "Silver", value: "silver" },
+];
+
+const taxSlabOptions = [
+  { label: "0%", value: "0" },
+  { label: "5%", value: "5" },
+  { label: "12%", value: "12" },
+  { label: "18%", value: "18" },
+  { label: "28%", value: "28" },
+];
+
+const groupOptions = [
+  { label: "Group 1", value: "group1" },
+  { label: "Group 2", value: "group2" },
+  { label: "Group 3", value: "group3" },
+];
+
+const fuelTypeOptions = [
+  { label: "Diesel", value: "diesel" },
+  { label: "Petrol", value: "petrol" },
+  { label: "Electric", value: "electric" },
+  { label: "CNG", value: "cng" },
+];
+
+const emptyTractor: TractorData = {
+  selectModel: "",
+  selectVariant: "",
+  selectColour: "",
+  itemName: "",
+  codeNo: "",
+  shortName: "",
+  hsnCode: "",
+  taxSlab: "",
+  selectGroup: "",
+  fuelType: "",
+  fuelCapacity: "",
+  purchasePriceWithoutGST: "",
+  purchasePriceTaxable: "",
+  status: "Active",
+};
+
 type TermsType = "Credit" | "Cash" | "Bank";
 
 type PaymentMode = "UPI" | "NEFT" | "RTGS" | "IMPS" | "CHEQUE" | "CARD";
@@ -75,7 +152,7 @@ interface BankDetailsData {
 }
 
 const emptyBankDetails: BankDetailsData = {
-  paymentMode: "",
+  paymentMode: "UPI",
   chequeNo: "",
   chequeDate: "",
   clearDate: "",
@@ -269,6 +346,11 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
     "not_verify",
   );
 
+  // ── Add Tractor Modal state ─────────────────────────────────────────────
+  const [addTractorModalOpen, setAddTractorModalOpen] = useState(false);
+  const [tractorForm, setTractorForm] = useState<TractorData>(emptyTractor);
+  const [tractorTouched, setTractorTouched] = useState(false);
+
   // ── Bank Details drawer state ──────────────────────────────────────────
   const [bankDetailsModalOpen, setBankDetailsModalOpen] = useState(false);
   const [bankDetails, setBankDetails] =
@@ -332,6 +414,38 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
     setAccountModalOpen(false);
     setAccountForm(emptyAccount);
     setAccountTouched(false);
+  };
+
+  // ── Tractor handlers ────────────────────────────────────────────────────
+  const updateTractorForm = (key: keyof TractorData, value: string) => {
+    setTractorForm((f) => ({ ...f, [key]: value }));
+  };
+
+  const handleSaveTractor = () => {
+    const required: (keyof TractorData)[] = [
+      "selectModel",
+      "selectVariant",
+      "selectColour",
+      "itemName",
+      "codeNo",
+      "purchasePriceWithoutGST",
+      "purchasePriceTaxable",
+    ];
+    const missing = required.filter((k) => !tractorForm[k]?.trim());
+    setTractorTouched(true);
+    if (missing.length > 0) {
+      alert("Please fill all required fields");
+      return;
+    }
+
+    // Here you would save the tractor data
+    console.log("Tractor saved:", tractorForm);
+
+    // You can add the tractor to a list or send to API
+    // For now, just close the modal
+    setAddTractorModalOpen(false);
+    setTractorForm(emptyTractor);
+    setTractorTouched(false);
   };
 
   // ── Dynamic Location Data (matches tractor add.tsx) ───────────────────
@@ -544,39 +658,45 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
               />
             </div>
           )}
-        {terms === "Bank" && (
-  <div className="col-span-1">
-    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-      Bank Account
-    </label>
-    <div className="flex w-full gap-2">
-      <div className="min-w-0 flex-1">
-        <Listbox
-          data={BANK_ACCOUNTS.map((a) => ({ label: a, value: a }))}
-          value={
-            BANK_ACCOUNTS.find((a) => a === bankAccount)
-              ? { label: bankAccount, value: bankAccount }
-              : null
-          }
-          onChange={(val: any) => {
-            setBankAccount(val.value);
-          }}
-          displayField="label"
-          placeholder="Select bank account"
-        />
-      </div>
-      {bankAccount && (
-        <button
-          onClick={() => setBankDetailsModalOpen(true)}
-          className="flex h-[38px] w-[38px] flex-shrink-0 items-center justify-center rounded-lg border border-gray-300 text-blue-600 hover:bg-gray-50 dark:border-gray-600 dark:text-blue-400 dark:hover:bg-gray-700"
-          title="Add Bank Details"
-        >
-          <BuildingOffice2Icon className="h-5 w-5" />
-        </button>
-      )}
-    </div>
-  </div>
-)}
+          {terms === "Bank" && (
+            <div className="col-span-1">
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Bank Account
+              </label>
+
+              <div className="flex w-full gap-2">
+                <div className="min-w-0 flex-1">
+                  <Listbox
+                    data={BANK_ACCOUNTS.map((a) => ({
+                      label: a,
+                      value: a,
+                    }))}
+                    value={
+                      BANK_ACCOUNTS.find((a) => a === bankAccount)
+                        ? {
+                            label: bankAccount,
+                            value: bankAccount,
+                          }
+                        : null
+                    }
+                    onChange={(val: any) => {
+                      setBankAccount(val.value);
+                    }}
+                    displayField="label"
+                    placeholder="Select bank account"
+                  />
+                </div>
+
+                <button
+                  onClick={() => setBankDetailsModalOpen(true)}
+                  className="flex h-[38px] w-[38px] flex-shrink-0 items-center justify-center rounded-lg border border-gray-300 text-blue-600 hover:bg-gray-50 dark:border-gray-600 dark:text-blue-400 dark:hover:bg-gray-700"
+                  title="Add Bank Details"
+                >
+                  <BuildingOffice2Icon className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+          )}
 
           <div className={terms === "Credit" ? "col-span-2" : "col-span-1"}>
             <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -904,7 +1024,7 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
                         <span className="text-sm text-gray-500 dark:text-gray-400">
                           No items added yet. Click{" "}
                           <span className="font-semibold text-blue-600">
-                             Add
+                            Add
                           </span>{" "}
                           to add items.
                         </span>
@@ -1080,7 +1200,7 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
               setAccessorySearch("");
             }}
           />
-          <div className="absolute top-0 right-0 h-full w-full max-w-2xl transform bg-white shadow-2xl transition-transform sm:w-3/4 lg:w-1/2 dark:bg-gray-800">
+          <div className="absolute top-0 right-0 h-full w-full max-w-7xl transform bg-white shadow-2xl transition-transform sm:w-3/4 lg:w-1/2 dark:bg-gray-800">
             <div className="flex h-full flex-col">
               <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 sm:px-6 sm:py-4 dark:border-gray-700">
                 <h2 className="text-lg font-bold text-blue-600 dark:text-blue-400">
@@ -1110,6 +1230,7 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
                   </div>
                   <button
                     title="Add new accessory item"
+                    onClick={() => setAddTractorModalOpen(true)}
                     className="flex h-[42px] w-[42px] flex-shrink-0 items-center justify-center rounded-lg bg-blue-700 text-white hover:bg-blue-800"
                   >
                     <PlusIcon className="h-5 w-5" />
@@ -1160,147 +1281,416 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
         </div>
       )}
 
-      {/* Bank Details - Right Drawer (matches tractor add.tsx) */}
-      {bankDetailsModalOpen && (
-        <div className="fixed inset-0 z-50 overflow-hidden">
-          <div
-            className="absolute inset-0 bg-black/50"
-            onClick={handleCancelBankDetails}
-          />
-          <div className="absolute top-0 right-0 h-full w-full max-w-lg transform bg-white shadow-2xl transition-transform sm:w-3/4 lg:w-2/5 dark:bg-gray-800">
-            <div className="flex h-full flex-col">
-              <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 sm:px-6 sm:py-4 dark:border-gray-700">
-                <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-                  Bank Details
-                </h2>
-                <button
-                  onClick={handleCancelBankDetails}
-                  className="rounded-lg p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
-                >
-                  <XMarkIcon className="h-6 w-6" />
-                </button>
-              </div>
-              <div className="flex-1 overflow-y-auto p-4 sm:p-6">
-                <div className="mb-4">
-                  <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Payment Mode <span className="text-red-500">*</span>
-                  </label>
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
-                    {paymentModeOptions.map((opt) => (
-                      <label
-                        key={opt.value}
-                        className="flex cursor-pointer items-center gap-2 text-sm text-gray-800 dark:text-gray-200"
-                      >
-                        <input
-                          type="radio"
-                          name="paymentMode"
-                          checked={bankDetails.paymentMode === opt.value}
-                          onChange={() =>
-                            updateBankDetails("paymentMode", opt.value)
-                          }
-                        />
-                        {opt.label}
-                      </label>
-                    ))}
-                  </div>
-                  {bankDetailsTouched && !bankDetails.paymentMode && (
-                    <p className="mt-1 text-xs text-red-500">
-                      Please select a payment mode.
-                    </p>
-                  )}
-                </div>
+      {/* Add Tractor Modal - Opens when clicking + in Accessories Details */}
+     {/* Add Tractor - Right Drawer */}
+{addTractorModalOpen && (
+  <div className="fixed inset-0 z-50 overflow-hidden">
+    <div
+      className="absolute inset-0 bg-black/50"
+      onClick={() => {
+        setAddTractorModalOpen(false);
+        setTractorForm(emptyTractor);
+        setTractorTouched(false);
+      }}
+    />
+    <div className="absolute top-0 right-0 h-full w-full max-w-7xl transform bg-white shadow-2xl transition-transform sm:w-3/4 lg:w-1/2 dark:bg-gray-800">
+      <div className="flex h-full flex-col">
+        <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 sm:px-6 sm:py-4 dark:border-gray-700">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+            Add Tractor
+          </h2>
+          <button
+            onClick={() => {
+              setAddTractorModalOpen(false);
+              setTractorForm(emptyTractor);
+              setTractorTouched(false);
+            }}
+            className="rounded-lg p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+          >
+            <XMarkIcon className="h-6 w-6" />
+          </button>
+        </div>
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
+            {/* Select Model */}
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Select Model <span className="text-red-500">*</span>
+              </label>
+              <Listbox
+                data={modelOptions}
+                value={
+                  modelOptions.find((o) => o.value === tractorForm.selectModel) || null
+                }
+                onChange={(val: any) => updateTractorForm("selectModel", val.value)}
+                displayField="label"
+                placeholder="Select Model"
+              />
+              {tractorTouched && !tractorForm.selectModel && (
+                <p className="mt-1 text-xs text-red-500">Please select a model.</p>
+              )}
+            </div>
 
-                {bankDetails.paymentMode === "CHEQUE" && (
-                  <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    <div>
-                      <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Cheque No <span className="text-red-500">*</span>
-                      </label>
-                      <Input
-                        placeholder="Enter Cheque No"
-                        value={bankDetails.chequeNo}
-                        onChange={(e) =>
-                          updateBankDetails("chequeNo", e.target.value)
-                        }
-                        className={`w-full ${bankDetailsTouched && !bankDetails.chequeNo.trim() ? "border-red-500" : ""}`}
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Cheque Date <span className="text-red-500">*</span>
-                      </label>
-                      <DatePicker
-                        value={bankDetails.chequeDate}
-                        onChange={(selectedDates: Date[]) => {
-                          const val = selectedDates[0];
-                          updateBankDetails(
-                            "chequeDate",
-                            typeof val === "string"
-                              ? val
-                              : val?.toISOString?.()?.split?.("T")?.[0] || "",
-                          );
-                        }}
-                        placeholder="Select date..."
-                        className={`w-full ${bankDetailsTouched && !bankDetails.chequeDate.trim() ? "border-red-500" : ""}`}
-                      />
-                    </div>
-                    <div className="sm:col-span-2">
-                      <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Clear Date
-                      </label>
-                      <DatePicker
-                        value={bankDetails.clearDate}
-                        onChange={(selectedDates: Date[]) => {
-                          const val = selectedDates[0];
-                          updateBankDetails(
-                            "clearDate",
-                            typeof val === "string"
-                              ? val
-                              : val?.toISOString?.()?.split?.("T")?.[0] || "",
-                          );
-                        }}
-                        placeholder="Select date..."
-                        className="w-full"
-                      />
-                    </div>
-                  </div>
-                )}
+            {/* Select Variant */}
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Select Variant <span className="text-red-500">*</span>
+              </label>
+              <Listbox
+                data={variantOptions}
+                value={
+                  variantOptions.find((o) => o.value === tractorForm.selectVariant) || null
+                }
+                onChange={(val: any) => updateTractorForm("selectVariant", val.value)}
+                displayField="label"
+                placeholder="Select Variant"
+              />
+              {tractorTouched && !tractorForm.selectVariant && (
+                <p className="mt-1 text-xs text-red-500">Please select a variant.</p>
+              )}
+            </div>
 
-                <div className="mb-4">
-                  <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Narration
-                  </label>
-                  <textarea
-                    placeholder="Enter Narration"
-                    value={bankDetails.narration}
-                    onChange={(e) =>
-                      updateBankDetails("narration", e.target.value)
-                    }
-                    rows={3}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-                  />
-                </div>
-              </div>
-              <div className="border-t border-gray-200 p-4 sm:p-6 dark:border-gray-700">
-                <div className="flex flex-col gap-2 sm:flex-row sm:justify-end sm:gap-3">
-                  <button
-                    onClick={handleCancelBankDetails}
-                    className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 sm:w-auto sm:px-6 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleSaveBankDetails}
-                    className="w-full rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 sm:w-auto sm:px-6"
-                  >
-                    Add Bank Details
-                  </button>
-                </div>
-              </div>
+            {/* Select Colour */}
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Select Colour <span className="text-red-500">*</span>
+              </label>
+              <Listbox
+                data={colourOptions}
+                value={
+                  colourOptions.find((o) => o.value === tractorForm.selectColour) || null
+                }
+                onChange={(val: any) => updateTractorForm("selectColour", val.value)}
+                displayField="label"
+                placeholder="Select Colour"
+              />
+              {tractorTouched && !tractorForm.selectColour && (
+                <p className="mt-1 text-xs text-red-500">Please select a colour.</p>
+              )}
+            </div>
+
+            {/* Item Name */}
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Item Name <span className="text-red-500">*</span>
+              </label>
+              <Input
+                placeholder="Enter Item Name"
+                value={tractorForm.itemName}
+                onChange={(e) => updateTractorForm("itemName", e.target.value)}
+                className={`w-full ${tractorTouched && !tractorForm.itemName.trim() ? "border-red-500" : ""}`}
+              />
+            </div>
+
+            {/* Code No */}
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Code No <span className="text-red-500">*</span>
+              </label>
+              <Input
+                placeholder="Enter Code No"
+                value={tractorForm.codeNo}
+                onChange={(e) => updateTractorForm("codeNo", e.target.value)}
+                className={`w-full ${tractorTouched && !tractorForm.codeNo.trim() ? "border-red-500" : ""}`}
+              />
+            </div>
+
+            {/* Short Name */}
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Short Name
+              </label>
+              <Input
+                placeholder="Enter Short Name"
+                value={tractorForm.shortName}
+                onChange={(e) => updateTractorForm("shortName", e.target.value)}
+                className="w-full"
+              />
+            </div>
+
+            {/* HSN Code */}
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                HSN Code
+              </label>
+              <Input
+                placeholder="Enter HSN Code"
+                value={tractorForm.hsnCode}
+                onChange={(e) => updateTractorForm("hsnCode", e.target.value)}
+                className="w-full"
+              />
+            </div>
+
+            {/* Tax Slab */}
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Tax Slab
+              </label>
+              <Listbox
+                data={taxSlabOptions}
+                value={
+                  taxSlabOptions.find((o) => o.value === tractorForm.taxSlab) || null
+                }
+                onChange={(val: any) => updateTractorForm("taxSlab", val.value)}
+                displayField="label"
+                placeholder="Select Tax Slab"
+              />
+            </div>
+
+            {/* List of Group */}
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                List of Group
+              </label>
+              <Listbox
+                data={groupOptions}
+                value={
+                  groupOptions.find((o) => o.value === tractorForm.selectGroup) || null
+                }
+                onChange={(val: any) => updateTractorForm("selectGroup", val.value)}
+                displayField="label"
+                placeholder="Select Group"
+              />
+            </div>
+
+            {/* Type of Fuel */}
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Type of Fuel
+              </label>
+              <Listbox
+                data={fuelTypeOptions}
+                value={
+                  fuelTypeOptions.find((o) => o.value === tractorForm.fuelType) || null
+                }
+                onChange={(val: any) => updateTractorForm("fuelType", val.value)}
+                displayField="label"
+                placeholder="Select Fuel Type"
+              />
+            </div>
+
+            {/* Fuel Capacity */}
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Fuel Capacity
+              </label>
+              <Input
+                placeholder="Enter Fuel Capacity"
+                value={tractorForm.fuelCapacity}
+                onChange={(e) => updateTractorForm("fuelCapacity", e.target.value)}
+                className="w-full"
+              />
+            </div>
+
+            {/* Purchase Price (Without GST) */}
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Purchase Price (Without GST) <span className="text-red-500">*</span>
+              </label>
+              <Input
+                placeholder="Enter Purchase Price"
+                value={tractorForm.purchasePriceWithoutGST}
+                onChange={(e) => updateTractorForm("purchasePriceWithoutGST", e.target.value)}
+                className={`w-full ${tractorTouched && !tractorForm.purchasePriceWithoutGST.trim() ? "border-red-500" : ""}`}
+              />
+            </div>
+
+            {/* Purchase Price (Taxable) */}
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Purchase Price (Taxable) <span className="text-red-500">*</span>
+              </label>
+              <Input
+                placeholder="Enter Taxable Price"
+                value={tractorForm.purchasePriceTaxable}
+                onChange={(e) => updateTractorForm("purchasePriceTaxable", e.target.value)}
+                className={`w-full ${tractorTouched && !tractorForm.purchasePriceTaxable.trim() ? "border-red-500" : ""}`}
+              />
+            </div>
+
+            {/* Status - Dropdown instead of radio */}
+            <div className="sm:col-span-2">
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Status
+              </label>
+              <Listbox
+                data={[
+                  { label: "Active", value: "Active" },
+                  { label: "Inactive", value: "Inactive" },
+                ]}
+                value={
+                  [{ label: "Active", value: "Active" }, { label: "Inactive", value: "Inactive" }].find(
+                    (o) => o.value === tractorForm.status
+                  ) || { label: "Active", value: "Active" }
+                }
+                onChange={(val: any) => updateTractorForm("status", val.value)}
+                displayField="label"
+                placeholder="Select Status"
+              />
             </div>
           </div>
         </div>
-      )}
+        <div className="border-t border-gray-200 p-4 sm:p-6 dark:border-gray-700">
+          <div className="flex flex-col gap-2 sm:flex-row sm:justify-end sm:gap-3">
+            <button
+              onClick={() => {
+                setAddTractorModalOpen(false);
+                setTractorForm(emptyTractor);
+                setTractorTouched(false);
+              }}
+              className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 sm:w-auto sm:px-6 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSaveTractor}
+              className="w-full rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 sm:w-auto sm:px-6"
+            >
+              Save Tractor
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+     {/* Bank Details - Right Drawer */}
+{bankDetailsModalOpen && (
+  <div className="fixed inset-0 z-50 overflow-hidden">
+    <div
+      className="absolute inset-0 bg-black/50"
+      onClick={handleCancelBankDetails}
+    />
+    <div className="absolute top-0 right-0 h-full w-full max-w-lg transform bg-white shadow-2xl transition-transform sm:w-3/4 lg:w-2/5 dark:bg-gray-800">
+      <div className="flex h-full flex-col">
+        <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 sm:px-6 sm:py-4 dark:border-gray-700">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+            Bank Details
+          </h2>
+          <button
+            onClick={handleCancelBankDetails}
+            className="rounded-lg p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+          >
+            <XMarkIcon className="h-6 w-6" />
+          </button>
+        </div>
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+          <div className="mb-4">
+            <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Payment Mode <span className="text-red-500">*</span>
+            </label>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
+              {paymentModeOptions.map((opt) => (
+                <label
+                  key={opt.value}
+                  className="flex cursor-pointer items-center gap-2 text-sm text-gray-800 dark:text-gray-200"
+                >
+                  <Radio
+                    checked={bankDetails.paymentMode === opt.value}
+                    onChange={() => updateBankDetails("paymentMode", opt.value)}
+                  />
+                  {opt.label}
+                </label>
+              ))}
+            </div>
+            {bankDetailsTouched && !bankDetails.paymentMode && (
+              <p className="mt-1 text-xs text-red-500">
+                Please select a payment mode.
+              </p>
+            )}
+          </div>
+
+          {bankDetails.paymentMode === "CHEQUE" && (
+            <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Cheque No <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  placeholder="Enter Cheque No"
+                  value={bankDetails.chequeNo}
+                  onChange={(e) =>
+                    updateBankDetails("chequeNo", e.target.value)
+                  }
+                  className={`w-full ${bankDetailsTouched && !bankDetails.chequeNo.trim() ? "border-red-500" : ""}`}
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Cheque Date <span className="text-red-500">*</span>
+                </label>
+                <DatePicker
+                  value={bankDetails.chequeDate}
+                  onChange={(selectedDates: Date[]) => {
+                    const val = selectedDates[0];
+                    updateBankDetails(
+                      "chequeDate",
+                      typeof val === "string"
+                        ? val
+                        : val?.toISOString?.()?.split?.("T")?.[0] || "",
+                    );
+                  }}
+                  placeholder="Select date..."
+                  className={`w-full ${bankDetailsTouched && !bankDetails.chequeDate.trim() ? "border-red-500" : ""}`}
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Clear Date
+                </label>
+                <DatePicker
+                  value={bankDetails.clearDate}
+                  onChange={(selectedDates: Date[]) => {
+                    const val = selectedDates[0];
+                    updateBankDetails(
+                      "clearDate",
+                      typeof val === "string"
+                        ? val
+                        : val?.toISOString?.()?.split?.("T")?.[0] || "",
+                    );
+                  }}
+                  placeholder="Select date..."
+                  className="w-full"
+                />
+              </div>
+            </div>
+          )}
+
+          <div className="mb-4">
+            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Narration
+            </label>
+            <textarea
+              placeholder="Enter Narration"
+              value={bankDetails.narration}
+              onChange={(e) =>
+                updateBankDetails("narration", e.target.value)
+              }
+              rows={3}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+            />
+          </div>
+        </div>
+        <div className="border-t border-gray-200 p-4 sm:p-6 dark:border-gray-700">
+          <div className="flex flex-col gap-2 sm:flex-row sm:justify-end sm:gap-3">
+            <button
+              onClick={handleCancelBankDetails}
+              className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 sm:w-auto sm:px-6 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSaveBankDetails}
+              className="w-full rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 sm:w-auto sm:px-6"
+            >
+              Add Bank Details
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
 
       {/* Create Account - Right Drawer WITH DYNAMIC LOCATION (matches tractor add.tsx) */}
       {accountModalOpen && (

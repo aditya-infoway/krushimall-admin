@@ -909,18 +909,25 @@ const Employee = () => {
   label="Type of Department *"
   placeholder="Select Department"
   data={departmentOptions}
-  value={formDepartmentValue}
-  onChange={(val: any) => setValue("department", val)}
+  value={departmentOptions.find(
+    (item) => item.value === formDepartmentValue
+  )}
+  onChange={(val: any) =>
+    setValue("department", val?.value || "")
+  }
   error={errors?.department && errors.department.message}
 />
                     </div>
                     <div>
                      <Combobox
   label="Branch *"
-  placeholder="Select Branch"
   data={branchOptions}
-  value={formBranchValue}
-  onChange={(val: any) => setValue("branch", val)}
+  value={branchOptions.find(
+    (item) => item.value === formBranchValue
+  )}
+  onChange={(val: any) =>
+    setValue("branch", val?.value || "")
+  }
   error={errors?.branch && errors.branch.message}
 />
                     </div>
@@ -928,11 +935,14 @@ const Employee = () => {
 
                   <div>
                     <Combobox
-  label="Role *"
-  placeholder="Select Role"
+   label="Role *"
   data={roleOptions}
-  value={formRoleValue}
-  onChange={(val: any) => setValue("role", val)}
+  value={roleOptions.find(
+    (item) => item.value === formRoleValue
+  )}
+  onChange={(val: any) =>
+    setValue("role", val?.value || "")
+  }
   error={errors?.role && errors.role.message}
 />
                   </div>
@@ -1050,8 +1060,13 @@ const Employee = () => {
                     </label>
 
                     <Listbox
-                      data={statusOptions}
-                      onChange={(val: any) => setValue("status", val)}
+                     data={statusOptions}
+  value={statusOptions.find(
+    (item) => item.value === formStatusValue
+  )}
+  onChange={(val: any) =>
+    setValue("status", val?.value || "")
+  }
                     />
                   </div>
                 </div>

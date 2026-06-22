@@ -94,7 +94,11 @@ const columns = [
   "Status",
 ];
 
-const TractorPurchaseRegister: React.FC = () => {
+const TractorPurchaseRegister: React.FC<TractorPurchaseRegisterProps> = ({
+  onAddPurchase,
+  onEditRow,
+  onDeleteRow,
+}) => {
   const [search, setSearch] = useState("");
   const [rowsPerPage, setRowsPerPage] = useState(15);
   const [selectedStatusFilter, setSelectedStatusFilter] = useState("All");
@@ -201,21 +205,22 @@ useEffect(() => {
     );
   };
 
-  const handleAddPurchase = () => {
-    navigate("/purchase/tractor/add");
-    onAddPurchase?.();
-  };
+ const handleAddPurchase = () => {
+  navigate("/purchase/tractor/add");
+  if (onAddPurchase) onAddPurchase();
+};
 
-  const handleEditRow = (row: PurchaseRegisterRow) => {
-    navigate(`/purchase/tractor/${row.id}`);
-    onEditRow?.(row);
-  };
+const handleEditRow = (row: PurchaseRegisterRow) => {
+  navigate(`/purchase/tractor/${row.id}`);
+  if (onEditRow) onEditRow(row);
+};
 
-  const handleDeleteRow = (row: PurchaseRegisterRow) => {
-    if (window.confirm(`Are you sure you want to delete this purchase?`)) {
-      onDeleteRow?.(row);
-    }
-  };
+const handleDeleteRow = (row: PurchaseRegisterRow) => {
+  if (window.confirm(`Are you sure you want to delete this purchase?`)) {
+    if (onDeleteRow) onDeleteRow(row);
+  }
+};
+
 
   return (
     <div className="relative min-h-screen space-y-6 p-4 pb-28 text-gray-900 md:p-6 dark:text-gray-100">

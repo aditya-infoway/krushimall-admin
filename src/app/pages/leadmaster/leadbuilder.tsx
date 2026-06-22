@@ -1,4 +1,4 @@
-import { Fragment, useState } from "react";
+import { Fragment, useState, useEffect } from "react";
 import {
   Dialog,
   DialogPanel,
@@ -37,7 +37,7 @@ import {
 import { Button, Input } from "@/components/ui";
 import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/Table";
 import { LeadDetailsModal } from "./model";
-
+import apiHelper from "@/utils/apiHelper";
 // ─── Types based on image_06d90a.jpg ────────────────────────
 type Lead = {
   id: number;
@@ -60,46 +60,6 @@ type Lead = {
 };
 
 // ─── Mock Data ──────────────────────────────────────────────
-const leadData: Lead[] = [
-  {
-    id: 1,
-    customerName: "Prathamesh Krishna Tari",
-    phone: "8975133576",
-    dob: "20-10-1998",
-    location: "Devgad",
-    gstStatus: "GST Applied",
-    createdBy: "Admin",
-    model: "Access 125",
-    variant: "Ride Connect Edition",
-    color: "Metallic Mat Black",
-    executive: "Hetavi Naik",
-    purchaseDate: "12-09-2025",
-    deliveryTime: "11:00 AM",
-    payment: "Pending",
-    followUp: "Scheduled",
-    finance: "Approved",
-    feedback: "Good",
-  },
-  {
-    id: 2,
-    customerName: "Rahul Sharma",
-    phone: "9876543210",
-    dob: "15-05-1995",
-    location: "Mumbai",
-    gstStatus: "GST Applied",
-    createdBy: "Admin",
-    model: "Burgman Street",
-    variant: "EX",
-    color: "Matte Blue",
-    executive: "Priya Patel",
-    purchaseDate: "15-09-2025",
-    deliveryTime: "02:30 PM",
-    payment: "Paid",
-    followUp: "Done",
-    finance: "Approved",
-    feedback: "Excellent",
-  },
-];
 
 // ─── Status Badge Component ─────────────────────────────────
 const StatusBadge = ({
@@ -128,17 +88,15 @@ export default function LeadBuilder() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10); // Changed from 5 to 10 to match Brand page
   const [showLeadModal, setShowLeadModal] = useState(false);
-
+  const [leadData, setLeadData] = useState<any[]>([]);
   // Filter leads based on search
-  const filteredData = leadData.filter((lead) => {
+  const filteredData = leadData.filter((lead: any) => {
     const searchLower = search.toLowerCase();
+
     return (
-      lead.customerName.toLowerCase().includes(searchLower) ||
-      lead.phone.includes(search) ||
-      lead.model.toLowerCase().includes(searchLower) ||
-      lead.variant.toLowerCase().includes(searchLower) ||
-      lead.executive.toLowerCase().includes(searchLower) ||
-      lead.location.toLowerCase().includes(searchLower)
+      lead.customer?.accountName?.toLowerCase().includes(searchLower) ||
+      lead.customer?.mobileNumber?.includes(search) ||
+      lead.model?.modelName?.toLowerCase().includes(searchLower)
     );
   });
 
@@ -149,7 +107,21 @@ export default function LeadBuilder() {
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage,
   );
+  const fetchLeads = async () => {
+    try {
+      const res = await apiHelper.get("/leads");
 
+      const data = Array.isArray(res.data) ? res.data : [];
+
+      setLeadData(data);
+    } catch (error) {
+      console.error("Lead Error:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchLeads();
+  }, []);
   const handleDelete = (id: number) => {
     console.log(`Deleting lead ${id}...`);
   };
@@ -190,10 +162,12 @@ export default function LeadBuilder() {
     console.log(`Cancel for lead ${id}...`);
   };
 
-  const handleOrderBill = (id: number) => {
-    console.log(`Order bill for lead ${id}...`);
-  };
-
+const handleOrderBill = (id: number) => {
+  window.open(
+    `http://192.168.1.38:5000/api/leads/${id}/order-bill`,
+    "_blank"
+  );
+};
   return (
     <div className="relative min-h-screen space-y-6 p-4 pb-28 text-gray-900 md:p-6 dark:text-gray-100">
       {/* Page Header */}
@@ -254,24 +228,31 @@ export default function LeadBuilder() {
                   <Td className="text-xs">
                     <div className="space-y-1">
                       <div className="font-bold text-gray-900 dark:text-white">
-                        {lead.customerName}
+                        {lead.customer?.accountName}
                       </div>
                       <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
                         <PhoneIcon className="size-3.5" />
-                        <span>{lead.phone}</span>
+                        <span>{lead.customer?.mobile}</span>
                       </div>
                       <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
                         <CalendarIcon className="size-3.5" />
-                        <span>{lead.dob}</span>
+                        <span>
+                          {" "}
+                          {lead.customer?.birthday
+                            ? new Date(
+                                lead.customer.birthday,
+                              ).toLocaleDateString("en-GB")
+                            : "-"}
+                        </span>
                       </div>
                       <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
                         <MapPinIcon className="size-3.5" />
-                        <span>{lead.location}</span>
+                        <span>{lead.customer?.city}</span>
                       </div>
                       <div className="flex items-center gap-1">
                         <DocumentTextIcon className="size-3.5 text-blue-600 dark:text-blue-400" />
                         <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
-                          {lead.gstStatus}
+                          {lead.customer?.gstNo}
                         </span>
                       </div>
                       <div className="flex items-center gap-1 text-gray-500 dark:text-gray-400">
@@ -284,13 +265,13 @@ export default function LeadBuilder() {
                   <Td className="w-[180px] text-xs">
                     <div className="space-y-1">
                       <div className="font-medium text-gray-900 dark:text-white">
-                        Model: {lead.model}
+                        Model: {lead.model?.modelName}
                       </div>
                       <div className="text-gray-600 dark:text-gray-400">
-                        Variant: {lead.variant}
+                        Variant: {lead.variant?.variantName}
                       </div>
                       <div className="text-gray-600 dark:text-gray-400">
-                        Colour: {lead.color}
+                        Colour: {lead.colour?.colourName}
                       </div>
                     </div>
                   </Td>
@@ -298,13 +279,23 @@ export default function LeadBuilder() {
                   <Td className="w-[180px] text-xs">
                     <div className="space-y-1">
                       <div className="font-medium text-gray-900 dark:text-white">
-                        Executive: {lead.executive}
+                        Executive: {lead.executive?.employeeName || "-"}
                       </div>
                       <div className="text-gray-600 dark:text-gray-400">
-                        Purchase: {lead.purchaseDate}
+                        Purchase:{" "}
+                        {lead.expectedPurchaseDate
+                          ? new Date(
+                              lead.expectedPurchaseDate,
+                            ).toLocaleDateString()
+                          : "-"}
                       </div>
                       <div className="text-gray-600 dark:text-gray-400">
-                        Delivery: {lead.deliveryTime}
+                        Delivery:{" "}
+                        {lead.expectedDeliveryDate
+                          ? new Date(
+                              lead.expectedDeliveryDate,
+                            ).toLocaleDateString()
+                          : "-"}
                       </div>
                     </div>
                   </Td>
@@ -376,7 +367,7 @@ export default function LeadBuilder() {
                   {/* Status Column - Vertical */}
                   <Td>
                     <div className="space-y-1">
-                      <div className="flex items-center text-[12px] gap-3">
+                      <div className="flex items-center gap-3 text-[12px]">
                         <span className="w-14 shrink-0 font-medium text-gray-600 dark:text-gray-400">
                           Payment:
                         </span>
@@ -386,7 +377,7 @@ export default function LeadBuilder() {
                           {lead.payment}
                         </span>
                       </div>
-                      <div className="flex items-center text-[12px] gap-3">
+                      <div className="flex items-center gap-3 text-[12px]">
                         <span className="w-14 shrink-0 font-medium text-gray-600 dark:text-gray-400">
                           Follow-up:
                         </span>
@@ -396,7 +387,7 @@ export default function LeadBuilder() {
                           {lead.followUp}
                         </span>
                       </div>
-                      <div className="flex items-center text-[12px] gap-3">
+                      <div className="flex items-center gap-3 text-[12px]">
                         <span className="w-14 shrink-0 font-medium text-gray-600 dark:text-gray-400">
                           Finance:
                         </span>
@@ -406,7 +397,7 @@ export default function LeadBuilder() {
                           {lead.finance}
                         </span>
                       </div>
-                      <div className="flex items-center text-[12px] gap-3">
+                      <div className="flex items-center gap-3 text-[12px]">
                         <span className="w-14 shrink-0 font-medium text-gray-600 dark:text-gray-400">
                           Feedback:
                         </span>
@@ -595,9 +586,9 @@ export default function LeadBuilder() {
         )}
       </div>
 
-      <LeadDetailsModal 
-        isOpen={showLeadModal} 
-        onClose={() => setShowLeadModal(false)} 
+      <LeadDetailsModal
+        isOpen={showLeadModal}
+        onClose={() => setShowLeadModal(false)}
       />
     </div>
   );
