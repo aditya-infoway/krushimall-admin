@@ -1140,7 +1140,7 @@ const Accessories = () => {
                     <Combobox
                       data={statusOptions}
                       displayField="label"
-                      value={statusOptions.find((s) => s.value === formData.status) || null}
+                       value={statusOptions.find((s) => s.value === formData.status) as { label: string; value: "ACTIVE" | "INACTIVE" } | null || null}
                       onChange={(val: { label: string; value: "ACTIVE" | "INACTIVE" } | null) =>
                         handleInputChange("status", val?.value || "ACTIVE")
                       }

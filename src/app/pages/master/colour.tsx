@@ -158,6 +158,9 @@ const Colour = () => {
     getColours();
   }, []);
 
+
+  
+
   const getModels = async () => {
     try {
       setLoading(true);
@@ -390,18 +393,18 @@ const handleToggleStatus = async (id: number) => {
     });
   };
 
-  // const handleColorChange = (newColor: string) => {
-  //   if (colorPickerState.id !== null) {
-  //     setColours(
-  //       colours.map((item) =>
-  //         item.id === colorPickerState.id
-  //           ? { ...item, colourCode: newColor }
-  //           : item,
-  //       ),
-  //     );
-  //     setColorPickerState((prev) => ({ ...prev, color: newColor }));
-  //   }
-  // };
+  const handleColorChange = (newColor: string) => {
+    if (colorPickerState.id !== null) {
+      setColours(
+        colours.map((item) =>
+          item.id === colorPickerState.id
+            ? { ...item, colourCode: newColor }
+            : item,
+        ),
+      );
+      setColorPickerState((prev) => ({ ...prev, color: newColor }));
+    }
+  };
 
 const closeColorPicker = async () => {
   const { id, color } = colorPickerState;
@@ -1139,7 +1142,6 @@ const closeColorPicker = async () => {
                         } | null,
                       ) => handleInputChange("status", val?.value || "ACTIVE")}
                       placeholder="Select Status"
-                      displayField="label"
                     />
                   </div>
                 </div>

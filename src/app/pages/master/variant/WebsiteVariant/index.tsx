@@ -26,13 +26,13 @@ export interface Step {
 }
 
 const steps: Step[] = [
-  {
-    key: "BasicInformation",
-    component: BasicInformation,
-    label: "Basic Information",
-    description:
-      "Please provide your personal information in order to complete your KYC",
-  },
+  // {
+  //   key: "BasicInformation",
+  //   component: BasicInformation,
+  //   label: "Basic Information",
+  //   description:
+  //     "Please provide your personal information in order to complete your KYC",
+  // },
   {
     key: "Enginedetails",
     component: Enginedetails,
