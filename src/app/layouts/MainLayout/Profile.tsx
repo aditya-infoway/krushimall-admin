@@ -96,7 +96,7 @@ export function Profile() {
         role="button"
         src={
           company?.logo
-            ? `http://192.168.1.38:5000/uploads/company/${company.logo}`
+            ? `http://192.168.1.38:5000/uploads/${company.logo}`
             : "/images/avatar/avatar-12.jpg"
         }
         alt="Profile"
@@ -125,7 +125,7 @@ export function Profile() {
                   size={14}
                   src={
                     company?.logo
-                      ? `http://192.168.1.38:5000/uploads/company/${company.logo}`
+                      ? `http://192.168.1.38:5000/uploads/${company.logo}`
                       : "/images/avatar/avatar-12.jpg"
                   }
                 />

@@ -11,12 +11,17 @@ import {
   UserCircleIcon,
   DocumentTextIcon,
   CheckCircleIcon,
-    TruckIcon,
+  TruckIcon,
   WrenchScrewdriverIcon,
   ClipboardDocumentListIcon,
   PlusCircleIcon,
-  ShoppingCartIcon
-  
+  ShoppingCartIcon,
+  ArrowUpIcon,
+  ArrowDownIcon,
+  CreditCardIcon,
+  BanknotesIcon,
+  ArrowPathIcon,
+  BookOpenIcon,
 } from "@heroicons/react/24/outline";
 import { ElementType } from "react";
 import { 
@@ -28,11 +33,25 @@ import {
   TbPalette, 
   TbColorSwatch, 
   TbBrush,
-   TbTruck,
+  TbTruck,
   TbTools,
   TbList,
   TbPlus,
-  
+  TbReceipt,
+  TbReceiptOff,
+  TbCash,
+ 
+  TbExchange,
+  TbBook,
+  TbFileInvoice,
+  TbWallet,
+  TbCreditCard,
+  TbBuildingBank as TbBank,
+  TbArrowsExchange,
+  TbNotebook,
+  TbReport,
+  TbReceiptTax,
+  TbReceipt2,
 } from "react-icons/tb";
 
 import DashboardsIcon from "@/assets/dualicons/dashboards.svg?react";
@@ -58,17 +77,28 @@ export const navigationIcons: Record<string, ElementType> = {
   account: BuildingOfficeIcon,
   employee: HiUserIcon,
   broker: BriefcaseIcon,
-   enquirysettings: TbCategory,
+  enquirysettings: TbCategory,
   enquirytype: DocumentTextIcon, 
   enquirysource: TbSourceCode, 
   profession: UserCircleIcon, 
   banker: HomeIcon, 
   finance: TbCoin, 
-enquirystatus: CheckCircleIcon,
- item: ClipboardDocumentListIcon, 
+  enquirystatus: CheckCircleIcon,
+  item: ClipboardDocumentListIcon, 
   tractor: TruckIcon,               
   accessories: WrenchScrewdriverIcon, 
-    purchase: ShoppingCartIcon,
-    "purchase-tractor": TbTruck,
+  purchase: ShoppingCartIcon,
+  "purchase-tractor": TbTruck,
   "purchase-accessories": TbTools,
+  
+  // ✅ Accounting Icons (using valid icons)
+  accounting: TbBuildingBank,
+  debitnote: TbReceiptTax,      // Receipt with tax (debit/outgoing)
+  creditnote: TbReceipt2,        // Receipt (credit/incoming)
+  cashpayment: TbCash,
+  cashreceipt: TbCash,
+  bankpayment: TbBank,
+  bankreceipt: TbBank,
+  contra: TbArrowsExchange,
+  journal: TbBook,
 };
