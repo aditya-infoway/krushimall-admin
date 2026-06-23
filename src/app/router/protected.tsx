@@ -168,6 +168,14 @@ const protectedRoutes: RouteObject = {
         ).default,
       }),
     },
+     {
+      path: "Followup/:id",
+      lazy: async () => ({
+        Component: (
+          await import("@/app/pages/leadmaster/followup")
+        ).default,
+      }),
+    },
   ],
 },
     

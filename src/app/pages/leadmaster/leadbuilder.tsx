@@ -1,43 +1,44 @@
 import { Fragment, useState, useEffect } from "react";
 import {
-  Dialog,
-  DialogPanel,
+  // Dialog,
+  // DialogPanel,
   Transition,
-  TransitionChild,
+  // TransitionChild,
   Menu,
   MenuButton,
   MenuItems,
   MenuItem,
 } from "@headlessui/react";
 import {
-  XMarkIcon,
+  // XMarkIcon,
   PencilSquareIcon,
   TrashIcon,
-  FunnelIcon,
-  EllipsisHorizontalIcon,
+  // FunnelIcon,
+  // EllipsisHorizontalIcon,
   MagnifyingGlassIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   PlusIcon,
-  DocumentArrowDownIcon,
-  PrinterIcon,
-  EyeIcon,
-  ClockIcon,
-  CheckCircleIcon,
-  ChatBubbleLeftIcon,
-  TruckIcon,
+  // DocumentArrowDownIcon,
+  // PrinterIcon,
+  // EyeIcon,
+  // ClockIcon,
+  // CheckCircleIcon,
+  // ChatBubbleLeftIcon,
+  // TruckIcon,
   DocumentTextIcon,
-  XCircleIcon,
-  CreditCardIcon,
+  // XCircleIcon,
+  // CreditCardIcon,
   PhoneIcon,
   CalendarIcon,
   MapPinIcon,
   UserIcon,
 } from "@heroicons/react/24/outline";
-import { Button, Input } from "@/components/ui";
+import { Button,  } from "@/components/ui";
 import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/Table";
 import { LeadDetailsModal } from "./model";
-import apiHelper from "@/utils/apiHelper";
+import apiHelper, { getBaseUrl } from "@/utils/apiHelper";
+import { useNavigate } from "react-router";
 // ─── Types based on image_06d90a.jpg ────────────────────────
 type Lead = {
   id: number;
@@ -90,6 +91,7 @@ export default function LeadBuilder() {
   const [showLeadModal, setShowLeadModal] = useState(false);
   const [leadData, setLeadData] = useState<any[]>([]);
   // Filter leads based on search
+  const navigate = useNavigate();
   const filteredData = leadData.filter((lead: any) => {
     const searchLower = search.toLowerCase();
 
@@ -130,21 +132,20 @@ export default function LeadBuilder() {
     console.log(`Editing lead ${id}...`);
   };
 
-  const handleView = (id: number) => {
-    console.log(`Viewing lead ${id}...`);
-  };
+  // const handleView = (id: number) => {
+  //   console.log(`Viewing lead ${id}...`);
+  // };
 
-  const handleFollowUp = (id: number) => {
-    console.log(`Follow-up for lead ${id}...`);
-  };
-
+ const handleFollowUp = (id: number) => {
+ navigate(`/leadmaster/Followup/${id}`);
+};
   const handlePayment = (id: number) => {
     console.log(`Payment for lead ${id}...`);
   };
 
-  const handleSendQuotation = (id: number) => {
-    console.log(`Send quotation for lead ${id}...`);
-  };
+  // const handleSendQuotation = (id: number) => {
+  //   console.log(`Send quotation for lead ${id}...`);
+  // };
 
   const handleTestDrive = (id: number) => {
     console.log(`Test drive for lead ${id}...`);
@@ -164,7 +165,7 @@ export default function LeadBuilder() {
 
 const handleOrderBill = (id: number) => {
   window.open(
-    `http://192.168.1.38:5000/api/leads/${id}/order-bill`,
+    `${getBaseUrl()}/api/leads/${id}/Quotation`,
     "_blank"
   );
 };
@@ -205,18 +206,18 @@ const handleOrderBill = (id: number) => {
       {/* Table Card */}
       <div className="dark:border-dark-700 dark:bg-dark-800 rounded-xl border border-gray-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
-          <Table className="w-full min-w-[1200px]">
+          <Table className="w-full min-w-300">
             <THead className="dark:border-dark-600 dark:bg-dark-700/60 border-b border-gray-200 bg-gray-100">
               <Tr>
                 <Th className="w-12"># ID</Th>
-                <Th className="w-[180px] min-w-[180px]">Customer Detail</Th>
-                <Th className="w-[180px] min-w-[180px]">Vehicle Detail</Th>
-                <Th className="w-[180px] min-w-[180px]">Purchase Detail</Th>
-                <Th className="w-[160px] min-w-[160px] text-center">Update</Th>
-                <Th className="w-[180px] min-w-[180px] text-center">
+                <Th className="w-45 min-w-45">Customer Detail</Th>
+                <Th className="w-45 min-w-45">Vehicle Detail</Th>
+                <Th className="w-45 min-w-45">Purchase Detail</Th>
+                <Th className="w-40 min-w-40 text-center">Update</Th>
+                <Th className="w-45 min-w-45 text-center">
                   Process / Billing
                 </Th>
-                <Th className="w-[160px] min-w-[160px]">Status</Th>
+                <Th className="w-40 min-w-40">Status</Th>
                 <Th className="w-20 text-center">Action</Th>
               </Tr>
             </THead>
@@ -262,7 +263,7 @@ const handleOrderBill = (id: number) => {
                     </div>
                   </Td>
 
-                  <Td className="w-[180px] text-xs">
+                  <Td className="w-45 text-xs">
                     <div className="space-y-1">
                       <div className="font-medium text-gray-900 dark:text-white">
                         Model: {lead.model?.modelName}
@@ -276,7 +277,7 @@ const handleOrderBill = (id: number) => {
                     </div>
                   </Td>
 
-                  <Td className="w-[180px] text-xs">
+                  <Td className="w-45 text-xs">
                     <div className="space-y-1">
                       <div className="font-medium text-gray-900 dark:text-white">
                         Executive: {lead.executive?.employeeName || "-"}
@@ -306,28 +307,28 @@ const handleOrderBill = (id: number) => {
                       {/* Follow-up: Red border */}
                       <button
                         onClick={() => handleFollowUp(lead.id)}
-                        className="w-full rounded-full border border-red-500 py-[2px] text-[12px] text-red-600"
+                        className="w-full rounded-full border border-red-500 py-0.5 text-[12px] text-red-600 cursor-pointer"
                       >
                         Follow-up
                       </button>
                       {/* Payment: Green border */}
                       <button
                         onClick={() => handlePayment(lead.id)}
-                        className="w-full rounded-full border border-green-500 py-[2px] text-[12px] text-green-600"
+                        className="w-full rounded-full border border-green-500 py-0.5 text-[12px] text-green-600 cursor-pointer"
                       >
                         Payment
                       </button>
                       {/* Send Quotation: Yellow/Orange border */}
                       <button
-                        onClick={() => handleSendQuotation(lead.id)}
-                        className="w-full rounded-full border border-yellow-500 py-[2px] text-[12px] text-yellow-600"
+                        onClick={() => handleOrderBill(lead.id)}
+                        className="w-full rounded-full border border-yellow-500 py-0.5 text-[12px] text-yellow-600 cursor-pointer"
                       >
                         Send Quotation
                       </button>
                       {/* Test Drive: Red border */}
                       <button
                         onClick={() => handleTestDrive(lead.id)}
-                        className="w-full rounded-full border border-red-500 py-[2px] text-[12px] text-red-600"
+                        className="w-full rounded-full border border-red-500 py-0.5 text-[12px] text-red-600 cursor-pointer"
                       >
                         Test Drive
                       </button>
@@ -338,26 +339,26 @@ const handleOrderBill = (id: number) => {
                     <div className="flex w-full flex-col gap-1.5">
                       <button
                         onClick={() => handleCreateOrder(lead.id)}
-                        className="w-full rounded-md border border-emerald-500 py-[2px] text-[12px] text-emerald-600"
+                        className="w-full rounded-md border border-emerald-500 py-0.5 text-[12px] text-emerald-600 cursor-pointer"
                       >
                         Create Order
                       </button>
                       <button
                         onClick={() => handleCreateBooking(lead.id)}
-                        className="w-full rounded-md border border-red-500 py-[2px] text-[12px] text-red-600"
+                        className="w-full rounded-md border border-red-500 py-0.5 text-[12px] text-red-600 cursor-pointer"
                       >
                         Create Booking
                       </button>
                       <button
                         onClick={() => handleCancel(lead.id)}
-                        className="w-full rounded-md border border-blue-900 py-[2px] text-[12px] text-blue-900"
+                        className="w-full rounded-md border border-blue-900 py-0.5 text-[12px] text-blue-900 cursor-pointer"
                       >
                         Cancel
                       </button>
                       {/* Solid Red Button */}
                       <button
-                        onClick={() => handleOrderBill(lead.id)}
-                        className="w-full rounded-md border border-red-600 py-[2px] text-[12px] text-red-600"
+                      
+                        className="w-full rounded-md border border-red-600 py-0.5 text-[12px] text-red-600 cursor-pointer"
                       >
                         Order Bill
                       </button>
