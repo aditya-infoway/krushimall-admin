@@ -168,6 +168,14 @@ const protectedRoutes: RouteObject = {
         ).default,
       }),
     },
+     {
+      path: "Followup/:id",
+      lazy: async () => ({
+        Component: (
+          await import("@/app/pages/leadmaster/followup")
+        ).default,
+      }),
+    },
   ],
 },
     
@@ -364,6 +372,47 @@ const protectedRoutes: RouteObject = {
   ],
 },
 
+
+
+
+    {
+  path: "accounting",
+  children: [
+    {
+      path: "cash-payment",
+      lazy: async () => ({
+        Component: (
+          await import("@/app/pages/accounting/cashpayment")
+        ).default,
+      }),
+    },
+     {
+      path: "cash-receipt",
+      lazy: async () => ({
+        Component: (
+          await import("@/app/pages/accounting/cashreceipt")
+        ).default,
+      }),
+    },
+     {
+      path: "bank-payment",
+      lazy: async () => ({
+        Component: (
+          await import("@/app/pages/accounting/bankpayment")
+        ).default,
+      }),
+    },
+     {
+      path: "bank-receipt",
+      lazy: async () => ({
+        Component: (
+          await import("@/app/pages/accounting/bankreceipt")
+        ).default,
+      }),
+    },
+  ],
+},
+    
 
 
 

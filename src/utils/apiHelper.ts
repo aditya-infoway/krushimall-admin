@@ -21,9 +21,10 @@ api.interceptors.request.use((config) => {
 });
 
 // ✅ Add this helper function
-const getBaseUrl = () => {
-  // Remove '/api' from the end to get the root URL
-  const apiUrl = import.meta.env.VITE_API_URL || "http://192.168.1.38:5000/api";
+export const getBaseUrl = () => {
+  const apiUrl =
+    import.meta.env.VITE_API_URL || "http://192.168.1.38:5000/api";
+
   return apiUrl.replace(/\/api$/, "");
 };
 
