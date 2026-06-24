@@ -11,14 +11,14 @@ export const item: NavigationTree = {
       type: "item",
       title: "Tractor Item",
       path: "/item/tractor",
-      icon: "tractor",
+      
     },
     {
       id: "accessories",
       type: "item",
       title: "Accessories",
       path: "/item/accessories",
-      icon: "accessories",
+      
     },
   ],
 };

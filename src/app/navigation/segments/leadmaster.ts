@@ -11,7 +11,7 @@ export const leadmaster: NavigationTree = {
    type: "item",
    title: "Lead Builder Report",
    path: "/leadmaster/leadbuilder",
-   icon: "leadbuilder",
+  
   },
  
  ],

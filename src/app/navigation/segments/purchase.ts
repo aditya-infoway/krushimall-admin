@@ -11,14 +11,14 @@ export const purchase: NavigationTree = {
       type: "item",
       title: "Tractor Purchase",
       path: "/purchase/tractor",
-      icon: "purchase-tractor",
+   
     },
     {
       id: "purchase-accessories",
       type: "item",
       title: "Accessories Purchase",
       path: "/purchase/accessories",
-      icon: "purchase-accessories",
+     
     },
   ],
 };
