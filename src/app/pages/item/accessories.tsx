@@ -28,7 +28,27 @@ import { Button, Checkbox, Input, Radio } from "@/components/ui";
 import { Combobox } from "@/components/shared/form/StyledCombobox";
 import { Listbox } from "@/components/shared/form/StyledListbox";
 import apiHelper from "@/utils/apiHelper";
+import Select, { components } from "react-select";
+const CheckboxOption = (props: any) => {
+  return (
+    <components.Option {...props}>
+      <div className="flex items-center justify-between w-full">
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={props.isSelected}
+            readOnly
+          />
+          <span>{props.data.variantName}</span>
+        </div>
 
+        <span className="text-xs text-white">
+          {props.data.model}
+        </span>
+      </div>
+    </components.Option>
+  );
+};
 // ─── Types ──────────────────────────────────────────────────────────────────
 interface AccessoryItem {
   id: number;
@@ -115,11 +135,7 @@ const groupOptions = [
   { label: "General Accessories", value: "General Accessories" },
 ];
 
-const variantOptions = [
-  { label: "Standard", value: "Standard" },
-  { label: "Heavy Duty", value: "Heavy Duty" },
-  { label: "Universal", value: "Universal" },
-];
+
 
 const typeOptions = [
   { label: "Accessories", value: "Accessories" },
@@ -139,7 +155,32 @@ const Accessories = () => {
   const [selectedStatusFilter, setSelectedStatusFilter] = useState("All");
   const [selectedTypeFilter, setSelectedTypeFilter] = useState("All");
   const [loading, setLoading] = useState(false);
+  const [selectedVariants, setSelectedVariants] = useState<any[]>([]);
+const [variantOptions, setVariantOptions] = useState([]);
 
+const fetchShowroomVariants = async () => {
+  try {
+    const res = await apiHelper.get("/showroom-variant");
+
+    const data = res.data?.data || res.data || [];
+
+    console.log("Showroom Variant Response:", data);
+
+    setVariantOptions(
+      data.map((item: any) => ({
+        value: item.id,
+        label: `${item.variantName} - ${item.model}`,
+        variantName: item.variantName,
+        model: item.model,
+      }))
+    );
+  } catch (error) {
+    console.error("Error fetching showroom variants", error);
+  }
+};
+useEffect(() => {
+  fetchShowroomVariants();
+}, []);
   // ─── Form State ─────────────────────────────────────────────────────────
   const [formData, setFormData] = useState<FormValues>({
     type: "Accessories",
@@ -224,25 +265,38 @@ const Accessories = () => {
     setShowDrawer(true);
   };
 
-  const handleOpenEditDrawer = (item: AccessoryItem) => {
-    setEditId(item.id);
-    setFormData({
-      type: item.type,
-      itemName: item.itemName,
-      codeNo: item.codeNo,
-      shortName: item.shortName,
-      hsnCode: item.hsnCode,
-      taxSlab: item.taxSlab,
-      group: item.group,
-      purchasePrice: item.purchasePrice,
-      salesPrice: item.salesPrice,
-      mrp: item.mrp,
-      opStock: item.opStock,
-      variant: item.variant,
-      status: item.status,
-    });
-    setShowDrawer(true);
-  };
+const handleOpenEditDrawer = (item: any) => {
+  setEditId(item.id);
+
+  setFormData({
+    type: item.type,
+    itemName: item.itemName || "",
+    codeNo: item.codeNo || "",
+    shortName: item.shortName || "",
+    hsnCode: item.hsnCode || "",
+    taxSlab: item.taxSlab || "",
+    group: item.group || "",
+
+    purchasePrice: String(item.purchasePrice ?? ""),
+    salesPrice: String(item.salesPrice ?? ""),
+    mrp: String(item.mrp ?? ""),
+    opStock: String(item.opStock ?? ""),
+
+    variant: "",
+    status: item.status || "ACTIVE",
+  });
+
+  setSelectedVariants(
+    (item.showroomVariants || []).map((v: any) => ({
+      value: v.id,
+      label: `${v.variantName} - ${v.model}`,
+      variantName: v.variantName,
+      model: v.model,
+    }))
+  );
+
+  setShowDrawer(true);
+};
 
   const handleDelete = async (id: number) => {
     try {
@@ -303,7 +357,9 @@ const Accessories = () => {
       newErrors.salesPrice = "Sales Price is required";
     if (!formData.mrp.trim()) newErrors.mrp = "MRP is required";
     if (!formData.opStock.trim()) newErrors.opStock = "Opening Stock is required";
-    if (!formData.variant.trim()) newErrors.variant = "Variant is required";
+ if (selectedVariants.length === 0) {
+  newErrors.variant = "Variant is required";
+}
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -312,21 +368,27 @@ const Accessories = () => {
     if (!validate()) return;
 
     try {
-      const payload = {
-        type: formData.type,
-        itemName: formData.itemName,
-        codeNo: formData.codeNo,
-        shortName: formData.shortName,
-        hsnCode: formData.hsnCode,
-        taxSlab: formData.taxSlab,
-        group: formData.group,
-        purchasePrice: formData.purchasePrice,
-        salesPrice: formData.salesPrice,
-        mrp: formData.mrp,
-        opStock: formData.opStock,
-        variant: formData.variant,
-        status: formData.status,
-      };
+    const payload = {
+  type: formData.type,
+  itemName: formData.itemName,
+  codeNo: formData.codeNo,
+  shortName: formData.shortName,
+  hsnCode: formData.hsnCode,
+  taxSlab: formData.taxSlab,
+  group: formData.group,
+  purchasePrice: formData.purchasePrice,
+  salesPrice: formData.salesPrice,
+  mrp: formData.mrp,
+  opStock: formData.opStock,
+
+showroomVariants: selectedVariants.map((v: any) => ({
+  id: v.value,
+  variantName: v.variantName,
+  model: v.model,
+})),
+
+  status: formData.status,
+};
 
       if (editId) {
         await apiHelper.put(`/accessories/${editId}`, payload);
@@ -390,7 +452,84 @@ const Accessories = () => {
     { id: "Accessories", name: "Accessories" },
     { id: "Parts", name: "Parts" },
   ];
+ const customSelectStyles = {
+  control: (provided: any, state: any) => ({
+    ...provided,
+    backgroundColor: "transparent",
+    borderColor: state.isFocused
+      ? "var(--color-primary-600)"
+      : "var(--color-gray-700)",
+        borderRadius: "7px",
+    boxShadow: state.isFocused
+      ? "0 0 0 1px var(--color-primary-600)"
+      : "none",
+    minHeight: "30px",
 
+    "&:hover": {
+      borderColor: "var(--color-primary-500)",
+    },
+  }),
+
+  valueContainer: (provided: any) => ({
+    ...provided,
+    color: "var(--color-dark-100)",
+  }),
+
+  singleValue: (provided: any) => ({
+    ...provided,
+    color: "var(--color-dark-100)",
+  }),
+
+  input: (provided: any) => ({
+    ...provided,
+    color: "var(--color-dark-100)",
+  }),
+
+  placeholder: (provided: any) => ({
+    ...provided,
+    color: "var(--color-gray-400)",
+  }),
+
+  menu: (provided: any) => ({
+    ...provided,
+    backgroundColor: "var(--color-dark-700)",
+    border: "1px solid var(--color-primary-600)",
+    borderRadius: "12px",
+    overflow: "hidden",
+  }),
+
+  menuList: (provided: any) => ({
+    ...provided,
+    padding: 0,
+  }),
+
+  option: (provided: any, state: any) => ({
+    ...provided,
+    backgroundColor: state.isSelected
+      ? "var(--color-primary-600)"
+      : state.isFocused
+        ? "var(--color-primary-500)"
+        : "var(--color-dark-700)",
+    color: "#fff",
+    cursor: "pointer",
+  }),
+
+  dropdownIndicator: (provided: any, state: any) => ({
+    ...provided,
+    color: state.isFocused
+      ? "var(--color-primary-600)"
+      : "var(--color-gray-400)",
+  }),
+
+  clearIndicator: (provided: any) => ({
+    ...provided,
+    color: "var(--color-gray-400)",
+  }),
+
+  indicatorSeparator: () => ({
+    display: "none",
+  }),
+};
   return (
     <div className="relative min-h-screen space-y-6 p-4 pb-28 text-gray-900 md:p-6 dark:text-gray-100">
       {/* Header */}
@@ -1114,16 +1253,21 @@ const Accessories = () => {
                       <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
                         Variant <span className="text-red-500">*</span>
                       </label>
-                      <Combobox
-                        data={variantOptions}
-                        displayField="label"
-                        value={variantOptions.find((v) => v.value === formData.variant) || null}
-                        onChange={(val: { label: string; value: string } | null) =>
-                          handleInputChange("variant", val?.value || "")
-                        }
-                        placeholder="Search Variant"
-                        searchFields={["label"]}
-                      />
+                  <Select
+  isMulti
+  closeMenuOnSelect={false}
+  hideSelectedOptions={false}
+    styles={customSelectStyles}
+  options={variantOptions}
+  value={selectedVariants}
+  onChange={(selected) =>
+    setSelectedVariants(selected as any[])
+  }
+  components={{
+    Option: CheckboxOption,
+  }}
+  placeholder="Select Variant"
+/>
                       {errors.variant && (
                         <span className="text-xs text-orange-500">
                           {errors.variant}

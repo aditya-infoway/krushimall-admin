@@ -35,7 +35,7 @@ interface Colour {
 
   modelId: number;
   variantId: number;
-
+  showroomVariantId?: number;
   model?: {
     modelName: string;
   };
@@ -43,7 +43,10 @@ interface Colour {
   variant?: {
     variantName: string;
   };
-
+  showroomVariant?: {
+    id: number;
+    variantName: string;
+  };
   colourName: string;
   colourCode: string;
   status: "ACTIVE" | "INACTIVE";
@@ -56,6 +59,7 @@ interface FormValues {
   modelId: number | string;
   variant: string;
   variantId: number | string;
+  showroomVariantId: number | string;
   colourName: string;
   colourCode: string;
   status: "ACTIVE" | "INACTIVE";
@@ -125,13 +129,17 @@ const Colour = () => {
   const [models, setModels] = useState<OptionType[]>([]);
   const [variants, setVariants] = useState<OptionType[]>([]);
   const [filteredVariants, setFilteredVariants] = useState<OptionType[]>([]);
-
+  const [showroomVariants, setShowroomVariants] = useState<OptionType[]>([]);
+  const [filteredShowroomVariants, setFilteredShowroomVariants] = useState<
+    OptionType[]
+  >([]);
   // ─── Form State ─────────────────────────────────────────────────────────
   const [formData, setFormData] = useState<FormValues>({
     model: "",
     modelId: "",
     variant: "",
     variantId: "",
+    showroomVariantId: "",
     colourName: "",
     colourCode: "#000000",
     status: "ACTIVE",
@@ -156,10 +164,26 @@ const Colour = () => {
     getModels();
     getVariants();
     getColours();
+    getShowroomVariants();
   }, []);
 
+  const getShowroomVariants = async () => {
+    try {
+      const res = await apiHelper.get("/showroom-variant");
 
-  
+      const data = res.data || [];
+
+      setShowroomVariants(
+        data.map((item: any) => ({
+          id: item.id,
+          name: item.variantName,
+          modelId: item.modelId,
+        })),
+      );
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   const getModels = async () => {
     try {
@@ -218,6 +242,17 @@ const Colour = () => {
       setLoading(false);
     }
   };
+  useEffect(() => {
+    if (formData.modelId) {
+      setFilteredShowroomVariants(
+        showroomVariants.filter(
+          (item) => item.modelId === Number(formData.modelId),
+        ),
+      );
+    } else {
+      setFilteredShowroomVariants([]);
+    }
+  }, [formData.modelId, showroomVariants]);
   // ─── Filter Variants by Model ─────────────────────────────────────────
   useEffect(() => {
     if (formData.modelId) {
@@ -275,6 +310,7 @@ const Colour = () => {
       modelId: "",
       variant: "",
       variantId: "",
+      showroomVariantId: "",
       colourName: "",
       colourCode: "#000000",
       status: "ACTIVE",
@@ -292,7 +328,7 @@ const Colour = () => {
 
       variant: item.variant?.variantName || "",
       variantId: item.variantId || "",
-
+      showroomVariantId: item.showroomVariantId || "",
       colourName: item.colourName,
       colourCode: item.colourCode,
       status: item.status,
@@ -339,29 +375,27 @@ const Colour = () => {
     }
   };
 
+  const handleToggleStatus = async (id: number) => {
+    const colour = colours.find((item) => item.id === id);
+    if (!colour) return;
 
+    const newStatus = colour.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
 
-const handleToggleStatus = async (id: number) => {
-  const colour = colours.find((item) => item.id === id);
-  if (!colour) return;
+    // Optimistic update for instant feedback
+    setColours((prev) =>
+      prev.map((item) =>
+        item.id === id ? { ...item, status: newStatus } : item,
+      ),
+    );
 
-  const newStatus = colour.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
-
-  // Optimistic update for instant feedback
-  setColours((prev) =>
-    prev.map((item) =>
-      item.id === id ? { ...item, status: newStatus } : item,
-    ),
-  );
-
-  try {
-    await apiHelper.put(`/colours/${id}`, { status: newStatus });
-  } catch (error) {
-    console.error("Failed to toggle status:", error);
-    // Revert on failure
-    await getColours();
-  }
-};
+    try {
+      await apiHelper.put(`/colours/${id}`, { status: newStatus });
+    } catch (error) {
+      console.error("Failed to toggle status:", error);
+      // Revert on failure
+      await getColours();
+    }
+  };
 
   // ─── Handle Colour Picker Click (Direct Edit) ──────────────────────────
   const handleOpenColorPicker = (
@@ -406,33 +440,40 @@ const handleToggleStatus = async (id: number) => {
     }
   };
 
-const closeColorPicker = async () => {
-  const { id, color } = colorPickerState;
+  const closeColorPicker = async () => {
+    const { id, color } = colorPickerState;
 
-  if (id !== null) {
-    try {
-      await apiHelper.put(`/colours/${id}`, { colourCode: color });
-    } catch (error) {
-      console.error("Failed to update colour:", error);
-      await getColours();
+    if (id !== null) {
+      try {
+        await apiHelper.put(`/colours/${id}`, { colourCode: color });
+      } catch (error) {
+        console.error("Failed to update colour:", error);
+        await getColours();
+      }
     }
-  }
 
-  setColorPickerState((prev) => ({ ...prev, isOpen: false }));
-};
-
-  
-  const validate = () => {
-    const newErrors: Record<string, string> = {};
-    if (!formData.model) newErrors.model = "Model is required";
-    if (!formData.variant) newErrors.variant = "Variant is required";
-    if (!formData.colourName.trim())
-      newErrors.colourName = "Colour Name is required";
-    if (!formData.colourCode) newErrors.colourCode = "Colour Code is required";
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    setColorPickerState((prev) => ({ ...prev, isOpen: false }));
   };
 
+  const validate = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.modelId) newErrors.model = "Model is required";
+
+    // Either Variant OR Showroom Variant required
+    if (!formData.variantId && !formData.showroomVariantId) {
+      newErrors.variant = "Select Variant or Showroom Variant";
+    }
+
+    if (!formData.colourName.trim())
+      newErrors.colourName = "Colour Name is required";
+
+    if (!formData.colourCode) newErrors.colourCode = "Colour Code is required";
+
+    setErrors(newErrors);
+
+    return Object.keys(newErrors).length === 0;
+  };
   const handleSave = async () => {
     if (!validate()) return;
 
@@ -440,6 +481,7 @@ const closeColorPicker = async () => {
       const payload = {
         modelId: Number(formData.modelId),
         variantId: Number(formData.variantId),
+        showroomVariantId: Number(formData.showroomVariantId),
         colourName: formData.colourName,
         colourCode: formData.colourCode,
         status: formData.status,
@@ -611,6 +653,9 @@ const closeColorPicker = async () => {
                   Model
                 </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                  Showroom Variant
+                </Th>
+                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Variant
                 </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
@@ -655,7 +700,10 @@ const closeColorPicker = async () => {
                       {item.model?.modelName}
                     </Td>
                     <Td className="dark:text-dark-200 py-4 text-gray-600">
-                      {item.variant?.variantName}
+                      {item.showroomVariant?.variantName || "-"}
+                    </Td>
+                    <Td className="dark:text-dark-200 py-4 text-gray-600">
+                      {item.variant?.variantName || "-"}
                     </Td>
                     <Td className="dark:text-dark-200 py-4 text-gray-600">
                       {item.colourName}
@@ -1037,6 +1085,13 @@ const closeColorPicker = async () => {
                       onChange={(val: OptionType | null) => {
                         handleInputChange("model", val?.name || "");
                         handleInputChange("modelId", val?.id || "");
+
+                        // reset variant
+                        handleInputChange("variant", "");
+                        handleInputChange("variantId", "");
+
+                        // reset showroom variant
+                        handleInputChange("showroomVariantId", "");
                       }}
                       placeholder="Select Model"
                       searchFields={["name"]}
@@ -1064,10 +1119,17 @@ const closeColorPicker = async () => {
                       onChange={(val: OptionType | null) => {
                         handleInputChange("variant", val?.name || "");
                         handleInputChange("variantId", val?.id || "");
+
+                        // Reset showroom variant
+                        if (val?.id) {
+                          handleInputChange("showroomVariantId", "");
+                        }
                       }}
                       placeholder="Select Variant"
                       searchFields={["name"]}
-                      disabled={!formData.modelId}
+                      disabled={
+                        !formData.modelId || !!formData.showroomVariantId
+                      }
                     />
                     {errors.variant && (
                       <span className="text-xs text-orange-500">
@@ -1075,7 +1137,38 @@ const closeColorPicker = async () => {
                       </span>
                     )}
                   </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium">
+                      Select Showroom Variant
+                    </label>
 
+                    <Combobox
+                      data={filteredShowroomVariants}
+                      displayField="name"
+                      value={
+                        filteredShowroomVariants.find(
+                          (v) => v.id === Number(formData.showroomVariantId),
+                        ) || null
+                      }
+                      onChange={(val: any) => {
+                        handleInputChange("showroomVariantId", val?.id || "");
+
+                        // Reset variant
+                        if (val?.id) {
+                          handleInputChange("variant", "");
+                          handleInputChange("variantId", "");
+                        }
+                      }}
+                      placeholder="Select Showroom Variant"
+                      searchFields={["name"]}
+                      disabled={!formData.modelId || !!formData.variantId}
+                    />
+                    {errors.showroomVariantId && (
+                      <span className="text-xs text-orange-500">
+                        {errors.showroomVariantId}
+                      </span>
+                    )}
+                  </div>
                   {/* Colour Name */}
                   <div>
                     <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">

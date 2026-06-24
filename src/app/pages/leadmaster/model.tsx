@@ -1716,9 +1716,13 @@ export function LeadDetailsModal({
 }) {
   const [step, setStep] = useState(1);
   const [selectedModel, setSelectedModel] = useState<OptionType | null>(null);
-  const [selectedVariant, setSelectedVariant] = useState<OptionType | null>(
-    null,
-  );
+ const [selectedShowroomVariant, setSelectedShowroomVariant] =
+  useState<OptionType | null>(null);
+
+const [showroomVariants, setShowroomVariants] = useState([]);
+
+const [filteredShowroomVariants, setFilteredShowroomVariants] =
+  useState<any[]>([]);
   const [selectedColor, setSelectedColor] = useState<OptionType | null>(null);
   const [selectedCustomer, setSelectedCustomer] = useState<OptionType | null>(
     null,
@@ -1734,10 +1738,10 @@ export function LeadDetailsModal({
   const totalSteps = 4;
 
   const [models, setModels] = useState([]);
-  const [variants, setVariants] = useState([]);
+  // const [variants, setVariants] = useState([]);
   const [colors, setColors] = useState([]);
 
-  const [filteredVariants, setFilteredVariants] = useState([]);
+  // const [filteredVariants, setFilteredVariants] = useState([]);
   const [filteredColors, setFilteredColors] = useState([]);
   const [customers, setCustomers] = useState<OptionType[]>([]);
 
@@ -1818,7 +1822,9 @@ export function LeadDetailsModal({
     const newErrors: Record<string, string> = {};
     if (currentStep === 1) {
       if (!selectedModel) newErrors.model = "Please select a model";
-      if (!selectedVariant) newErrors.variant = "Please select a variant";
+     if (!selectedShowroomVariant)
+  newErrors.showroomVariant =
+    "Please select showroom variant";
       if (!selectedColor) newErrors.color = "Please select a color";
     }
     if (currentStep === 2) {
@@ -1863,7 +1869,8 @@ export function LeadDetailsModal({
     try {
       const payload = {
         modelId: selectedModel?.id,
-        variantId: selectedVariant?.id,
+     showroomVariantId:
+  selectedShowroomVariant?.id,
         colourId: selectedColor?.id,
         customerId: selectedCustomer?.id,
         executiveId: selectedExecutive?.id,
@@ -1991,27 +1998,15 @@ export function LeadDetailsModal({
     );
   };
 
-  const fetchVariants = async () => {
-    try {
-      const response = await apiHelper.get("/variant");
+const fetchShowroomVariants = async () => {
+  const res = await apiHelper.get("/showroom-variant");
 
-      let variantsData = response?.data || response;
+  console.log("Showroom Variants:", res.data);
 
-      if (!Array.isArray(variantsData)) {
-        variantsData = variantsData?.data || [];
-      }
+  const data = res.data?.data || [];
 
-      const mappedVariants = variantsData.map((item: any) => ({
-        id: item.id,
-        name: item.variantName,
-        modelId: item.modelId,
-      }));
-      setVariants(mappedVariants);
-    } catch (error) {
-      console.error("Failed to fetch variants:", error);
-      setVariants([]);
-    }
-  };
+  setShowroomVariants(data);
+};
   const fetchColors = async () => {
     const res = await apiHelper.get("/colours");
     const data = Array.isArray(res.data) ? res.data : [];
@@ -2020,39 +2015,52 @@ export function LeadDetailsModal({
       data.map((item: any) => ({
         id: item.id,
         name: item.colourName,
-        variantId: item.variantId,
+       showroomVariantId: item.showroomVariantId,
       })),
     );
   };
   useEffect(() => {
     fetchModels();
-    fetchVariants();
+    fetchShowroomVariants();
     fetchColors();
     fetchCustomers();
   }, []);
-  const handleModelChange = (model: any) => {
-    setSelectedModel(model);
+ const handleModelChange = (model: any) => {
+  setSelectedModel(model);
 
-    const filtered = variants.filter(
-      (v: any) => Number(v.modelId) === Number(model.id),
-    );
-    setFilteredVariants(filtered);
-  };
+  const filtered = showroomVariants.filter(
+    (v: any) => Number(v.modelId) === Number(model.id)
+  );
 
-  const handleVariantChange = (variant: any) => {
-    setSelectedVariant(variant);
+  console.log("Filtered Showroom Variants:", filtered);
 
-    if (!variant) {
-      setFilteredColors([]);
-      return;
-    }
+  setFilteredShowroomVariants(
+    filtered.map((item: any) => ({
+      id: item.id,
+      name: item.variantName,
+      modelId: item.modelId,
+    }))
+  );
 
-    const filtered = colors.filter(
-      (c: any) => Number(c.variantId) === Number(variant.id),
-    );
+  setSelectedShowroomVariant(null);
+  setSelectedColor(null);
+};
 
-    setFilteredColors(filtered);
-  };
+ const handleShowroomVariantChange = (variant: any) => {
+  setSelectedShowroomVariant(variant);
+
+  if (!variant) {
+    setFilteredColors([]);
+    return;
+  }
+
+  const filtered = colors.filter(
+    (c: any) =>
+      Number(c.showroomVariantId) === Number(variant.id)
+  );
+
+  setFilteredColors(filtered);
+};
 
   const handleColorChange = (val: OptionType | null) => {
     setSelectedColor(val);
@@ -2132,13 +2140,14 @@ export function LeadDetailsModal({
                   {selectedModel && (
                     <div className="flex flex-col gap-1">
                       <label className="dark:text-dark-200 text-sm font-medium text-gray-700">
-                        Select Variant
+                       Select Showroom Variant
                       </label>
                       <Combobox
-                        data={filteredVariants}
+                      
                         displayField="name"
-                        value={selectedVariant}
-                        onChange={handleVariantChange}
+                       data={filteredShowroomVariants}
+value={selectedShowroomVariant}
+onChange={handleShowroomVariantChange}
                         placeholder="Select Variant"
                         searchFields={["name"]}
                       />
@@ -2150,7 +2159,7 @@ export function LeadDetailsModal({
                     </div>
                   )}
 
-                  {selectedVariant && (
+                  {selectedShowroomVariant  && (
                     <div className="flex flex-col gap-1">
                       <label className="dark:text-dark-200 text-sm font-medium text-gray-700">
                         Select Color
@@ -2171,10 +2180,10 @@ export function LeadDetailsModal({
                     </div>
                   )}
 
-                  {selectedModel && selectedVariant && selectedColor && (
+                  {selectedModel && selectedShowroomVariant && selectedColor && (
                     <div className="mt-4 rounded-md border border-blue-200 bg-blue-50 p-3 dark:border-blue-800 dark:bg-blue-900/20">
                       <p className="text-sm font-medium text-blue-900 dark:text-blue-200">
-                        Selected: {selectedModel.name} - {selectedVariant.name}{" "}
+                        Selected: {selectedModel.name} - {selectedShowroomVariant.name}{" "}
                         - {selectedColor.name}
                       </p>
                     </div>
