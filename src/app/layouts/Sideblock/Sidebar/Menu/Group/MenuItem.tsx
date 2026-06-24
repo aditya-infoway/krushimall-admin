@@ -2,7 +2,6 @@
 import clsx from "clsx";
 import { NavLink, useRouteLoaderData } from "react-router";
 import { useTranslation } from "react-i18next";
-import invariant from "tiny-invariant";
 
 // Local Imports
 import { Badge } from "@/components/ui";
@@ -19,20 +18,21 @@ export function MenuItem({ data }: { data: NavigationTree }) {
   const { close } = useSidebarContext();
   const { t } = useTranslation();
 
-  invariant(
-    icon && navigationIcons[icon],
-    `[MenuItem] Icon ${icon} not found in navigationIcons`,
-  );
 
-  invariant(path, "[MenuItem] path is required but not found");
-
-  const Icon = navigationIcons[icon];
+  const isSubmenu = !icon;
+  
+  // Get icon only if it exists
+  let Icon = null;
+  if (icon && navigationIcons[icon]) {
+    Icon = navigationIcons[icon];
+  }
 
   const label = transKey ? t(transKey) : title;
-
   const info = useRouteLoaderData("root")?.[id]?.info;
-
   const handleMenuItemClick = () => lgAndDown && close();
+
+  // If path is missing, don't render
+  if (!path) return null;
 
   return (
     <div className="relative flex px-3">
@@ -45,6 +45,8 @@ export function MenuItem({ data }: { data: NavigationTree }) {
             isActive
               ? "text-primary-600 dark:text-primary-400"
               : "text-gray-800 hover:bg-gray-100 hover:text-gray-950 focus:bg-gray-100 focus:text-gray-950 dark:text-dark-200 dark:hover:bg-dark-300/10 dark:hover:text-dark-50 dark:focus:bg-dark-300/10",
+            // Add left padding for submenu items
+            isSubmenu && "pl-8"
           )
         }
       >
@@ -55,7 +57,8 @@ export function MenuItem({ data }: { data: NavigationTree }) {
               className="flex min-w-0 items-center justify-between gap-2 text-xs-plus tracking-wide"
             >
               <div className="flex min-w-0 items-center gap-3">
-                {Icon && (
+                {/* Show icon for parent items */}
+                {!isSubmenu && Icon && (
                   <Icon
                     className={clsx(
                       "size-5 shrink-0 stroke-[1.5]",
@@ -63,6 +66,19 @@ export function MenuItem({ data }: { data: NavigationTree }) {
                     )}
                   />
                 )}
+                
+                {/* Show bullet for submenu items */}
+                {isSubmenu && (
+                  <span
+                    className={clsx(
+                      "size-2 shrink-0 rounded-full",
+                      isActive
+                        ? "bg-primary-600 dark:bg-primary-400"
+                        : "bg-gray-400 dark:bg-dark-400"
+                    )}
+                  />
+                )}
+                
                 <span className="truncate">{label}</span>
               </div>
               {info && info.val && (

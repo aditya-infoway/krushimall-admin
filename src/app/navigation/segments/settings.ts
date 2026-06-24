@@ -14,7 +14,7 @@ export const settings: NavigationTree = {
       path: "/settings/general",
       title: "General",
       transKey: "nav.settings.general",
-      icon: "settings.general",
+    
     },
     {
       id: "appearance",
@@ -22,7 +22,7 @@ export const settings: NavigationTree = {
       path: "/settings/appearance",
       title: "Appearance",
       transKey: "nav.settings.appearance",
-      icon: "settings.appearance",
+     
     },
   ],
 };

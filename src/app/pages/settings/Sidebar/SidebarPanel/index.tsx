@@ -74,7 +74,7 @@ export function SidebarPanel() {
                 className="group text-xs-plus w-full justify-start gap-2 p-2"
               >
                 <QuestionMarkCircleIcon className="dark:text-dark-300 dark:group-hover:text-dark-200 dark:group-focus:text-dark-200 size-4.5 text-gray-400 transition-colors group-hover:text-gray-500 group-focus:text-gray-500" />
-                <span>Tailux Faq</span>
+                <span>Krushi Mall Faq</span>
               </Button>
             </li>
             <li>
@@ -105,18 +105,22 @@ function MenuItem({
 }: {
   title: string;
   transKey: string;
-  icon: string;
+  icon?: string; // Make icon optional
   path: To;
 }) {
   const { lgAndDown } = useBreakpointsContext();
   const { close } = useSidebarContext();
   const { t } = useTranslation();
 
-  if (!icon || !navigationIcons[icon]) {
-    throw new Error(`Icon ${icon} not found in navigationIcons`);
+  // ✅ Don't throw error if icon is missing
+  // Instead, check if icon exists and get it
+  let Icon = null;
+  if (icon && navigationIcons[icon]) {
+    Icon = navigationIcons[icon];
   }
-  
-  const Icon = navigationIcons[icon];
+
+  // If no icon, show a bullet/dot instead
+  const showBullet = !icon;
   
   return (
     <NavLink to={path} {...rest}>
@@ -127,6 +131,7 @@ function MenuItem({
           className={clsx(
             "group text-xs-plus w-full justify-start gap-2 p-2",
             isPending && "opacity-80",
+            showBullet && "pl-8" // Add padding for items with bullets
           )}
           onKeyDown={createScopedKeydownHandler({
             siblingSelector: "[data-menu-list-item]",
@@ -148,6 +153,19 @@ function MenuItem({
               )}
             />
           )}
+          
+          {/* Show bullet for items without icons */}
+          {showBullet && (
+            <span
+              className={clsx(
+                "size-2 shrink-0 rounded-full",
+                isActive
+                  ? "bg-primary-600 dark:bg-primary-400"
+                  : "bg-gray-400 dark:bg-dark-400"
+              )}
+            />
+          )}
+          
           <span>{t(transKey) || title}</span>
         </Button>
       )}
