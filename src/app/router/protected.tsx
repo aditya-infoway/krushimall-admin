@@ -410,6 +410,22 @@ const protectedRoutes: RouteObject = {
         ).default,
       }),
     },
+     {
+      path: "contra",
+      lazy: async () => ({
+        Component: (
+          await import("@/app/pages/accounting/contra")
+        ).default,
+      }),
+    },
+      {
+      path: "journal-entries",
+      lazy: async () => ({
+        Component: (
+          await import("@/app/pages/accounting/journalentries")
+        ).default,
+      }),
+    },
   ],
 },
     

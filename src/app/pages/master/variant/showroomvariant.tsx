@@ -32,7 +32,9 @@ import { Listbox } from "@/components/shared/form/StyledListbox";
 
 // ─── Types ───────────────────────────────────────────────────────────
 type Accessory = {
+  accessoryId?: number;
   name: string;
+  qty: number;
   price: number;
   taxPercent: number;
   totalPrice: number;
@@ -105,17 +107,20 @@ const calcWithTax = (price: number, taxPercent: number) =>
 const AccessoryCombobox = ({
   value,
   onChange,
+  options,
   placeholder,
   error,
 }: {
   value: string;
   onChange: (value: string) => void;
+  options: any[];
   placeholder?: string;
   error?: string;
 }) => {
   const [inputValue, setInputValue] = useState(value);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [filteredOptions, setFilteredOptions] = useState(accessoryOptions);
+const [filteredOptions, setFilteredOptions] =
+  useState<any[]>([]);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -142,13 +147,13 @@ const AccessoryCombobox = ({
     onChange(val);
 
     if (val.trim()) {
-      const filtered = accessoryOptions.filter((opt) =>
-        opt.toLowerCase().includes(val.toLowerCase()),
-      );
+     const filtered = options.filter((opt) =>
+  opt.itemName.toLowerCase().includes(val.toLowerCase())
+);
       setFilteredOptions(filtered);
       setShowDropdown(true);
     } else {
-      setFilteredOptions(accessoryOptions);
+      setFilteredOptions(options);
       setShowDropdown(true);
     }
   };
@@ -160,10 +165,10 @@ const AccessoryCombobox = ({
     inputRef.current?.focus();
   };
 
-  const handleFocus = () => {
-    setFilteredOptions(accessoryOptions);
-    setShowDropdown(true);
-  };
+const handleFocus = () => {
+  setFilteredOptions(options);
+  setShowDropdown(true);
+};
 
   return (
     <div ref={wrapperRef} className="relative w-full">
@@ -185,11 +190,11 @@ const AccessoryCombobox = ({
         <div className="dark:border-dark-500 dark:bg-dark-700 absolute z-50 mt-1 max-h-48 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg">
           {filteredOptions.map((option) => (
             <div
-              key={option}
+               key={option.id}
               className="dark:hover:bg-dark-600 cursor-pointer px-3 py-2 text-sm transition-colors hover:bg-gray-100"
-              onClick={() => handleOptionSelect(option)}
+              onClick={() => handleOptionSelect(option.itemName)}
             >
-              {option}
+              {option.itemName}
             </div>
           ))}
         </div>
@@ -211,9 +216,9 @@ export default function ShowroomVariantPage() {
   const [showFilterBar, setShowFilterBar] = useState(false);
   const [selectedModelFilter, setSelectedModelFilter] = useState("All");
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
-
+const [accessoryOptions, setAccessoryOptions] = useState<any[]>([]);
   const [accessories, setAccessories] = useState<Accessory[]>([
-    { name: "", price: 0, taxPercent: 0, totalPrice: 0 },
+    { name: "",   qty: 0, price: 0, taxPercent: 0, totalPrice: 0 },
   ]);
   const [accessoryErrors, setAccessoryErrors] = useState<{
     [key: number]: string;
@@ -224,6 +229,7 @@ export default function ShowroomVariantPage() {
   useEffect(() => {
     getVariants();
     getModels();
+      getAccessories();
   }, []);
 
   const getVariants = async () => {
@@ -257,7 +263,19 @@ export default function ShowroomVariantPage() {
       setModels([]);
     }
   };
+const getAccessories = async () => {
+  try {
+    const res = await apiHelper.get("/accessories");
 
+    const data = res.data || [];
+
+    console.log("Accessories API:", data);
+
+    setAccessoryOptions(data);
+  } catch (error) {
+    console.error(error);
+  }
+};
   // ─── Validation Rules ──────────────────────────────────────────────
   const validationRules = {
     modelId: {
@@ -418,6 +436,7 @@ export default function ShowroomVariantPage() {
   setAccessories([
     {
       name: "",
+      qty:0,
       price: 0,
       taxPercent: 0,
       totalPrice: 0,
@@ -452,10 +471,15 @@ const handleOpenEditDrawer = (item: any) => {
   setAccessories(
     item.accessories?.length
       ? item.accessories.map((acc: any) => ({
-          name: acc.accessoryName || "",
-          price: Number(acc.price) || 0,
-          taxPercent: Number(acc.taxPercent) || 0,
-          totalPrice: Number(acc.totalPrice) || 0,
+        accessoryId: acc.accessoryId,
+
+
+
+qty: Number(acc.qty) || 0,
+
+price: Number(acc.price) || 0,
+taxPercent: Number(acc.taxPercent) || 0,
+totalPrice: Number(acc.totalPrice) || 0,
         }))
       : [{ name: "", price: 0, taxPercent: 0, totalPrice: 0 }]
   );
@@ -507,7 +531,7 @@ const handleOpenEditDrawer = (item: any) => {
   const addAccessory = () => {
     setAccessories([
       ...accessories,
-      { name: "", price: 0, taxPercent: 0, totalPrice: 0 },
+      { name: "", qty: 0, price: 0, taxPercent: 0, totalPrice: 0 },
     ]);
     // Clear error for new accessory
     setAccessoryErrors({});
@@ -515,7 +539,7 @@ const handleOpenEditDrawer = (item: any) => {
 
   const removeAccessory = (index: number) => {
     if (accessories.length === 1) {
-      setAccessories([{ name: "", price: 0, taxPercent: 0, totalPrice: 0 }]);
+      setAccessories([{ name: "", qty: 0, price: 0, taxPercent: 0, totalPrice: 0 }]);
     } else {
       setAccessories(accessories.filter((_, i) => i !== index));
     }
@@ -524,33 +548,41 @@ const handleOpenEditDrawer = (item: any) => {
     delete newErrors[index];
     setAccessoryErrors(newErrors);
   };
+const calculateAccessoryTotal = (
+  price: number,
+  qty: number,
+  taxPercent: number
+) => {
+  const subTotal = price * qty;
+  const taxAmount = (subTotal * taxPercent) / 100;
 
-  const updateAccessory = (
-    index: number,
-    field: keyof Accessory,
-    value: string,
-  ) => {
-    const updated = [...accessories];
-    updated[index] = {
-      ...updated[index],
-      [field]:
-        field === "price" || field === "taxPercent" ? Number(value) : value,
-    };
-    if (field === "price" || field === "taxPercent") {
-      updated[index].totalPrice = calcWithTax(
-        updated[index].price,
-        updated[index].taxPercent,
-      );
-    }
-    setAccessories(updated);
+  return subTotal + taxAmount;
+};
+const updateAccessory = (
+  index: number,
+  field: keyof Accessory,
+  value: any
+) => {
+  const updated = [...accessories];
 
-    // Clear error for this accessory when user types
-    if (field === "name" && accessoryErrors[index]) {
-      const newErrors = { ...accessoryErrors };
-      delete newErrors[index];
-      setAccessoryErrors(newErrors);
-    }
+  updated[index] = {
+    ...updated[index],
+    [field]:
+      field === "price" ||
+      field === "taxPercent" ||
+      field === "qty"
+        ? Number(value)
+        : value,
   };
+
+  updated[index].totalPrice = calculateAccessoryTotal(
+    Number(updated[index].price || 0),
+    Number(updated[index].qty || 0),
+    Number(updated[index].taxPercent || 0)
+  );
+
+  setAccessories(updated);
+};
 
   // ─── Form Submit with Validation ───────────────────────────────────
   // ─── Form Submit with Validation ───────────────────────────────────
@@ -1196,21 +1228,43 @@ const handleOpenEditDrawer = (item: any) => {
                       <div key={i} id={`accessory-${i}`}>
                         <div className="mb-2 flex items-center gap-2">
                           <div className="min-w-[200px] flex-1">
-                            <AccessoryCombobox
-                              value={acc.name}
-                              onChange={(val) => {
-                                updateAccessory(i, "name", val);
-                                // Clear error for this accessory when user types
-                                if (accessoryErrors[i]) {
-                                  const newErrors = { ...accessoryErrors };
-                                  delete newErrors[i];
-                                  setAccessoryErrors(newErrors);
-                                }
-                              }}
-                              placeholder="Type or select accessory..."
-                              error={accessoryErrors[i]}
-                            />
+                           <AccessoryCombobox
+  options={accessoryOptions}
+  value={acc.name}
+ onChange={(val) => {
+  const selectedAccessory = accessoryOptions.find(
+    (item: any) => item.itemName === val
+  );
+
+  const updatedAccessories = [...accessories];
+updatedAccessories[i] = {
+  ...updatedAccessories[i],
+
+  accessoryId: selectedAccessory?.id,
+
+  name: val,
+
+  price: Number(selectedAccessory?.salesPrice || 0),
+  taxPercent: Number(selectedAccessory?.taxSlab || 0),
+};
+
+  setAccessories(updatedAccessories);
+
+  console.log(updatedAccessories[i]);
+}}
+  placeholder="Type or select accessory..."
+  error={accessoryErrors[i]}
+/>
                           </div>
+                          <Input
+  type="number"
+  placeholder="Qty"
+  value={acc.qty || 0}
+  onChange={(e) =>
+    updateAccessory(i, "qty", e.target.value)
+  }
+  className="w-20"
+/>
                           <Input
                             type="number"
                             placeholder="Price"

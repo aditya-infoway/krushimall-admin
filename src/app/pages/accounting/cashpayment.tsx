@@ -52,7 +52,7 @@ import {
 import { Fragment } from "react";
 import { DatePicker } from "@/components/shared/form/Datepicker";
 import { Combobox } from "@/components/shared/form/StyledCombobox";
-import { Input, Radio } from "@/components/ui";
+import { Input, Radio, Textarea } from "@/components/ui";
 
 type EntryType = "Manual" | "Lead Cancel";
 
@@ -90,25 +90,29 @@ const OPP_ACCOUNTS = [
     id: 1,
     label: "Cash account (9081540777)",
     value: "Cash account (9081540777)",
-    balance: "1,00,000.00 DR",
+    balance: "100,000.00 DR",
+    balanceType: "DR",
   },
   {
     id: 2,
     label: "Denish patel (9081540774)",
     value: "Denish patel (9081540774)",
     balance: "0.00 DR",
+    balanceType: "DR",
   },
   {
     id: 3,
     label: "Suresh Kumar (9081540775)",
     value: "Suresh Kumar (9081540775)",
     balance: "25,000.00 CR",
+    balanceType: "CR",
   },
   {
     id: 4,
     label: "Ramesh Singh (9081540776)",
     value: "Ramesh Singh (9081540776)",
     balance: "50,000.00 DR",
+    balanceType: "DR",
   },
 ];
 
@@ -192,6 +196,19 @@ export default function CashPayment() {
     setShowDrawer(true);
   };
 
+  // Transform OPP_ACCOUNTS to include balance in label
+  // Calculate the longest account name for proper alignment
+  const OPP_ACCOUNTS_WITH_BALANCE = OPP_ACCOUNTS.map((account) => {
+    // Use padEnd to ensure consistent length
+    const maxLength = 50; // Adjust this value
+    const paddedLabel = account.label.padEnd(maxLength, " ");
+
+    return {
+      ...account,
+      label: `${paddedLabel}${account.balance}`,
+    };
+  });
+
   const handleEdit = (item: CashPayment) => {
     setEditId(item.id);
     setForm({
@@ -210,6 +227,22 @@ export default function CashPayment() {
     setErrors({});
     setShowDrawer(true);
   };
+
+  // Add this after OPP_ACCOUNTS definition
+  const LEADS = [
+    { id: 1, leadNo: "LEAD-001", name: "John Doe", phone: "9876543210" },
+    { id: 2, leadNo: "LEAD-002", name: "Jane Smith", phone: "9876543211" },
+    { id: 3, leadNo: "LEAD-003", name: "Bob Johnson", phone: "9876543212" },
+    { id: 4, leadNo: "LEAD-004", name: "Alice Brown", phone: "9876543213" },
+    { id: 5, leadNo: "LEAD-005", name: "Charlie Wilson", phone: "9876543214" },
+  ];
+
+  const leadOptions = LEADS.map((lead) => ({
+    value: lead.leadNo,
+    label: `${lead.leadNo} - ${lead.name}`,
+    phone: lead.phone,
+    id: lead.id,
+  }));
 
   const handleDelete = (id: number) => {
     setRows(rows.filter((row) => row.id !== id));
@@ -769,23 +802,18 @@ export default function CashPayment() {
                     <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Lead No. <span className="text-red-500">*</span>
                     </label>
-                    <input
-                      type="text"
-                      value={form.leadNo || ""}
-                      onChange={(e) => {
-                        setForm({ ...form, leadNo: e.target.value });
+                    <Combobox
+                      data={leadOptions}
+                      displayField="label"
+                      value={form.leadNo}
+                      onChange={(value: any) => {
+                        setForm({ ...form, leadNo: value });
                         if (errors.leadNo) setErrors({ ...errors, leadNo: "" });
                       }}
-                      placeholder="Enter lead number"
-                      className={`dark:border-dark-500 dark:bg-dark-600 w-full rounded-lg border ${
-                        errors.leadNo ? "border-red-500" : "border-gray-300"
-                      } bg-white px-4 py-2.5 text-sm focus:border-red-500 focus:ring-2 focus:ring-red-500`}
+                      placeholder="Search or select lead..."
+                      searchFields={["label"]}
+                      error={errors.leadNo}
                     />
-                    {errors.leadNo && (
-                      <p className="mt-1 text-sm text-red-500">
-                        {errors.leadNo}
-                      </p>
-                    )}
                   </div>
                 )}
 
@@ -798,7 +826,7 @@ export default function CashPayment() {
                     data={CASH_ACCOUNTS}
                     displayField="label"
                     value={form.cashAccount}
-                    onChange={(value) => {
+                    onChange={(value: any) => {
                       setForm({ ...form, cashAccount: value });
                       if (errors.cashAccount)
                         setErrors({ ...errors, cashAccount: "" });
@@ -837,27 +865,19 @@ export default function CashPayment() {
                 </div>
 
                 {/* Opp Account with Combobox - Shows Balance */}
+
                 <div>
                   <div className="flex items-center justify-between">
                     <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Opp. Account <span className="text-red-500">*</span>
                     </label>
-                    {form.oppAccount && (
-                      <span className="text-sm text-gray-500">
-                        Balance:{" "}
-                        <span
-                          className={`font-semibold ${form.oppAccount.balance?.includes("CR") ? "text-green-600" : "text-red-500"}`}
-                        >
-                          {form.oppAccount.balance || "0.00 DR"}
-                        </span>
-                      </span>
-                    )}
                   </div>
+
                   <Combobox
-                    data={OPP_ACCOUNTS}
+                    data={OPP_ACCOUNTS_WITH_BALANCE}
                     displayField="label"
                     value={form.oppAccount}
-                    onChange={(value) => {
+                    onChange={(value: any) => {
                       setForm({ ...form, oppAccount: value });
                       if (errors.oppAccount)
                         setErrors({ ...errors, oppAccount: "" });
@@ -867,7 +887,6 @@ export default function CashPayment() {
                     error={errors.oppAccount}
                   />
                 </div>
-
                 {/* Amount */}
                 <div>
                   <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -889,14 +908,13 @@ export default function CashPayment() {
                   <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Narration
                   </label>
-                  <input
-                    type="text"
+                  <Textarea
                     value={form.narration}
                     onChange={(e) =>
                       setForm({ ...form, narration: e.target.value })
                     }
                     placeholder="Enter narration"
-                    className="dark:border-dark-500 dark:bg-dark-600 w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm focus:border-red-500 focus:ring-2 focus:ring-red-500"
+                    className="dark:border-dark-500 dark:bg-dark-600 w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm"
                   />
                 </div>
               </div>

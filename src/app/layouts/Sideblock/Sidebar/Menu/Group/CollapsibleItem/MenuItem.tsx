@@ -1,32 +1,41 @@
 // Import Dependencies
 import clsx from "clsx";
 import { NavLink, useRouteLoaderData } from "react-router";
-import invariant from "tiny-invariant";
 import { useTranslation } from "react-i18next";
 
 // Local Imports
 import { Badge } from "@/components/ui";
 import { useBreakpointsContext } from "@/app/contexts/breakpoint/context";
 import { useSidebarContext } from "@/app/contexts/sidebar/context";
-import { NavigationTree } from "@/@types/navigation";
+import { type NavigationTree } from "@/@types/navigation";
+import { navigationIcons } from "@/app/navigation/icons";
 
 // ----------------------------------------------------------------------
 
 export function MenuItem({ data }: { data: NavigationTree }) {
-  const { id, transKey, path, title } = data;
-  const { t } = useTranslation();
+  const { icon, path, id, transKey, title } = data;
   const { lgAndDown } = useBreakpointsContext();
   const { close } = useSidebarContext();
+  const { t } = useTranslation();
 
-  invariant(path, `[MenuItem] Path is required for navigation item`);
+  // Check if this is a submenu item (no icon)
+  const isSubmenu = !icon;
+  
+  // Get icon only if it exists
+  let Icon = null;
+  if (icon && navigationIcons[icon]) {
+    Icon = navigationIcons[icon];
+  }
 
   const label = transKey ? t(transKey) : title;
   const info = useRouteLoaderData("root")?.[id]?.info;
-
   const handleMenuItemClick = () => lgAndDown && close();
 
+  // If path is missing, don't render
+  if (!path) return null;
+
   return (
-    <div className="relative flex">
+    <div className="relative flex px-3">
       <NavLink
         to={path}
         onClick={handleMenuItemClick}
@@ -36,34 +45,56 @@ export function MenuItem({ data }: { data: NavigationTree }) {
             isActive
               ? "text-primary-600 dark:text-primary-400"
               : "text-gray-800 hover:bg-gray-100 hover:text-gray-950 focus:bg-gray-100 focus:text-gray-950 dark:text-dark-200 dark:hover:bg-dark-300/10 dark:hover:text-dark-50 dark:focus:bg-dark-300/10",
+            // Add left padding for submenu items
+            isSubmenu && "pl-8"
           )
         }
       >
         {({ isActive }) => (
-          <div
-            data-menu-active={isActive}
-            className="flex min-w-0 items-center justify-between gap-2.5"
-          >
-            <div className="flex min-w-0 items-center gap-3">
-              <div
-                className={clsx(
-                  isActive
-                    ? "bg-primary-600 opacity-80 dark:bg-primary-400"
-                    : "opacity-50 transition-all",
-                  "size-2 rounded-full border border-current",
+          <>
+            <div
+              data-menu-active={isActive}
+              className="flex min-w-0 items-center justify-between gap-2 text-xs-plus tracking-wide"
+            >
+              <div className="flex min-w-0 items-center gap-3">
+                {/* Show icon for parent items */}
+                {!isSubmenu && Icon && (
+                  <Icon
+                    className={clsx(
+                      "size-5 shrink-0 stroke-[1.5]",
+                      !isActive && "opacity-80 group-hover:opacity-100",
+                    )}
+                  />
                 )}
-              />
-              <span className="truncate">{label}</span>
+                
+                {/* Show bullet for submenu items */}
+                {isSubmenu && (
+                  <span
+                    className={clsx(
+                      "size-2 shrink-0 rounded-full",
+                      isActive
+                        ? "bg-primary-600 dark:bg-primary-400"
+                        : "bg-gray-400 dark:bg-dark-400"
+                    )}
+                  />
+                )}
+                
+                <span className="truncate">{label}</span>
+              </div>
+              {info && info.val && (
+                <Badge
+                  color={info.color}
+                  variant="soft"
+                  className="h-4.5 min-w-[1rem] shrink-0 p-[5px] text-tiny-plus"
+                >
+                  {info.val}
+                </Badge>
+              )}
             </div>
-            {info && info.val && (
-              <Badge
-                color={info.color}
-                className="h-5 min-w-[1.25rem] shrink-0 rounded-full p-[5px]"
-              >
-                {info.val}
-              </Badge>
+            {isActive && (
+              <div className="absolute bottom-1 top-1 w-1 bg-primary-600 dark:bg-primary-400 ltr:left-0 ltr:rounded-r-full rtl:right-0 rtl:rounded-l-lg" />
             )}
-          </div>
+          </>
         )}
       </NavLink>
     </div>

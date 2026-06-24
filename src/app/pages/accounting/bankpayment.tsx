@@ -26,7 +26,7 @@ import {
 import { Fragment } from "react";
 import { DatePicker } from "@/components/shared/form/Datepicker";
 import { Combobox } from "@/components/shared/form/StyledCombobox";
-import { Input, Radio } from "@/components/ui";
+import { Input, Radio, Textarea } from "@/components/ui";
 
 type EntryType = "Manual" | "Lead Cancel";
 type PaymentMode = "NEFT" | "RTGS" | "IMPS" | "Cheque" | "UPI";
@@ -188,13 +188,13 @@ export default function BankPayment() {
     if (form.type === "Lead Cancel" && !form.leadNo) {
       newErrors.leadNo = "Lead No. is required";
     }
-    if (form.paymentMode === "Cheque" && !form.chequeNo) {
+    if (form.paymentMode?.id === "Cheque" && !form.chequeNo) {
       newErrors.chequeNo = "Cheque No. is required";
     }
-    if (form.paymentMode === "Cheque" && !form.chequeDate) {
+    if (form.paymentMode?.id === "Cheque" && !form.chequeDate) {
       newErrors.chequeDate = "Cheque Date is required";
     }
-    if (form.paymentMode === "Cheque" && !form.chequeClearDate) {
+    if (form.paymentMode?.id === "Cheque" && !form.chequeClearDate) {
       newErrors.chequeClearDate = "Cheque Clear Date is required";
     }
 
@@ -259,7 +259,7 @@ const handleAdd = () => {
       bankAccount: form.bankAccount.value,
       oppAccount: form.oppAccount.value,
       amount: parseFloat(form.amount),
-      paymentMode: form.paymentMode.id,
+      paymentMode: (form.paymentMode?.id || "UPI") as PaymentMode,
       chequeNo: form.paymentMode?.id === "Cheque" ? form.chequeNo : undefined,
       chequeDate: form.paymentMode?.id === "Cheque" ? form.chequeDate : undefined,
       chequeClearDate:
@@ -300,6 +300,37 @@ const handleAdd = () => {
         : [...prev, id],
     );
   };
+
+
+
+
+const LEADS = [
+  { id: 1, leadNo: "LEAD-001", name: "John Doe", phone: "9876543210" },
+  { id: 2, leadNo: "LEAD-002", name: "Jane Smith", phone: "9876543211" },
+  { id: 3, leadNo: "LEAD-003", name: "Bob Johnson", phone: "9876543212" },
+  { id: 4, leadNo: "LEAD-004", name: "Alice Brown", phone: "9876543213" },
+  { id: 5, leadNo: "LEAD-005", name: "Charlie Wilson", phone: "9876543214" },
+];
+
+const leadOptions = LEADS.map(lead => ({
+  value: lead.leadNo,
+  label: `${lead.leadNo} - ${lead.name}`,
+  phone: lead.phone,
+  id: lead.id
+}));
+
+// Transform OPP_ACCOUNTS to include balance on the right
+const maxLabelLength = Math.max(...OPP_ACCOUNTS.map(a => a.label.length));
+const EXTRA_SPACING = 6;
+
+const OPP_ACCOUNTS_WITH_BALANCE = OPP_ACCOUNTS.map(account => {
+  const paddedLabel = account.label.padEnd(maxLabelLength + EXTRA_SPACING, ' ');
+  return {
+    ...account,
+    label: `${paddedLabel}${account.balance}`
+  };
+});
+  
 
   // Apply filters automatically when any filter changes
   useEffect(() => {
@@ -845,30 +876,25 @@ const handleAdd = () => {
                 </div>
 
                 {/* Lead No - Show when Lead Cancel is selected */}
-                {form.type === "Lead Cancel" && (
-                  <div>
-                    <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Lead No. <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={form.leadNo || ""}
-                      onChange={(e) => {
-                        setForm({ ...form, leadNo: e.target.value });
-                        if (errors.leadNo) setErrors({ ...errors, leadNo: "" });
-                      }}
-                      placeholder="Enter lead number"
-                      className={`dark:border-dark-500 dark:bg-dark-600 w-full rounded-lg border ${
-                        errors.leadNo ? "border-red-500" : "border-gray-300"
-                      } bg-white px-4 py-2.5 text-sm focus:border-red-500 focus:ring-2 focus:ring-red-500`}
-                    />
-                    {errors.leadNo && (
-                      <p className="mt-1 text-sm text-red-500">
-                        {errors.leadNo}
-                      </p>
-                    )}
-                  </div>
-                )}
+               {form.type === "Lead Cancel" && (
+  <div>
+    <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+      Lead No. <span className="text-red-500">*</span>
+    </label>
+    <Combobox
+      data={leadOptions}
+      displayField="label"
+      value={form.leadNo}
+      onChange={(value: any) => {
+        setForm({ ...form, leadNo: value });
+        if (errors.leadNo) setErrors({ ...errors, leadNo: "" });
+      }}
+      placeholder="Search or select lead..."
+      searchFields={["label"]}
+      error={errors.leadNo}
+    />
+  </div>
+)}
 
                 {/* Bank Account with Combobox */}
                 <div>
@@ -879,7 +905,7 @@ const handleAdd = () => {
                     data={BANK_ACCOUNTS}
                     displayField="label"
                     value={form.bankAccount}
-                    onChange={(value) => {
+                    onChange={(value: any) => {
                       setForm({ ...form, bankAccount: value });
                       if (errors.bankAccount)
                         setErrors({ ...errors, bankAccount: "" });
@@ -923,30 +949,20 @@ const handleAdd = () => {
                     <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Opp. Account <span className="text-red-500">*</span>
                     </label>
-                    {form.oppAccount && (
-                      <span className="text-sm text-gray-500">
-                        Balance:{" "}
-                        <span
-                          className={`font-semibold ${form.oppAccount.balance?.includes("CR") ? "text-green-600" : "text-red-500"}`}
-                        >
-                          {form.oppAccount.balance || "0.00 DR"}
-                        </span>
-                      </span>
-                    )}
+                   
                   </div>
-                  <Combobox
-                    data={OPP_ACCOUNTS}
-                    displayField="label"
-                    value={form.oppAccount}
-                    onChange={(value) => {
-                      setForm({ ...form, oppAccount: value });
-                      if (errors.oppAccount)
-                        setErrors({ ...errors, oppAccount: "" });
-                    }}
-                    placeholder="Select Opp. Account"
-                    searchFields={["label"]}
-                    error={errors.oppAccount}
-                  />
+                 <Combobox
+  data={OPP_ACCOUNTS_WITH_BALANCE}
+  displayField="label"
+  value={form.oppAccount}
+  onChange={(value: any) => {
+    setForm({ ...form, oppAccount: value });
+    if (errors.oppAccount) setErrors({ ...errors, oppAccount: "" });
+  }}
+  placeholder="Select Opp. Account"
+  searchFields={["label"]}
+  error={errors.oppAccount}
+/>
                 </div>
 
                 {/* Amount */}
@@ -1076,14 +1092,14 @@ const handleAdd = () => {
                   <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Narration
                   </label>
-                  <input
-                    type="text"
+                  <Textarea
+                    
                     value={form.narration}
                     onChange={(e) =>
                       setForm({ ...form, narration: e.target.value })
                     }
                     placeholder="Enter narration"
-                    className="dark:border-dark-500 dark:bg-dark-600 w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm focus:border-red-500 focus:ring-2 focus:ring-red-500"
+                    className="dark:border-dark-500 dark:bg-dark-600 w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm "
                   />
                 </div>
               </div>

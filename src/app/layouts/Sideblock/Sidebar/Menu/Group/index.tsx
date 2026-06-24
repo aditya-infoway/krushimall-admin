@@ -1,35 +1,37 @@
 // Import Dependencies
 import { useTranslation } from "react-i18next";
 import clsx from "clsx";
-import invariant from "tiny-invariant";
+import { ChevronDownIcon } from "@heroicons/react/24/outline";
 
 // Local Imports
 import { Collapse } from "@/components/ui";
-// import { useDisclosure } from "@/hooks";
 import { useThemeContext } from "@/app/contexts/theme/context";
 import { CollapsibleItem } from "./CollapsibleItem";
 import { MenuItem } from "./MenuItem";
 import { type NavigationTree } from "@/@types/navigation";
 import { navigationIcons } from "@/app/navigation/icons";
+
 // ----------------------------------------------------------------------
 interface GroupProps {
  data: NavigationTree;
  isOpened: boolean;
  onToggle: () => void;
 }
+
 export function Group({
  data,
  isOpened,
  onToggle,
 }: GroupProps) {
- // const [isOpened, { toggle }] = useDisclosure(true);
  const { t } = useTranslation();
  const { cardSkin } = useThemeContext();
-const Icon = data.icon ? navigationIcons[data.icon] : null;
- invariant(
-  data.childs && data.childs.length > 0,
-  "[Group] Group menu must have at least one child",
- );
+
+ // If no children, don't render
+ if (!data.childs || data.childs.length === 0) {
+   return null;
+ }
+
+ const Icon = data.icon ? navigationIcons[data.icon] : null;
 
  return (
   <div className="pt-3">
@@ -41,10 +43,23 @@ const Icon = data.icon ? navigationIcons[data.icon] : null;
    >
     <button
      onClick={onToggle}
-     className="dark:text-dark-300 dark:hover:text-dark-50 dark:focus:text-dark-50 mb-2 flex cursor-pointer items-center gap-3 pt-2 text-xs font-medium tracking-wider text-gray-500 uppercase outline-hidden hover:text-gray-900 focus:text-gray-900"
+     className={clsx(
+       "dark:text-dark-300 dark:hover:text-dark-50 dark:focus:text-dark-50 mb-2 flex w-full cursor-pointer items-center justify-between pt-2 text-xs font-medium tracking-wider uppercase outline-hidden hover:text-gray-900 focus:text-gray-900",
+       // Change text color from text-gray-500 to text-gray-900 (black) in light mode
+       "text-gray-900" // ← CHANGED FROM text-gray-500 TO text-gray-900
+     )}
     >
-      {Icon && <Icon className="h-4 w-4 shrink-0" />}
-     <span>{data.transKey ? t(data.transKey) : data.title}</span>
+     <div className="flex items-center gap-3">
+       {Icon && <Icon className="h-4 w-4 shrink-0" />}
+       <span>{data.transKey ? t(data.transKey) : data.title}</span>
+     </div>
+     {/* Dropdown arrow */}
+     <ChevronDownIcon
+       className={clsx(
+         "h-4 w-4 shrink-0 transition-transform duration-200",
+         isOpened && "rotate-180"
+       )}
+     />
     </button>
     <div
      className={clsx(

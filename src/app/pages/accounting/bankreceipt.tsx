@@ -26,7 +26,7 @@ import {
 import { Fragment } from "react";
 import { DatePicker } from "@/components/shared/form/Datepicker";
 import { Combobox } from "@/components/shared/form/StyledCombobox";
-import { Input, Radio } from "@/components/ui";
+import { Input, Radio, Textarea } from "@/components/ui";
 
 type EntryType = "Manual" | "Lead Cancel" | "Job Card";
 type PaymentType = "NEFT" | "RTGS" | "IMPS" | "Cheque" | "UPI";
@@ -65,7 +65,7 @@ const initialForm = {
   date: null as any,
   oppAccount: null as any,
   amount: "",
-  paymentType: PAYMENT_TYPES.find(m => m.id === "UPI") || null,
+  paymentType: PAYMENT_TYPES.find((m) => m.id === "UPI") || null,
   chequeNo: "",
   chequeDate: null as any,
   chequeClearDate: null as any,
@@ -188,13 +188,13 @@ export default function BankReceipt() {
     if (form.type === "Job Card" && !form.jobCardNo) {
       newErrors.jobCardNo = "Job Card No. is required";
     }
-    if (form.paymentType === "Cheque" && !form.chequeNo) {
+    if (form.paymentType?.id === "Cheque" && !form.chequeNo) {
       newErrors.chequeNo = "Cheque No. is required";
     }
-    if (form.paymentType === "Cheque" && !form.chequeDate) {
+    if (form.paymentType?.id === "Cheque" && !form.chequeDate) {
       newErrors.chequeDate = "Cheque Date is required";
     }
-    if (form.paymentType === "Cheque" && !form.chequeClearDate) {
+    if (form.paymentType?.id === "Cheque" && !form.chequeClearDate) {
       newErrors.chequeClearDate = "Cheque Clear Date is required";
     }
 
@@ -204,9 +204,9 @@ export default function BankReceipt() {
 
   const handleAdd = () => {
     setEditId(null);
-    setForm({ 
-      ...initialForm, 
-      paymentType: PAYMENT_TYPES.find(m => m.id === "UPI") || null 
+    setForm({
+      ...initialForm,
+      paymentType: PAYMENT_TYPES.find((m) => m.id === "UPI") || null,
     });
     setErrors({});
     setShowDrawer(true);
@@ -216,12 +216,16 @@ export default function BankReceipt() {
     setEditId(item.id);
     setForm({
       type: item.type,
-      bankAccount: BANK_ACCOUNTS.find((a) => a.value === item.bankAccount) || null,
+      bankAccount:
+        BANK_ACCOUNTS.find((a) => a.value === item.bankAccount) || null,
       voucherNo: item.voucherNo,
       date: item.date,
       oppAccount: OPP_ACCOUNTS.find((a) => a.value === item.oppAccount) || null,
       amount: String(item.amount),
-      paymentType: PAYMENT_TYPES.find((a) => a.id === item.paymentType) || PAYMENT_TYPES.find(m => m.id === "UPI") || null,
+      paymentType:
+        PAYMENT_TYPES.find((a) => a.id === item.paymentType) ||
+        PAYMENT_TYPES.find((m) => m.id === "UPI") ||
+        null,
       chequeNo: item.chequeNo || "",
       chequeDate: item.chequeDate || null,
       chequeClearDate: item.chequeClearDate || null,
@@ -260,9 +264,10 @@ export default function BankReceipt() {
       bankAccount: form.bankAccount.value,
       oppAccount: form.oppAccount.value,
       amount: parseFloat(form.amount),
-      paymentType: form.paymentType.id,
+      paymentType: (form.paymentType?.id as PaymentType) || "UPI",
       chequeNo: form.paymentType?.id === "Cheque" ? form.chequeNo : undefined,
-      chequeDate: form.paymentType?.id === "Cheque" ? form.chequeDate : undefined,
+      chequeDate:
+        form.paymentType?.id === "Cheque" ? form.chequeDate : undefined,
       chequeClearDate:
         form.paymentType?.id === "Cheque" ? form.chequeClearDate : undefined,
       narration: form.narration,
@@ -302,6 +307,76 @@ export default function BankReceipt() {
         : [...prev, id],
     );
   };
+
+  const LEADS = [
+    { id: 1, leadNo: "LEAD-001", name: "John Doe", phone: "9876543210" },
+    { id: 2, leadNo: "LEAD-002", name: "Jane Smith", phone: "9876543211" },
+    { id: 3, leadNo: "LEAD-003", name: "Bob Johnson", phone: "9876543212" },
+    { id: 4, leadNo: "LEAD-004", name: "Alice Brown", phone: "9876543213" },
+    { id: 5, leadNo: "LEAD-005", name: "Charlie Wilson", phone: "9876543214" },
+  ];
+
+  const JOB_CARDS = [
+    {
+      id: 1,
+      jobCardNo: "JC-001",
+      customer: "Rahul Sharma",
+      vehicle: "Tractor-123",
+    },
+    {
+      id: 2,
+      jobCardNo: "JC-002",
+      customer: "Priya Patel",
+      vehicle: "Tractor-456",
+    },
+    {
+      id: 3,
+      jobCardNo: "JC-003",
+      customer: "Amit Singh",
+      vehicle: "Tractor-789",
+    },
+    {
+      id: 4,
+      jobCardNo: "JC-004",
+      customer: "Sneha Reddy",
+      vehicle: "Tractor-012",
+    },
+    {
+      id: 5,
+      jobCardNo: "JC-005",
+      customer: "Vikram Kumar",
+      vehicle: "Tractor-345",
+    },
+  ];
+
+  const leadOptions = LEADS.map((lead) => ({
+    value: lead.leadNo,
+    label: `${lead.leadNo} - ${lead.name}`,
+    phone: lead.phone,
+    id: lead.id,
+  }));
+
+  const jobCardOptions = JOB_CARDS.map((job) => ({
+    value: job.jobCardNo,
+    label: `${job.jobCardNo} - ${job.customer}`,
+    vehicle: job.vehicle,
+    id: job.id,
+  }));
+
+  // Transform OPP_ACCOUNTS to include balance on the right
+  const maxLabelLength = Math.max(...OPP_ACCOUNTS.map((a) => a.label.length));
+  const EXTRA_SPACING = 6;
+
+  const OPP_ACCOUNTS_WITH_BALANCE = OPP_ACCOUNTS.map((account) => {
+    const paddedLabel = account.label.padEnd(
+      maxLabelLength + EXTRA_SPACING,
+      " ",
+    );
+    return {
+      ...account,
+      label: `${paddedLabel}${account.balance}`,
+    };
+  });
 
   // Apply filters automatically when any filter changes
   useEffect(() => {
@@ -442,7 +517,7 @@ export default function BankReceipt() {
           <table className="w-full min-w-[1400px] text-left [&_.table-th]:font-semibold">
             <thead className="dark:bg-dark-700/60 dark:border-dark-600 border-b border-gray-200 bg-gray-100">
               <tr>
-                <th className="w-10 py-3.5 px-2 text-center">
+                <th className="w-10 px-2 py-3.5 text-center">
                   <input
                     type="checkbox"
                     className="size-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
@@ -450,49 +525,49 @@ export default function BankReceipt() {
                     onChange={(e) => handleSelectAll(e.target.checked)}
                   />
                 </th>
-                <th className="w-12 py-3.5 px-3 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400 whitespace-nowrap">
+                <th className="w-12 px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
                   S.No
                 </th>
-                <th className="py-3.5 px-3 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
                   Date
                 </th>
-                <th className="py-3.5 px-3 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
                   Voucher No.
                 </th>
-                <th className="py-3.5 px-3 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
                   Type
                 </th>
-                <th className="py-3.5 px-3 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
                   Bank Account
                 </th>
-                <th className="py-3.5 px-3 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
                   Opp. Account
                 </th>
-                <th className="py-3.5 px-3 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
                   Amount
                 </th>
-                <th className="py-3.5 px-3 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
                   Payment Type
                 </th>
-                <th className="py-3.5 px-3 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
                   Cheque No.
                 </th>
-                <th className="py-3.5 px-3 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
                   Cheque Date
                 </th>
-                <th className="py-3.5 px-3 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
                   Cheque Clear Date
                 </th>
-                <th className="py-3.5 px-3 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
                   Narration
                 </th>
-                <th className="py-3.5 px-3 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
                   Created Type
                 </th>
-                <th className="py-3.5 px-3 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
                   Created By
                 </th>
-                <th className="w-16 py-3.5 px-3 text-center text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                <th className="w-16 px-3 py-3.5 text-center text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
                   Actions
                 </th>
               </tr>
@@ -506,7 +581,7 @@ export default function BankReceipt() {
                     key={item.id}
                     className={`${isRowSelected ? "dark:bg-dark-600/30 bg-gray-50/50" : ""} dark:hover:bg-dark-700/40 transition-colors hover:bg-gray-50/30`}
                   >
-                    <td className="py-3 px-2 text-center">
+                    <td className="px-2 py-3 text-center">
                       <input
                         type="checkbox"
                         className="size-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
@@ -514,16 +589,16 @@ export default function BankReceipt() {
                         onChange={() => handleSelectRow(item.id)}
                       />
                     </td>
-                    <td className="py-3 px-3 text-sm font-medium text-gray-500 whitespace-nowrap">
+                    <td className="px-3 py-3 text-sm font-medium whitespace-nowrap text-gray-500">
                       {indexOfFirstItem + index + 1}
                     </td>
-                    <td className="py-3 px-3 text-sm whitespace-nowrap text-gray-900 dark:text-gray-400">
+                    <td className="px-3 py-3 text-sm whitespace-nowrap text-gray-900 dark:text-gray-400">
                       {item.date}
                     </td>
-                    <td className="py-3 px-3 text-sm font-medium whitespace-nowrap text-gray-900 dark:text-gray-400">
+                    <td className="px-3 py-3 text-sm font-medium whitespace-nowrap text-gray-900 dark:text-gray-400">
                       {item.voucherNo}
                     </td>
-                    <td className="py-3 px-3 whitespace-nowrap">
+                    <td className="px-3 py-3 whitespace-nowrap">
                       <span
                         className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${
                           item.type === "Manual"
@@ -536,19 +611,19 @@ export default function BankReceipt() {
                         {item.type}
                       </span>
                     </td>
-                    <td className="py-3 px-3 text-sm whitespace-nowrap text-gray-600 dark:text-gray-400">
+                    <td className="px-3 py-3 text-sm whitespace-nowrap text-gray-600 dark:text-gray-400">
                       {item.bankAccount}
                     </td>
-                    <td className="py-3 px-3 text-sm whitespace-nowrap text-gray-600 dark:text-gray-400">
+                    <td className="px-3 py-3 text-sm whitespace-nowrap text-gray-600 dark:text-gray-400">
                       {item.oppAccount}
                     </td>
-                    <td className="py-3 px-3 text-sm font-semibold whitespace-nowrap text-gray-900 dark:text-gray-400">
+                    <td className="px-3 py-3 text-sm font-semibold whitespace-nowrap text-gray-900 dark:text-gray-400">
                       ₹
                       {item.amount.toLocaleString("en-IN", {
                         minimumFractionDigits: 2,
                       })}
                     </td>
-                    <td className="py-3 px-3 text-sm whitespace-nowrap text-gray-600 dark:text-gray-400">
+                    <td className="px-3 py-3 text-sm whitespace-nowrap text-gray-600 dark:text-gray-400">
                       <span
                         className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${
                           item.paymentType === "Cheque"
@@ -561,25 +636,25 @@ export default function BankReceipt() {
                         {item.paymentType}
                       </span>
                     </td>
-                    <td className="py-3 px-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
+                    <td className="px-3 py-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
                       {item.chequeNo || "-"}
                     </td>
-                    <td className="py-3 px-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
+                    <td className="px-3 py-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
                       {item.chequeDate || "-"}
                     </td>
-                    <td className="py-3 px-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
+                    <td className="px-3 py-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
                       {item.chequeClearDate || "-"}
                     </td>
-                    <td className="py-3 px-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
+                    <td className="px-3 py-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
                       {item.narration}
                     </td>
-                    <td className="py-3 px-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
+                    <td className="px-3 py-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
                       {item.createdType}
                     </td>
-                    <td className="py-3 px-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
+                    <td className="px-3 py-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
                       {item.createdBy}
                     </td>
-                    <td className="py-3 px-3 text-center whitespace-nowrap">
+                    <td className="px-3 py-3 text-center whitespace-nowrap">
                       <Menu
                         as="div"
                         className="relative inline-block text-left"
@@ -837,9 +912,15 @@ export default function BankReceipt() {
                     name="type"
                     checked={form.type === "Manual"}
                     onChange={() => {
-                      setForm({ ...form, type: "Manual", leadNo: "", jobCardNo: "" });
+                      setForm({
+                        ...form,
+                        type: "Manual",
+                        leadNo: "",
+                        jobCardNo: "",
+                      });
                       if (errors.leadNo) setErrors({ ...errors, leadNo: "" });
-                      if (errors.jobCardNo) setErrors({ ...errors, jobCardNo: "" });
+                      if (errors.jobCardNo)
+                        setErrors({ ...errors, jobCardNo: "" });
                     }}
                   />
                   <Radio
@@ -848,7 +929,8 @@ export default function BankReceipt() {
                     checked={form.type === "Lead Cancel"}
                     onChange={() => {
                       setForm({ ...form, type: "Lead Cancel", jobCardNo: "" });
-                      if (errors.jobCardNo) setErrors({ ...errors, jobCardNo: "" });
+                      if (errors.jobCardNo)
+                        setErrors({ ...errors, jobCardNo: "" });
                     }}
                   />
                   <Radio
@@ -868,23 +950,18 @@ export default function BankReceipt() {
                     <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Lead No. <span className="text-red-500">*</span>
                     </label>
-                    <input
-                      type="text"
-                      value={form.leadNo || ""}
-                      onChange={(e) => {
-                        setForm({ ...form, leadNo: e.target.value });
+                    <Combobox
+                      data={leadOptions}
+                      displayField="label"
+                      value={form.leadNo}
+                      onChange={(value: any) => {
+                        setForm({ ...form, leadNo: value });
                         if (errors.leadNo) setErrors({ ...errors, leadNo: "" });
                       }}
-                      placeholder="Enter lead number"
-                      className={`dark:border-dark-500 dark:bg-dark-600 w-full rounded-lg border ${
-                        errors.leadNo ? "border-red-500" : "border-gray-300"
-                      } bg-white px-4 py-2.5 text-sm focus:border-red-500 focus:ring-2 focus:ring-red-500`}
+                      placeholder="Search or select lead..."
+                      searchFields={["label"]}
+                      error={errors.leadNo}
                     />
-                    {errors.leadNo && (
-                      <p className="mt-1 text-sm text-red-500">
-                        {errors.leadNo}
-                      </p>
-                    )}
                   </div>
                 )}
 
@@ -894,26 +971,21 @@ export default function BankReceipt() {
                     <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Job Card No. <span className="text-red-500">*</span>
                     </label>
-                    <input
-                      type="text"
-                      value={form.jobCardNo || ""}
-                      onChange={(e) => {
-                        setForm({ ...form, jobCardNo: e.target.value });
-                        if (errors.jobCardNo) setErrors({ ...errors, jobCardNo: "" });
+                    <Combobox
+                      data={jobCardOptions}
+                      displayField="label"
+                      value={form.jobCardNo}
+                      onChange={(value: any) => {
+                        setForm({ ...form, jobCardNo: value });
+                        if (errors.jobCardNo)
+                          setErrors({ ...errors, jobCardNo: "" });
                       }}
-                      placeholder="Enter job card number"
-                      className={`dark:border-dark-500 dark:bg-dark-600 w-full rounded-lg border ${
-                        errors.jobCardNo ? "border-red-500" : "border-gray-300"
-                      } bg-white px-4 py-2.5 text-sm focus:border-red-500 focus:ring-2 focus:ring-red-500`}
+                      placeholder="Search or select job card..."
+                      searchFields={["label"]}
+                      error={errors.jobCardNo}
                     />
-                    {errors.jobCardNo && (
-                      <p className="mt-1 text-sm text-red-500">
-                        {errors.jobCardNo}
-                      </p>
-                    )}
                   </div>
                 )}
-
                 {/* Bank Account with Combobox */}
                 <div>
                   <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -923,7 +995,7 @@ export default function BankReceipt() {
                     data={BANK_ACCOUNTS}
                     displayField="label"
                     value={form.bankAccount}
-                    onChange={(value) => {
+                    onChange={(value: any) => {
                       setForm({ ...form, bankAccount: value });
                       if (errors.bankAccount)
                         setErrors({ ...errors, bankAccount: "" });
@@ -979,10 +1051,10 @@ export default function BankReceipt() {
                     )}
                   </div>
                   <Combobox
-                    data={OPP_ACCOUNTS}
+                    data={OPP_ACCOUNTS_WITH_BALANCE}
                     displayField="label"
                     value={form.oppAccount}
-                    onChange={(value) => {
+                    onChange={(value: any) => {
                       setForm({ ...form, oppAccount: value });
                       if (errors.oppAccount)
                         setErrors({ ...errors, oppAccount: "" });
@@ -1048,7 +1120,7 @@ export default function BankReceipt() {
 
                 {/* Cheque Fields - Show only when Cheque is selected */}
                 {form.paymentType?.id === "Cheque" && (
-                  <div className="space-y-4 rounded-lg border border-gray-200 p-4 dark:border-dark-500">
+                  <div className="dark:border-dark-500 space-y-4 rounded-lg border border-gray-200 p-4">
                     <div>
                       <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                         Cheque No. <span className="text-red-500">*</span>
@@ -1095,7 +1167,8 @@ export default function BankReceipt() {
 
                     <div>
                       <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Cheque Clear Date <span className="text-red-500">*</span>
+                        Cheque Clear Date{" "}
+                        <span className="text-red-500">*</span>
                       </label>
                       <DatePicker
                         placeholder="Select cheque clear date..."
@@ -1120,14 +1193,13 @@ export default function BankReceipt() {
                   <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Narration
                   </label>
-                  <input
-                    type="text"
+                  <Textarea
                     value={form.narration || ""}
                     onChange={(e) =>
                       setForm({ ...form, narration: e.target.value })
                     }
                     placeholder="Enter narration"
-                    className="dark:border-dark-500 dark:bg-dark-600 w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm focus:border-red-500 focus:ring-2 focus:ring-red-500"
+                    className="dark:border-dark-500 dark:bg-dark-600 w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm"
                   />
                 </div>
               </div>
