@@ -141,8 +141,8 @@ export function MediaDocumnet({
 
 await apiHelper.put(
   `/website-variants/${websiteVariantId}/save-step`,
+  formData,
   {
-    data: formData,
     headers: {
       "Content-Type": "multipart/form-data",
     },

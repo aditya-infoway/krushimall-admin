@@ -324,9 +324,9 @@ export default function Brand() {
 
         let result;
         if (editId !== null) {
-          result = await apiHelper.upload(`/brand/${editId}`, formData);
+          result = await apiHelper.put(`/brand/${editId}`, formData);
         } else {
-          result = await apiHelper.upload("/brand", formData);
+          result = await apiHelper.post("/brand", formData);
         }
         console.log("✅ Upload response:", result);
       } else {

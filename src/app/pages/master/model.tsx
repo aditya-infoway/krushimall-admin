@@ -330,8 +330,8 @@ export default function Model() {
         const blob = await response.blob();
         formData.append("image", blob, "model-image.jpg");
         if (editId !== null)
-          await apiHelper.upload(`/model/${editId}`, formData);
-        else await apiHelper.upload("/model", formData);
+          await apiHelper.put(`/model/${editId}`, formData);
+        else await apiHelper.post("/model", formData);
       } else {
         const payload: any = {
           modelName: data.modelName,

@@ -269,7 +269,7 @@ const handleOrderBill = (id: number) => {
                         Model: {lead.model?.modelName}
                       </div>
                       <div className="text-gray-600 dark:text-gray-400">
-                        Variant: {lead.variant?.variantName}
+                        Variant: {lead.showroomVariant?.variantName}
                       </div>
                       <div className="text-gray-600 dark:text-gray-400">
                         Colour: {lead.colour?.colourName}
