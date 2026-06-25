@@ -15,7 +15,7 @@ export const dashboards: NavigationTree = {
       type: "item",
       title: "Home",
       transKey: "nav.dashboards.home",
-      icon: "dashboards.home",
+     
     },
   ],
 };

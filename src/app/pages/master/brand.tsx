@@ -130,11 +130,10 @@ export default function Brand() {
       } else if (Array.isArray(response)) {
         brandsData = response;
       }
-console.log("API Data:", brandsData);
+
       const mappedData = brandsData.map((item: any) => ({
-         
         ...item,
-        
+
         name: item.brandName || item.name || "Unknown",
         image: apiHelper.getImageUrl(item.image), // ✅ Use helper
         category:
@@ -236,17 +235,17 @@ console.log("API Data:", brandsData);
     setShowDrawer(true);
   };
 
-const handleDelete = async (id: number) => {
-  try {
-    console.log("🗑️ Deleting brand ID:", id);
-    await apiHelper.delete(`/brand/${id}`);  
-    console.log("✅ Brand deleted successfully");
-    getBrands();
-  } catch (error: any) {
-    console.error("❌ Delete error:", error);
-    console.error("Backend response:", error.response?.data);
-  }
-};
+  const handleDelete = async (id: number) => {
+    try {
+      console.log("🗑️ Deleting brand ID:", id);
+      await apiHelper.delete(`/brand/${id}`);
+      console.log("✅ Brand deleted successfully");
+      getBrands();
+    } catch (error: any) {
+      console.error("❌ Delete error:", error);
+      console.error("Backend response:", error.response?.data);
+    }
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -336,7 +335,6 @@ const handleDelete = async (id: number) => {
           brandName: data.name,
           categoryId: Number(data.categoryId),
           status: data.status,
-        
         };
 
         // Only include image if it exists and is not a new upload
@@ -425,7 +423,7 @@ const handleDelete = async (id: number) => {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-xl font-semibold text-gray-900 md:text-2xl dark:text-white">
-            Brand Management
+            Brand List
           </h1>
           <p className="dark:text-dark-300 mt-1 text-sm text-gray-500">
             Manage all product brands from here
@@ -621,7 +619,6 @@ const handleDelete = async (id: number) => {
                             src={item.image}
                             alt={item.name}
                             className="h-full w-full object-contain"
-                            
                             onError={(e) => {
                               console.error(
                                 "❌ Image failed to load:",
@@ -630,9 +627,6 @@ const handleDelete = async (id: number) => {
                               (e.target as HTMLImageElement).style.display =
                                 "none";
                             }}
-                            onLoad={() =>
-                              console.log("✅ Image loaded:", item.image)
-                            }
                           />
                         ) : (
                           <span className="text-xs font-bold text-gray-400 uppercase">

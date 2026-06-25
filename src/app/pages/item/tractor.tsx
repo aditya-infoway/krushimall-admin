@@ -466,7 +466,7 @@ const handleToggleStatus = async (id: number) => {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-xl font-semibold text-gray-900 md:text-2xl dark:text-white">
-            Tractor Management
+            Tractor List
           </h1>
           <p className="dark:text-dark-300 mt-1 text-sm text-gray-500">
             Manage all tractors from here

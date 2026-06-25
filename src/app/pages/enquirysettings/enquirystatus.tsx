@@ -255,7 +255,7 @@ useEffect(() => {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-xl font-semibold text-gray-900 md:text-2xl dark:text-white">
-            Enquiry Status Management
+            Enquiry Status List
           </h1>
           <p className="dark:text-dark-300 mt-1 text-sm text-gray-500">
             Manage all enquiry statuses from here
