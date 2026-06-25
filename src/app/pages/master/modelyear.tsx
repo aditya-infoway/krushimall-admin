@@ -438,7 +438,7 @@ export default function ModelYear() {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-xl font-semibold text-gray-900 md:text-2xl dark:text-white">
-            Year Management
+            Year List
           </h1>
           <p className="dark:text-dark-300 mt-1 text-sm text-gray-500">
             Manage all years from here
@@ -660,21 +660,41 @@ export default function ModelYear() {
                         onChange={() => handleSelectRow(item.id)}
                       />
                     </Td>
-                    <Td className="font-medium text-gray-500 py-4">{indexOfFirstItem + index + 1}</Td>
-                    <Td className="text-gray-600 dark:text-dark-200 py-4">{item.category}</Td>
-                    <Td className="text-gray-600 dark:text-dark-200 py-4">{item.brand}</Td>
-                    <Td className="font-medium text-gray-900 dark:text-gray-400 py-4">{item.model}</Td>
-                    <Td className="font-medium text-gray-900 dark:text-gray-400 py-4">{item.year}</Td>
-                  <Td className="py-4">
-  <button type="button" onClick={() => handleToggleTableStatus(item.id)}
-    className={`relative h-6 w-12 rounded-full transition-all ${item.status === "ACTIVE" ? "bg-primary-500" : "bg-gray-300 dark:bg-dark-600"}`}>
-    <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${item.status === "ACTIVE" ? "left-6.5" : "left-0.5"}`} />
-  </button>
-</Td>
-                    <Td className="text-gray-500 dark:text-gray-400 py-4">{item.createdAt}</Td>
-                    <Td className="text-center py-4">
-                      <Menu as="div" className="relative inline-block text-left">
-                        <MenuButton className="inline-flex size-8 items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-dark-600 transition-colors text-gray-500 dark:text-dark-200">
+                    <Td className="py-4 font-medium text-gray-500">
+                      {indexOfFirstItem + index + 1}
+                    </Td>
+                    <Td className="dark:text-dark-200 py-4 text-gray-600">
+                      {item.category}
+                    </Td>
+                    <Td className="dark:text-dark-200 py-4 text-gray-600">
+                      {item.brand}
+                    </Td>
+                    <Td className="py-4 font-medium text-gray-900 dark:text-gray-400">
+                      {item.model}
+                    </Td>
+                    <Td className="py-4 font-medium text-gray-900 dark:text-gray-400">
+                      {item.year}
+                    </Td>
+                    <Td className="py-4">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleTableStatus(item.id)}
+                        className={`relative h-6 w-12 rounded-full transition-all ${item.status === "ACTIVE" ? "bg-primary-500" : "dark:bg-dark-600 bg-gray-300"}`}
+                      >
+                        <span
+                          className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${item.status === "ACTIVE" ? "left-6.5" : "left-0.5"}`}
+                        />
+                      </button>
+                    </Td>
+                    <Td className="py-4 text-gray-500 dark:text-gray-400">
+                      {item.createdAt}
+                    </Td>
+                    <Td className="py-4 text-center">
+                      <Menu
+                        as="div"
+                        className="relative inline-block text-left"
+                      >
+                        <MenuButton className="dark:hover:bg-dark-600 dark:text-dark-200 inline-flex size-8 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-100">
                           <EllipsisHorizontalIcon className="size-5" />
                         </MenuButton>
                         <Transition

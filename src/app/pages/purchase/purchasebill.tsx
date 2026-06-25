@@ -25,12 +25,21 @@ interface TractorPurchaseBillProps {
 }
 
 interface VehicleOption {
-  id: string;
+  id: number;
   itemName: string;
   model: string;
   itemCode: string;
   variant: string;
   colour: string;
+
+  shortName: string;
+  hsnCode: string;
+  taxSlab: string;
+  typeOfFuel: string;
+  fuelCapacity: string;
+  purchasePriceNoGST: number;
+  purchasePriceTaxable: number;
+  status: string;
 }
 
 interface ItemRow {
@@ -96,40 +105,40 @@ const paymentModeOptions: { label: string; value: PaymentMode }[] = [
 ];
 
 // ---------- Mock data ----------
-const VEHICLE_OPTIONS: VehicleOption[] = [
-  {
-    id: "v1",
-    itemName: "C12",
-    model: "C12",
-    itemCode: "001",
-    variant: "EX",
-    colour: "RED",
-  },
-  {
-    id: "v2",
-    itemName: "C14",
-    model: "C14",
-    itemCode: "002",
-    variant: "DX",
-    colour: "BLUE",
-  },
-  {
-    id: "v3",
-    itemName: "T20",
-    model: "T20",
-    itemCode: "003",
-    variant: "EX",
-    colour: "GREEN",
-  },
-  {
-    id: "v4",
-    itemName: "T20",
-    model: "T20",
-    itemCode: "004",
-    variant: "Base",
-    colour: "WHITE",
-  },
-];
+// const VEHICLE_OPTIONS: VehicleOption[] = [
+//   {
+//     id: "v1",
+//     itemName: "C12",
+//     model: "C12",
+//     itemCode: "001",
+//     variant: "EX",
+//     colour: "RED",
+//   },
+//   {
+//     id: "v2",
+//     itemName: "C14",
+//     model: "C14",
+//     itemCode: "002",
+//     variant: "DX",
+//     colour: "BLUE",
+//   },
+//   {
+//     id: "v3",
+//     itemName: "T20",
+//     model: "T20",
+//     itemCode: "003",
+//     variant: "EX",
+//     colour: "GREEN",
+//   },
+//   {
+//     id: "v4",
+//     itemName: "T20",
+//     model: "T20",
+//     itemCode: "004",
+//     variant: "Base",
+//     colour: "WHITE",
+//   },
+// ];
 
 const PARTY_OPTIONS: PartyOption[] = [
   { id: "p1", name: "Sharma Traders" },
@@ -264,8 +273,7 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
   const [cashAccount, setCashAccount] = useState("");
   const [bankAccount, setBankAccount] = useState("");
   const [partyId, setPartyId] = useState("");
- const [parties, setParties] =
-  useState<PartyOption[]>([]);
+  const [parties, setParties] = useState<PartyOption[]>([]);
   // const [billNo] = useState("p/V/25-26/001");
   const [purchaseBillNo, setPurchaseBillNo] = useState("");
   const [purchaseDate, setPurchaseDate] = useState("");
@@ -294,10 +302,44 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
   const [bankDetails, setBankDetails] =
     useState<BankDetailsData>(emptyBankDetails);
   const [bankDetailsTouched, setBankDetailsTouched] = useState(false);
-
+  const [vehicleOptions, setVehicleOptions] = useState<VehicleOption[]>([]);
   const updateBankDetails = (key: keyof BankDetailsData, value: string) =>
     setBankDetails((b) => ({ ...b, [key]: value }));
+  const getTractors = async () => {
+    try {
+      const res = await apiHelper.get("/tractors");
 
+      const tractors = res.data || [];
+
+      console.log("Tractors:", tractors);
+
+      setVehicleOptions(
+        tractors.map((item: any) => ({
+          id: item.id,
+          itemName: item.itemName,
+          model: item.model?.modelName || "",
+          itemCode: item.codeNo,
+          variant: item.showroomVariant?.variantName || "",
+          colour: item.colour?.colourName || "",
+
+          shortName: item.shortName,
+          hsnCode: item.hsnCode,
+          taxSlab: item.taxSlab,
+          typeOfFuel: item.typeOfFuel,
+          fuelCapacity: item.fuelCapacity,
+          purchasePriceNoGST: item.purchasePriceNoGST,
+          purchasePriceTaxable: item.purchasePriceTaxable,
+          status: item.status,
+
+          ratePer: item.purchasePriceNoGST,
+          gstPercent: item.taxSlab,
+          amount: item.purchasePriceTaxable,
+        })),
+      );
+    } catch (err) {
+      console.log(err);
+    }
+  };
   const handleSaveBankDetails = () => {
     setBankDetailsTouched(true);
     if (!bankDetails.paymentMode) return;
@@ -358,37 +400,33 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
   const freightInsuranceOther = freightNum + insuranceNum + otherNum;
   const newTaxableValue = totalAmount + freightInsuranceOther;
   const grandTotal = newTaxableValue + roundNum;
- const getAccounts = async () => {
-  try {
-    const res = await apiHelper.get("/accounts");
+  const getAccounts = async () => {
+    try {
+      const res = await apiHelper.get("/accounts");
 
-    const accounts = res.data || [];
+      const accounts = res.data || [];
 
-    setCashAccounts(
-      accounts.filter(
-        (acc: any) =>
-          acc.group === "Cash-in-Hand" ||
-          acc.group === "Cash Account"
-      )
-    );
+      setCashAccounts(
+        accounts.filter(
+          (acc: any) =>
+            acc.group === "Cash-in-Hand" || acc.group === "Cash Account",
+        ),
+      );
 
-    setBankAccounts(
-      accounts.filter(
-        (acc: any) =>
-          acc.group === "Bank Accounts" ||
-          acc.group === "Bank Account"
-      )
-    );
-    
-  } catch (error) {
-    console.error(error);
-  }
-};
+      setBankAccounts(
+        accounts.filter(
+          (acc: any) =>
+            acc.group === "Bank Accounts" || acc.group === "Bank Account",
+        ),
+      );
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
-useEffect(() => {
-  getAccounts();
-}, []);
-
+  useEffect(() => {
+    getAccounts();
+  }, []);
 
   const fmt = (n: number) =>
     n.toLocaleString("en-IN", {
@@ -400,25 +438,35 @@ useEffect(() => {
     setDraft((d) => ({ ...d, [key]: value }));
 
   const filteredVehicles = useMemo(() => {
-    if (!vehicleSearch.trim()) return VEHICLE_OPTIONS;
+    if (!vehicleSearch.trim()) return vehicleOptions;
+
     const q = vehicleSearch.toLowerCase();
-    return VEHICLE_OPTIONS.filter((v) =>
+
+    return vehicleOptions.filter((v) =>
       `${v.itemName} ${v.model} ${v.itemCode} ${v.variant} ${v.colour}`
         .toLowerCase()
         .includes(q),
     );
-  }, [vehicleSearch]);
+  }, [vehicleSearch, vehicleOptions]);
 
-  const handleVehicleSelect = (v: VehicleOption) => {
-    setDraft((d) => ({
-      ...d,
-      item: v.itemName,
-      itemCode: v.itemCode,
-      color: v.colour,
-    }));
-    setVehicleModalOpen(false);
-    setVehicleSearch("");
-  };
+const handleVehicleSelect = (v: VehicleOption) => {
+  setDraft((d) => ({
+    ...d,
+
+    item: v.itemName,
+    itemCode: v.itemCode,
+    color: v.colour,
+
+    qty: 1,
+
+    ratePer: String(v.purchasePriceNoGST),
+    gstPercent: String(v.taxSlab),
+    amount: String(v.purchasePriceTaxable),
+  }));
+
+  setVehicleModalOpen(false);
+  setVehicleSearch("");
+};
 
   const saveDraftRow = () => {
     // Validate all required fields
@@ -467,154 +515,148 @@ useEffect(() => {
   const removeRow = (id: string) =>
     setRows((r) => r.filter((row) => row.id !== id));
 
-const handleCreateAccount = async () => {
-  try {
-    const required: (keyof NewAccountData)[] = [
-      "accountName",
-      "mobile",
-      "countryCode",
-      "stateCode",
-      "district",
-      "city",
-      "address",
-      "panCard",
-      "aadharCard",
-    ];
+  const handleCreateAccount = async () => {
+    try {
+      const required: (keyof NewAccountData)[] = [
+        "accountName",
+        "mobile",
+        "countryCode",
+        "stateCode",
+        "district",
+        "city",
+        "address",
+        "panCard",
+        "aadharCard",
+      ];
 
-    const missing = required.filter(
-      (k) => !accountForm[k]?.trim()
-    );
+      const missing = required.filter((k) => !accountForm[k]?.trim());
 
-    setAccountTouched(true);
+      setAccountTouched(true);
 
-    if (missing.length > 0) return;
+      if (missing.length > 0) return;
 
-    const res = await apiHelper.post("/accounts", {
-      accountName: accountForm.accountName,
-      printName: accountForm.accountName,
+      const res = await apiHelper.post("/accounts", {
+        accountName: accountForm.accountName,
+        printName: accountForm.accountName,
 
-      mobile: accountForm.mobile,
+        mobile: accountForm.mobile,
 
-      country: accountForm.country,
-      countryCode: accountForm.countryCode,
+        country: accountForm.country,
+        countryCode: accountForm.countryCode,
 
-      state: accountForm.state,
-      stateCode: accountForm.stateCode,
+        state: accountForm.state,
+        stateCode: accountForm.stateCode,
 
-      district: accountForm.district,
-      city: accountForm.city,
+        district: accountForm.district,
+        city: accountForm.city,
 
-      address1: accountForm.address,
+        address1: accountForm.address,
 
-      panCard: accountForm.panCard,
-      aadharNo: accountForm.aadharCard,
+        panCard: accountForm.panCard,
+        aadharNo: accountForm.aadharCard,
 
-      // drCr: "DR",
-      // openingBalance: 0,
-    });
+        // drCr: "DR",
+        // openingBalance: 0,
+      });
 
-const account = res.data;
+      const account = res.data;
 
-console.log("API Response:", account);
+      console.log("API Response:", account);
 
-if (!account?.id) {
-  console.log("Invalid Response:", account);
-  return;
-}
+      if (!account?.id) {
+        console.log("Invalid Response:", account);
+        return;
+      }
 
-const newParty = {
-  id: account.id,
-  name: account.accountName,
-};
+      const newParty = {
+        id: account.id,
+        name: account.accountName,
+      };
 
-    setParties((prev) => [...prev, newParty]);
+      setParties((prev) => [...prev, newParty]);
 
-    setPartyId(account.id);
+      setPartyId(account.id);
 
-    setAccountModalOpen(false);
-    setAccountForm(emptyAccount);
-    setAccountTouched(false);
+      setAccountModalOpen(false);
+      setAccountForm(emptyAccount);
+      setAccountTouched(false);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+  const getParties = async () => {
+    try {
+      const res = await apiHelper.get("/accounts");
 
-  } catch (error) {
-    console.error(error);
-  }
-};
-const getParties = async () => {
-  try {
-    const res = await apiHelper.get("/accounts");
+      const accounts = Array.isArray(res.data?.data)
+        ? res.data.data
+        : Array.isArray(res.data)
+          ? res.data
+          : [];
 
-  const accounts = Array.isArray(res.data?.data)
-  ? res.data.data
-  : Array.isArray(res.data)
-  ? res.data
-  : [];
+      setParties(
+        accounts.map((acc: any) => ({
+          id: acc.id,
+          name: acc.accountName,
+        })),
+      );
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
-setParties(
-  accounts.map((acc: any) => ({
-    id: acc.id,
-    name: acc.accountName,
-  }))
-);
-  } catch (error) {
-    console.error(error);
-  }
-};
-
-useEffect(() => {
+  useEffect(() => {
     getBillNo();
-  getParties();
-}, []);
+    getParties();
+    getTractors();
+  }, []);
   const updateAccountForm = (key: keyof NewAccountData, value: string) => {
     setAccountForm((f) => ({ ...f, [key]: value }));
   };
 
-const handleSave = async () => {
-  try {
-    const payload = {
-      accountId: partyId,
-      purchaseDate: purchaseDate || date,
-      purchaseBillNo,
-      terms,
-      narration,
+  const handleSave = async () => {
+    try {
+      const payload = {
+        accountId: partyId,
+        purchaseDate: purchaseDate || date,
+        purchaseBillNo,
+        terms,
+        narration,
 
-      freightCharge,
-      insurance,
-      otherCharge,
-      roundAmount,
+        freightCharge,
+        insurance,
+        otherCharge,
+        roundAmount,
 
-      totalQty: totalQuantity,
-      totalAmount,
-      grandTotal,
+        totalQty: totalQuantity,
+        totalAmount,
+        grandTotal,
 
-      items: rows,
-    };
+        items: rows,
+      };
 
-    const res = await apiHelper.post(
-      "/purchases",
-      payload
-    );
+      const res = await apiHelper.post("/purchases", payload);
 
-    console.log(res);
+      console.log(res);
 
-    alert("Purchase Saved Successfully");
+      alert("Purchase Saved Successfully");
+   navigate("/purchase/tractor");
+      // Generate next bill no
+      await getBillNo();
 
-    // Generate next bill no
-    await getBillNo();
-
-    // Reset form
-    setRows([]);
-    setPurchaseBillNo("");
-    setNarration("");
-    setFreightCharge("");
-    setInsurance("");
-    setOtherCharge("");
-    setRoundAmount("");
-
-  } catch (error) {
-    console.error(error);
-    alert("Failed to save purchase");
-  }
-};
+      // Reset form
+      setRows([]);
+      setPurchaseBillNo("");
+      setNarration("");
+      setFreightCharge("");
+      setInsurance("");
+      setOtherCharge("");
+      setRoundAmount("");
+    } catch (error) {
+      console.error(error);
+      alert("Failed to save purchase");
+    }
+  };
 
   const handleBack = () => {
     if (onBack) {
@@ -623,19 +665,15 @@ const handleSave = async () => {
       navigate("/purchase/tractor");
     }
   };
-const getBillNo = async () => {
-  try {
-    const res = await apiHelper.get(
-      "/purchases/generate-bill-no"
-    );
+  const getBillNo = async () => {
+    try {
+      const res = await apiHelper.get("/purchases/generate-bill-no");
 
-   
-
-    setBillNo(res.billNo || "");
-  } catch (error) {
-    console.error(error);
-  }
-};
+      setBillNo(res.billNo || "");
+    } catch (error) {
+      console.error(error);
+    }
+  };
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="bg-white shadow-sm dark:bg-gray-800">
@@ -646,7 +684,7 @@ const getBillNo = async () => {
           </h1>
           <button
             onClick={handleBack}
-            className="w-full rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-700 sm:w-auto sm:px-5"
+            className="w-full rounded-lg bg-primary-500  px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-500  sm:w-auto sm:px-5"
           >
             ← Back
           </button>
@@ -1252,7 +1290,7 @@ const getBillNo = async () => {
         <div className="flex justify-center px-3 pb-4 sm:px-4 sm:pb-6">
           <button
             onClick={handleSave}
-            className="w-full rounded-lg bg-red-600 px-8 py-2.5 text-sm font-bold text-white transition-colors hover:bg-red-700 sm:w-auto sm:px-12 sm:py-3"
+            className="w-full rounded-lg bg-primary-500 px-8 py-2.5 text-sm font-bold text-white transition-colors hover:bg-primary-500  sm:w-auto sm:px-12 sm:py-3"
           >
             Save
           </button>
@@ -1271,7 +1309,7 @@ const getBillNo = async () => {
               setVehicleSearch("");
             }}
           />
-          <div className="absolute top-0 right-0 h-full w-full max-w-2xl transform bg-white shadow-2xl transition-transform sm:w-3/4 lg:w-1/2 dark:bg-gray-800">
+          <div className="absolute top-0 right-0 h-full w-full max-w-5xl transform bg-white shadow-2xl transition-transform sm:w-3/4 lg:w-1/2 dark:bg-gray-800">
             <div className="flex h-full flex-col">
               <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 sm:px-6 sm:py-4 dark:border-gray-700">
                 <h2 className="text-lg font-bold text-blue-600 dark:text-blue-400">
@@ -1301,13 +1339,21 @@ const getBillNo = async () => {
                 <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
                   <table className="w-full border-collapse text-sm">
                     <thead>
-                      <tr className="bg-gray-100 text-left dark:bg-gray-700">
+                      <tr className="bg-gray-100 text-left dark:bg-gray-700 whitespace-nowrap">
                         <th className="w-12 p-2">#</th>
                         <th className="p-2">Item Name</th>
                         <th className="p-2">Model</th>
                         <th className="p-2">Item Code</th>
                         <th className="p-2">Variant</th>
                         <th className="p-2">Colour</th>
+                        <th className="p-2">Short Name</th>
+                        <th className="p-2">HSN</th>
+                        <th className="p-2">GST</th>
+                        <th className="p-2">Fuel</th>
+                        <th className="p-2">Capacity</th>
+                        <th className="p-2">Purchase (No GST)</th>
+                        <th className="p-2">Purchase (GST)</th>
+                        <th className="p-2">Status</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1329,6 +1375,14 @@ const getBillNo = async () => {
                           <td className="p-2">{v.itemCode}</td>
                           <td className="p-2">{v.variant}</td>
                           <td className="p-2">{v.colour}</td>
+                          <td className="p-2">{v.shortName}</td>
+                          <td className="p-2">{v.hsnCode}</td>
+                          <td className="p-2">{v.taxSlab}%</td>
+                          <td className="p-2">{v.typeOfFuel}</td>
+                          <td className="p-2">{v.fuelCapacity}</td>
+                          <td className="p-2">{v.purchasePriceNoGST}</td>
+                          <td className="p-2">{v.purchasePriceTaxable}</td>
+                          <td className="p-2">{v.status}</td>
                         </tr>
                       ))}
                       {filteredVehicles.length === 0 && (
