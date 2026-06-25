@@ -66,13 +66,19 @@ const apiHelper = {
   },
 
   // PUT
-  put: async (
-    url: string,
-    data: Record<string, any>
-  ) => {
-    const response = await api.put(url, data);
-    return response.data;
-  },
+put: async (
+  url: string,
+  data: any,
+  config?: any
+) => {
+  const response = await api.put(
+    url,
+    data,
+    config
+  );
+
+  return response.data;
+},
 
   // PATCH
 patch: async (

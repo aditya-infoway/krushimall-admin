@@ -34,10 +34,14 @@ import apiHelper from "@/utils/apiHelper";
 interface Tractor {
   id: number;
   modelId: number;
-  variantId: number;
+   showroomVariantId: number;
+
+  showroomVariant?: {
+    variantName: string;
+  };
   colourId: number;
   model?: { modelName: string };
-  variant?: { variantName: string };
+ 
   colour?: { colourName: string; colourCode: string };
   itemName: string;
   codeNo: string;
@@ -55,7 +59,7 @@ interface Tractor {
 
 interface FormValues {
   modelId: number | string;
-  variantId: number | string;
+  showroomVariantId: number | string;
   colourId: number | string;
   itemName: string;
   codeNo: string;
@@ -74,7 +78,7 @@ interface OptionType {
   id: number;
   name: string;
   modelId?: number;
-  variantId?: number;
+ showroomVariantId?: number;
 }
 
 // ─── Helper Functions ──────────────────────────────────────────────────────
@@ -129,14 +133,16 @@ const Tractor = () => {
   const [filteredColours, setFilteredColours] = useState<OptionType[]>([]);
   // ─── Dynamic Data from API ─────────────────────────────────────────────
   const [models, setModels] = useState<OptionType[]>([]);
-  const [variants, setVariants] = useState<OptionType[]>([]);
+const [showroomVariants, setShowroomVariants] = useState<OptionType[]>([]);
+const [filteredShowroomVariants, setFilteredShowroomVariants] =
+  useState<OptionType[]>([]);
   const [colours, setColours] = useState<OptionType[]>([]);
-  const [filteredVariants, setFilteredVariants] = useState<OptionType[]>([]);
+
 
   // ─── Form State ─────────────────────────────────────────────────────────
   const [formData, setFormData] = useState<FormValues>({
     modelId: "",
-    variantId: "",
+     showroomVariantId: "",
     colourId: "",
     itemName: "",
     codeNo: "",
@@ -153,12 +159,12 @@ const Tractor = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // ─── Fetch Data ──────────────────────────────────────────────────────
-  useEffect(() => {
-    getModels();
-    getVariants();
-    getColours();
-    getTractors();
-  }, []);
+ useEffect(() => {
+  getModels();
+  getShowroomVariants();
+  getColours();
+  getTractors();
+}, []);
 
   const getModels = async () => {
     try {
@@ -176,25 +182,50 @@ const Tractor = () => {
     }
   };
 
-  const getVariants = async () => {
-    try {
-      const response = await apiHelper.get("/variant");
-      let data = response?.data || response;
-      if (!Array.isArray(data)) data = [];
-      const mapped = data.map((item: any) => ({
-        id: item.id || item._id,
-        name: item.variantName || item.name || "Unknown",
-        modelId: item.modelId || item.model?.id || null,
-      }));
-      setVariants(mapped);
-      setFilteredVariants(mapped);
-    } catch (error) {
-      console.error("Failed to fetch variants:", error);
-      setVariants([]);
-      setFilteredVariants([]);
-    }
-  };
+const getShowroomVariants = async () => {
+  try {
+    const response = await apiHelper.get("/showroom-variant");
 
+    let data = response?.data || response;
+
+    if (!Array.isArray(data)) data = [];
+
+    const mapped = data.map((item: any) => ({
+      id: item.id,
+      name: item.variantName,
+      modelId: item.modelId,
+    }));
+
+    setShowroomVariants(mapped);
+    setFilteredShowroomVariants(mapped);
+  } catch (error) {
+    console.error(error);
+
+    setShowroomVariants([]);
+    setFilteredShowroomVariants([]);
+  }
+};
+const getVariantDetails = async (id: number) => {
+  try {
+    const res = await apiHelper.get(`/showroom-variant/${id}`);
+
+    console.log("Variant Response", res.data);
+
+    // Your API returns the object directly
+    const variant = res.data;
+
+    setFormData((prev) => ({
+      ...prev,
+      purchasePriceNoGST: variant.purPrice,
+      purchasePriceTaxable:
+        variant.purPrice +
+        (variant.purPrice * variant.purTaxPercent) / 100,
+      taxSlab: String(variant.purTaxPercent),
+    }));
+  } catch (err) {
+    console.log(err);
+  }
+};
   const getColours = async () => {
     try {
       const response = await apiHelper.get("/colours");
@@ -202,11 +233,12 @@ const Tractor = () => {
       let data = response?.data || response;
       if (!Array.isArray(data)) data = [];
 
-      const mapped = data.map((item: any) => ({
-        id: item.id || item._id,
-        name: item.colourName || item.name || "Unknown",
-        variantId: item.variantId || item.variant?.id || null,
-      }));
+     const mapped = data.map((item: any) => ({
+  id: item.id,
+  name: item.colourName,
+  showroomVariantId:
+    item.showroomVariantId || item.showroomVariant?.id,
+}));
 
       setColours(mapped);
       setFilteredColours(mapped);
@@ -233,27 +265,28 @@ const Tractor = () => {
   };
 
   // ─── Filter Variants by Model ─────────────────────────────────────────
-  useEffect(() => {
-    if (formData.modelId) {
-      const filtered = variants.filter(
-        (v) => v.modelId === Number(formData.modelId),
-      );
-      setFilteredVariants(filtered);
-    } else {
-      setFilteredVariants(variants);
-    }
-  }, [formData.modelId, variants]);
-  useEffect(() => {
-    if (formData.variantId) {
-      const filtered = colours.filter(
-        (c) => c.variantId === Number(formData.variantId),
-      );
+ useEffect(() => {
+  if (formData.modelId) {
+    const filtered = showroomVariants.filter(
+      (v) => v.modelId === Number(formData.modelId)
+    );
 
-      setFilteredColours(filtered);
-    } else {
-      setFilteredColours([]);
-    }
-  }, [formData.variantId, colours]);
+    setFilteredShowroomVariants(filtered);
+  } else {
+    setFilteredShowroomVariants(showroomVariants);
+  }
+}, [formData.modelId, showroomVariants]);
+  useEffect(() => {
+  if (formData.showroomVariantId) {
+    const filtered = colours.filter(
+      (c) => c.showroomVariantId === Number(formData.showroomVariantId)
+    );
+
+    setFilteredColours(filtered);
+  } else {
+    setFilteredColours([]);
+  }
+}, [formData.showroomVariantId, colours]);
   // ─── Handlers ───────────────────────────────────────────────────────────
   const handleInputChange = (field: keyof FormValues, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -268,7 +301,7 @@ const Tractor = () => {
     setEditId(null);
     setFormData({
       modelId: "",
-      variantId: "",
+       showroomVariantId: "",
       colourId: "",
       itemName: "",
       codeNo: "",
@@ -290,7 +323,7 @@ const Tractor = () => {
     setEditId(item.id);
     setFormData({
       modelId: item.modelId || "",
-      variantId: item.variantId || "",
+     showroomVariantId: item.showroomVariantId || "",
       colourId: item.colourId || "",
       itemName: item.itemName,
       codeNo: item.codeNo,
@@ -365,7 +398,8 @@ const handleToggleStatus = async (id: number) => {
   const validate = () => {
     const newErrors: Record<string, string> = {};
     if (!formData.modelId) newErrors.modelId = "Model is required";
-    if (!formData.variantId) newErrors.variantId = "Variant is required";
+    if (!formData.showroomVariantId)
+  newErrors.showroomVariantId = "Showroom Variant is required";
     if (!formData.colourId) newErrors.colourId = "Colour is required";
     if (!formData.itemName.trim()) newErrors.itemName = "Item Name is required";
     if (!formData.codeNo.trim()) newErrors.codeNo = "Code No is required";
@@ -379,7 +413,7 @@ const handleToggleStatus = async (id: number) => {
     try {
       const payload = {
         modelId: Number(formData.modelId),
-        variantId: Number(formData.variantId),
+        showroomVariantId: Number(formData.showroomVariantId),
         colourId: Number(formData.colourId),
         itemName: formData.itemName,
         codeNo: formData.codeNo,
@@ -412,7 +446,9 @@ const handleToggleStatus = async (id: number) => {
     const matchesSearch =
       item.itemName.toLowerCase().includes(search.toLowerCase()) ||
       item.model?.modelName?.toLowerCase().includes(search.toLowerCase()) ||
-      item.variant?.variantName?.toLowerCase().includes(search.toLowerCase());
+   item.showroomVariant?.variantName
+  ?.toLowerCase()
+  .includes(search.toLowerCase())
 
     const matchesStatus =
       selectedStatusFilter === "All" || item.status === selectedStatusFilter;
@@ -466,7 +502,7 @@ const handleToggleStatus = async (id: number) => {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-xl font-semibold text-gray-900 md:text-2xl dark:text-white">
-            Tractor Management
+            Tractor List
           </h1>
           <p className="dark:text-dark-300 mt-1 text-sm text-gray-500">
             Manage all tractors from here
@@ -618,7 +654,7 @@ const handleToggleStatus = async (id: number) => {
                       {item.model?.modelName}
                     </Td>
                     <Td className="dark:text-dark-200 py-4 text-gray-600">
-                      {item.variant?.variantName}
+                   {item.showroomVariant?.variantName}
                     </Td>
                     <Td className="dark:text-dark-200 py-4 text-gray-600">
                       <span className="inline-flex items-center gap-2">
@@ -946,7 +982,7 @@ const handleToggleStatus = async (id: number) => {
                           setFormData((prev) => ({
                             ...prev,
                             modelId: val?.id || "",
-                            variantId: "", // reset variant
+                            showroomVariantId: "", // reset variant
                             colourId: "", // reset colour
                           }));
                         }}
@@ -968,28 +1004,32 @@ const handleToggleStatus = async (id: number) => {
                       </label>
 
                       <Combobox
-                        data={filteredVariants}
+                        data={filteredShowroomVariants}
                         displayField="name"
-                        value={
-                          filteredVariants.find(
-                            (v) => v.id === Number(formData.variantId),
-                          ) || null
-                        }
-                        onChange={(val: OptionType | null) => {
-                          setFormData((prev) => ({
-                            ...prev,
-                            variantId: val?.id || "",
-                            colourId: "", // reset colour
-                          }));
-                        }}
+                       value={
+  filteredShowroomVariants.find(
+    (v) => v.id === Number(formData.showroomVariantId)
+  ) || null
+}
+                       onChange={async (val: OptionType | null) => {
+  setFormData((prev) => ({
+    ...prev,
+    showroomVariantId: val?.id || "",
+    colourId: "",
+  }));
+
+  if (val?.id) {
+    await getVariantDetails(val.id);
+  }
+}}
                         placeholder="Select Variant"
                         searchFields={["name"]}
                         disabled={!formData.modelId}
                       />
 
-                      {errors.variantId && (
+                      {errors.showroomVariantId && (
                         <span className="text-xs text-orange-500">
-                          {errors.variantId}
+                          {errors.showroomVariantId}
                         </span>
                       )}
                     </div>
@@ -1013,7 +1053,7 @@ const handleToggleStatus = async (id: number) => {
                         }}
                         placeholder="Select Colour"
                         searchFields={["name"]}
-                        disabled={!formData.variantId} // disable until variant selected
+                        disabled={!formData.showroomVariantId} // disable until variant selected
                       />
 
                       {errors.colourId && (

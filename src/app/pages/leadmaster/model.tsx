@@ -1999,13 +1999,21 @@ const [filteredShowroomVariants, setFilteredShowroomVariants] =
   };
 
 const fetchShowroomVariants = async () => {
-  const res = await apiHelper.get("/showroom-variant");
+  try {
+    const res = await apiHelper.get("/showroom-variant");
 
-  console.log("Showroom Variants:", res.data);
+    const data = Array.isArray(res.data?.data)
+      ? res.data.data
+      : Array.isArray(res.data)
+      ? res.data
+      : [];
 
-  const data = res.data?.data || [];
+    console.log("API Response:", data);
 
-  setShowroomVariants(data);
+    setShowroomVariants(data);
+  } catch (err) {
+    console.log(err);
+  }
 };
   const fetchColors = async () => {
     const res = await apiHelper.get("/colours");
