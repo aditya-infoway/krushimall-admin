@@ -6,6 +6,8 @@ import { enquirysettings } from "./segments/enquirysettings";
 import { item } from "./segments/item";
 import { purchase } from "./segments/purchase";
 import { accounting } from "./segments/accounting";
+import { goodcontrol } from "./segments/goodscontrol";
+
 
 
 
@@ -18,4 +20,6 @@ export const navigation = [
   item,
   purchase,
   accounting,
+  goodcontrol,
+  
 ];

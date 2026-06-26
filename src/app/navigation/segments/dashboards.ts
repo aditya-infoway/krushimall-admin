@@ -1,21 +1,22 @@
-import { baseNavigationObj } from "../baseNavigation";
 import { NavigationTree } from "@/@types/navigation";
 
-const ROOT_DASHBOARDS = "/dashboards";
-
-const path = (root: string, item: string) => `${root}${item}`;
-
 export const dashboards: NavigationTree = {
-  ...baseNavigationObj["dashboards"],
+  id: "dashboards",
   type: "root",
+  title: "Dashboards",
+  icon: "dashboards",
   childs: [
     {
-      id: "dashboards.home",
-      path: path(ROOT_DASHBOARDS, "/home"),
+      id: "dashboard",
       type: "item",
-      title: "Home",
-      transKey: "nav.dashboards.home",
-     
+      title: "Dashboard",
+      path: "/dashboards/dashboard",
+    },
+    {
+      id: "inventory",
+      type: "item",
+      title: "Inventory",
+      path: "/dashboards/inventory",
     },
   ],
 };
