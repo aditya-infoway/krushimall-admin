@@ -29,22 +29,25 @@ const protectedRoutes: RouteObject = {
           index: true,
           element: <Navigate to="/dashboards/home" />,
         },
-        {
-          path: "dashboards",
-          children: [
-            {
-              index: true,
-              element: <Navigate to="/dashboards/home" />,
-            },
-            {
-              path: "home",
-              lazy: async () => ({
-                Component: (await import("@/app/pages/dashboards/home"))
-                  .default,
-              }),
-            },
-          ],
-        },
+       {
+  path: "dashboards",
+  children: [
+    {
+       path: "dashboard",
+      lazy: async () => ({
+        Component: (await import("@/app/pages/dashboards/dashboard"))
+          .default,
+      }),
+    },
+    {
+      path: "inventory",
+      lazy: async () => ({
+        Component: (await import("@/app/pages/dashboards/inventory"))
+          .default,
+      }),
+    },
+  ],
+},
           {
       path: "master",
       children: [
@@ -330,14 +333,14 @@ const protectedRoutes: RouteObject = {
             ).default,
           }),
         },
-        // {
-        //   path: ":id",
-        //   lazy: async () => ({
-        //     Component: (
-        //       await import("@/app/pages/purchase/tractor/edit")
-        //     ).default,
-        //   }),
-        // },
+         {
+          path: "inward/:id",
+          lazy: async () => ({
+            Component: (
+              await import("@/app/pages/purchase/purchaseitemlist")
+            ).default,
+          }),
+        },
       ],
     },
     {
@@ -429,6 +432,21 @@ const protectedRoutes: RouteObject = {
   ],
 },
     
+
+{
+  path: "goodscontrol",
+  children: [
+    {
+      path: "tractorinventory",
+      lazy: async () => ({
+        Component: (
+          await import("@/app/pages/goodscontrol/tractorinventory")
+        ).default,
+      }),
+    },
+   
+  ],
+},
 
 
 

@@ -22,6 +22,7 @@ import {
   BanknotesIcon,
   ArrowPathIcon,
   BookOpenIcon,
+
 } from "@heroicons/react/24/outline";
 import { ElementType } from "react";
 import { 
@@ -40,7 +41,7 @@ import {
   TbReceipt,
   TbReceiptOff,
   TbCash,
- 
+ TbBox,
   TbExchange,
   TbBook,
   TbFileInvoice,
@@ -101,4 +102,5 @@ export const navigationIcons: Record<string, ElementType> = {
   bankreceipt: TbBank,
   contra: TbArrowsExchange,
   journal: TbBook,
+  tinven: TbBox,
 };

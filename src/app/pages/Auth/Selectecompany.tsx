@@ -300,7 +300,7 @@ export default function Selectcomapny() {
                     companies.map((company) => (
                       <tr
                         key={company.id}
-                        onClick={() => navigate("/dashboards/home")}
+                        onClick={() => navigate("/dashboards/dashboard")}
                         className="cursor-pointer border-t hover:bg-gray-50"
                       >
                         <td className="p-3">{company.companyName}</td>
