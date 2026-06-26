@@ -13,6 +13,7 @@ import {
   PencilIcon,
   TrashIcon,
   PlusIcon,
+  ArrowDownCircleIcon,
 } from "@heroicons/react/24/outline";
 import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/Table";
 import { Button, Checkbox, Input } from "@/components/ui";
@@ -64,13 +65,18 @@ const statusFilterOptions = [
 ];
 
 const statusColors: Record<PurchaseRegisterRow["status"], string> = {
-  Pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
-  Verified: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
+  Pending:
+    "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
+  Verified:
+    "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
   Cancelled: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
 };
 
 const fmt = (n: number) =>
-  n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  n.toLocaleString("en-IN", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 
 const columns = [
   "#",
@@ -104,7 +110,7 @@ const TractorPurchaseRegister: React.FC<TractorPurchaseRegisterProps> = ({
   const [selectedStatusFilter, setSelectedStatusFilter] = useState("All");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-const [rows, setRows] = useState<PurchaseRegisterRow[]>([]);
+  const [rows, setRows] = useState<PurchaseRegisterRow[]>([]);
   const navigate = useNavigate();
 
   // Filter rows
@@ -127,7 +133,7 @@ const [rows, setRows] = useState<PurchaseRegisterRow[]>([]);
         ]
           .join(" ")
           .toLowerCase()
-          .includes(q)
+          .includes(q),
       );
     }
 
@@ -148,45 +154,45 @@ const [rows, setRows] = useState<PurchaseRegisterRow[]>([]);
   const isAllPageSelected =
     currentItems.length > 0 &&
     currentItems.every((item) => selectedIds.includes(item.id));
-const getPurchases = async () => {
-  try {
-    const res = await apiHelper.get("/purchases");
+  const getPurchases = async () => {
+    try {
+      const res = await apiHelper.get("/purchases");
 
-    const purchases = res.data || [];
+      const purchases = res.data || [];
 
-    setRows(
-      purchases.map((item: any) => ({
-        id: item.id,
-        purchaseDate: item.purchaseDate?.split("T")[0] || "",
-        terms: item.terms,
-        supplierName: item.account?.accountName || "",
-        billNo: item.billNo,
-        purchaseBillNo: item.purchaseBillNo,
-        location: item.location || "",
-        totalQuantity: item.totalQty,
-        totalAmount: Number(item.totalAmount),
-        freightInsuranceOther:
-          Number(item.freightCharge || 0) +
-          Number(item.insurance || 0) +
-          Number(item.otherCharge || 0),
-        cgstAmount: 0,
-        sgstAmount: 0,
-        igstAmount: 0,
-        grandTotal: Number(item.grandTotal),
-        transportName: "",
-        mobileNo: "",
-        vehicalNo: "",
-        status: "Pending",
-      }))
-    );
-  } catch (error) {
-    console.error(error);
-  }
-};
+      setRows(
+        purchases.map((item: any) => ({
+          id: item.id,
+          purchaseDate: item.purchaseDate?.split("T")[0] || "",
+          terms: item.terms,
+          supplierName: item.account?.accountName || "",
+          billNo: item.billNo,
+          purchaseBillNo: item.purchaseBillNo,
+          location: item.location || "",
+          totalQuantity: item.totalQty,
+          totalAmount: Number(item.totalAmount),
+          freightInsuranceOther:
+            Number(item.freightCharge || 0) +
+            Number(item.insurance || 0) +
+            Number(item.otherCharge || 0),
+          cgstAmount: 0,
+          sgstAmount: 0,
+          igstAmount: 0,
+          grandTotal: Number(item.grandTotal),
+          transportName: "",
+          mobileNo: "",
+          vehicalNo: "",
+          status: "Pending",
+        })),
+      );
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
-useEffect(() => {
-  getPurchases();
-}, []);
+  useEffect(() => {
+    getPurchases();
+  }, []);
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
       const pageIds = currentItems.map((item) => item.id);
@@ -201,27 +207,29 @@ useEffect(() => {
     setSelectedIds((prev) =>
       prev.includes(id)
         ? prev.filter((selectedId) => selectedId !== id)
-        : [...prev, id]
+        : [...prev, id],
     );
   };
 
- const handleAddPurchase = () => {
-  navigate("/purchase/tractor/add");
-  if (onAddPurchase) onAddPurchase();
-};
+  const handleAddPurchase = () => {
+    navigate("/purchase/tractor/add");
+    if (onAddPurchase) onAddPurchase();
+  };
 
-const handleEditRow = (row: PurchaseRegisterRow) => {
-  navigate(`/purchase/tractor/${row.id}`);
-  if (onEditRow) onEditRow(row);
-};
+  const handleEditRow = (row: PurchaseRegisterRow) => {
+    navigate(`/purchase/tractor/${row.id}`);
+    if (onEditRow) onEditRow(row);
+  };
 
-const handleDeleteRow = (row: PurchaseRegisterRow) => {
-  if (window.confirm(`Are you sure you want to delete this purchase?`)) {
-    if (onDeleteRow) onDeleteRow(row);
-  }
-};
+  const handleDeleteRow = (row: PurchaseRegisterRow) => {
+    if (window.confirm(`Are you sure you want to delete this purchase?`)) {
+      if (onDeleteRow) onDeleteRow(row);
+    }
+  };
 
-
+  const handleInward = (row: PurchaseRegisterRow) => {
+    navigate(`/purchase/tractor/inward/${row.id}`);
+  };
   return (
     <div className="relative min-h-screen space-y-6 p-4 pb-28 text-gray-900 md:p-6 dark:text-gray-100">
       {/* Header */}
@@ -244,7 +252,11 @@ const handleDeleteRow = (row: PurchaseRegisterRow) => {
             Excel
           </button>
 
-          <Button color="primary" onClick={handleAddPurchase} className="w-full sm:w-auto">
+          <Button
+            color="primary"
+            onClick={handleAddPurchase}
+            className="w-full sm:w-auto"
+          >
             <PlusIcon className="mr-1.5 size-4.5" />
             Add Purchase
           </Button>
@@ -363,84 +375,97 @@ const handleDeleteRow = (row: PurchaseRegisterRow) => {
               </Tr>
             </THead>
 
-          <TBody className="dark:divide-dark-700 divide-y divide-gray-200">
-  {currentItems.map((item, index) => {
-    const isRowSelected = selectedIds.includes(item.id);
-    return (
-      <Tr
-        key={item.id}
-        className={`${
-          isRowSelected ? "dark:bg-dark-600/30 bg-gray-50/50" : ""
-        } dark:hover:bg-dark-700/40 transition-colors hover:bg-gray-50/30`}
-      >
-        <Td className="py-4 text-center">
-          <Checkbox
-            className="size-4.5"
-            checked={isRowSelected}
-            onChange={() => handleSelectRow(item.id)}
-          />
-        </Td>
-        <Td className="py-4 font-medium text-gray-500">
-          {indexOfFirstItem + index + 1}
-        </Td>
-        <Td className="py-4 text-center">
-          <div className="flex items-center justify-center gap-1">
-            <button
-              onClick={() => handleEditRow(item)}
-              title="Edit"
-              className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-            >
-              <PencilIcon className="size-4" />
-            </button>
-            <button
-              onClick={() => handleDeleteRow(item)}
-              title="Delete"
-              className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
-            >
-              <TrashIcon className="size-4" />
-            </button>
-          </div>
-        </Td>
-        <Td className="py-4 whitespace-nowrap">{item.purchaseDate}</Td>
-        <Td className="py-4">{item.terms}</Td>
-        <Td className="py-4 font-medium">{item.supplierName}</Td>
-        <Td className="py-4">{item.billNo}</Td>
-        <Td className="py-4">{item.purchaseBillNo}</Td>
-        <Td className="py-4">{item.location}</Td>
-        <Td className="py-4 text-right">{item.totalQuantity}</Td>
-        <Td className="py-4 text-right">₹{fmt(item.totalAmount)}</Td>
-        <Td className="py-4 text-right">₹{fmt(item.freightInsuranceOther)}</Td>
-        <Td className="py-4 text-right">₹{fmt(item.cgstAmount)}</Td>
-        <Td className="py-4 text-right">₹{fmt(item.sgstAmount)}</Td>
-        <Td className="py-4 text-right">₹{fmt(item.igstAmount)}</Td>
-        <Td className="py-4 text-right font-bold text-blue-600 dark:text-blue-400">
-          ₹{fmt(item.grandTotal)}
-        </Td>
-        <Td className="py-4">{item.transportName}</Td>
-        <Td className="py-4">{item.mobileNo}</Td>
-        <Td className="py-4">{item.vehicalNo}</Td>
-        <Td className="py-4">
-          <span
-            className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${statusColors[item.status]}`}
-          >
-            {item.status}
-          </span>
-        </Td>
-      </Tr>
-    );
-  })}
+            <TBody className="dark:divide-dark-700 divide-y divide-gray-200">
+              {currentItems.map((item, index) => {
+                const isRowSelected = selectedIds.includes(item.id);
+                return (
+                  <Tr
+                    key={item.id}
+                    className={`${
+                      isRowSelected ? "dark:bg-dark-600/30 bg-gray-50/50" : ""
+                    } dark:hover:bg-dark-700/40 transition-colors hover:bg-gray-50/30`}
+                  >
+                    <Td className="py-4 text-center">
+                      <Checkbox
+                        className="size-4.5"
+                        checked={isRowSelected}
+                        onChange={() => handleSelectRow(item.id)}
+                      />
+                    </Td>
+                    <Td className="py-4 font-medium text-gray-500">
+                      {indexOfFirstItem + index + 1}
+                    </Td>
+                    <Td className="py-4 text-center">
+                      <div className="flex items-center justify-center gap-1.5">
+                        <button
+                          onClick={() => handleEditRow(item)}
+                          title="Edit"
+                          className="text-blue-500 transition-colors hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                        >
+                          <PencilIcon className="size-4.5" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteRow(item)}
+                          title="Delete"
+                          className="text-red-500 transition-colors hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                        >
+                          <TrashIcon className="size-4.5" />
+                        </button>
+                        <button
+                          onClick={() => handleInward(item)}
+                          title="Inward"
+                          className="text-green-500 transition-colors hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
+                        >
+                          <ArrowDownCircleIcon className="size-5" />
+                        </button>
+                      </div>
+                    </Td>
+                    <Td className="py-4 whitespace-nowrap">
+                      {item.purchaseDate}
+                    </Td>
+                    <Td className="py-4">{item.terms}</Td>
+                    <Td className="py-4 font-medium">{item.supplierName}</Td>
+                    <Td className="py-4">{item.billNo}</Td>
+                    <Td className="py-4">{item.purchaseBillNo}</Td>
+                    <Td className="py-4">{item.location}</Td>
+                    <Td className="py-4 text-right">{item.totalQuantity}</Td>
+                    <Td className="py-4 text-right">
+                      ₹{fmt(item.totalAmount)}
+                    </Td>
+                    <Td className="py-4 text-right">
+                      ₹{fmt(item.freightInsuranceOther)}
+                    </Td>
+                    <Td className="py-4 text-right">₹{fmt(item.cgstAmount)}</Td>
+                    <Td className="py-4 text-right">₹{fmt(item.sgstAmount)}</Td>
+                    <Td className="py-4 text-right">₹{fmt(item.igstAmount)}</Td>
+                    <Td className="py-4 text-right font-bold text-blue-600 dark:text-blue-400">
+                      ₹{fmt(item.grandTotal)}
+                    </Td>
+                    <Td className="py-4">{item.transportName}</Td>
+                    <Td className="py-4">{item.mobileNo}</Td>
+                    <Td className="py-4">{item.vehicalNo}</Td>
+                    <Td className="py-4">
+                      <span
+                        className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${statusColors[item.status]}`}
+                      >
+                        {item.status}
+                      </span>
+                    </Td>
+                  </Tr>
+                );
+              })}
 
-  {currentItems.length === 0 && (
-    <Tr>
-      <Td
-        colSpan={columns.length + 1}
-        className="py-12 text-center text-gray-400 dark:text-gray-500"
-      >
-        No purchase records found
-      </Td>
-    </Tr>
-  )}
-</TBody>
+              {currentItems.length === 0 && (
+                <Tr>
+                  <Td
+                    colSpan={columns.length + 1}
+                    className="py-12 text-center text-gray-400 dark:text-gray-500"
+                  >
+                    No purchase records found
+                  </Td>
+                </Tr>
+              )}
+            </TBody>
           </Table>
         </div>
 
@@ -451,7 +476,10 @@ const handleDeleteRow = (row: PurchaseRegisterRow) => {
               <span>Show</span>
               <Listbox
                 data={entriesOptions}
-                value={entriesOptions.find((o) => o.id === rowsPerPage) || entriesOptions[0]}
+                value={
+                  entriesOptions.find((o) => o.id === rowsPerPage) ||
+                  entriesOptions[0]
+                }
                 onChange={(opt: any) => {
                   setRowsPerPage(opt.id);
                   setCurrentPage(1);
@@ -466,7 +494,9 @@ const handleDeleteRow = (row: PurchaseRegisterRow) => {
               <div className="dark:border-dark-700 dark:bg-dark-800 inline-flex items-center space-x-1 rounded-lg border border-gray-200 bg-white p-1 shadow-sm">
                 <button
                   type="button"
-                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
                   disabled={currentPage === 1}
                   className="dark:hover:bg-dark-700 inline-flex size-8 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100 disabled:opacity-40 disabled:hover:bg-transparent dark:text-gray-400"
                 >
@@ -502,7 +532,9 @@ const handleDeleteRow = (row: PurchaseRegisterRow) => {
 
                 <button
                   type="button"
-                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                  }
                   disabled={currentPage === totalPages}
                   className="dark:hover:bg-dark-700 inline-flex size-8 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100 disabled:opacity-40 disabled:hover:bg-transparent dark:text-gray-400"
                 >

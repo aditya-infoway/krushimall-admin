@@ -9,8 +9,8 @@ import { Country, State, City } from "country-state-city";
 import Select from "react-select";
 import apiHelper from "@/utils/apiHelper";
 import { Listbox } from "@/components/shared/form/StyledListbox";
+import { GroupCombobox } from "@/components/shared/form/GroupCombobox";
 type FormValues = {
-
   accountName: string;
   printName: string;
   group: string;
@@ -97,14 +97,28 @@ const NewAccount = () => {
   const watchedCountryCode = watch("countryCode");
   const watchedStateCode = watch("stateCode");
   const groupOptions = [
-    { label: "Sundry Debtors", value: "Sundry Debtors" },
-    { label: "Sundry Creditors", value: "Sundry Creditors" },
-    { label: "Cash-in-Hand", value: "Cash-in-Hand" },
-    { label: "Bank Accounts", value: "Bank Accounts" },
-    { label: "Direct Expenses", value: "Direct Expenses" },
-    { label: "Indirect Expenses", value: "Indirect Expenses" },
-    { label: "Direct Income", value: "Direct Income" },
-    { label: "Indirect Income", value: "Indirect Income" },
+    { label: "Bank Accounts (Bank)", value: "Bank Accounts", effect: "Balance Sheet" },
+      { label: "Bank OCC A/C", value: "Bank OCC A/C", effect: "Balance Sheet" },
+       { label: "Capital Account", value: "Capital Account", effect: "Balance Sheet" },
+       { label: "Cash-in-Hand", value: "Cash-in-Hand", effect: "Balance Sheet" },
+          { label: "Currant Assets", value: "Currant Assets", effect: "Balance Sheet" },
+           { label: "Duites & Taxes", value: "Duites & Taxes", effect: "Balance Sheet" },
+             { label: "Expense Account", value: "Expense Account", effect: "Profit & Loss" },
+                { label: "Purchase Account", value: "Purchase Account", effect: "Trading" },
+                  { label: "Sales Account", value: "Sales Account", effect: "Trading" },
+                   { label: "Stock in Hand", value: "Stock in Hand", effect: "Balance Sheet" },
+                   { label: "Sundry Creditors", value: "Sundry Creditors", effect: "Balance Sheet" },
+    { label: "Sundry Debitors", value: "Sundry Debtors", effect: "Balance Sheet" },
+     { label: "Supplier", value: "Supplier", effect: "Balance Sheet" },
+       { label: "Customer", value: "Customer", effect: "Balance Sheet" },
+        { label: "Sundry Debitor (finance)", value: "Sundry Debitor (finance)", effect: "Balance Sheet" },
+        { label: "Sundry Credito (finance)", value: "Sundry Credito (finance)", effect: "Balance Sheet" },
+   
+       
+    
+    
+   
+
   ];
   const drCrOptions = [
     { label: "Dr", value: "Dr" },
@@ -148,33 +162,27 @@ const NewAccount = () => {
     navigate("/usermaster/account");
   };
 
-const onFormSubmit = async (data: FormValues) => {
-  try {
-    const finalPayload = {
-      ...data,
-      
-      birthday: data.birthday || null,
-      anniversary: data.anniversary || null,
-      openingBalance: Number(data.openingBalance) || 0,
-    };
+  const onFormSubmit = async (data: FormValues) => {
+    try {
+      const finalPayload = {
+        ...data,
 
-    if (isEditMode) {
-      await apiHelper.put(
-        `/accounts/${editData.id}`,
-        finalPayload
-      );
-    } else {
-      await apiHelper.post(
-        "/accounts",
-        finalPayload
-      );
+        birthday: data.birthday || null,
+        anniversary: data.anniversary || null,
+        openingBalance: Number(data.openingBalance) || 0,
+      };
+
+      if (isEditMode) {
+        await apiHelper.put(`/accounts/${editData.id}`, finalPayload);
+      } else {
+        await apiHelper.post("/accounts", finalPayload);
+      }
+
+      navigate("/usermaster/account");
+    } catch (error) {
+      console.log(error);
     }
-
-    navigate("/usermaster/account");
-  } catch (error) {
-    console.log(error);
-  }
-};
+  };
 
   // ─── Dynamic Location Data ──────────────────────────────────────────────────
   const countryOptions = useMemo(() => {
@@ -318,15 +326,21 @@ const onFormSubmit = async (data: FormValues) => {
                 control={control}
                 rules={{ required: "Group is required" }}
                 render={({ field }) => (
-                  <Listbox
-                    data={groupOptions}
-                    value={
-                      groupOptions.find((item) => item.value === field.value) ||
-                      null
-                    }
-                    onChange={(val: any) => field.onChange(val?.value || "")}
-                    placeholder="Select Group"
-                  />
+                 <GroupCombobox
+    data={groupOptions}
+    displayField="label"
+    searchFields={["label", "effect"]}
+    
+    value={
+        groupOptions.find(
+            item => item.value === field.value
+        ) || null
+    }
+    onChange={(val: any) =>
+        field.onChange(val?.value || "")
+    }
+    placeholder="Search Group"
+/>
                 )}
               />
 
@@ -632,7 +646,9 @@ const onFormSubmit = async (data: FormValues) => {
               <DatePicker
                 label="Birthday On"
                 placeholder="Select Date"
-                onChange={(val: Date[]) => setValue("birthday", val[0]?.toISOString() || "")}
+                onChange={(val: Date[]) =>
+                  setValue("birthday", val[0]?.toISOString() || "")
+                }
               />
             </div>
 
@@ -640,7 +656,9 @@ const onFormSubmit = async (data: FormValues) => {
               <DatePicker
                 label="Anniversary"
                 placeholder="Select Date"
-                onChange={(val: Date[]) => setValue("anniversary", val[0]?.toISOString() || "")}
+                onChange={(val: Date[]) =>
+                  setValue("anniversary", val[0]?.toISOString() || "")
+                }
               />
             </div>
 

@@ -8,9 +8,10 @@ import { PencilSquareIcon } from "@heroicons/react/24/outline";
 import { PreviewImg } from "@/components/shared/PreviewImg";
 import { Avatar, Button, Input, Upload } from "@/components/ui";
 import axios from "@/utils/axios";
-// ----------------------------------------------------------------------
+import apiHelper from "@/utils/apiHelper";
 import Select from "react-select";
 import { Country, State, City } from "country-state-city";
+
 export default function General() {
   const [avatar, setAvatar] = useState<File | null>(null);
   const [company, setCompany] = useState<any>(null);
@@ -210,7 +211,7 @@ export default function General() {
               avatar
                 ? URL.createObjectURL(avatar)
                 : company?.logo
-                  ? `http://192.168.1.38:5000/uploads/${company.logo}`
+                  ? apiHelper.getImageUrl(company.logo)
                   : "/images/avatar/avatar-20.jpg"
             }
             classNames={{

@@ -6,7 +6,7 @@ import {
   XMarkIcon,
   CheckIcon,
   MagnifyingGlassIcon,
-  BuildingOffice2Icon,
+  // BuildingOffice2Icon,
 } from "@heroicons/react/24/outline";
 import { Input } from "@/components/ui";
 import { Listbox } from "@/components/shared/form/StyledListbox";
@@ -18,7 +18,9 @@ import Select from "react-select";
 import { Radio } from "@/components/ui";
 import apiHelper from "@/utils/apiHelper";
 // ---------- Types ----------
-
+import { PlusIcon } from "@heroicons/react/24/outline";
+// import { Combobox } from "@/components/shared/form/StyledCombobox";
+import { Combobox } from "@/components/shared/form/Combobox";
 interface TractorPurchaseBillProps {
   onBack?: () => void;
   onSaved?: (row: PurchaseRegisterRow) => void;
@@ -59,6 +61,8 @@ interface ItemRow {
 interface PartyOption {
   id: string;
   name: string;
+  mobile: number;
+    stateCode: string;
 }
 
 interface NewAccountData {
@@ -73,6 +77,9 @@ interface NewAccountData {
   address: string;
   panCard: string;
   aadharCard: string;
+  group: string;
+  openingBalance: string;
+  drCr: string;
 }
 
 type TermsType = "Credit" | "Cash" | "Bank";
@@ -140,18 +147,18 @@ const paymentModeOptions: { label: string; value: PaymentMode }[] = [
 //   },
 // ];
 
-const PARTY_OPTIONS: PartyOption[] = [
-  { id: "p1", name: "Sharma Traders" },
-  { id: "p2", name: "Bharat Motors" },
-  { id: "p3", name: "Kisan Agro Supplies" },
-];
+// const PARTY_OPTIONS: PartyOption[] = [
+//   { id: "p1", name: "Sharma Traders" },
+//   { id: "p2", name: "Bharat Motors" },
+//   { id: "p3", name: "Kisan Agro Supplies" },
+// ];
 
-const CASH_ACCOUNTS = ["Cash in Hand", "Petty Cash"];
-const BANK_ACCOUNTS = [
-  "HDFC Bank - 4521",
-  "SBI Current - 7788",
-  "ICICI Bank - 1190",
-];
+// const CASH_ACCOUNTS = ["Cash in Hand", "Petty Cash"];
+// const BANK_ACCOUNTS = [
+//   "HDFC Bank - 4521",
+//   "SBI Current - 7788",
+//   "ICICI Bank - 1190",
+// ];
 
 const termsOptions = [
   { label: "Credit", value: "Credit" },
@@ -191,6 +198,10 @@ const emptyAccount: NewAccountData = {
   address: "",
   panCard: "",
   aadharCard: "",
+
+  group: "",
+  openingBalance: "",
+  drCr: "",
 };
 
 // ─── react-select custom styles ──────────────────────────────────────────
@@ -261,7 +272,7 @@ const customSelectStyles = {
 
 const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
   onBack,
-  onSaved,
+  // onSaved,
 }) => {
   const navigate = useNavigate();
   const [date, setDate] = useState(() => {
@@ -292,7 +303,7 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
     "not_verify",
   );
   const [vehicleSearch, setVehicleSearch] = useState("");
-  const [draftErrors, setDraftErrors] = useState<Record<string, string>>({});
+  // const [draftErrors, setDraftErrors] = useState<Record<string, string>>({});
   // Account form state
   const [accountForm, setAccountForm] = useState<NewAccountData>(emptyAccount);
   const [accountTouched, setAccountTouched] = useState(false);
@@ -305,6 +316,32 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
   const [vehicleOptions, setVehicleOptions] = useState<VehicleOption[]>([]);
   const updateBankDetails = (key: keyof BankDetailsData, value: string) =>
     setBankDetails((b) => ({ ...b, [key]: value }));
+  const [accountErrors, setAccountErrors] = useState<
+    Partial<Record<keyof NewAccountData, string>>
+  >({});
+  const selectedGroup = accountForm.group;
+  const groupOptions = [
+    { label: "Supplier", value: "Supplier" },
+    { label: "Sundry Creditor", value: "Sundry Creditor" },
+  ];
+
+  const drCrOptions = [
+    { label: "Dr", value: "Dr" },
+    { label: "Cr", value: "Cr" },
+  ];
+  const [company, setCompany] = useState<any>(null);
+
+const getCompany = async () => {
+  try {
+    const res = await apiHelper.get("/company");
+
+    const companyData = res.data?.data || res.data;
+
+    setCompany(companyData);
+  } catch (err) {
+    console.log(err);
+  }
+};
   const getTractors = async () => {
     try {
       const res = await apiHelper.get("/tractors");
@@ -386,8 +423,14 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
       label: c.name,
     }));
   }, [accountForm.countryCode, accountForm.stateCode]);
+const selectedParty = parties.find(
+  (p) => p.id === partyId
+);
 
+const isSameState =
+  company?.stateCode === selectedParty?.stateCode;
   // Use cityOptions for district as well
+  
   const districtOptions = cityOptions;
 
   // ----- derived totals -----
@@ -400,6 +443,7 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
   const freightInsuranceOther = freightNum + insuranceNum + otherNum;
   const newTaxableValue = totalAmount + freightInsuranceOther;
   const grandTotal = newTaxableValue + roundNum;
+  
   const getAccounts = async () => {
     try {
       const res = await apiHelper.get("/accounts");
@@ -426,8 +470,14 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
 
   useEffect(() => {
     getAccounts();
+      getCompany();
   }, []);
+  const partyOptions = parties.map((p) => ({
+    label: p.name,
+    mobile: p.mobile,
 
+    value: p.id,
+  }));
   const fmt = (n: number) =>
     n.toLocaleString("en-IN", {
       minimumFractionDigits: 2,
@@ -449,24 +499,24 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
     );
   }, [vehicleSearch, vehicleOptions]);
 
-const handleVehicleSelect = (v: VehicleOption) => {
-  setDraft((d) => ({
-    ...d,
+  const handleVehicleSelect = (v: VehicleOption) => {
+    setDraft((d) => ({
+      ...d,
 
-    item: v.itemName,
-    itemCode: v.itemCode,
-    color: v.colour,
+      item: v.itemName,
+      itemCode: v.itemCode,
+      color: v.colour,
 
-    qty: 1,
+      qty: 1,
 
-    ratePer: String(v.purchasePriceNoGST),
-    gstPercent: String(v.taxSlab),
-    amount: String(v.purchasePriceTaxable),
-  }));
+      ratePer: String(v.purchasePriceNoGST),
+      gstPercent: String(v.taxSlab),
+      amount: String(v.purchasePriceTaxable),
+    }));
 
-  setVehicleModalOpen(false);
-  setVehicleSearch("");
-};
+    setVehicleModalOpen(false);
+    setVehicleSearch("");
+  };
 
   const saveDraftRow = () => {
     // Validate all required fields
@@ -482,12 +532,25 @@ const handleVehicleSelect = (v: VehicleOption) => {
       alert("Please enter Color");
       return;
     }
-    if (!draft.chassisNo.trim()) {
-      alert("Please enter Chassis No");
+    // ✅ Duplicate Chassis No in current purchase
+    const chassisExists = rows.some(
+      (r) =>
+        r.chassisNo.trim().toLowerCase() ===
+        draft.chassisNo.trim().toLowerCase(),
+    );
+
+    if (chassisExists) {
+      alert("Chassis No already added.");
       return;
     }
-    if (!draft.engineNo.trim()) {
-      alert("Please enter Engine No");
+
+    // ✅ Duplicate Engine No in current purchase
+    const engineExists = rows.some(
+      (r) =>
+        r.engineNo.trim().toLowerCase() === draft.engineNo.trim().toLowerCase(),
+    );
+    if (engineExists) {
+      alert("Engine No already added.");
       return;
     }
     if (!draft.qty || draft.qty < 1) {
@@ -514,7 +577,86 @@ const handleVehicleSelect = (v: VehicleOption) => {
 
   const removeRow = (id: string) =>
     setRows((r) => r.filter((row) => row.id !== id));
+  const getAccountError = (field: keyof NewAccountData) => {
+    if (!accountTouched) return "";
 
+    switch (field) {
+      case "accountName":
+        return !accountForm.accountName.trim()
+          ? "Account Name is required"
+          : "";
+
+      case "group":
+        return !accountForm.group ? "Group is required" : "";
+
+      case "openingBalance":
+        return accountForm.group === "Sundry Creditor" &&
+          !accountForm.openingBalance.trim()
+          ? "Opening Balance is required"
+          : "";
+
+      case "drCr":
+        return accountForm.group === "Sundry Creditor" && !accountForm.drCr
+          ? "Dr / Cr is required"
+          : "";
+
+      case "mobile":
+        if (!accountForm.mobile.trim()) return "Mobile is required";
+        if (!/^[0-9]{10}$/.test(accountForm.mobile))
+          return "Mobile must be 10 digits";
+        return "";
+
+      case "countryCode":
+        return !accountForm.countryCode ? "Country is required" : "";
+
+      case "stateCode":
+        return !accountForm.stateCode ? "State is required" : "";
+
+      case "district":
+        return !accountForm.district ? "District is required" : "";
+
+      case "city":
+        return !accountForm.city ? "City is required" : "";
+
+      case "address":
+        return !accountForm.address.trim() ? "Address is required" : "";
+
+      case "panCard":
+        return !accountForm.panCard.trim() ? "PAN Card is required" : "";
+
+      case "aadharCard":
+        return !accountForm.aadharCard.trim() ? "Aadhar Card is required" : "";
+
+      default:
+        return "";
+    }
+  };
+  const validateField = (field: keyof NewAccountData, value: string) => {
+    let error = "";
+
+    switch (field) {
+      case "panCard":
+        if (!value.trim()) {
+          error = "PAN Card is required";
+        } else if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/i.test(value)) {
+          error = "Enter a valid PAN Card number";
+        }
+        break;
+
+      case "aadharCard":
+        if (!value.trim()) {
+          error = "Aadhar Card is required";
+        } else if (!/^\d{12}$/.test(value)) {
+          error = "Enter a valid Aadhar Card number";
+        }
+        break;
+    }
+
+    setAccountErrors((prev) => ({
+      ...prev,
+      [field]: error,
+    }));
+  };
   const handleCreateAccount = async () => {
     try {
       const required: (keyof NewAccountData)[] = [
@@ -527,9 +669,21 @@ const handleVehicleSelect = (v: VehicleOption) => {
         "address",
         "panCard",
         "aadharCard",
+        "group",
       ];
 
-      const missing = required.filter((k) => !accountForm[k]?.trim());
+      const missing = required.filter((k) => !String(accountForm[k]).trim());
+
+      // If Sundry Creditor then Opening Balance & Dr/Cr are required
+      if (accountForm.group === "Sundry Creditor") {
+        if (!accountForm.openingBalance.trim()) {
+          missing.push("openingBalance");
+        }
+
+        if (!accountForm.drCr.trim()) {
+          missing.push("drCr");
+        }
+      }
 
       setAccountTouched(true);
 
@@ -555,8 +709,13 @@ const handleVehicleSelect = (v: VehicleOption) => {
         panCard: accountForm.panCard,
         aadharNo: accountForm.aadharCard,
 
-        // drCr: "DR",
-        // openingBalance: 0,
+        // New Fields
+        group: accountForm.group,
+        openingBalance:
+          accountForm.group === "Sundry Creditor"
+            ? Number(accountForm.openingBalance)
+            : 0,
+        drCr: accountForm.group === "Sundry Creditor" ? accountForm.drCr : null,
       });
 
       const account = res.data;
@@ -574,7 +733,6 @@ const handleVehicleSelect = (v: VehicleOption) => {
       };
 
       setParties((prev) => [...prev, newParty]);
-
       setPartyId(account.id);
 
       setAccountModalOpen(false);
@@ -595,10 +753,17 @@ const handleVehicleSelect = (v: VehicleOption) => {
           : [];
 
       setParties(
-        accounts.map((acc: any) => ({
-          id: acc.id,
-          name: acc.accountName,
-        })),
+        accounts
+          .filter(
+            (acc: any) =>
+              acc.group === "Supplier" || acc.group === "Sundry Creditor",
+          )
+          .map((acc: any) => ({
+            id: acc.id,
+            name: acc.accountName,
+            mobile: acc.mobile,
+             stateCode: acc.stateCode
+          })),
       );
     } catch (error) {
       console.error(error);
@@ -640,7 +805,7 @@ const handleVehicleSelect = (v: VehicleOption) => {
       console.log(res);
 
       alert("Purchase Saved Successfully");
-   navigate("/purchase/tractor");
+      navigate("/purchase/tractor");
       // Generate next bill no
       await getBillNo();
 
@@ -652,9 +817,10 @@ const handleVehicleSelect = (v: VehicleOption) => {
       setInsurance("");
       setOtherCharge("");
       setRoundAmount("");
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      alert("Failed to save purchase");
+
+      alert(error.response?.data?.message || "Failed to save purchase");
     }
   };
 
@@ -684,7 +850,7 @@ const handleVehicleSelect = (v: VehicleOption) => {
           </h1>
           <button
             onClick={handleBack}
-            className="w-full rounded-lg bg-primary-500  px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-500  sm:w-auto sm:px-5"
+            className="bg-primary-500 hover:bg-primary-500 w-full rounded-lg px-4 py-2 text-sm font-semibold text-white transition-colors sm:w-auto sm:px-5"
           >
             ← Back
           </button>
@@ -731,10 +897,12 @@ const handleVehicleSelect = (v: VehicleOption) => {
                 Cash Account
               </label>
 
-              <Listbox
+              <Combobox
                 data={cashAccounts.map((acc) => ({
                   label: acc.accountName,
                   value: acc.id,
+                  mobile: acc.mobile,
+                  openingBalance: acc.openingBalance,
                 }))}
                 value={
                   cashAccounts.find((acc) => acc.id === cashAccount)
@@ -743,12 +911,33 @@ const handleVehicleSelect = (v: VehicleOption) => {
                           cashAccounts.find((acc) => acc.id === cashAccount)
                             ?.accountName || "",
                         value: cashAccount,
+                        mobile:
+                          cashAccounts.find((acc) => acc.id === cashAccount)
+                            ?.mobile || "",
+                        openingBalance:
+                          cashAccounts.find((acc) => acc.id === cashAccount)
+                            ?.openingBalance || 0,
                       }
                     : null
                 }
                 onChange={(val: any) => setCashAccount(val.value)}
                 displayField="label"
-                placeholder="Select Cash Account"
+                placeholder="Search Cash Account"
+                searchFields={["label", "mobile"]}
+                columns={[
+                  {
+                    header: "Account",
+                    field: "label",
+                    width: "2fr",
+                  },
+
+                  {
+                    header: "Opening",
+                    field: "openingBalance",
+                    width: "1fr",
+                  },
+               
+                ]}
               />
             </div>
           )}
@@ -758,10 +947,12 @@ const handleVehicleSelect = (v: VehicleOption) => {
                 Bank Account
               </label>
 
-              <Listbox
+              <Combobox
                 data={bankAccounts.map((acc) => ({
                   label: acc.accountName,
                   value: acc.id,
+                  mobile: acc.mobile,
+                  openingBalance: acc.openingBalance,
                 }))}
                 value={
                   bankAccounts.find((acc) => acc.id === bankAccount)
@@ -770,6 +961,12 @@ const handleVehicleSelect = (v: VehicleOption) => {
                           bankAccounts.find((acc) => acc.id === bankAccount)
                             ?.accountName || "",
                         value: bankAccount,
+                        mobile:
+                          bankAccounts.find((acc) => acc.id === bankAccount)
+                            ?.mobile || "",
+                        openingBalance:
+                          bankAccounts.find((acc) => acc.id === bankAccount)
+                            ?.openingBalance || 0,
                       }
                     : null
                 }
@@ -778,7 +975,22 @@ const handleVehicleSelect = (v: VehicleOption) => {
                   setBankDetailsModalOpen(true);
                 }}
                 displayField="label"
-                placeholder="Select Bank Account"
+                placeholder="Search Bank Account"
+                searchFields={["label", "mobile"]}
+                columns={[
+                  {
+                    header: "Account",
+                    field: "label",
+                    width: "2fr",
+                  },
+
+                  {
+                    header: "Opening",
+                    field: "openingBalance",
+                    width: "1fr",
+                  },
+                
+                ]}
               />
             </div>
           )}
@@ -789,25 +1001,30 @@ const handleVehicleSelect = (v: VehicleOption) => {
             </label>
             <div className="flex w-full gap-2">
               <div className="min-w-0 flex-1">
-                <Listbox
-                  data={parties.map((p) => ({ label: p.name, value: p.id }))}
-                  value={
-                    parties.find((p) => p.id === partyId)
-                      ? {
-                          label:
-                            parties.find((p) => p.id === partyId)?.name || "",
-                          value: partyId,
-                        }
-                      : null
-                  }
+                <Combobox
+                  data={partyOptions}
+                  value={partyOptions.find((x) => x.value === partyId) || null}
                   onChange={(val: any) => setPartyId(val.value)}
                   displayField="label"
-                  placeholder="Select party"
+                  searchFields={["label", "mobile"]}
+                  columns={[
+                    {
+                      header: "Party",
+                      field: "label",
+                      width: "2fr",
+                    },
+                    {
+                      header: "Mobile",
+                      field: "mobile",
+                      width: "1fr",
+                    },
+                  ]}
+                  placeholder="Search Party"
                 />
               </div>
               <button
                 onClick={() => setAccountModalOpen(true)}
-                className="flex h-[38px] w-[38px] flex-shrink-0 items-center justify-center rounded-lg border border-gray-300 text-xl text-blue-600 hover:bg-gray-50 dark:border-gray-600 dark:text-blue-400 dark:hover:bg-gray-700"
+                className="flex h-9.5 w-9.5 shrink-0 items-center justify-center rounded-lg border border-gray-300 text-xl text-blue-600 hover:bg-gray-50 dark:border-gray-600 dark:text-blue-400 dark:hover:bg-gray-700"
               >
                 +
               </button>
@@ -872,6 +1089,7 @@ const handleVehicleSelect = (v: VehicleOption) => {
               displayField="label"
             />
           </div>
+          
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
               Due Date
@@ -905,243 +1123,252 @@ const handleVehicleSelect = (v: VehicleOption) => {
 
         {/* ========== ITEM TABLE ========== */}
         <div className="px-3 pb-3 sm:px-4 sm:pb-4 md:px-6">
-          <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-            <table className="w-full border-collapse text-sm">
-              <thead className="bg-gray-100 dark:bg-gray-700">
-                <tr>
-                  <th className="px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
-                    ITEM
-                  </th>
-                  <th className="px-3 py-2.5 text-left text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
-                    ITEM NAME
-                  </th>
-                  <th className="px-3 py-2.5 text-left text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
-                    ITEM CODE
-                  </th>
-                  <th className="px-3 py-2.5 text-left text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
-                    COLOR
-                  </th>
-                  <th className="px-3 py-2.5 text-left text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
-                    CHASSIS NO
-                  </th>
-                  <th className="px-3 py-2.5 text-left text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
-                    ENGINE NO
-                  </th>
-                  <th className="px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
-                    QTY
-                  </th>
-                  <th className="px-3 py-2.5 text-left text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
-                    RATE PER
-                  </th>
-                  <th className="px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
-                    GST %
-                  </th>
-                  <th className="px-3 py-2.5 text-right text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
-                    AMOUNT
-                  </th>
-                  <th className="px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
-                    ACTION
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {/* Draft row */}
+          <div className="overflow-x-auto rounded border border-gray-200 dark:border-gray-700">
+            <div className="h-96 overflow-y-auto">
+              <table className="w-full border-collapse text-sm">
+                <thead className="sticky top-0 z-20 bg-gray-100 dark:bg-gray-700">
+                  <tr>
+                    <th className="border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:border-gray-500 dark:text-gray-300">
+                      ITEM
+                    </th>
+                    <th className="border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:border-gray-500 dark:text-gray-300">
+                      ITEM NAME
+                    </th>
+                    <th className="border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:border-gray-500 dark:text-gray-300">
+                      ITEM CODE
+                    </th>
+                    <th className="border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:border-gray-500 dark:text-gray-300">
+                      COLOR
+                    </th>
+                    <th className="border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:border-gray-500 dark:text-gray-300">
+                      CHASSIS NO
+                    </th>
+                    <th className="border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:border-gray-500 dark:text-gray-300">
+                      ENGINE NO
+                    </th>
+                    <th className="border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:border-gray-500 dark:text-gray-300">
+                      QTY
+                    </th>
+                    <th className="border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:border-gray-500 dark:text-gray-300">
+                      RATE PER
+                    </th>
+                    <th className="border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:border-gray-500 dark:text-gray-300">
+                      GST %
+                    </th>
+                    <th className="border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:border-gray-500 dark:text-gray-300">
+                      AMOUNT
+                    </th>
+                    <th className="border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:border-gray-500 dark:text-gray-300">
+                      ACTION
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {/* Draft row */}
 
-                <tr className="bg-gray-50 dark:bg-gray-700/50">
-                  <td className="px-2 py-1.5 text-center">
-                    <button
-                      onClick={() => setVehicleModalOpen(true)}
-                      className="rounded border border-blue-600 px-3 py-1 text-sm font-semibold text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20"
-                    >
-                      Add
-                    </button>
-                  </td>
-                  <td className="px-2 py-1.5">
-                    <input
-                      placeholder="Enter Item Name"
-                      value={draft.item}
-                      onChange={(e) => updateDraft("item", e.target.value)}
-                      className="w-full rounded border border-gray-300 px-2 py-1 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
-                    />
-                  </td>
-                  <td className="px-2 py-1.5">
-                    <input
-                      placeholder="Enter Code"
-                      value={draft.itemCode}
-                      onChange={(e) => updateDraft("itemCode", e.target.value)}
-                      className="w-full rounded border border-gray-300 px-2 py-1 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
-                    />
-                  </td>
-                  <td className="px-2 py-1.5">
-                    <input
-                      placeholder="Color"
-                      value={draft.color}
-                      onChange={(e) => updateDraft("color", e.target.value)}
-                      className="w-full rounded border border-gray-300 px-2 py-1 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
-                    />
-                  </td>
-                  <td className="px-2 py-1.5">
-                    <input
-                      placeholder="Chassis"
-                      value={draft.chassisNo}
-                      onChange={(e) => updateDraft("chassisNo", e.target.value)}
-                      className="w-full rounded border border-gray-300 px-2 py-1 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
-                    />
-                  </td>
-                  <td className="px-2 py-1.5">
-                    <input
-                      placeholder="Engine"
-                      value={draft.engineNo}
-                      onChange={(e) => updateDraft("engineNo", e.target.value)}
-                      className="w-full rounded border border-gray-300 px-2 py-1 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
-                    />
-                  </td>
-                  <td className="px-2 py-1.5">
-                    <input
-                      type="number"
-                      min={1}
-                      value={draft.qty}
-                      onChange={(e) =>
-                        updateDraft("qty", Number(e.target.value))
-                      }
-                      className="w-full rounded border border-gray-300 px-2 py-1 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
-                    />
-                  </td>
-                  <td className="px-2 py-1.5">
-                    <input
-                      placeholder="Rate"
-                      value={draft.ratePer}
-                      onChange={(e) => updateDraft("ratePer", e.target.value)}
-                      className="w-full rounded border border-gray-300 px-2 py-1 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
-                    />
-                  </td>
-                  <td className="px-2 py-1.5">
-                    <input
-                      placeholder="GST"
-                      value={draft.gstPercent}
-                      onChange={(e) =>
-                        updateDraft("gstPercent", e.target.value)
-                      }
-                      className="w-full rounded border border-gray-300 px-2 py-1 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
-                    />
-                  </td>
-                  <td className="px-2 py-1.5">
-                    <input
-                      placeholder="Amount"
-                      value={draft.amount}
-                      onChange={(e) => updateDraft("amount", e.target.value)}
-                      className="w-full rounded border border-gray-300 px-2 py-1 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
-                    />
-                  </td>
-                  <td className="px-2 py-1.5 text-center">
-                    <button
-                      onClick={saveDraftRow}
-                      disabled={!draft.item.trim()}
-                      className={`inline-flex h-8 w-8 items-center justify-center rounded-lg text-white ${
-                        draft.item.trim()
-                          ? "bg-green-600 hover:bg-green-700"
-                          : "cursor-not-allowed bg-gray-300"
-                      }`}
-                    >
-                      <CheckIcon className="h-4 w-4" />
-                    </button>
-                  </td>
-                </tr>
-
-                {/* Saved rows */}
-                {rows.map((r, index) => (
-                  <tr
-                    key={r.id}
-                    className={`border-t border-gray-200 dark:border-gray-700 ${
-                      index % 2 === 0
-                        ? "bg-white dark:bg-gray-800/50"
-                        : "bg-gray-50 dark:bg-gray-700/30"
-                    }`}
-                  >
-                    <td className="px-3 py-2.5 text-center font-medium text-gray-500 dark:text-gray-400">
-                      {index + 1}
-                    </td>
-                    <td className="px-3 py-2.5 font-medium text-gray-900 dark:text-gray-200">
-                      {r.item}
-                    </td>
-                    <td className="px-3 py-2.5 text-gray-700 dark:text-gray-300">
-                      {r.itemCode}
-                    </td>
-                    <td className="px-3 py-2.5">
-                      <span className="inline-flex items-center gap-1.5">
-                        <span
-                          className="inline-block h-3 w-3 rounded-full border border-gray-300 dark:border-gray-600"
-                          style={{ backgroundColor: r.color || "#cccccc" }}
-                        />
-                        {r.color}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2.5 font-mono text-gray-700 dark:text-gray-300">
-                      {r.chassisNo}
-                    </td>
-                    <td className="px-3 py-2.5 font-mono text-gray-700 dark:text-gray-300">
-                      {r.engineNo}
-                    </td>
-                    <td className="px-3 py-2.5 text-center font-semibold text-gray-900 dark:text-gray-200">
-                      {r.qty}
-                    </td>
-                    <td className="px-3 py-2.5 text-gray-700 dark:text-gray-300">
-                      {r.ratePer}
-                    </td>
-                    <td className="px-3 py-2.5 text-center text-gray-700 dark:text-gray-300">
-                      {r.gstPercent}%
-                    </td>
-                    <td className="px-3 py-2.5 text-right font-semibold text-gray-900 dark:text-gray-200">
-                      ₹{r.amount}
-                    </td>
-                    <td className="px-3 py-2.5 text-center">
+                  <tr className="sticky top-9 z-20 bg-gray-700">
+                    <td className="border border-gray-500 px-2 py-1.5 text-center dark:border-gray-500">
                       <button
-                        onClick={() => removeRow(r.id)}
-                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400"
+                        onClick={() => setVehicleModalOpen(true)}
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-blue-600 bg-blue-600 text-white transition hover:bg-blue-700"
+                        title="Add Item"
                       >
-                        <XMarkIcon className="h-4 w-4" />
+                        <PlusIcon className="h-5 w-5" />
+                      </button>
+                    </td>
+                    <td className="border border-gray-500 px-2 py-1.5 dark:border-gray-500">
+                      <input
+                        placeholder="Enter Item Name"
+                        value={draft.item}
+                        onChange={(e) => updateDraft("item", e.target.value)}
+                        className="w-full rounded border border-gray-300 px-2 py-1 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
+                      />
+                    </td>
+                    <td className="border border-gray-500 px-2 py-1.5 dark:border-gray-500">
+                      <input
+                        placeholder="Enter Code"
+                        value={draft.itemCode}
+                        onChange={(e) =>
+                          updateDraft("itemCode", e.target.value)
+                        }
+                        className="w-full rounded border border-gray-300 px-2 py-1 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
+                      />
+                    </td>
+                    <td className="border border-gray-500 px-2 py-1.5 dark:border-gray-500">
+                      <input
+                        placeholder="Color"
+                        value={draft.color}
+                        onChange={(e) => updateDraft("color", e.target.value)}
+                        className="w-full rounded border border-gray-300 px-2 py-1 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
+                      />
+                    </td>
+                    <td className="border border-gray-500 px-2 py-1.5 dark:border-gray-500">
+                      <input
+                        placeholder="Chassis"
+                        value={draft.chassisNo}
+                        onChange={(e) =>
+                          updateDraft("chassisNo", e.target.value)
+                        }
+                        className="w-full rounded border border-gray-300 px-2 py-1 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
+                      />
+                    </td>
+                    <td className="border border-gray-500 px-2 py-1.5 dark:border-gray-500">
+                      <input
+                        placeholder="Engine"
+                        value={draft.engineNo}
+                        onChange={(e) =>
+                          updateDraft("engineNo", e.target.value)
+                        }
+                        className="w-full rounded border border-gray-300 px-2 py-1 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
+                      />
+                    </td>
+                    <td className="border border-gray-500 px-2 py-1.5 dark:border-gray-500">
+                      <input
+                        type="number"
+                        readOnly
+                        min={1}
+                        value={draft.qty}
+                        onChange={(e) =>
+                          updateDraft("qty", Number(e.target.value))
+                        }
+                        className="w-20 rounded border border-gray-300 px-2 py-1 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
+                      />
+                    </td>
+                    <td className="border border-gray-500 px-2 py-1.5 dark:border-gray-500">
+                      <input
+                        placeholder="Rate"
+                        value={draft.ratePer}
+                        onChange={(e) => updateDraft("ratePer", e.target.value)}
+                        className="w-full rounded border border-gray-300 px-2 py-1 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
+                      />
+                    </td>
+                    <td className="border border-gray-500 px-2 py-1.5 dark:border-gray-500">
+                      <input
+                        placeholder="GST"
+                        value={draft.gstPercent}
+                        onChange={(e) =>
+                          updateDraft("gstPercent", e.target.value)
+                        }
+                        className="w-full rounded border border-gray-300 px-2 py-1 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
+                      />
+                    </td>
+                    <td className="border border-gray-500 px-2 py-1.5 dark:border-gray-500">
+                      <input
+                        placeholder="Amount"
+                        value={draft.amount}
+                        onChange={(e) => updateDraft("amount", e.target.value)}
+                        className="w-full rounded border border-gray-300 px-2 py-1 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
+                      />
+                    </td>
+                    <td className="border border-gray-500 px-2 py-1.5 text-center dark:border-gray-500">
+                      <button
+                        onClick={saveDraftRow}
+                        disabled={!draft.item.trim()}
+                        className={`inline-flex h-8 w-8 items-center justify-center rounded-lg bg-green-600 text-white ${
+                          draft.item.trim()
+                            ? "bg-green-600 hover:bg-green-700"
+                            : "cursor-not-allowed bg-gray-300"
+                        }`}
+                      >
+                        <CheckIcon className="h-4 w-4" />
                       </button>
                     </td>
                   </tr>
-                ))}
 
-                {/* Empty state */}
-                {rows.length === 0 && (
-                  <tr>
-                    <td colSpan={11} className="py-12 text-center">
-                      <div className="flex flex-col items-center justify-center gap-3">
-                        <img
-                          src={emptyStateImage}
-                          alt="No items added"
-                          className="max-h-32 w-auto opacity-60 sm:max-h-40"
-                          onError={(e) => {
-                            const target = e.currentTarget;
-                            target.style.display = "none";
-                            const parent = target.parentElement;
-                            if (parent) {
-                              const emoji = document.createElement("div");
-                              emoji.className = "text-5xl opacity-60";
-                              emoji.textContent = "📦";
-                              parent.insertBefore(emoji, parent.firstChild);
-                            }
-                          }}
-                        />
-                        <span className="text-sm text-gray-500 dark:text-gray-400">
-                          No items added yet. Click{" "}
-                          <span className="font-semibold text-blue-600">
-                            {" "}
-                            Add
-                          </span>{" "}
-                          to add items.
+                  {/* Saved rows */}
+                  {rows.map((r, index) => (
+                    <tr
+                      key={r.id}
+                      className={`border-t border-gray-200 dark:border-gray-700 ${
+                        index % 2 === 0
+                          ? "bg-white dark:bg-gray-800/50"
+                          : "bg-gray-50 dark:bg-gray-700/30"
+                      }`}
+                    >
+                      <td className="border border-gray-500 px-3 py-2.5 text-center font-medium text-gray-500 dark:border-gray-500 dark:text-gray-400">
+                        {index + 1}
+                      </td>
+                      <td className="border border-gray-500 px-3 py-2.5 font-medium text-gray-900 dark:border-gray-500 dark:text-gray-200">
+                        {r.item}
+                      </td>
+                      <td className="border border-gray-500 px-3 py-2.5 text-gray-700 dark:border-gray-500 dark:text-gray-300">
+                        {r.itemCode}
+                      </td>
+                      <td className="border border-gray-500 px-3 py-2.5 dark:border-gray-500">
+                        <span className="inline-flex items-center gap-1.5">
+                          <span
+                            className="inline-block h-3 w-3 rounded-full border border-gray-300 dark:border-gray-600"
+                            style={{ backgroundColor: r.color || "#cccccc" }}
+                          />
+                          {r.color}
                         </span>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                      </td>
+                      <td className="border border-gray-500 px-3 py-2.5 font-mono text-gray-700 dark:border-gray-500 dark:text-gray-300">
+                        {r.chassisNo}
+                      </td>
+                      <td className="border border-gray-500 px-3 py-2.5 font-mono text-gray-700 dark:border-gray-500 dark:text-gray-300">
+                        {r.engineNo}
+                      </td>
+                      <td className="border border-gray-500 px-3 py-2.5 text-center font-semibold text-gray-900 dark:border-gray-500 dark:text-gray-200">
+                        {r.qty}
+                      </td>
+                      <td className="border border-gray-500 px-3 py-2.5 text-center text-gray-700 dark:border-gray-500 dark:text-gray-300">
+                        {r.ratePer}
+                      </td>
+                      <td className="border border-gray-500 px-3 py-2.5 text-center text-gray-700 dark:border-gray-500 dark:text-gray-300">
+                        {r.gstPercent}%
+                      </td>
+                      <td className="border border-gray-500 px-3 py-2.5 text-center font-semibold text-gray-900 dark:border-gray-500 dark:text-gray-200">
+                        ₹{r.amount}
+                      </td>
+                      <td className="border border-gray-500 px-3 py-2.5 text-center dark:border-gray-500">
+                        <button
+                          onClick={() => removeRow(r.id)}
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400"
+                        >
+                          <XMarkIcon className="h-4 w-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
 
+                  {/* Empty state */}
+                  {rows.length === 0 && (
+                    <tr>
+                      <td colSpan={11} className="py-12 text-center">
+                        <div className="flex flex-col items-center justify-center gap-3">
+                          <img
+                            src={emptyStateImage}
+                            alt="No items added"
+                            className="max-h-32 w-auto opacity-60 sm:max-h-40"
+                            onError={(e) => {
+                              const target = e.currentTarget;
+                              target.style.display = "none";
+                              const parent = target.parentElement;
+                              if (parent) {
+                                const emoji = document.createElement("div");
+                                emoji.className = "text-5xl opacity-60";
+                                emoji.textContent = "📦";
+                                parent.insertBefore(emoji, parent.firstChild);
+                              }
+                            }}
+                          />
+                          <span className="text-sm text-gray-500 dark:text-gray-400">
+                            No items added yet. Click{" "}
+                            <span className="font-semibold text-blue-600">
+                              {" "}
+                              Add
+                            </span>{" "}
+                            to add items.
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
           {/* Totals */}
           <div className="mt-4 flex flex-col justify-between gap-2 border-t border-gray-200 pt-4 text-sm font-semibold text-gray-700 sm:flex-row dark:border-gray-700 dark:text-gray-300">
             <span>
@@ -1273,6 +1500,34 @@ const handleVehicleSelect = (v: VehicleOption) => {
                     ₹{fmt(newTaxableValue)}
                   </span>
                 </div>
+                 <div className="flex items-center justify-between border-b border-gray-200/60 pb-2 dark:border-gray-700/60">
+    <span className="text-sm text-gray-600 dark:text-gray-400">
+      CGST
+    </span>
+    <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+      {/* ₹{fmt(totalCgst)} */}
+    </span>
+  </div>
+
+  {/* SGST */}
+  <div className="flex items-center justify-between border-b border-gray-200/60 pb-2 dark:border-gray-700/60">
+    <span className="text-sm text-gray-600 dark:text-gray-400">
+      SGST
+    </span>
+    <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+      {/* ₹{fmt(totalSgst)} */}
+    </span>
+  </div>
+
+  {/* IGST */}
+  <div className="flex items-center justify-between border-b border-gray-200/60 pb-2 dark:border-gray-700/60">
+    <span className="text-sm text-gray-600 dark:text-gray-400">
+      IGST
+    </span>
+    <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+      {/* ₹{fmt(totalIgst)} */}
+    </span>
+  </div>
                 <div className="flex items-center justify-between rounded-lg bg-blue-600/10 p-2 dark:bg-blue-500/20">
                   <span className="text-sm font-bold text-gray-900 dark:text-white">
                     Grand Total
@@ -1290,7 +1545,7 @@ const handleVehicleSelect = (v: VehicleOption) => {
         <div className="flex justify-center px-3 pb-4 sm:px-4 sm:pb-6">
           <button
             onClick={handleSave}
-            className="w-full rounded-lg bg-primary-500 px-8 py-2.5 text-sm font-bold text-white transition-colors hover:bg-primary-500  sm:w-auto sm:px-12 sm:py-3"
+            className="bg-primary-500 hover:bg-primary-500 w-full rounded-lg px-8 py-2.5 text-sm font-bold text-white transition-colors sm:w-auto sm:px-12 sm:py-3"
           >
             Save
           </button>
@@ -1339,7 +1594,7 @@ const handleVehicleSelect = (v: VehicleOption) => {
                 <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
                   <table className="w-full border-collapse text-sm">
                     <thead>
-                      <tr className="bg-gray-100 text-left dark:bg-gray-700 whitespace-nowrap">
+                      <tr className="bg-gray-100 text-left whitespace-nowrap dark:bg-gray-700">
                         <th className="w-12 p-2">#</th>
                         <th className="p-2">Item Name</th>
                         <th className="p-2">Model</th>
@@ -1558,7 +1813,7 @@ const handleVehicleSelect = (v: VehicleOption) => {
               setAccountTouched(false);
             }}
           />
-          <div className="absolute top-0 right-0 h-full w-full max-w-2xl transform bg-white shadow-2xl transition-transform sm:w-3/4 lg:w-1/2 dark:bg-gray-800">
+          <div className="absolute top-0 right-0 h-full w-full max-w-3xl transform bg-white shadow-2xl transition-transform sm:w-3/4 lg:w-1/2 dark:bg-gray-800">
             <div className="flex h-full flex-col">
               <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 sm:px-6 sm:py-4 dark:border-gray-700">
                 <h2 className="text-lg font-bold text-gray-900 dark:text-white">
@@ -1590,7 +1845,82 @@ const handleVehicleSelect = (v: VehicleOption) => {
                       }
                       className={`w-full ${accountTouched && !accountForm.accountName.trim() ? "border-red-500" : ""}`}
                     />
+                    {getAccountError("accountName") && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {getAccountError("accountName")}
+                      </p>
+                    )}
                   </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-medium">
+                      Group
+                    </label>
+
+                    <Listbox
+                      data={groupOptions}
+                      value={
+                        groupOptions.find(
+                          (x) => x.value === accountForm.group,
+                        ) || null
+                      }
+                      onChange={(val: any) =>
+                        updateAccountForm("group", val?.value || "")
+                      }
+                      placeholder="Select Group"
+                    />
+                    {getAccountError("group") && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {getAccountError("group")}
+                      </p>
+                    )}
+                  </div>
+
+                  {accountForm.group === "Sundry Creditor" && (
+                    <>
+                      <div>
+                        <label className="mb-1 block text-xs font-medium">
+                          Opening Balance
+                        </label>
+
+                        <Input
+                          placeholder="Opening Balance"
+                          value={accountForm.openingBalance}
+                          onChange={(e) =>
+                            updateAccountForm("openingBalance", e.target.value)
+                          }
+                        />
+                        {getAccountError("openingBalance") && (
+                          <p className="mt-1 text-xs text-red-500">
+                            {getAccountError("openingBalance")}
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="mb-1 block text-xs font-medium">
+                          Dr / Cr
+                        </label>
+
+                        <Listbox
+                          data={drCrOptions}
+                          value={
+                            drCrOptions.find(
+                              (x) => x.value === accountForm.drCr,
+                            ) || null
+                          }
+                          onChange={(val: any) =>
+                            updateAccountForm("drCr", val?.value || "")
+                          }
+                          placeholder="Select Dr / Cr"
+                        />
+                        {getAccountError("drCr") && (
+                          <p className="mt-1 text-xs text-red-500">
+                            {getAccountError("drCr")}
+                          </p>
+                        )}
+                      </div>
+                    </>
+                  )}
                   {/* Mobile */}
                   <div>
                     <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
@@ -1604,6 +1934,11 @@ const handleVehicleSelect = (v: VehicleOption) => {
                       }
                       className={`w-full ${accountTouched && !accountForm.mobile.trim() ? "border-red-500" : ""}`}
                     />
+                    {getAccountError("mobile") && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {getAccountError("mobile")}
+                      </p>
+                    )}
                   </div>
 
                   {/* Country - Dynamic with react-select */}
@@ -1630,9 +1965,9 @@ const handleVehicleSelect = (v: VehicleOption) => {
                         updateAccountForm("city", "");
                       }}
                     />
-                    {accountTouched && !accountForm.countryCode && (
+                    {getAccountError("countryCode") && (
                       <p className="mt-1 text-xs text-red-500">
-                        Please select a country.
+                        {getAccountError("countryCode")}
                       </p>
                     )}
                   </div>
@@ -1660,9 +1995,9 @@ const handleVehicleSelect = (v: VehicleOption) => {
                         updateAccountForm("city", "");
                       }}
                     />
-                    {accountTouched && !accountForm.stateCode && (
+                    {getAccountError("stateCode") && (
                       <p className="mt-1 text-xs text-red-500">
-                        Please select a state.
+                        {getAccountError("stateCode")}
                       </p>
                     )}
                   </div>
@@ -1687,9 +2022,9 @@ const handleVehicleSelect = (v: VehicleOption) => {
                         updateAccountForm("district", selected?.value || "");
                       }}
                     />
-                    {accountTouched && !accountForm.district && (
+                    {getAccountError("district") && (
                       <p className="mt-1 text-xs text-red-500">
-                        Please select a district.
+                        {getAccountError("district")}
                       </p>
                     )}
                   </div>
@@ -1714,9 +2049,9 @@ const handleVehicleSelect = (v: VehicleOption) => {
                         updateAccountForm("city", selected?.value || "");
                       }}
                     />
-                    {accountTouched && !accountForm.city && (
+                    {getAccountError("city") && (
                       <p className="mt-1 text-xs text-red-500">
-                        Please select a city.
+                        {getAccountError("city")}
                       </p>
                     )}
                   </div>
@@ -1734,6 +2069,11 @@ const handleVehicleSelect = (v: VehicleOption) => {
                       }
                       className={`w-full ${accountTouched && !accountForm.address.trim() ? "border-red-500" : ""}`}
                     />
+                    {getAccountError("address") && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {getAccountError("address")}
+                      </p>
+                    )}
                   </div>
 
                   {/* PAN Card */}
@@ -1744,11 +2084,21 @@ const handleVehicleSelect = (v: VehicleOption) => {
                     <Input
                       placeholder="PAN Card Number"
                       value={accountForm.panCard}
-                      onChange={(e) =>
-                        updateAccountForm("panCard", e.target.value)
-                      }
+                      onChange={(e) => {
+                        updateAccountForm(
+                          "panCard",
+                          e.target.value.toUpperCase(),
+                        );
+                        validateField("panCard", e.target.value.toUpperCase());
+                      }}
+                      error={accountErrors.panCard}
                       className={`w-full ${accountTouched && !accountForm.panCard.trim() ? "border-red-500" : ""}`}
                     />
+                    {/* {getAccountError("panCard") && (
+  <p className="mt-1 text-xs text-red-500">
+    {getAccountError("panCard")}
+  </p>
+)} */}
                   </div>
                   {/* Aadhar Card */}
                   <div>
@@ -1758,11 +2108,18 @@ const handleVehicleSelect = (v: VehicleOption) => {
                     <Input
                       placeholder="Aadhar Number"
                       value={accountForm.aadharCard}
-                      onChange={(e) =>
-                        updateAccountForm("aadharCard", e.target.value)
-                      }
+                      onChange={(e) => {
+                        updateAccountForm("aadharCard", e.target.value);
+                        validateField("aadharCard", e.target.value);
+                      }}
+                      error={accountErrors.aadharCard}
                       className={`w-full ${accountTouched && !accountForm.aadharCard.trim() ? "border-red-500" : ""}`}
                     />
+                    {/* {getAccountError("aadharCard") && (
+  <p className="mt-1 text-xs text-red-500">
+    {getAccountError("aadharCard")}
+  </p>
+)} */}
                   </div>
                 </div>
               </div>
@@ -1780,7 +2137,7 @@ const handleVehicleSelect = (v: VehicleOption) => {
                   </button>
                   <button
                     onClick={handleCreateAccount}
-                    className="w-full rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 sm:w-auto sm:px-6"
+                    className="bg-primary-500 hover:bg-primary-500 w-full cursor-pointer rounded-lg px-4 py-2 text-sm font-semibold text-white sm:w-auto sm:px-6"
                   >
                     Create Account
                   </button>
