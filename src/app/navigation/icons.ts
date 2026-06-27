@@ -22,7 +22,7 @@ import {
   BanknotesIcon,
   ArrowPathIcon,
   BookOpenIcon,
-
+ExclamationTriangleIcon
 } from "@heroicons/react/24/outline";
 import { ElementType } from "react";
 import { 
@@ -57,6 +57,7 @@ import {
 
 import DashboardsIcon from "@/assets/dualicons/dashboards.svg?react";
 import SettingIcon from "@/assets/dualicons/setting.svg?react";
+import { report } from "./segments/report";
 
 
 export const navigationIcons: Record<string, ElementType> = {
@@ -91,6 +92,7 @@ export const navigationIcons: Record<string, ElementType> = {
   purchase: ShoppingCartIcon,
   "purchase-tractor": TbTruck,
   "purchase-accessories": TbTools,
+  report: ExclamationTriangleIcon,
   
   // ✅ Accounting Icons (using valid icons)
   accounting: TbBuildingBank,

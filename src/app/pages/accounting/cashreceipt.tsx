@@ -54,7 +54,7 @@ import { DatePicker } from "@/components/shared/form/Datepicker";
 import { Combobox } from "@/components/shared/form/StyledCombobox";
 import { Input, Radio, Textarea } from "@/components/ui";
 
-type EntryType = "Manual" | "Lead Cancel" | "Job Card";
+type EntryType = "Manual" | "Lead" | "Job Card";
 
 interface CashReceipt {
   id: number;
@@ -179,7 +179,7 @@ export default function CashReceipt() {
     if (!form.amount || form.amount === "") {
       newErrors.amount = "Amount is required";
     }
-    if (form.type === "Lead Cancel" && !form.leadNo) {
+    if (form.type === "Lead" && !form.leadNo) {
       newErrors.leadNo = "Lead No. is required";
     }
     if (form.type === "Job Card" && !form.jobCardNo) {
@@ -317,7 +317,7 @@ export default function CashReceipt() {
       narration: form.narration,
       createdType: form.createdType || "Manual",
       createdBy: "Admin",
-      leadNo: form.type === "Lead Cancel" ? form.leadNo : undefined,
+      leadNo: form.type === "Lead" ? form.leadNo : undefined,
       jobCardNo: form.type === "Job Card" ? form.jobCardNo : undefined,
     };
 
@@ -403,7 +403,7 @@ export default function CashReceipt() {
           <button
             type="button"
             onClick={handleAdd}
-            className="bg-primary-600 hover:bg-primary-700 inline-flex items-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-medium text-white transition-colors"
+            className="bg-primary-600 hover:bg-primary-700 inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-medium text-white transition-colors"
           >
             <Plus className="size-4.5" />
             Add Cash Receipt
@@ -440,7 +440,7 @@ export default function CashReceipt() {
               >
                 <option value="All">All Types</option>
                 <option value="Manual">Manual</option>
-                <option value="Lead Cancel">Lead Cancel</option>
+                <option value="Lead ">Lead </option>
                 <option value="Job Card">Job Card</option>
               </select>
             </div>
@@ -548,7 +548,7 @@ export default function CashReceipt() {
                         className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${
                           item.type === "Manual"
                             ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
-                            : item.type === "Lead Cancel"
+                            : item.type === "Lead"
                               ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
                               : "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
                         }`}
@@ -811,7 +811,7 @@ export default function CashReceipt() {
             leaveFrom="translate-x-0"
             leaveTo="translate-x-full"
           >
-            <DialogPanel className="dark:bg-dark-700 fixed top-0 right-0 flex h-full w-full max-w-xl transform-gpu flex-col bg-white shadow-2xl transition-transform duration-200">
+            <DialogPanel className="dark:bg-dark-700 fixed top-0 right-0 flex h-full w-full max-w-4xl transform-gpu flex-col bg-white shadow-2xl transition-transform duration-200">
               <div className="dark:border-dark-500 flex items-center justify-between border-b border-gray-200 px-5 py-4">
                 <h2 className="dark:text-dark-50 text-lg font-semibold text-gray-800">
                   {editId !== null ? "Edit Cash Receipt" : "Add Cash Receipt"}
@@ -825,175 +825,170 @@ export default function CashReceipt() {
               </div>
 
               <div className="grow space-y-5 overflow-y-auto p-5">
-                {/* Radio Buttons */}
-                <div className="flex gap-6">
-                  <Radio
-                    label="Manual"
-                    name="type"
-                    checked={form.type === "Manual"}
-                    onChange={() => {
-                      setForm({
-                        ...form,
-                        type: "Manual",
-                        leadNo: "",
-                        jobCardNo: "",
-                      });
-                      if (errors.leadNo) setErrors({ ...errors, leadNo: "" });
-                      if (errors.jobCardNo)
-                        setErrors({ ...errors, jobCardNo: "" });
-                    }}
-                  />
-                  <Radio
-                    label="Lead Cancel"
-                    name="type"
-                    checked={form.type === "Lead Cancel"}
-                    onChange={() => {
-                      setForm({ ...form, type: "Lead Cancel", jobCardNo: "" });
-                      if (errors.jobCardNo)
-                        setErrors({ ...errors, jobCardNo: "" });
-                    }}
-                  />
-                  <Radio
-                    label="Job Card"
-                    name="type"
-                    checked={form.type === "Job Card"}
-                    onChange={() => {
-                      setForm({ ...form, type: "Job Card", leadNo: "" });
-                      if (errors.leadNo) setErrors({ ...errors, leadNo: "" });
-                    }}
-                  />
-                </div>
-
-                {/* Lead No - Show when Lead Cancel is selected */}
-                {form.type === "Lead Cancel" && (
-                  <div>
-                    <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Lead No. <span className="text-red-500">*</span>
-                    </label>
-                    <Combobox
-                      data={leadOptions}
-                      displayField="label"
-                      value={form.leadNo}
-                      onChange={(value: any) => {
-                        setForm({ ...form, leadNo: value });
+                {/* Radio Buttons + Lead No / Job Card No inline */}
+                {/* Radio Buttons + Lead No / Job Card No inline */}
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  {/* Left side - Radio buttons */}
+                  <div className="flex flex-wrap items-center gap-4 sm:gap-6">
+                    <Radio
+                      label="Manual"
+                      name="type"
+                      checked={form.type === "Manual"}
+                      onChange={() => {
+                        setForm({
+                          ...form,
+                          type: "Manual",
+                          leadNo: "",
+                          jobCardNo: "",
+                        });
                         if (errors.leadNo) setErrors({ ...errors, leadNo: "" });
-                      }}
-                      placeholder="Search or select lead..."
-                      searchFields={["label"]}
-                      error={errors.leadNo}
-                    />
-                  </div>
-                )}
-
-                {/* Job Card No - Show when Job Card is selected */}
-                {form.type === "Job Card" && (
-                  <div>
-                    <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Job Card No. <span className="text-red-500">*</span>
-                    </label>
-                    <Combobox
-                      data={jobCardOptions}
-                      displayField="label"
-                      value={form.jobCardNo}
-                      onChange={(value: any) => {
-                        setForm({ ...form, jobCardNo: value });
                         if (errors.jobCardNo)
                           setErrors({ ...errors, jobCardNo: "" });
                       }}
-                      placeholder="Search or select job card..."
-                      searchFields={["label"]}
-                      error={errors.jobCardNo}
+                    />
+                    <Radio
+                      label="Lead"
+                      name="type"
+                      checked={form.type === "Lead"}
+                      onChange={() => {
+                        setForm({ ...form, type: "Lead", jobCardNo: "" });
+                        if (errors.jobCardNo)
+                          setErrors({ ...errors, jobCardNo: "" });
+                      }}
+                    />
+                    <Radio
+                      label="Job Card"
+                      name="type"
+                      checked={form.type === "Job Card"}
+                      onChange={() => {
+                        setForm({ ...form, type: "Job Card", leadNo: "" });
+                        if (errors.leadNo) setErrors({ ...errors, leadNo: "" });
+                      }}
                     />
                   </div>
-                )}
 
-                {/* Cash Account with Combobox */}
-                <div>
-                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Cash Account <span className="text-red-500">*</span>
-                  </label>
-                  <Combobox
-                    data={CASH_ACCOUNTS}
-                    displayField="label"
-                    value={form.cashAccount}
-                    onChange={(value: any) => {
-                      setForm({ ...form, cashAccount: value });
-                      if (errors.cashAccount)
-                        setErrors({ ...errors, cashAccount: "" });
-                    }}
-                    placeholder="Select Cash Account"
-                    searchFields={["label"]}
-                    error={errors.cashAccount}
-                  />
-                </div>
+                  {/* Right side - Combobox */}
+                  <div className="w-full sm:max-w-sm">
+                    {form.type === "Lead" && (
+                      <Combobox
+                        data={leadOptions}
+                        displayField="label"
+                        value={form.leadNo}
+                        onChange={(value: any) => {
+                          setForm({ ...form, leadNo: value });
+                          if (errors.leadNo)
+                            setErrors({ ...errors, leadNo: "" });
+                        }}
+                        placeholder="Search or select lead..."
+                        searchFields={["label"]}
+                        error={errors.leadNo}
+                      />
+                    )}
 
-                {/* Voucher No */}
-                <div>
-                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Voucher No.
-                  </label>
-                  <input
-                    type="text"
-                    value={form.voucherNo}
-                    onChange={(e) =>
-                      setForm({ ...form, voucherNo: e.target.value })
-                    }
-                    className="dark:border-dark-500 dark:bg-dark-600 w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm focus:border-red-500 focus:ring-2 focus:ring-red-500"
-                  />
-                </div>
-
-                {/* Date with DatePicker */}
-                <div>
-                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Date
-                  </label>
-                  <DatePicker
-                    placeholder="Select date..."
-                    value={form.date}
-                    onChange={(date) => setForm({ ...form, date })}
-                  />
-                </div>
-
-                {/* Opp Account with Combobox - Shows Balance */}
-                <div>
-                  <div className="flex items-center justify-between">
-                    <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Opp. Account <span className="text-red-500">*</span>
-                    </label>
+                    {form.type === "Job Card" && (
+                      <Combobox
+                        data={jobCardOptions}
+                        displayField="label"
+                        value={form.jobCardNo}
+                        onChange={(value: any) => {
+                          setForm({ ...form, jobCardNo: value });
+                          if (errors.jobCardNo)
+                            setErrors({ ...errors, jobCardNo: "" });
+                        }}
+                        placeholder="Search or select job card..."
+                        searchFields={["label"]}
+                        error={errors.jobCardNo}
+                      />
+                    )}
                   </div>
-                  <Combobox
-                    data={OPP_ACCOUNTS_WITH_BALANCE}
-                    displayField="label"
-                    value={form.oppAccount}
-                    onChange={(value: any) => {
-                      setForm({ ...form, oppAccount: value });
-                      if (errors.oppAccount)
-                        setErrors({ ...errors, oppAccount: "" });
-                    }}
-                    placeholder="Select Opp. Account"
-                    searchFields={["label"]}
-                    error={errors.oppAccount}
-                  />
+                </div>
+                {/* Row 1: Cash Account | Voucher No | Date */}
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Cash Account <span className="text-red-500">*</span>
+                    </label>
+                    <Combobox
+                      data={CASH_ACCOUNTS}
+                      displayField="label"
+                      value={form.cashAccount}
+                      onChange={(value: any) => {
+                        setForm({ ...form, cashAccount: value });
+                        if (errors.cashAccount)
+                          setErrors({ ...errors, cashAccount: "" });
+                      }}
+                      placeholder="Select Cash Account"
+                      searchFields={["label"]}
+                      error={errors.cashAccount}
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Voucher No.
+                    </label>
+                    <input
+                      type="text"
+                      value={form.voucherNo}
+                      onChange={(e) =>
+                        setForm({ ...form, voucherNo: e.target.value })
+                      }
+                      className="dark:border-dark-500 dark:bg-dark-600 w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm focus:border-red-500 focus:ring-2 focus:ring-red-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Date
+                    </label>
+                    <DatePicker
+                      placeholder="Select date..."
+                      value={form.date}
+                      onChange={(date) => setForm({ ...form, date })}
+                    />
+                  </div>
                 </div>
 
-                {/* Amount */}
-                <div>
-                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Amount <span className="text-red-500">*</span>
-                  </label>
-                  <Input
-                    type="number"
-                    value={form.amount}
-                    onChange={(e) => {
-                      setForm({ ...form, amount: e.target.value });
-                      if (errors.amount) setErrors({ ...errors, amount: "" });
-                    }}
-                    placeholder="Enter amount"
-                    error={errors.amount}
-                  />
-                </div>
+                {/* Dotted Separator */}
+                <div className="border-t border-dashed border-blue-300 dark:border-blue-700" />
 
-                {/* Narration */}
+                {/* Row 2: Opp. Account | Amount */}
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <div className="mb-1.5 flex items-center justify-between">
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Opp. Account <span className="text-red-500">*</span>
+                      </label>
+                    </div>
+                    <Combobox
+                      data={OPP_ACCOUNTS_WITH_BALANCE}
+                      displayField="label"
+                      value={form.oppAccount}
+                      onChange={(value: any) => {
+                        setForm({ ...form, oppAccount: value });
+                        if (errors.oppAccount)
+                          setErrors({ ...errors, oppAccount: "" });
+                      }}
+                      placeholder="Select Opp. Account"
+                      searchFields={["label"]}
+                      error={errors.oppAccount}
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Amount <span className="text-red-500">*</span>
+                    </label>
+                    <Input
+                      type="number"
+                      value={form.amount}
+                      onChange={(e) => {
+                        setForm({ ...form, amount: e.target.value });
+                        if (errors.amount) setErrors({ ...errors, amount: "" });
+                      }}
+                      placeholder="Enter amount"
+                      error={errors.amount}
+                    />
+                  </div>
+                </div>
+                {/* Row 3: Narration */}
                 <div>
                   <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Narration
@@ -1003,7 +998,7 @@ export default function CashReceipt() {
                     onChange={(e) =>
                       setForm({ ...form, narration: e.target.value })
                     }
-                    placeholder="Enter narration"
+                    placeholder="Enter Narration"
                     className="dark:border-dark-500 dark:bg-dark-600 w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm"
                   />
                 </div>
