@@ -283,6 +283,9 @@ useEffect(() => {
                   Balance
                 </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+  Closing Balance
+</Th>
+                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Mobile
                 </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
@@ -328,8 +331,11 @@ useEffect(() => {
                       {item.printName}
                     </Td>
                     <Td className="dark:text-dark-200 py-4 text-gray-600">
-                      {item.openingBalance}
+                       {item.openingBalance} {item.drCr}
                     </Td>
+                    <Td className="dark:text-dark-200 py-4 text-gray-600">
+{item.closingBalance} {item.drCr}
+</Td>
                     <Td className="dark:text-dark-200 py-4 text-gray-600">
                       {item.mobile}
                     </Td>
