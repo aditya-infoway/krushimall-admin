@@ -17,7 +17,7 @@ import { Link } from "react-router";
 import { Avatar, AvatarDot, Button } from "@/components/ui";
 import { ColorType } from "@/constants/app";
 import { useEffect, useState } from "react";
-import axios from "@/utils/axios";
+import apiHelper from "@/utils/apiHelper";
 // Define Link Types
 interface LinkItem {
   id: string;
@@ -81,24 +81,28 @@ export function Profile() {
   }, []);
 
   const fetchCompany = async () => {
-    try {
-      const response = await axios.get("/company");
-      setCompany(response.data.data[0]);
-    } catch (error) {
-      console.error(error);
-    }
-  };
+  try {
+    const response = await apiHelper.get("/company");
+    // Handle different response structures
+    const companyData = response?.data?.data?.[0] || response?.data?.[0] || response;
+    setCompany(companyData);
+  } catch (error) {
+    console.error("Failed to fetch company:", error);
+  }
+};
+
+const getCompanyLogo = () => {
+  if (!company?.logo) return "/images/avatar/avatar-12.jpg";
+  return apiHelper.getImageUrl(company.logo);
+};
+
   return (
     <Popover className="relative">
       <PopoverButton
         as={Avatar}
         size={12}
         role="button"
-        src={
-          company?.logo
-            ? `http://192.168.1.38:5000/uploads/${company.logo}`
-            : "/images/avatar/avatar-12.jpg"
-        }
+      src={getCompanyLogo()}
         alt="Profile"
         indicator={
           <AvatarDot color="success" className="ltr:right-0 rtl:left-0" />
@@ -121,14 +125,10 @@ export function Profile() {
             <>
               {/* User Info */}
               <div className="dark:bg-dark-800 flex items-center gap-4 rounded-t-lg bg-gray-100 px-4 py-5">
-                <Avatar
-                  size={14}
-                  src={
-                    company?.logo
-                      ? `http://192.168.1.38:5000/uploads/${company.logo}`
-                      : "/images/avatar/avatar-12.jpg"
-                  }
-                />
+               <Avatar
+  size={14}
+  src={getCompanyLogo()}
+/>
                 <div>
                   <Link
                     className="hover:text-primary-600 focus:text-primary-600 dark:text-dark-100 dark:hover:text-primary-400 dark:focus:text-primary-400 text-base font-medium text-gray-700"

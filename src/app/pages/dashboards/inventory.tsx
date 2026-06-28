@@ -23,7 +23,11 @@ import {
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
+   ArrowDownTrayIcon,
+  DocumentArrowDownIcon,
+  ArrowPathIcon,
 } from "@heroicons/react/24/outline";
+import { DatePicker } from "@/components/shared/form/Datepicker";
 
 // ---------- Types ----------
 interface Member {
@@ -200,8 +204,41 @@ export default function Dashboard() {
 
   return (
     <div className="p-6 min-h-screen bg-gray-50 dark:bg-dark-800">
-      <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Dashboard</h2>
-      <p className="mb-6 text-gray-600 dark:text-gray-400">Welcome to the admin dashboard!</p>
+    <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between">
+  <div>
+    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+      Inventory
+    </h2>
+    <p className="text-gray-600 dark:text-gray-400">
+      Welcome to the admin inventory!
+    </p>
+  </div>
+  <div className="mt-3 flex flex-wrap items-center gap-3 sm:mt-0">
+    {/* Date Picker */}
+    <div className="flex items-center gap-2">
+      <DatePicker placeholder="From Date" />
+      <span className="text-gray-400">to</span>
+      <DatePicker placeholder="To Date" />
+    </div>
+
+    {/* PDF Button */}
+    <button className="flex items-center gap-1.5 cursor-pointer rounded-lg border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-dark-600">
+      <DocumentArrowDownIcon className="h-4 w-4" />
+      PDF
+    </button>
+
+    {/* Excel Button */}
+    <button className="flex items-center gap-1.5 cursor-pointer rounded-lg border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-dark-600">
+      <ArrowDownTrayIcon className="h-4 w-4" />
+      Excel
+    </button>
+
+    {/* Refresh Button */}
+    <button className="rounded-lg cursor-pointer border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 p-2 text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-dark-600">
+      <ArrowPathIcon className="h-4 w-4" />
+    </button>
+  </div>
+</div>
 
       {/* 4 Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">

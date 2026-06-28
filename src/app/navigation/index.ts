@@ -7,6 +7,7 @@ import { item } from "./segments/item";
 import { purchase } from "./segments/purchase";
 import { accounting } from "./segments/accounting";
 import { goodcontrol } from "./segments/goodscontrol";
+import { report } from "./segments/report";
 
 
 
@@ -21,5 +22,6 @@ export const navigation = [
   purchase,
   accounting,
   goodcontrol,
+  report
   
 ];

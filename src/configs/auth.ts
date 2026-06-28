@@ -4,4 +4,4 @@
  **/
 
 export const JWT_HOST_API: string =
-  import.meta.env.VITE_API_URL || "http://192.168.1.38:5000/api";
+  import.meta.env.VITE_API_URL || "http://192.168.1.49:5000/api";

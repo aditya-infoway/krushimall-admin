@@ -405,13 +405,6 @@ const TractorPurchaseRegister: React.FC<TractorPurchaseRegisterProps> = ({
                           <PencilIcon className="size-4.5" />
                         </button>
                         <button
-                          onClick={() => handleDeleteRow(item)}
-                          title="Delete"
-                          className="text-red-500 transition-colors hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
-                        >
-                          <TrashIcon className="size-4.5" />
-                        </button>
-                        <button
                           onClick={() => handleInward(item)}
                           title="Inward"
                           className="text-green-500 transition-colors hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"

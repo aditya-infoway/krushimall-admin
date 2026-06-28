@@ -23,7 +23,7 @@ api.interceptors.request.use((config) => {
 // ✅ Add this helper function
 export const getBaseUrl = () => {
   const apiUrl =
-    import.meta.env.VITE_API_URL || "http://192.168.1.38:5000/api";
+    import.meta.env.VITE_API_URL || "http://192.168.1.49:5000/api";
 
   return apiUrl.replace(/\/api$/, "");
 };

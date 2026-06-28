@@ -17,7 +17,7 @@ import { useAuthContext } from "@/app/contexts/auth/context";
 // Local Imports
 import { Avatar, AvatarDot, type AvatarProps, Button } from "@/components/ui";
 import { useEffect, useState } from "react";
-import axios from "@/utils/axios";
+import apiHelper from "@/utils/apiHelper";
 // ----------------------------------------------------------------------
 
 interface LinkItem {
@@ -82,23 +82,28 @@ export function Profile() {
 
   const fetchCompany = async () => {
     try {
-      const response = await axios.get("/company");
-      setCompany(response.data.data[0]);
+      const response = await apiHelper.get("/company");
+      // Handle different response structures
+      const companyData =
+        response?.data?.data?.[0] || response?.data?.[0] || response;
+      setCompany(companyData);
     } catch (error) {
-      console.error(error);
+      console.error("Failed to fetch company:", error);
     }
   };
+
+  const getCompanyLogo = () => {
+    if (!company?.logo) return "/images/avatar/avatar-12.jpg";
+    return apiHelper.getImageUrl(company.logo);
+  };
+
   return (
     <Popover className="relative flex">
       <PopoverButton
         as={Avatar}
         size={9}
         role="button"
-       src={
-  company?.logo
-    ? `http://192.168.1.38:5000/uploads/${company.logo}`
-    : "/images/avatar/avatar-12.jpg"
-}
+        src={getCompanyLogo()}
         indicator={
           <AvatarDot
             color="success"
@@ -122,14 +127,7 @@ export function Profile() {
           {({ close }: { close: () => void }) => (
             <>
               <div className="dark:bg-dark-800 flex items-center gap-4 rounded-t-lg bg-gray-100 px-4 py-5">
-                <Avatar
-                  size={14}
-                  src={
-                    company?.logo
-                      ? `http://192.168.1.38:5000/uploads/${company.logo}`
-                      : "/images/avatar/avatar-12.jpg"
-                  }
-                />
+                <Avatar size={14} src={getCompanyLogo()} />
                 <div>
                   <Link
                     className="hover:text-primary-600 focus:text-primary-600 dark:text-dark-100 dark:hover:text-primary-400"
