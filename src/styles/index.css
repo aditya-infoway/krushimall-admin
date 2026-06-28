@@ -180,3 +180,44 @@
 .react-select__placeholder {
   color: var(--color-gray-400) !important;
 }
+
+
+
+
+/* Custom Scrollbar Styles */
+::-webkit-scrollbar {
+  width: 1px;
+  height: 1px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c7cd;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a0a7ae;
+}
+
+/* Firefox Scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #c1c7cd transparent;
+}
+
+/* Dark mode scrollbar */
+.dark ::-webkit-scrollbar-thumb {
+  background: #4a4f55;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #5a5f65;
+}
+
+.dark * {
+  scrollbar-color: #4a4f55 transparent;
+}

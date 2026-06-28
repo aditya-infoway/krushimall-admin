@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
-import { Combobox } from "@/components/shared/form/StyledCombobox";
+// import { Combobox } from "@/components/shared/form/StyledCombobox";
 import { Checkbox } from "@/components/ui/Form/Checkbox";
 import { XMarkIcon, PlusIcon } from "@heroicons/react/24/outline";
 import { Input } from "@/components/ui";
@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui";
 import Select from "react-select";
 import { Controller, useForm } from "react-hook-form";
 import apiHelper from "@/utils/apiHelper";
+import { Combobox } from "@/components/shared/form/Combobox";
 // ─── Types ──────────────────────────────────────────────────────────────────
 interface AccountForm {
   accountName: string;
@@ -76,6 +77,7 @@ interface ReviewSummaryType {
 interface OptionType {
   id: number;
   name: string;
+    mobile: string;
 }
 
 // Helper function to format date as dd-mm-yyyy
@@ -176,7 +178,7 @@ function CreateAccountModal({
       backgroundColor: "transparent",
       borderColor: state.isFocused
         ? "var(--color-primary-600)"
-        : "var(--color-gray-300)",
+        : "var(--color-gray-700)",
       boxShadow: state.isFocused
         ? "0 0 0 1px var(--color-primary-600)"
         : "none",
@@ -613,7 +615,7 @@ function CreateAccountModal({
             <button
               type="button"
               onClick={handleSubmit(handleFormSubmit)}
-              className="rounded-lg bg-red-600 px-6 py-2 text-sm font-semibold text-white hover:bg-red-700"
+              className="rounded-lg bg-primary-500 px-6 py-2 text-sm font-semibold text-white hover:bg-primary-500"
             >
               Create Account
             </button>
@@ -993,7 +995,7 @@ function ReviewLeadSummaryStep({
   const purchaseTypeOptions = [
     { label: "Cash", value: "Cash" },
     { label: "Finance", value: "Finance" },
-    { label: "Exchange", value: "Exchange" },
+    { label: "Bank", value: "Bank" },
   ];
 
   const [professions, setProfessions] = useState([]);
@@ -1763,6 +1765,7 @@ const [filteredShowroomVariants, setFilteredShowroomVariants] =
           .map((item: any) => ({
             id: item.id,
             name: item.employeeName,
+              role: item.role,
           })),
       );
     } catch (error) {
@@ -1950,6 +1953,8 @@ const [filteredShowroomVariants, setFilteredShowroomVariants] =
 
         panCard: formData.panCard,
         aadharNo: formData.aadharCard,
+         group: "Customer",
+      drCr: "Dr",
       });
 
       console.log("Create Response:", res.data);
@@ -1964,28 +1969,33 @@ const [filteredShowroomVariants, setFilteredShowroomVariants] =
     }
   };
 
-  const fetchCustomers = async () => {
-    try {
-      const res = await apiHelper.get("/accounts");
+ const fetchCustomers = async () => {
+  try {
+    const res = await apiHelper.get("/accounts");
 
-      console.log("Accounts Response:", res.data);
+    const data = Array.isArray(res.data)
+      ? res.data
+      : Array.isArray(res.data?.data)
+      ? res.data.data
+      : [];
 
-      const data = Array.isArray(res.data)
-        ? res.data
-        : Array.isArray(res.data?.data)
-          ? res.data.data
-          : [];
+    const filteredCustomers = data.filter(
+      (item: any) =>
+        item.group === "Customer" ||
+        item.group === "Sundry Debtors"
+    );
 
-      setCustomers(
-        data.map((item: any) => ({
-          id: item.id,
-          name: item.accountName,
-        })),
-      );
-    } catch (error) {
-      console.error("Failed to fetch customers:", error);
-    }
-  };
+    setCustomers(
+      filteredCustomers.map((item: any) => ({
+        id: item.id,
+        name: item.accountName,
+          mobile: item.mobile,
+      }))
+    );
+  } catch (error) {
+    console.error("Failed to fetch customers:", error);
+  }
+};
   const fetchModels = async () => {
     const res = await apiHelper.get("/model");
     const data = Array.isArray(res.data) ? res.data : [];
@@ -2206,22 +2216,39 @@ onChange={handleShowroomVariantChange}
                   </h3>
                   <div className="flex items-start gap-2">
                     <div className="flex-1">
-                      <Combobox
-                        data={customers}
-                        displayField="name"
-                        value={selectedCustomer}
-                        onChange={(val: OptionType | null) => {
-                          setSelectedCustomer(val);
-                          if (errors.customer) {
-                            const newErrors = { ...errors };
-                            delete newErrors.customer;
-                            setErrors(newErrors);
-                          }
-                        }}
-                        placeholder="First Name"
-                        label="First Name"
-                        searchFields={["name"]}
-                      />
+                         <label className="dark:text-dark-200 text-sm font-medium text-gray-700 mb-1 inline-block">
+                    Customer Name
+                    </label>
+                     <Combobox
+  data={customers}
+  value={selectedCustomer}
+  onChange={(val: any) => {
+     console.log(val);
+    setSelectedCustomer(val);
+
+    if (errors.customer) {
+      const newErrors = { ...errors };
+      delete newErrors.customer;
+      setErrors(newErrors);
+    }
+  }}
+  displayField="name"
+  placeholder="Search Customer"
+  searchFields={["label", "mobile"]}
+  columns={[
+    {
+      header: "Customer",
+      field: "name",
+      width: "2fr",
+    },
+    {
+      header: "Mobile",
+      field: "mobile",
+      width: "1.5fr",
+    },
+   
+  ]}
+/>
                       {errors.customer && (
                         <span className="text-xs text-orange-500">
                           {errors.customer}
@@ -2239,22 +2266,38 @@ onChange={handleShowroomVariantChange}
                     <label className="dark:text-dark-200 text-sm font-medium text-gray-700">
                       Sales Executive
                     </label>
-                    <Combobox
-                      data={executives}
-                      displayField="name"
-                      value={selectedExecutive}
-                      onChange={(val: OptionType | null) => {
-                        setSelectedExecutive(val);
+                   <Combobox
+  data={executives.map((item: any) => ({
+    id: item.id,
+    name: item.name,
+    role: item.role,
+  }))}
+  displayField="name"
+  value={selectedExecutive}
+  onChange={(val: any) => {
+    setSelectedExecutive(val);
 
-                        if (errors.executive) {
-                          const newErrors = { ...errors };
-                          delete newErrors.executive;
-                          setErrors(newErrors);
-                        }
-                      }}
-                      placeholder="Select Sales Executive"
-                      searchFields={["name"]}
-                    />
+    if (errors.executive) {
+      const newErrors = { ...errors };
+      delete newErrors.executive;
+      setErrors(newErrors);
+    }
+  }}
+  placeholder="Select Sales Executive"
+  searchFields={["name", "role"]}
+  columns={[
+    {
+      header: "Name",
+      field: "name",
+      width: "2fr",
+    },
+    {
+      header: "Role",
+      field: "role",
+      width: "1fr",
+    },
+  ]}
+/>
                     {errors.executive && (
                       <span className="text-xs text-orange-500">
                         {errors.executive}

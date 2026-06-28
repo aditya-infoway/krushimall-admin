@@ -891,7 +891,7 @@ export default function BankReceipt() {
             leaveFrom="translate-x-0"
             leaveTo="translate-x-full"
           >
-            <DialogPanel className="dark:bg-dark-700 fixed top-0 right-0 flex h-full w-full max-w-xl transform-gpu flex-col bg-white shadow-2xl transition-transform duration-200">
+            <DialogPanel className="dark:bg-dark-700 fixed top-0 right-0 flex h-full w-full max-w-4xl transform-gpu flex-col bg-white shadow-2xl transition-transform duration-200">
               <div className="dark:border-dark-500 flex items-center justify-between border-b border-gray-200 px-5 py-4">
                 <h2 className="dark:text-dark-50 text-lg font-semibold text-gray-800">
                   {editId !== null ? "Edit Bank Receipt" : "Add Bank Receipt"}
@@ -906,180 +906,171 @@ export default function BankReceipt() {
 
               <div className="grow space-y-5 overflow-y-auto p-5">
                 {/* Radio Buttons - Three options */}
-                <div className="flex flex-wrap gap-6">
-                  <Radio
-                    label="Manual"
-                    name="type"
-                    checked={form.type === "Manual"}
-                    onChange={() => {
-                      setForm({
-                        ...form,
-                        type: "Manual",
-                        leadNo: "",
-                        jobCardNo: "",
-                      });
-                      if (errors.leadNo) setErrors({ ...errors, leadNo: "" });
-                      if (errors.jobCardNo)
-                        setErrors({ ...errors, jobCardNo: "" });
-                    }}
-                  />
-                  <Radio
-                    label="Lead Cancel"
-                    name="type"
-                    checked={form.type === "Lead Cancel"}
-                    onChange={() => {
-                      setForm({ ...form, type: "Lead Cancel", jobCardNo: "" });
-                      if (errors.jobCardNo)
-                        setErrors({ ...errors, jobCardNo: "" });
-                    }}
-                  />
-                  <Radio
-                    label="Job Card"
-                    name="type"
-                    checked={form.type === "Job Card"}
-                    onChange={() => {
-                      setForm({ ...form, type: "Job Card", leadNo: "" });
-                      if (errors.leadNo) setErrors({ ...errors, leadNo: "" });
-                    }}
-                  />
-                </div>
-
-                {/* Lead No - Show when Lead Cancel is selected */}
-                {form.type === "Lead Cancel" && (
-                  <div>
-                    <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Lead No. <span className="text-red-500">*</span>
-                    </label>
-                    <Combobox
-                      data={leadOptions}
-                      displayField="label"
-                      value={form.leadNo}
-                      onChange={(value: any) => {
-                        setForm({ ...form, leadNo: value });
+                {/* Radio Buttons + Lead/Job Card inline */}
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  {/* Left side - Radio buttons */}
+                  <div className="flex flex-wrap items-center gap-3 sm:gap-6">
+                    <Radio
+                      label="Manual"
+                      name="type"
+                      checked={form.type === "Manual"}
+                      onChange={() => {
+                        setForm({
+                          ...form,
+                          type: "Manual",
+                          leadNo: "",
+                          jobCardNo: "",
+                        });
                         if (errors.leadNo) setErrors({ ...errors, leadNo: "" });
-                      }}
-                      placeholder="Search or select lead..."
-                      searchFields={["label"]}
-                      error={errors.leadNo}
-                    />
-                  </div>
-                )}
-
-                {/* Job Card No - Show when Job Card is selected */}
-                {form.type === "Job Card" && (
-                  <div>
-                    <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Job Card No. <span className="text-red-500">*</span>
-                    </label>
-                    <Combobox
-                      data={jobCardOptions}
-                      displayField="label"
-                      value={form.jobCardNo}
-                      onChange={(value: any) => {
-                        setForm({ ...form, jobCardNo: value });
                         if (errors.jobCardNo)
                           setErrors({ ...errors, jobCardNo: "" });
                       }}
-                      placeholder="Search or select job card..."
-                      searchFields={["label"]}
-                      error={errors.jobCardNo}
+                    />
+                    <Radio
+                      label="Lead Cancel"
+                      name="type"
+                      checked={form.type === "Lead Cancel"}
+                      onChange={() => {
+                        setForm({
+                          ...form,
+                          type: "Lead Cancel",
+                          jobCardNo: "",
+                        });
+                        if (errors.jobCardNo)
+                          setErrors({ ...errors, jobCardNo: "" });
+                      }}
+                    />
+                    <Radio
+                      label="Job Card"
+                      name="type"
+                      checked={form.type === "Job Card"}
+                      onChange={() => {
+                        setForm({ ...form, type: "Job Card", leadNo: "" });
+                        if (errors.leadNo) setErrors({ ...errors, leadNo: "" });
+                      }}
                     />
                   </div>
-                )}
-                {/* Bank Account with Combobox */}
-                <div>
-                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Bank Account <span className="text-red-500">*</span>
-                  </label>
-                  <Combobox
-                    data={BANK_ACCOUNTS}
-                    displayField="label"
-                    value={form.bankAccount}
-                    onChange={(value: any) => {
-                      setForm({ ...form, bankAccount: value });
-                      if (errors.bankAccount)
-                        setErrors({ ...errors, bankAccount: "" });
-                    }}
-                    placeholder="Select Bank Account"
-                    searchFields={["label"]}
-                    error={errors.bankAccount}
-                  />
-                </div>
 
-                {/* Voucher No */}
-                <div>
-                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Voucher No.
-                  </label>
-                  <input
-                    type="text"
-                    value={form.voucherNo || ""}
-                    onChange={(e) =>
-                      setForm({ ...form, voucherNo: e.target.value })
-                    }
-                    className="dark:border-dark-500 dark:bg-dark-600 w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm focus:border-red-500 focus:ring-2 focus:ring-red-500"
-                  />
-                </div>
+                  {/* Right side - Combobox */}
+                  <div className="w-full sm:max-w-sm">
+                    {form.type === "Lead Cancel" && (
+                      <Combobox
+                        data={leadOptions}
+                        displayField="label"
+                        value={form.leadNo}
+                        onChange={(value: any) => {
+                          setForm({ ...form, leadNo: value });
+                          if (errors.leadNo)
+                            setErrors({ ...errors, leadNo: "" });
+                        }}
+                        placeholder="Search or select lead..."
+                        searchFields={["label"]}
+                        error={errors.leadNo}
+                      />
+                    )}
 
-                {/* Date with DatePicker */}
-                <div>
-                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Date
-                  </label>
-                  <DatePicker
-                    placeholder="Select date..."
-                    value={form.date}
-                    onChange={(date) => setForm({ ...form, date })}
-                  />
-                </div>
-
-                {/* Opp Account with Combobox - Shows Balance */}
-                <div>
-                  <div className="flex items-center justify-between">
-                    <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Opp. Account <span className="text-red-500">*</span>
-                    </label>
-                    {form.oppAccount && (
-                      <span className="text-sm text-gray-500">
-                        Balance:{" "}
-                        <span
-                          className={`font-semibold ${form.oppAccount.balance?.includes("CR") ? "text-green-600" : "text-red-500"}`}
-                        >
-                          {form.oppAccount.balance || "0.00 DR"}
-                        </span>
-                      </span>
+                    {form.type === "Job Card" && (
+                      <Combobox
+                        data={jobCardOptions}
+                        displayField="label"
+                        value={form.jobCardNo}
+                        onChange={(value: any) => {
+                          setForm({ ...form, jobCardNo: value });
+                          if (errors.jobCardNo)
+                            setErrors({ ...errors, jobCardNo: "" });
+                        }}
+                        placeholder="Search or select job card..."
+                        searchFields={["label"]}
+                        error={errors.jobCardNo}
+                      />
                     )}
                   </div>
-                  <Combobox
-                    data={OPP_ACCOUNTS_WITH_BALANCE}
-                    displayField="label"
-                    value={form.oppAccount}
-                    onChange={(value: any) => {
-                      setForm({ ...form, oppAccount: value });
-                      if (errors.oppAccount)
-                        setErrors({ ...errors, oppAccount: "" });
-                    }}
-                    placeholder="Select Opp. Account"
-                    searchFields={["label"]}
-                    error={errors.oppAccount}
-                  />
+                </div>
+                {/* Bank Account with Combobox */}
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Bank Account <span className="text-red-500">*</span>
+                    </label>
+                    <Combobox
+                      data={BANK_ACCOUNTS}
+                      displayField="label"
+                      value={form.bankAccount}
+                      onChange={(value: any) => {
+                        setForm({ ...form, bankAccount: value });
+                        if (errors.bankAccount)
+                          setErrors({ ...errors, bankAccount: "" });
+                      }}
+                      placeholder="Select Bank Account"
+                      searchFields={["label"]}
+                      error={errors.bankAccount}
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Voucher No.
+                    </label>
+                    <input
+                      type="text"
+                      value={form.voucherNo || ""}
+                      onChange={(e) =>
+                        setForm({ ...form, voucherNo: e.target.value })
+                      }
+                      className="dark:border-dark-500 dark:bg-dark-600 w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm focus:border-red-500 focus:ring-2 focus:ring-red-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Date
+                    </label>
+                    <DatePicker
+                      placeholder="Select date..."
+                      value={form.date}
+                      onChange={(date) => setForm({ ...form, date })}
+                    />
+                  </div>
                 </div>
 
-                {/* Amount */}
-                <div>
-                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Amount <span className="text-red-500">*</span>
-                  </label>
-                  <Input
-                    type="number"
-                    value={form.amount || ""}
-                    onChange={(e) => {
-                      setForm({ ...form, amount: e.target.value });
-                      if (errors.amount) setErrors({ ...errors, amount: "" });
-                    }}
-                    placeholder="Enter amount"
-                    error={errors.amount}
-                  />
+                {/* Dotted Separator */}
+                <div className="border-t border-dashed border-blue-300 dark:border-blue-700" />
+
+                {/* Opp Account with Combobox - Shows Balance */}
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <div className="mb-1.5 flex items-center justify-between">
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Opp. Account <span className="text-red-500">*</span>
+                      </label>
+                    </div>
+                    <Combobox
+                      data={OPP_ACCOUNTS_WITH_BALANCE}
+                      displayField="label"
+                      value={form.oppAccount}
+                      onChange={(value: any) => {
+                        setForm({ ...form, oppAccount: value });
+                        if (errors.oppAccount)
+                          setErrors({ ...errors, oppAccount: "" });
+                      }}
+                      placeholder="Select Opp. Account"
+                      searchFields={["label"]}
+                      error={errors.oppAccount}
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Amount <span className="text-red-500">*</span>
+                    </label>
+                    <Input
+                      type="number"
+                      value={form.amount || ""}
+                      onChange={(e) => {
+                        setForm({ ...form, amount: e.target.value });
+                        if (errors.amount) setErrors({ ...errors, amount: "" });
+                      }}
+                      placeholder="Enter amount"
+                      error={errors.amount}
+                    />
+                  </div>
                 </div>
 
                 {/* Payment Type - Radio Buttons */}
@@ -1087,7 +1078,7 @@ export default function BankReceipt() {
                   <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Payment Type <span className="text-red-500">*</span>
                   </label>
-                  <div className="flex flex-wrap gap-4">
+                  <div className="flex flex-wrap gap-3 sm:gap-4">
                     {PAYMENT_TYPES.map((type) => (
                       <Radio
                         key={type.id}
@@ -1117,10 +1108,10 @@ export default function BankReceipt() {
                     </p>
                   )}
                 </div>
-
+                {/* Cheque Fields - Show only when Cheque is selected */}
                 {/* Cheque Fields - Show only when Cheque is selected */}
                 {form.paymentType?.id === "Cheque" && (
-                  <div className="dark:border-dark-500 space-y-4 rounded-lg border border-gray-200 p-4">
+                  <div className="dark:border-dark-500 grid grid-cols-1 gap-4 rounded-lg border border-gray-200 p-4 sm:grid-cols-2">
                     <div>
                       <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                         Cheque No. <span className="text-red-500">*</span>
@@ -1144,7 +1135,6 @@ export default function BankReceipt() {
                         </p>
                       )}
                     </div>
-
                     <div>
                       <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                         Cheque Date <span className="text-red-500">*</span>
@@ -1164,7 +1154,6 @@ export default function BankReceipt() {
                         </p>
                       )}
                     </div>
-
                     <div>
                       <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                         Cheque Clear Date{" "}
@@ -1187,7 +1176,6 @@ export default function BankReceipt() {
                     </div>
                   </div>
                 )}
-
                 {/* Narration */}
                 <div>
                   <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">

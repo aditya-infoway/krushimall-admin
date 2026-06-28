@@ -21,6 +21,7 @@ import {
   TransitionChild,
 } from "@headlessui/react";
 import { Fragment } from "react";
+import { DatePicker } from "@/components/shared/form/Datepicker";
 import apiHelper from "@/utils/apiHelper";
 
 // ---------- Types ----------
@@ -651,7 +652,7 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
             leaveFrom="translate-x-0"
             leaveTo="translate-x-full"
           >
-            <DialogPanel className="dark:bg-dark-700 fixed top-0 right-0 flex h-full w-full max-w-md transform-gpu flex-col bg-white shadow-2xl transition-transform duration-200">
+            <DialogPanel className="dark:bg-dark-700 fixed top-0 right-0 flex h-full w-full max-w-4xl transform-gpu flex-col bg-white shadow-2xl transition-transform duration-200">
               {/* Header */}
               <div className="dark:border-dark-500 flex items-center justify-between border-b border-gray-200 px-5 py-4">
                 <h2 className="dark:text-dark-50 text-lg font-semibold text-gray-800">
@@ -669,200 +670,234 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
               </div>
 
               {/* Content */}
-              <div className="grow space-y-4 overflow-y-auto p-5">
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Vehicle Sr. No.
-                  </label>
-                  <Input
-                    type="text"
-                    name="vehicleSrNo"
-                    value={inwardData.vehicleSrNo}
-                    onChange={handleInwardChange}
-                    placeholder="Enter vehicle serial number"
-                  />
-                </div>
+              <div className="grow overflow-y-auto p-5">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Vehicle Sr. No.
+                    </label>
+                    <Input
+                      type="text"
+                      name="vehicleSrNo"
+                      value={inwardData.vehicleSrNo}
+                      onChange={handleInwardChange}
+                      placeholder="Enter vehicle serial number"
+                    />
+                  </div>
 
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Chassis No.
-                  </label>
-                  <Input
-                    type="text"
-                    name="chassisNo"
-                    value={inwardData.chassisNo}
-                    onChange={handleInwardChange}
-                    placeholder="Enter chassis number"
-                  />
-                </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Chassis No.
+                    </label>
+                    <Input
+                      type="text"
+                      name="chassisNo"
+                      value={inwardData.chassisNo}
+                      onChange={handleInwardChange}
+                      placeholder="Enter chassis number"
+                    />
+                  </div>
 
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Engine No.
-                  </label>
-                  <Input
-                    type="text"
-                    name="engineNo"
-                    value={inwardData.engineNo}
-                    onChange={handleInwardChange}
-                    placeholder="Enter engine number"
-                  />
-                </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Engine No.
+                    </label>
+                    <Input
+                      type="text"
+                      name="engineNo"
+                      value={inwardData.engineNo}
+                      onChange={handleInwardChange}
+                      placeholder="Enter engine number"
+                    />
+                  </div>
 
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    MFG Date
-                  </label>
-                  <Input
-                    type="date"
-                    name="mfgDate"
-                    value={inwardData.mfgDate}
-                    onChange={handleInwardChange}
-                  />
-                </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      MFG Date
+                    </label>
+                    <DatePicker
+                      placeholder="Select MFG Date"
+                      value={inwardData.mfgDate}
+                      onChange={(selectedDates: Date[]) => {
+                        if (selectedDates && selectedDates.length > 0) {
+                          const date = selectedDates[0];
+                          const formattedDate =
+                            date instanceof Date
+                              ? date.toISOString().split("T")[0]
+                              : date;
+                          setInwardData({
+                            ...inwardData,
+                            mfgDate: formattedDate as string,
+                          });
+                        }
+                      }}
+                    />
+                  </div>
 
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Key No.
-                  </label>
-                  <Input
-                    type="text"
-                    name="keyNo"
-                    value={inwardData.keyNo}
-                    onChange={handleInwardChange}
-                    placeholder="Enter key number"
-                  />
-                </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Key No.
+                    </label>
+                    <Input
+                      type="text"
+                      name="keyNo"
+                      value={inwardData.keyNo}
+                      onChange={handleInwardChange}
+                      placeholder="Enter key number"
+                    />
+                  </div>
 
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Battery Make
-                  </label>
-                  <Input
-                    type="text"
-                    name="batteryMake"
-                    value={inwardData.batteryMake}
-                    onChange={handleInwardChange}
-                    placeholder="Enter battery make"
-                  />
-                </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Battery Make
+                    </label>
+                    <Input
+                      type="text"
+                      name="batteryMake"
+                      value={inwardData.batteryMake}
+                      onChange={handleInwardChange}
+                      placeholder="Enter battery make"
+                    />
+                  </div>
 
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Battery No.
-                  </label>
-                  <Input
-                    type="text"
-                    name="batteryNo"
-                    value={inwardData.batteryNo}
-                    onChange={handleInwardChange}
-                    placeholder="Enter battery number"
-                  />
-                </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Battery No.
+                    </label>
+                    <Input
+                      type="text"
+                      name="batteryNo"
+                      value={inwardData.batteryNo}
+                      onChange={handleInwardChange}
+                      placeholder="Enter battery number"
+                    />
+                  </div>
 
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    First 1 Tyer No.
-                  </label>
-                  <Input
-                    type="text"
-                    name="first1TyerNo"
-                    value={inwardData.first1TyerNo}
-                    onChange={handleInwardChange}
-                    placeholder="Enter first 1 tyer number"
-                  />
-                </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      First 1 Tyer No.
+                    </label>
+                    <Input
+                      type="text"
+                      name="first1TyerNo"
+                      value={inwardData.first1TyerNo}
+                      onChange={handleInwardChange}
+                      placeholder="Enter first 1 tyer number"
+                    />
+                  </div>
 
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    First 2 Tyer No.
-                  </label>
-                  <Input
-                    type="text"
-                    name="first2TyerNo"
-                    value={inwardData.first2TyerNo}
-                    onChange={handleInwardChange}
-                    placeholder="Enter first 2 tyer number"
-                  />
-                </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      First 2 Tyer No.
+                    </label>
+                    <Input
+                      type="text"
+                      name="first2TyerNo"
+                      value={inwardData.first2TyerNo}
+                      onChange={handleInwardChange}
+                      placeholder="Enter first 2 tyer number"
+                    />
+                  </div>
 
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Second 1 Tyer No.
-                  </label>
-                  <Input
-                    type="text"
-                    name="second1TyerNo"
-                    value={inwardData.second1TyerNo}
-                    onChange={handleInwardChange}
-                    placeholder="Enter second 1 tyer number"
-                  />
-                </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Second 1 Tyer No.
+                    </label>
+                    <Input
+                      type="text"
+                      name="second1TyerNo"
+                      value={inwardData.second1TyerNo}
+                      onChange={handleInwardChange}
+                      placeholder="Enter second 1 tyer number"
+                    />
+                  </div>
 
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Second 2 Tyer No.
-                  </label>
-                  <Input
-                    type="text"
-                    name="second2TyerNo"
-                    value={inwardData.second2TyerNo}
-                    onChange={handleInwardChange}
-                    placeholder="Enter second 2 tyer number"
-                  />
-                </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Second 2 Tyer No.
+                    </label>
+                    <Input
+                      type="text"
+                      name="second2TyerNo"
+                      value={inwardData.second2TyerNo}
+                      onChange={handleInwardChange}
+                      placeholder="Enter second 2 tyer number"
+                    />
+                  </div>
 
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Location
-                  </label>
-                  <Input
-                    type="text"
-                    name="location"
-                    value={inwardData.location}
-                    onChange={handleInwardChange}
-                    placeholder="Enter location"
-                  />
-                </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Location
+                    </label>
+                    <Input
+                      type="text"
+                      name="location"
+                      value={inwardData.location}
+                      onChange={handleInwardChange}
+                      placeholder="Enter location"
+                    />
+                  </div>
 
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    GRN Number
-                  </label>
-                  <Input
-                    type="text"
-                    name="grnNumber"
-                    value={inwardData.grnNumber}
-                    onChange={handleInwardChange}
-                    placeholder="Enter GRN number"
-                  />
-                </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      GRN Number
+                    </label>
+                    <Input
+                      type="text"
+                      name="grnNumber"
+                      value={inwardData.grnNumber}
+                      onChange={handleInwardChange}
+                      placeholder="Enter GRN number"
+                    />
+                  </div>
 
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    GRN Date
-                  </label>
-                  <Input
-                    type="date"
-                    name="grnDate"
-                    value={inwardData.grnDate}
-                    onChange={handleInwardChange}
-                  />
-                </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      GRN Date
+                    </label>
+                    <DatePicker
+                      placeholder="Select GRN Date"
+                      value={inwardData.grnDate}
+                      onChange={(selectedDates: Date[]) => {
+                        if (selectedDates && selectedDates.length > 0) {
+                          const date = selectedDates[0];
+                          const formattedDate =
+                            date instanceof Date
+                              ? date.toISOString().split("T")[0]
+                              : date;
+                          setInwardData({
+                            ...inwardData,
+                            grnDate: formattedDate as string,
+                          });
+                        }
+                      }}
+                    />
+                  </div>
 
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    GRN Record Date
-                  </label>
-                  <Input
-                    type="date"
-                    name="grnRecordDate"
-                    value={inwardData.grnRecordDate}
-                    onChange={handleInwardChange}
-                  />
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      GRN Record Date
+                    </label>
+                    <DatePicker
+                      placeholder="Select GRN Record Date"
+                      value={inwardData.grnRecordDate}
+                      onChange={(selectedDates: Date[]) => {
+                        if (selectedDates && selectedDates.length > 0) {
+                          const date = selectedDates[0];
+                          const formattedDate =
+                            date instanceof Date
+                              ? date.toISOString().split("T")[0]
+                              : date;
+                          setInwardData({
+                            ...inwardData,
+                            grnRecordDate: formattedDate as string,
+                          });
+                        }
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
-
               {/* Footer */}
               <div className="dark:border-dark-500 flex items-center justify-end gap-3 border-t border-gray-200 p-5">
                 <Button

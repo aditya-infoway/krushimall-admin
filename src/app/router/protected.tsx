@@ -450,6 +450,32 @@ const protectedRoutes: RouteObject = {
 
 
 
+
+{
+  path: "report",
+  children: [
+    {
+      path: "dynemicreport",
+      lazy: async () => ({
+        Component: (
+          await import("@/app/pages/report/dynemicreport")
+        ).default,
+      }),
+    },
+    //  {
+    //   path: "enquirysource",
+    //   lazy: async () => ({
+    //     Component: (
+    //       await import("@/app/pages/report/enquirysource")
+    //     ).default,
+    //   }),
+    // },
+   
+  ],
+},
+
+
+
       ],
     },
   

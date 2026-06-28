@@ -82,11 +82,15 @@ const statusFilterOptions = [
 ];
 
 const statusColors: Record<TractorInventoryRow["status"], string> = {
-  Available: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
+  Available:
+    "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
   Sold: "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400",
-  "In Transit": "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
-  Pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
-  Reserved: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400",
+  "In Transit":
+    "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
+  Pending:
+    "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
+  Reserved:
+    "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400",
 };
 
 const stockColors = {
@@ -95,7 +99,10 @@ const stockColors = {
 };
 
 const fmt = (n: number) =>
-  n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  n.toLocaleString("en-IN", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 
 const columns = [
   "#",
@@ -246,35 +253,32 @@ const TractorInventory: React.FC<TractorInventoryProps> = ({
     setRows(sampleData);
   }, []);
 
-
   // Add this function with your other handlers
-const handleToggleStock = async (id: string) => {
-  const item = rows.find((row) => row.id === id);
-  if (!item) return;
+  const handleToggleStock = async (id: string) => {
+    const item = rows.find((row) => row.id === id);
+    if (!item) return;
 
-  const newStock = item.stock === "On" ? "Off" : "On";
+    const newStock = item.stock === "On" ? "Off" : "On";
 
-  // Update local state optimistically
-  setRows((prev) =>
-    prev.map((row) =>
-      row.id === id ? { ...row, stock: newStock } : row
-    )
-  );
-
-  // Here you would make your API call
-  try {
-    // await apiHelper.put(`/tractor-inventory/${id}`, { stock: newStock });
-    console.log(`Toggled stock to ${newStock} for item ${id}`);
-  } catch (error) {
-    // Revert on error
+    // Update local state optimistically
     setRows((prev) =>
-      prev.map((row) =>
-        row.id === id ? { ...row, stock: item.stock } : row
-      )
+      prev.map((row) => (row.id === id ? { ...row, stock: newStock } : row)),
     );
-    console.error("Failed to toggle stock:", error);
-  }
-};
+
+    // Here you would make your API call
+    try {
+      // await apiHelper.put(`/tractor-inventory/${id}`, { stock: newStock });
+      console.log(`Toggled stock to ${newStock} for item ${id}`);
+    } catch (error) {
+      // Revert on error
+      setRows((prev) =>
+        prev.map((row) =>
+          row.id === id ? { ...row, stock: item.stock } : row,
+        ),
+      );
+      console.error("Failed to toggle stock:", error);
+    }
+  };
 
   // Filter rows
   const filteredRows = useMemo(() => {
@@ -302,7 +306,7 @@ const handleToggleStock = async (id: string) => {
         ]
           .join(" ")
           .toLowerCase()
-          .includes(q)
+          .includes(q),
       );
     }
 
@@ -343,7 +347,7 @@ const handleToggleStock = async (id: string) => {
     setSelectedIds((prev) =>
       prev.includes(id)
         ? prev.filter((selectedId) => selectedId !== id)
-        : [...prev, id]
+        : [...prev, id],
     );
   };
 
@@ -389,14 +393,10 @@ const handleToggleStock = async (id: string) => {
             <DocumentArrowDownIcon className="size-4.5 text-gray-400" />
             Excel
           </button>
-
-          <Button color="primary" onClick={handleAddTractor} className="w-full sm:w-auto">
-            <PlusIcon className="mr-1.5 size-4.5" />
-            Add 
-          </Button>
         </div>
       </div>
 
+      {/* Search and Filter */}
       {/* Search and Filter */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative w-full max-w-md">
@@ -409,46 +409,47 @@ const handleToggleStock = async (id: string) => {
               setSearch(e.target.value);
               setCurrentPage(1);
             }}
-            className="dark:border-dark-500 dark:bg-dark-800 w-full rounded-lg border border-gray-300 bg-white py-2.5 pr-4 pl-10 text-sm outline-none"
+            className="dark:border-dark-500 dark:bg-dark-800 focus:border-primary-500 focus:ring-primary-500/20 w-full rounded-lg border border-gray-300 bg-white py-2.5 pr-4 pl-10 text-sm transition-all duration-200 outline-none focus:ring-2"
           />
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
-            Stock:
-          </span>
-          <Listbox
-            data={stockFilterOptions}
-            value={
-              stockFilterOptions.find((o) => o.id === selectedStockFilter) ||
-              stockFilterOptions[0]
-            }
-            placeholder="All Stock"
-            onChange={(opt: any) => {
-              setSelectedStockFilter(opt.id);
-              setCurrentPage(1);
+        {/* Status Filter Toggle Buttons - Segmented Control Style */}
+        <div className="dark:bg-dark-700/80  relative inline-flex rounded-lg bg-gray-100/80 p-1 shadow-inner">
+          <div
+            className="dark:bg-dark-600  absolute top-1 bottom-1 rounded-md bg-white shadow-md transition-all duration-300 ease-out"
+            style={{
+              left: `calc(${
+                selectedStatusFilter === "All"
+                  ? "4px"
+                  : selectedStatusFilter === "Available"
+                    ? "calc(33.33% + 4px)"
+                    : "calc(66.66% + 4px)"
+              })`,
+              width: `calc(33.33% - 8px)`,
             }}
-            displayField="name"
           />
-          <span className="dark:text-dark-200 text-sm font-medium text-gray-700 ml-2">
-            Status:
-          </span>
-          <Listbox
-            data={statusFilterOptions}
-            value={
-              statusFilterOptions.find((o) => o.id === selectedStatusFilter) ||
-              statusFilterOptions[0]
-            }
-            placeholder="All Statuses"
-            onChange={(opt: any) => {
-              setSelectedStatusFilter(opt.id);
-              setCurrentPage(1);
-            }}
-            displayField="name"
-          />
+          {[
+            { id: "All", label: "All" },
+            { id: "Available", label: "Present" },
+            { id: "Sold", label: "Transit" },
+          ].map((option) => (
+            <button
+              key={option.id}
+              onClick={() => {
+                setSelectedStatusFilter(option.id);
+                setCurrentPage(1);
+              }}
+              className={`relative z-10 rounded-md cursor-pointer px-6 py-1.5 text-sm font-medium transition-colors duration-200 ${
+                selectedStatusFilter === option.id
+                  ? "text-gray-900 dark:text-white"
+                  : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
         </div>
       </div>
-
       {/* Table */}
       <div className="dark:bg-dark-800 dark:border-dark-700 rounded-xl border border-gray-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
@@ -468,10 +469,10 @@ const handleToggleStock = async (id: string) => {
                 <Th className="w-16 py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   S.No
                 </Th>
-              
+
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-  Stock
-</Th>
+                  Stock
+                </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Status
                 </Th>
@@ -527,16 +528,16 @@ const handleToggleStock = async (id: string) => {
                   Battery No.
                 </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  First 1 Tyer 
+                  First 1 Tyer
                 </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  First 2 Tyer 
+                  First 2 Tyer
                 </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  Second 1 Tyer 
+                  Second 1 Tyer
                 </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  Second 2 Tyer 
+                  Second 2 Tyer
                 </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   GRN Date
@@ -577,22 +578,22 @@ const handleToggleStock = async (id: string) => {
                       {indexOfFirstItem + index + 1}
                     </Td>
                     <Td className="py-4">
-  <button
-    type="button"
-    onClick={() => handleToggleStock(item.id)}
-    className={`relative h-6 w-12 rounded-full transition-all ${
-      item.stock === "On"
-        ? "bg-primary-500"
-        : "dark:bg-dark-600 bg-gray-300"
-    }`}
-  >
-    <span
-      className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${
-        item.stock === "On" ? "left-6.5" : "left-0.5"
-      }`}
-    />
-  </button>
-</Td>
+                      <button
+                        type="button"
+                        onClick={() => handleToggleStock(item.id)}
+                        className={`relative h-6 w-12 rounded-full transition-all ${
+                          item.stock === "On"
+                            ? "bg-primary-500"
+                            : "dark:bg-dark-600 bg-gray-300"
+                        }`}
+                      >
+                        <span
+                          className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${
+                            item.stock === "On" ? "left-6.5" : "left-0.5"
+                          }`}
+                        />
+                      </button>
+                    </Td>
                     <Td className="py-4">
                       <span
                         className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${statusColors[item.status]}`}
@@ -601,7 +602,9 @@ const handleToggleStock = async (id: string) => {
                       </span>
                     </Td>
                     <Td className="py-4 whitespace-nowrap">{item.location}</Td>
-                    <Td className="py-4 whitespace-nowrap">{item.currentLocation}</Td>
+                    <Td className="py-4 whitespace-nowrap">
+                      {item.currentLocation}
+                    </Td>
                     <Td className="py-4">{item.billNo}</Td>
                     <Td className="py-4">{item.purchaseBillNo}</Td>
                     <Td className="py-4 font-medium">{item.supplierName}</Td>
@@ -610,7 +613,10 @@ const handleToggleStock = async (id: string) => {
                     <Td className="py-4">{item.variant}</Td>
                     <Td className="py-4">
                       <span className="inline-flex items-center gap-1.5">
-                        <span className="inline-block size-3 rounded-full border border-gray-300" style={{ backgroundColor: item.colour.toLowerCase() }} />
+                        <span
+                          className="inline-block size-3 rounded-full border border-gray-300"
+                          style={{ backgroundColor: item.colour.toLowerCase() }}
+                        />
                         {item.colour}
                       </span>
                     </Td>
@@ -656,7 +662,10 @@ const handleToggleStock = async (id: string) => {
               <span>Show</span>
               <Listbox
                 data={entriesOptions}
-                value={entriesOptions.find((o) => o.id === rowsPerPage) || entriesOptions[0]}
+                value={
+                  entriesOptions.find((o) => o.id === rowsPerPage) ||
+                  entriesOptions[0]
+                }
                 onChange={(opt: any) => {
                   setRowsPerPage(opt.id);
                   setCurrentPage(1);
@@ -671,7 +680,9 @@ const handleToggleStock = async (id: string) => {
               <div className="dark:border-dark-700 dark:bg-dark-800 inline-flex items-center space-x-1 rounded-lg border border-gray-200 bg-white p-1 shadow-sm">
                 <button
                   type="button"
-                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
                   disabled={currentPage === 1}
                   className="dark:hover:bg-dark-700 inline-flex size-8 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100 disabled:opacity-40 disabled:hover:bg-transparent dark:text-gray-400"
                 >
@@ -707,7 +718,9 @@ const handleToggleStock = async (id: string) => {
 
                 <button
                   type="button"
-                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                  }
                   disabled={currentPage === totalPages}
                   className="dark:hover:bg-dark-700 inline-flex size-8 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100 disabled:opacity-40 disabled:hover:bg-transparent dark:text-gray-400"
                 >

@@ -39,7 +39,6 @@ const PAYMENT_MODES = [
   { id: "UPI", label: "UPI" },
 ];
 
-
 const initialForm = {
   type: "Manual" as EntryType,
   bankAccount: null as any,
@@ -47,7 +46,7 @@ const initialForm = {
   date: null as any,
   oppAccount: null as any,
   amount: "",
-  paymentMode: PAYMENT_MODES.find(m => m.id === "UPI") || null, // Default to UPI
+  paymentMode: PAYMENT_MODES.find((m) => m.id === "UPI") || null, // Default to UPI
   chequeNo: "",
   chequeDate: null as any,
   chequeClearDate: null as any,
@@ -56,7 +55,6 @@ const initialForm = {
   createdBy: "",
   leadNo: "",
 };
-
 
 interface BankPayment {
   id: number;
@@ -123,9 +121,6 @@ const OPP_ACCOUNTS = [
     balance: "50,000.00 DR",
   },
 ];
-
-
-
 
 const entriesOptions = [
   { id: 10, name: "10" },
@@ -202,37 +197,41 @@ export default function BankPayment() {
     return Object.keys(newErrors).length === 0;
   };
 
-const handleAdd = () => {
-  setEditId(null);
-  setForm({ 
-    ...initialForm, 
-    paymentMode: PAYMENT_MODES.find(m => m.id === "UPI") || null 
-  });
-  setErrors({});
-  setShowDrawer(true);
-};
+  const handleAdd = () => {
+    setEditId(null);
+    setForm({
+      ...initialForm,
+      paymentMode: PAYMENT_MODES.find((m) => m.id === "UPI") || null,
+    });
+    setErrors({});
+    setShowDrawer(true);
+  };
 
   const handleEdit = (item: BankPayment) => {
-  setEditId(item.id);
-  setForm({
-    type: item.type,
-    bankAccount: BANK_ACCOUNTS.find((a) => a.value === item.bankAccount) || null,
-    voucherNo: item.voucherNo,
-    date: item.date,
-    oppAccount: OPP_ACCOUNTS.find((a) => a.value === item.oppAccount) || null,
-    amount: String(item.amount),
-    paymentMode: PAYMENT_MODES.find((a) => a.id === item.paymentMode) || PAYMENT_MODES.find(m => m.id === "UPI") || null,
-    chequeNo: item.chequeNo || "",
-    chequeDate: item.chequeDate || null,
-    chequeClearDate: item.chequeClearDate || null,
-    narration: item.narration,
-    createdType: item.createdType,
-    createdBy: item.createdBy,
-    leadNo: item.leadNo || "",
-  });
-  setErrors({});
-  setShowDrawer(true);
-};
+    setEditId(item.id);
+    setForm({
+      type: item.type,
+      bankAccount:
+        BANK_ACCOUNTS.find((a) => a.value === item.bankAccount) || null,
+      voucherNo: item.voucherNo,
+      date: item.date,
+      oppAccount: OPP_ACCOUNTS.find((a) => a.value === item.oppAccount) || null,
+      amount: String(item.amount),
+      paymentMode:
+        PAYMENT_MODES.find((a) => a.id === item.paymentMode) ||
+        PAYMENT_MODES.find((m) => m.id === "UPI") ||
+        null,
+      chequeNo: item.chequeNo || "",
+      chequeDate: item.chequeDate || null,
+      chequeClearDate: item.chequeClearDate || null,
+      narration: item.narration,
+      createdType: item.createdType,
+      createdBy: item.createdBy,
+      leadNo: item.leadNo || "",
+    });
+    setErrors({});
+    setShowDrawer(true);
+  };
 
   const handleDelete = (id: number) => {
     setRows(rows.filter((row) => row.id !== id));
@@ -261,7 +260,8 @@ const handleAdd = () => {
       amount: parseFloat(form.amount),
       paymentMode: (form.paymentMode?.id || "UPI") as PaymentMode,
       chequeNo: form.paymentMode?.id === "Cheque" ? form.chequeNo : undefined,
-      chequeDate: form.paymentMode?.id === "Cheque" ? form.chequeDate : undefined,
+      chequeDate:
+        form.paymentMode?.id === "Cheque" ? form.chequeDate : undefined,
       chequeClearDate:
         form.paymentMode?.id === "Cheque" ? form.chequeClearDate : undefined,
       narration: form.narration,
@@ -301,36 +301,35 @@ const handleAdd = () => {
     );
   };
 
+  const LEADS = [
+    { id: 1, leadNo: "LEAD-001", name: "John Doe", phone: "9876543210" },
+    { id: 2, leadNo: "LEAD-002", name: "Jane Smith", phone: "9876543211" },
+    { id: 3, leadNo: "LEAD-003", name: "Bob Johnson", phone: "9876543212" },
+    { id: 4, leadNo: "LEAD-004", name: "Alice Brown", phone: "9876543213" },
+    { id: 5, leadNo: "LEAD-005", name: "Charlie Wilson", phone: "9876543214" },
+  ];
 
+  const leadOptions = LEADS.map((lead) => ({
+    value: lead.leadNo,
+    label: `${lead.leadNo} - ${lead.name}`,
+    phone: lead.phone,
+    id: lead.id,
+  }));
 
+  // Transform OPP_ACCOUNTS to include balance on the right
+  const maxLabelLength = Math.max(...OPP_ACCOUNTS.map((a) => a.label.length));
+  const EXTRA_SPACING = 6;
 
-const LEADS = [
-  { id: 1, leadNo: "LEAD-001", name: "John Doe", phone: "9876543210" },
-  { id: 2, leadNo: "LEAD-002", name: "Jane Smith", phone: "9876543211" },
-  { id: 3, leadNo: "LEAD-003", name: "Bob Johnson", phone: "9876543212" },
-  { id: 4, leadNo: "LEAD-004", name: "Alice Brown", phone: "9876543213" },
-  { id: 5, leadNo: "LEAD-005", name: "Charlie Wilson", phone: "9876543214" },
-];
-
-const leadOptions = LEADS.map(lead => ({
-  value: lead.leadNo,
-  label: `${lead.leadNo} - ${lead.name}`,
-  phone: lead.phone,
-  id: lead.id
-}));
-
-// Transform OPP_ACCOUNTS to include balance on the right
-const maxLabelLength = Math.max(...OPP_ACCOUNTS.map(a => a.label.length));
-const EXTRA_SPACING = 6;
-
-const OPP_ACCOUNTS_WITH_BALANCE = OPP_ACCOUNTS.map(account => {
-  const paddedLabel = account.label.padEnd(maxLabelLength + EXTRA_SPACING, ' ');
-  return {
-    ...account,
-    label: `${paddedLabel}${account.balance}`
-  };
-});
-  
+  const OPP_ACCOUNTS_WITH_BALANCE = OPP_ACCOUNTS.map((account) => {
+    const paddedLabel = account.label.padEnd(
+      maxLabelLength + EXTRA_SPACING,
+      " ",
+    );
+    return {
+      ...account,
+      label: `${paddedLabel}${account.balance}`,
+    };
+  });
 
   // Apply filters automatically when any filter changes
   useEffect(() => {
@@ -468,215 +467,215 @@ const OPP_ACCOUNTS_WITH_BALANCE = OPP_ACCOUNTS.map(account => {
       <div className="dark:bg-dark-800 dark:border-dark-700 rounded-xl border border-gray-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[1200px] text-left [&_.table-th]:font-semibold">
-     <thead className="dark:bg-dark-700/60 dark:border-dark-600 border-b border-gray-200 bg-gray-100">
-  <tr>
-    <th className="w-10 py-3.5 px-2 text-center">
-      <input
-        type="checkbox"
-        className="size-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
-        checked={isAllPageSelected}
-        onChange={(e) => handleSelectAll(e.target.checked)}
-      />
-    </th>
-    <th className="w-12 py-3.5 px-3 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400 whitespace-nowrap">
-      S.No
-    </th>
-    <th className="py-3.5 px-3 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
-      Date
-    </th>
-    <th className="py-3.5 px-3 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
-      Voucher No.
-    </th>
-    <th className="py-3.5 px-3 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
-      Type
-    </th>
-    <th className="py-3.5 px-3 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
-      Bank Account
-    </th>
-    <th className="py-3.5 px-3 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
-      Opp. Account
-    </th>
-    <th className="py-3.5 px-3 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
-      Amount
-    </th>
-    <th className="py-3.5 px-3 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
-      Payment Mode
-    </th>
-    <th className="py-3.5 px-3 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
-      Cheque No.
-    </th>
-    <th className="py-3.5 px-3 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
-      Cheque Date
-    </th>
-    <th className="py-3.5 px-3 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
-      Cheque Clear Date
-    </th>
-    <th className="py-3.5 px-3 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
-      Narration
-    </th>
-    <th className="py-3.5 px-3 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
-      Created Type
-    </th>
-    <th className="py-3.5 px-3 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
-      Created By
-    </th>
-    <th className="w-16 py-3.5 px-3 text-center text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
-      Actions
-    </th>
-  </tr>
-</thead>
+            <thead className="dark:bg-dark-700/60 dark:border-dark-600 border-b border-gray-200 bg-gray-100">
+              <tr>
+                <th className="w-10 px-2 py-3.5 text-center">
+                  <input
+                    type="checkbox"
+                    className="size-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                    checked={isAllPageSelected}
+                    onChange={(e) => handleSelectAll(e.target.checked)}
+                  />
+                </th>
+                <th className="w-12 px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                  S.No
+                </th>
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                  Date
+                </th>
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                  Voucher No.
+                </th>
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                  Type
+                </th>
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                  Bank Account
+                </th>
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                  Opp. Account
+                </th>
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                  Amount
+                </th>
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                  Payment Mode
+                </th>
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                  Cheque No.
+                </th>
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                  Cheque Date
+                </th>
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                  Cheque Clear Date
+                </th>
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                  Narration
+                </th>
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                  Created Type
+                </th>
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                  Created By
+                </th>
+                <th className="w-16 px-3 py-3.5 text-center text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                  Actions
+                </th>
+              </tr>
+            </thead>
 
-          <tbody className="dark:divide-dark-700 divide-y divide-gray-200">
-  {currentItems.map((item, index) => {
-    const isRowSelected = selectedIds.includes(item.id);
-    return (
-      <tr
-        key={item.id}
-        className={`${isRowSelected ? "dark:bg-dark-600/30 bg-gray-50/50" : ""} dark:hover:bg-dark-700/40 transition-colors hover:bg-gray-50/30`}
-      >
-        <td className="py-3 px-2 text-center">
-          <input
-            type="checkbox"
-            className="size-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
-            checked={isRowSelected}
-            onChange={() => handleSelectRow(item.id)}
-          />
-        </td>
-        <td className="py-3 px-3 text-sm font-medium text-gray-500 whitespace-nowrap">
-          {indexOfFirstItem + index + 1}
-        </td>
-        <td className="py-3 px-3 text-sm whitespace-nowrap text-gray-900 dark:text-gray-400">
-          {item.date}
-        </td>
-        <td className="py-3 px-3 text-sm font-medium whitespace-nowrap text-gray-900 dark:text-gray-400">
-          {item.voucherNo}
-        </td>
-        <td className="py-3 px-3 whitespace-nowrap">
-          <span
-            className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${
-              item.type === "Manual"
-                ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
-                : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-            }`}
-          >
-            {item.type}
-          </span>
-        </td>
-        <td className="py-3 px-3 text-sm whitespace-nowrap text-gray-600 dark:text-gray-400">
-          {item.bankAccount}
-        </td>
-        <td className="py-3 px-3 text-sm whitespace-nowrap text-gray-600 dark:text-gray-400">
-          {item.oppAccount}
-        </td>
-        <td className="py-3 px-3 text-sm font-semibold whitespace-nowrap text-gray-900 dark:text-gray-400">
-          ₹
-          {item.amount.toLocaleString("en-IN", {
-            minimumFractionDigits: 2,
-          })}
-        </td>
-        <td className="py-3 px-3 text-sm whitespace-nowrap text-gray-600 dark:text-gray-400">
-          <span
-            className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${
-              item.paymentMode === "Cheque"
-                ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
-                : item.paymentMode === "UPI"
-                  ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
-                  : "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-            }`}
-          >
-            {item.paymentMode}
-          </span>
-        </td>
-        <td className="py-3 px-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
-          {item.chequeNo || "-"}
-        </td>
-        <td className="py-3 px-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
-          {item.chequeDate || "-"}
-        </td>
-        <td className="py-3 px-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
-          {item.chequeClearDate || "-"}
-        </td>
-        <td className="py-3 px-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
-          {item.narration}
-        </td>
-        <td className="py-3 px-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
-          {item.createdType}
-        </td>
-        <td className="py-3 px-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
-          {item.createdBy}
-        </td>
-        <td className="py-3 px-3 text-center whitespace-nowrap">
-          <Menu
-            as="div"
-            className="relative inline-block text-left"
-          >
-            <MenuButton className="dark:hover:bg-dark-600 dark:text-dark-200 inline-flex size-8 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-100">
-              <ChevronsUpDown className="size-4" />
-            </MenuButton>
-            <Transition
-              as={Fragment}
-              enter="transition ease-out duration-100"
-              enterFrom="transform opacity-0 scale-95"
-              enterTo="transform opacity-100 scale-100"
-              leave="transition ease-in duration-75"
-              leaveFrom="transform opacity-100 scale-100"
-              leaveTo="transform opacity-0 scale-95"
-            >
-              <MenuItems
-                anchor="bottom end"
-                className="dark:bg-dark-800 dark:ring-dark-500 dark:border-dark-500 z-[100] w-36 rounded-lg border border-gray-100 bg-white p-1 shadow-lg ring-1 ring-black/5 [--anchor-gap:4px] focus:outline-none"
-              >
-                <MenuItem>
-                  {({ active }) => (
-                    <button
-                      type="button"
-                      onClick={() => handleEdit(item)}
-                      className={`${
-                        active
-                          ? "dark:bg-dark-600 bg-gray-50 text-blue-600 dark:text-white"
-                          : "dark:text-dark-200 text-gray-700"
-                      } flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium`}
-                    >
-                      <Edit className="size-4" />
-                      Edit
-                    </button>
-                  )}
-                </MenuItem>
-                <MenuItem>
-                  {({ active }) => (
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(item.id)}
-                      className={`${
-                        active
-                          ? "bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-400"
-                          : "dark:text-dark-200 text-gray-700"
-                      } flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium`}
-                    >
-                      <Trash2 className="size-4" />
-                      Delete
-                    </button>
-                  )}
-                </MenuItem>
-              </MenuItems>
-            </Transition>
-          </Menu>
-        </td>
-      </tr>
-    );
-  })}
+            <tbody className="dark:divide-dark-700 divide-y divide-gray-200">
+              {currentItems.map((item, index) => {
+                const isRowSelected = selectedIds.includes(item.id);
+                return (
+                  <tr
+                    key={item.id}
+                    className={`${isRowSelected ? "dark:bg-dark-600/30 bg-gray-50/50" : ""} dark:hover:bg-dark-700/40 transition-colors hover:bg-gray-50/30`}
+                  >
+                    <td className="px-2 py-3 text-center">
+                      <input
+                        type="checkbox"
+                        className="size-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                        checked={isRowSelected}
+                        onChange={() => handleSelectRow(item.id)}
+                      />
+                    </td>
+                    <td className="px-3 py-3 text-sm font-medium whitespace-nowrap text-gray-500">
+                      {indexOfFirstItem + index + 1}
+                    </td>
+                    <td className="px-3 py-3 text-sm whitespace-nowrap text-gray-900 dark:text-gray-400">
+                      {item.date}
+                    </td>
+                    <td className="px-3 py-3 text-sm font-medium whitespace-nowrap text-gray-900 dark:text-gray-400">
+                      {item.voucherNo}
+                    </td>
+                    <td className="px-3 py-3 whitespace-nowrap">
+                      <span
+                        className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${
+                          item.type === "Manual"
+                            ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                            : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                        }`}
+                      >
+                        {item.type}
+                      </span>
+                    </td>
+                    <td className="px-3 py-3 text-sm whitespace-nowrap text-gray-600 dark:text-gray-400">
+                      {item.bankAccount}
+                    </td>
+                    <td className="px-3 py-3 text-sm whitespace-nowrap text-gray-600 dark:text-gray-400">
+                      {item.oppAccount}
+                    </td>
+                    <td className="px-3 py-3 text-sm font-semibold whitespace-nowrap text-gray-900 dark:text-gray-400">
+                      ₹
+                      {item.amount.toLocaleString("en-IN", {
+                        minimumFractionDigits: 2,
+                      })}
+                    </td>
+                    <td className="px-3 py-3 text-sm whitespace-nowrap text-gray-600 dark:text-gray-400">
+                      <span
+                        className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${
+                          item.paymentMode === "Cheque"
+                            ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
+                            : item.paymentMode === "UPI"
+                              ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
+                              : "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                        }`}
+                      >
+                        {item.paymentMode}
+                      </span>
+                    </td>
+                    <td className="px-3 py-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
+                      {item.chequeNo || "-"}
+                    </td>
+                    <td className="px-3 py-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
+                      {item.chequeDate || "-"}
+                    </td>
+                    <td className="px-3 py-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
+                      {item.chequeClearDate || "-"}
+                    </td>
+                    <td className="px-3 py-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
+                      {item.narration}
+                    </td>
+                    <td className="px-3 py-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
+                      {item.createdType}
+                    </td>
+                    <td className="px-3 py-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
+                      {item.createdBy}
+                    </td>
+                    <td className="px-3 py-3 text-center whitespace-nowrap">
+                      <Menu
+                        as="div"
+                        className="relative inline-block text-left"
+                      >
+                        <MenuButton className="dark:hover:bg-dark-600 dark:text-dark-200 inline-flex size-8 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-100">
+                          <ChevronsUpDown className="size-4" />
+                        </MenuButton>
+                        <Transition
+                          as={Fragment}
+                          enter="transition ease-out duration-100"
+                          enterFrom="transform opacity-0 scale-95"
+                          enterTo="transform opacity-100 scale-100"
+                          leave="transition ease-in duration-75"
+                          leaveFrom="transform opacity-100 scale-100"
+                          leaveTo="transform opacity-0 scale-95"
+                        >
+                          <MenuItems
+                            anchor="bottom end"
+                            className="dark:bg-dark-800 dark:ring-dark-500 dark:border-dark-500 z-[100] w-36 rounded-lg border border-gray-100 bg-white p-1 shadow-lg ring-1 ring-black/5 [--anchor-gap:4px] focus:outline-none"
+                          >
+                            <MenuItem>
+                              {({ active }) => (
+                                <button
+                                  type="button"
+                                  onClick={() => handleEdit(item)}
+                                  className={`${
+                                    active
+                                      ? "dark:bg-dark-600 bg-gray-50 text-blue-600 dark:text-white"
+                                      : "dark:text-dark-200 text-gray-700"
+                                  } flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium`}
+                                >
+                                  <Edit className="size-4" />
+                                  Edit
+                                </button>
+                              )}
+                            </MenuItem>
+                            <MenuItem>
+                              {({ active }) => (
+                                <button
+                                  type="button"
+                                  onClick={() => handleDelete(item.id)}
+                                  className={`${
+                                    active
+                                      ? "bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-400"
+                                      : "dark:text-dark-200 text-gray-700"
+                                  } flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium`}
+                                >
+                                  <Trash2 className="size-4" />
+                                  Delete
+                                </button>
+                              )}
+                            </MenuItem>
+                          </MenuItems>
+                        </Transition>
+                      </Menu>
+                    </td>
+                  </tr>
+                );
+              })}
 
-  {currentItems.length === 0 && (
-    <tr>
-      <td
-        colSpan={16}
-        className="py-12 text-center text-gray-400 dark:text-gray-500"
-      >
-        No bank payments found
-      </td>
-    </tr>
-  )}
-</tbody>
+              {currentItems.length === 0 && (
+                <tr>
+                  <td
+                    colSpan={16}
+                    className="py-12 text-center text-gray-400 dark:text-gray-500"
+                  >
+                    No bank payments found
+                  </td>
+                </tr>
+              )}
+            </tbody>
           </table>
         </div>
 
@@ -842,7 +841,7 @@ const OPP_ACCOUNTS_WITH_BALANCE = OPP_ACCOUNTS.map(account => {
             leaveFrom="translate-x-0"
             leaveTo="translate-x-full"
           >
-            <DialogPanel className="dark:bg-dark-700 fixed top-0 right-0 flex h-full w-full max-w-xl transform-gpu flex-col bg-white shadow-2xl transition-transform duration-200">
+            <DialogPanel className="dark:bg-dark-700 shadow-4xl fixed top-0 right-0 flex h-full w-full max-w-4xl transform-gpu flex-col bg-white transition-transform duration-200">
               <div className="dark:border-dark-500 flex items-center justify-between border-b border-gray-200 px-5 py-4">
                 <h2 className="dark:text-dark-50 text-lg font-semibold text-gray-800">
                   {editId !== null ? "Edit Bank Payment" : "Add Bank Payment"}
@@ -857,137 +856,137 @@ const OPP_ACCOUNTS_WITH_BALANCE = OPP_ACCOUNTS.map(account => {
 
               <div className="grow space-y-5 overflow-y-auto p-5">
                 {/* Radio Buttons */}
-                <div className="flex gap-6">
-                  <Radio
-                    label="Manual"
-                    name="type"
-                    checked={form.type === "Manual"}
-                    onChange={() => {
-                      setForm({ ...form, type: "Manual", leadNo: "" });
-                      if (errors.leadNo) setErrors({ ...errors, leadNo: "" });
-                    }}
-                  />
-                  <Radio
-                    label="Lead Cancel"
-                    name="type"
-                    checked={form.type === "Lead Cancel"}
-                    onChange={() => setForm({ ...form, type: "Lead Cancel" })}
-                  />
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex flex-wrap items-center gap-4 sm:gap-6">
+                    <Radio
+                      label="Manual"
+                      name="type"
+                      checked={form.type === "Manual"}
+                      onChange={() => {
+                        setForm({ ...form, type: "Manual", leadNo: "" });
+                        if (errors.leadNo) setErrors({ ...errors, leadNo: "" });
+                      }}
+                    />
+                    <Radio
+                      label="Lead Cancel"
+                      name="type"
+                      checked={form.type === "Lead Cancel"}
+                      onChange={() => setForm({ ...form, type: "Lead Cancel" })}
+                    />
+                  </div>
+
+                  {form.type === "Lead Cancel" && (
+                    <div className="w-full sm:max-w-sm">
+                      <Combobox
+                        data={leadOptions}
+                        displayField="label"
+                        value={form.leadNo}
+                        onChange={(value: any) => {
+                          setForm({ ...form, leadNo: value });
+                          if (errors.leadNo)
+                            setErrors({ ...errors, leadNo: "" });
+                        }}
+                        placeholder="Search or select lead..."
+                        searchFields={["label"]}
+                        error={errors.leadNo}
+                      />
+                    </div>
+                  )}
                 </div>
-
-                {/* Lead No - Show when Lead Cancel is selected */}
-               {form.type === "Lead Cancel" && (
-  <div>
-    <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-      Lead No. <span className="text-red-500">*</span>
-    </label>
-    <Combobox
-      data={leadOptions}
-      displayField="label"
-      value={form.leadNo}
-      onChange={(value: any) => {
-        setForm({ ...form, leadNo: value });
-        if (errors.leadNo) setErrors({ ...errors, leadNo: "" });
-      }}
-      placeholder="Search or select lead..."
-      searchFields={["label"]}
-      error={errors.leadNo}
-    />
-  </div>
-)}
-
                 {/* Bank Account with Combobox */}
-                <div>
-                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Bank Account <span className="text-red-500">*</span>
-                  </label>
-                  <Combobox
-                    data={BANK_ACCOUNTS}
-                    displayField="label"
-                    value={form.bankAccount}
-                    onChange={(value: any) => {
-                      setForm({ ...form, bankAccount: value });
-                      if (errors.bankAccount)
-                        setErrors({ ...errors, bankAccount: "" });
-                    }}
-                    placeholder="Select Bank Account"
-                    searchFields={["label"]}
-                    error={errors.bankAccount}
-                  />
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Bank Account <span className="text-red-500">*</span>
+                    </label>
+                    <Combobox
+                      data={BANK_ACCOUNTS}
+                      displayField="label"
+                      value={form.bankAccount}
+                      onChange={(value: any) => {
+                        setForm({ ...form, bankAccount: value });
+                        if (errors.bankAccount)
+                          setErrors({ ...errors, bankAccount: "" });
+                      }}
+                      placeholder="Select Bank Account"
+                      searchFields={["label"]}
+                      error={errors.bankAccount}
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Voucher No.
+                    </label>
+                    <input
+                      type="text"
+                      value={form.voucherNo}
+                      onChange={(e) =>
+                        setForm({ ...form, voucherNo: e.target.value })
+                      }
+                      className="dark:border-dark-500 dark:bg-dark-600 w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm focus:border-red-500 focus:ring-2 focus:ring-red-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Date
+                    </label>
+                    <DatePicker
+                      placeholder="Select date..."
+                      value={form.date}
+                      onChange={(date) => setForm({ ...form, date })}
+                    />
+                  </div>
                 </div>
 
-                {/* Voucher No */}
-                <div>
-                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Voucher No.
-                  </label>
-                  <input
-                    type="text"
-                    value={form.voucherNo}
-                    onChange={(e) =>
-                      setForm({ ...form, voucherNo: e.target.value })
-                    }
-                    className="dark:border-dark-500 dark:bg-dark-600 w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm focus:border-red-500 focus:ring-2 focus:ring-red-500"
-                  />
-                </div>
+ {/* Dotted Separator */}
+                <div className="border-t border-dashed border-blue-300 dark:border-blue-700" />
 
-                {/* Date with DatePicker */}
-                <div>
-                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Date
-                  </label>
-                  <DatePicker
-                    placeholder="Select date..."
-                    value={form.date}
-                    onChange={(date) => setForm({ ...form, date })}
-                  />
-                </div>
 
                 {/* Opp Account with Combobox - Shows Balance */}
-                <div>
-                  <div className="flex items-center justify-between">
-                    <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Opp. Account <span className="text-red-500">*</span>
-                    </label>
-                   
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <div className="mb-1.5 flex items-center justify-between">
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Opp. Account <span className="text-red-500">*</span>
+                      </label>
+                    </div>
+                    <Combobox
+                      data={OPP_ACCOUNTS_WITH_BALANCE}
+                      displayField="label"
+                      value={form.oppAccount}
+                      onChange={(value: any) => {
+                        setForm({ ...form, oppAccount: value });
+                        if (errors.oppAccount)
+                          setErrors({ ...errors, oppAccount: "" });
+                      }}
+                      placeholder="Select Opp. Account"
+                      searchFields={["label"]}
+                      error={errors.oppAccount}
+                    />
                   </div>
-                 <Combobox
-  data={OPP_ACCOUNTS_WITH_BALANCE}
-  displayField="label"
-  value={form.oppAccount}
-  onChange={(value: any) => {
-    setForm({ ...form, oppAccount: value });
-    if (errors.oppAccount) setErrors({ ...errors, oppAccount: "" });
-  }}
-  placeholder="Select Opp. Account"
-  searchFields={["label"]}
-  error={errors.oppAccount}
-/>
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Amount <span className="text-red-500">*</span>
+                    </label>
+                    <Input
+                      type="number"
+                      value={form.amount}
+                      onChange={(e) => {
+                        setForm({ ...form, amount: e.target.value });
+                        if (errors.amount) setErrors({ ...errors, amount: "" });
+                      }}
+                      placeholder="Enter amount"
+                      error={errors.amount}
+                    />
+                  </div>
                 </div>
-
-                {/* Amount */}
-                <div>
-                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Amount <span className="text-red-500">*</span>
-                  </label>
-                  <Input
-                    type="number"
-                    value={form.amount}
-                    onChange={(e) => {
-                      setForm({ ...form, amount: e.target.value });
-                      if (errors.amount) setErrors({ ...errors, amount: "" });
-                    }}
-                    placeholder="Enter amount"
-                    error={errors.amount}
-                  />
-                </div>
-
+                {/* Payment Mode - Radio Buttons */}
                 {/* Payment Mode - Radio Buttons */}
                 <div>
                   <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Payment Mode <span className="text-red-500">*</span>
                   </label>
-                  <div className="flex flex-wrap gap-4">
+                  <div className="flex flex-wrap gap-3 sm:gap-4">
                     {PAYMENT_MODES.map((mode) => (
                       <Radio
                         key={mode.id}
@@ -1017,10 +1016,9 @@ const OPP_ACCOUNTS_WITH_BALANCE = OPP_ACCOUNTS.map(account => {
                     </p>
                   )}
                 </div>
-
                 {/* Cheque Fields - Show only when Cheque is selected */}
                 {form.paymentMode?.id === "Cheque" && (
-                  <div className="space-y-4 rounded-lg border border-gray-200 p-4 dark:border-dark-500">
+                  <div className="dark:border-dark-500 grid grid-cols-1 gap-4 rounded-lg border border-gray-200 p-4 sm:grid-cols-2">
                     <div>
                       <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                         Cheque No. <span className="text-red-500">*</span>
@@ -1035,8 +1033,8 @@ const OPP_ACCOUNTS_WITH_BALANCE = OPP_ACCOUNTS.map(account => {
                         }}
                         placeholder="Enter cheque number"
                         className={`dark:border-dark-500 dark:bg-dark-600 w-full rounded-lg border ${
-                          errors.chequeNo ? "border-red-500" : "border-gray-300"
-                        } bg-white px-4 py-2.5 text-sm focus:border-red-500 focus:ring-2 focus:ring-red-500`}
+                          errors.chequeNo ? "border-red-500" : "border-blue-500"
+                        } bg-white px-4 py-2.5 text-sm `}
                       />
                       {errors.chequeNo && (
                         <p className="mt-1 text-sm text-red-500">
@@ -1044,7 +1042,6 @@ const OPP_ACCOUNTS_WITH_BALANCE = OPP_ACCOUNTS.map(account => {
                         </p>
                       )}
                     </div>
-
                     <div>
                       <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                         Cheque Date <span className="text-red-500">*</span>
@@ -1064,10 +1061,10 @@ const OPP_ACCOUNTS_WITH_BALANCE = OPP_ACCOUNTS.map(account => {
                         </p>
                       )}
                     </div>
-
                     <div>
                       <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Cheque Clear Date <span className="text-red-500">*</span>
+                        Cheque Clear Date{" "}
+                        <span className="text-red-500">*</span>
                       </label>
                       <DatePicker
                         placeholder="Select cheque clear date..."
@@ -1086,20 +1083,18 @@ const OPP_ACCOUNTS_WITH_BALANCE = OPP_ACCOUNTS.map(account => {
                     </div>
                   </div>
                 )}
-
                 {/* Narration */}
                 <div>
                   <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Narration
                   </label>
                   <Textarea
-                    
                     value={form.narration}
                     onChange={(e) =>
                       setForm({ ...form, narration: e.target.value })
                     }
                     placeholder="Enter narration"
-                    className="dark:border-dark-500 dark:bg-dark-600 w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm "
+                    className="dark:border-dark-500 dark:bg-dark-600 w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm"
                   />
                 </div>
               </div>
