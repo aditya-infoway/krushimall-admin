@@ -1,7 +1,7 @@
 // src/app/pages/purchase/tractor/add.tsx
 import React, { useState, useMemo, useEffect } from "react";
 import type { PurchaseRegisterRow } from "./register";
-import { useNavigate } from "react-router-dom";
+import { useNavigate,useParams  } from "react-router-dom";
 import {
   XMarkIcon,
   CheckIcon,
@@ -46,16 +46,31 @@ interface VehicleOption {
 
 interface ItemRow {
   id: string;
+
   item: string;
   itemCode: string;
+
+  shortName: string;
+  hsnCode: string;
+  taxSlab: string;
+
+  modelName: string;
+  variantName: string;
+
+  typeOfFuel: string;
+  fuelCapacity: string;
+
   color: string;
+
   chassisNo: string;
   engineNo: string;
+
   qty: number;
   ratePer: string;
   gstPercent: string;
   amount: string;
   saved: boolean;
+   inwardStatus: "Pending" | "Inward";
 }
 
 interface PartyOption {
@@ -173,16 +188,31 @@ const nextRowId = () => `row-${rowIdSeq++}`;
 const DEFAULT_QTY = 1;
 
 const emptyDraft = (): ItemRow => ({
-  id: nextRowId(),
+   id: nextRowId(),
+
   item: "",
   itemCode: "",
+
+  shortName: "",
+  hsnCode: "",
+  taxSlab: "",
+
+  modelName: "",
+  variantName: "",
+
+  typeOfFuel: "",
+  fuelCapacity: "",
+
   color: "",
+
   chassisNo: "",
   engineNo: "",
+
   qty: DEFAULT_QTY,
   ratePer: "",
   gstPercent: "",
   amount: "",
+
   saved: false,
 });
 
@@ -274,7 +304,10 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
   onBack,
   // onSaved,
 }) => {
-  const navigate = useNavigate();
+const navigate = useNavigate();
+const { id } = useParams();
+
+const isEdit = !!id;
   const [date, setDate] = useState(() => {
     const d = new Date();
     return d.toISOString().split("T")[0];
@@ -594,6 +627,15 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
       itemCode: v.itemCode,
 
       color: v.colour,
+      shortName: v.shortName,
+hsnCode: v.hsnCode,
+taxSlab: v.taxSlab,
+
+modelName: v.model,
+variantName: v.variant,
+
+typeOfFuel: v.typeOfFuel,
+fuelCapacity: v.fuelCapacity,
 
       qty,
 
@@ -604,10 +646,12 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
       amount: String(amount),
     });
 
-    setVehicleModalOpen(false);
 
-    setVehicleSearch("");
-  };
+  setVehicleModalOpen(false);
+
+  setVehicleSearch("");
+
+};
   const saveDraftRow = () => {
     // Validate all required fields
     if (!draft.item.trim()) {
@@ -872,11 +916,86 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
     }
   };
 
-  useEffect(() => {
+ useEffect(() => {
+  getParties();
+  getTractors();
+
+  if (isEdit) {
+    getPurchase(id!);
+  } else {
     getBillNo();
-    getParties();
-    getTractors();
-  }, []);
+  }
+}, [id]);
+const getPurchase = async (id: string) => {
+  try {
+    const res = await apiHelper.get(`/purchases/${id}`);
+
+    const purchase = res.data;
+
+    setBillNo(purchase.billNo);
+    setPartyId(String(purchase.accountId));
+    setPurchaseBillNo(purchase.purchaseBillNo || "");
+    setPurchaseDate(
+      purchase.purchaseDate?.split("T")[0] || ""
+    );
+    setPurchaseLocation(
+  purchase.purchaseLocation || "Main Branch"
+);
+
+setDueDate(
+  purchase.dueDate
+    ? purchase.dueDate.split("T")[0]
+    : ""
+);
+    setTerms(purchase.terms);
+    setNarration(purchase.narration);
+
+    setFreightCharge(String(purchase.freightCharge));
+    setInsurance(String(purchase.insurance));
+    setOtherCharge(String(purchase.otherCharge));
+    setRoundAmount(String(purchase.roundAmount));
+
+    setBillVerify(
+      purchase.status === "VERIFY"
+        ? "verify"
+        : "not_verify"
+    );
+
+    setRows(
+      purchase.items.map((item: any) => ({
+      id: String(item.id),
+
+    item: item.itemName,
+    itemCode: item.itemCode,
+
+    shortName: item.shortName || "",
+    hsnCode: item.hsnCode || "",
+    taxSlab: item.taxSlab || "",
+
+    modelName: item.modelName || "",
+    variantName: item.variantName || "",
+
+    typeOfFuel: item.fuelType || "",
+    fuelCapacity: item.fuelCapacity || "",
+
+    color: item.color,
+
+    chassisNo: item.chassisNo,
+    engineNo: item.engineNo,
+
+    qty: item.qty,
+    ratePer: String(item.ratePer),
+    gstPercent: String(item.gstPercent),
+    amount: String(item.amount),
+
+    saved: true,
+      inwardStatus: item.status || "Pending",
+      }))
+    );
+  } catch (err) {
+    console.log(err);
+  }
+};
   const updateAccountForm = (key: keyof NewAccountData, value: string) => {
     setAccountForm((f) => ({ ...f, [key]: value }));
   };
@@ -887,6 +1006,8 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
         accountId: partyId,
         purchaseDate: purchaseDate || date,
         purchaseBillNo,
+          purchaseLocation,
+  dueDate,
         terms,
         narration,
 
@@ -905,9 +1026,15 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
         items: rows,
       };
 
-      const res = await apiHelper.post("/purchases", payload);
+    if (isEdit) {
+  await apiHelper.put(`/purchases/${id}`, payload);
+  alert("Purchase Updated Successfully");
+} else {
+  await apiHelper.post("/purchases", payload);
+ 
+}
 
-      console.log(res);
+   
 
       alert("Purchase Saved Successfully");
       navigate("/purchase/tractor");
@@ -928,7 +1055,12 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
       alert(error.response?.data?.message || "Failed to save purchase");
     }
   };
+const handleVerify = async () => {
+  await apiHelper.put(`/purchases/${id}/verify`, null);
+  setBillVerify("verify");
 
+  alert("Purchase Verified");
+};
   const handleBack = () => {
     if (onBack) {
       onBack();
@@ -1425,16 +1557,22 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
                         ₹{r.ratePer}
                       </td>
                       <td className="border border-gray-500 px-3 py-2.5 text-center dark:border-gray-500">
-                        <button
-                          onClick={() => removeRow(r.id)}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400"
-                        >
-                          <XMarkIcon className="h-4 w-4" />
-                        </button>
+                       <button
+  disabled={r.inwardStatus === "Inward"}
+  onClick={() => removeRow(r.id)}
+    className={`inline-flex h-8 w-8 items-center justify-center rounded-lg 
+  ${
+    r.inwardStatus === "Inward"
+      ? "cursor-not-allowed bg-gray-400 text-white"
+      : "border border-red-200 bg-red-50 text-red-600 hover:bg-red-100"
+  }`}
+>
+  <XMarkIcon className="h-4 w-4" />
+</button>
                       </td>
                     </tr>
                   ))}
-
+ 
                   {/* Empty state */}
                   {rows.length === 0 && (
                     <tr>
@@ -1551,19 +1689,21 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
                   Bill Status:
                 </span>
                 <label className="flex cursor-pointer items-center gap-2 text-sm">
-                  <Radio
-                    checked={billVerify === "not_verify"}
-                    onChange={() => setBillVerify("not_verify")}
-                  />
+                 <Radio
+  checked={billVerify === "not_verify"}
+  disabled={billVerify === "verify"}
+  onChange={() => setBillVerify("not_verify")}
+/>
                   <span className="text-gray-600 dark:text-gray-400">
                     Not Verify
                   </span>
                 </label>
                 <label className="flex cursor-pointer items-center gap-2 text-sm">
-                  <Radio
-                    checked={billVerify === "verify"}
-                    onChange={() => setBillVerify("verify")}
-                  />
+                <Radio
+  checked={billVerify === "verify"}
+  disabled={billVerify === "verify"}
+  onChange={handleVerify}
+/>
                   <span className="text-gray-600 dark:text-gray-400">
                     Verify
                   </span>
@@ -1657,9 +1797,10 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
         <div className="flex justify-center px-3 pb-4 sm:px-4 sm:pb-6">
           <button
             onClick={handleSave}
+
             className="bg-primary-500 hover:bg-primary-500 w-full rounded-lg px-8 py-2.5 text-sm font-bold text-white transition-colors sm:w-auto sm:px-12 sm:py-3"
           >
-            Save
+            {isEdit ? "Update" : "Save"}
           </button>
         </div>
       </div>

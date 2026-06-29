@@ -333,6 +333,14 @@ const protectedRoutes: RouteObject = {
             ).default,
           }),
         },
+        {
+  path: ":id",
+  lazy: async () => ({
+    Component: (
+      await import("@/app/pages/purchase/purchasebill")
+    ).default,
+  }),
+},
          {
           path: "inward/:id",
           lazy: async () => ({
