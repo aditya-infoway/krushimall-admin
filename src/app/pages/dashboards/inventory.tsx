@@ -318,14 +318,14 @@ export default function Dashboard() {
                   innerRadius={50}
                   outerRadius={80}
                   dataKey="value"
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
                 >
                   {pieChartData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                   ))}
                 </Pie>
                 <Tooltip 
-                  formatter={(value: number) => [`${value}`, 'Count']}
+                 formatter={(value: any) => [`${value}`, 'Count']}
                   contentStyle={{
                     backgroundColor: 'rgba(255,255,255,0.9)',
                     border: '1px solid #e5e7eb',
@@ -382,7 +382,7 @@ export default function Dashboard() {
         </div>
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-sm">
-            <thead className="bg-gray-50 dark:bg-dark-600">
+            <thead className="bg-gray-50 dark:bg-dark-600 whitespace-nowrap">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Sr No</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Model</th>
@@ -398,7 +398,7 @@ export default function Dashboard() {
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-dark-600">
               {currentItems.map((item, index) => (
-                <tr key={index} className="hover:bg-gray-50 dark:hover:bg-dark-600 transition-colors">
+                <tr key={index} className="hover:bg-gray-50 dark:hover:bg-dark-600 transition-colors whitespace-nowrap">
                   <td className="px-4 py-3 text-gray-500 dark:text-gray-400">{item.srNo}</td>
                   <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">{item.model}</td>
                   <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{item.variant}</td>
