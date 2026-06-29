@@ -338,6 +338,7 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
   return (
     <div className="relative min-h-screen space-y-6 p-4 pb-28 text-gray-900 md:p-6 dark:text-gray-100">
       {/* Header */}
+
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-xl font-semibold text-gray-900 md:text-2xl dark:text-white">
@@ -349,6 +350,7 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          {/* Excel Button */}
           <button
             type="button"
             className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
@@ -356,9 +358,31 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
             <DocumentArrowDownIcon className="size-4.5 text-gray-400" />
             Excel
           </button>
+
+          {/* Back Button */}
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="bg-primary-500 hover:bg-primary-600 inline-flex cursor-pointer items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white transition-colors"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="size-4.5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M10 19l-7-7m0 0l7-7m-7 7h18"
+              />
+            </svg>
+            Back
+          </button>
         </div>
       </div>
-
       {/* Search and Filter */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative w-full max-w-md">
@@ -394,7 +418,6 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
           />
         </div>
       </div>
-
       {/* Table */}
       <div className="dark:bg-dark-800 dark:border-dark-700 rounded-xl border border-gray-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
@@ -623,7 +646,6 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
           </div>
         )}
       </div>
-
       {/* Inward Drawer */}
       <Transition appear show={showDrawer} as={Fragment}>
         <Dialog

@@ -62,7 +62,7 @@ interface PartyOption {
   id: string;
   name: string;
   mobile: number;
-    stateCode: string;
+  stateCode: string;
 }
 
 interface NewAccountData {
@@ -331,27 +331,22 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
   ];
   const [company, setCompany] = useState<any>(null);
 
-const getCompany = async () => {
-  try {
-    const res = await apiHelper.get("/company");
+  const getCompany = async () => {
+    try {
+      const res = await apiHelper.get("/company");
 
-    const companyData = Array.isArray(res.data)
-      ? res.data[0]
-      : res.data;
+      const companyData = Array.isArray(res.data) ? res.data[0] : res.data;
 
-    setCompany(companyData);
-
-   
-  } catch (err) {
-    console.error(err);
-  }
-};
+      setCompany(companyData);
+    } catch (err) {
+      console.error(err);
+    }
+  };
   const getTractors = async () => {
     try {
       const res = await apiHelper.get("/tractors");
 
       const tractors = res.data || [];
-
 
       setVehicleOptions(
         tractors.map((item: any) => ({
@@ -426,15 +421,12 @@ const getCompany = async () => {
       label: c.name,
     }));
   }, [accountForm.countryCode, accountForm.stateCode]);
-const selectedParty = parties.find(
-  (p) => p.id === partyId
-);
+  const selectedParty = parties.find((p) => p.id === partyId);
 
-const isSameState =
-  company?.stateCode === selectedParty?.stateCode;
+  const isSameState = company?.stateCode === selectedParty?.stateCode;
   // Use cityOptions for district as well
-  
-const isPartySelected = !!partyId;
+
+  const isPartySelected = !!partyId;
   const districtOptions = cityOptions;
 
   // ----- derived totals -----
@@ -447,92 +439,67 @@ const isPartySelected = !!partyId;
   // const freightInsuranceOther = freightNum + insuranceNum + otherNum;
   // const newTaxableValue = totalAmount + freightInsuranceOther;
   // const grandTotal = newTaxableValue + roundNum;
- const totalQuantity = rows.reduce(
-  (sum, r) => sum + Number(r.qty || 0),
-  0
-);
+  const totalQuantity = rows.reduce((sum, r) => sum + Number(r.qty || 0), 0);
 
-const totalAmount = rows.reduce(
-  (sum, r) => sum + (Number(r.amount) || 0),
-  0
-);
-const totalPurchasePrice = rows.reduce(
-  (sum, r) =>
-    sum + Number(r.ratePer) * Number(r.qty || 1),
-  0
-);
-const freightNum = Number(freightCharge) || 0;
-const insuranceNum = Number(insurance) || 0;
-const otherNum = Number(otherCharge) || 0;
-const roundNum = Number(roundAmount) || 0;
+  const totalAmount = rows.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
+  const totalPurchasePrice = rows.reduce(
+    (sum, r) => sum + Number(r.ratePer) * Number(r.qty || 1),
+    0,
+  );
+  const freightNum = Number(freightCharge) || 0;
+  const insuranceNum = Number(insurance) || 0;
+  const otherNum = Number(otherCharge) || 0;
+  const roundNum = Number(roundAmount) || 0;
 
-const freightInsuranceOther =
-  freightNum + insuranceNum + otherNum;
+  const freightInsuranceOther = freightNum + insuranceNum + otherNum;
 
-// Purchase value (Without GST)
-const totalValue = rows.reduce(
-  (sum, r) =>
-    sum + Number(r.ratePer) * Number(r.qty || 1),
-  0
-);
+  // Purchase value (Without GST)
+  const totalValue = rows.reduce(
+    (sum, r) => sum + Number(r.ratePer) * Number(r.qty || 1),
+    0,
+  );
 
-let totalGST = 0;
-let totalOtherCharges = 0;
-let totalNetAmount = 0;
+  let totalGST = 0;
+  let totalOtherCharges = 0;
+  let totalNetAmount = 0;
 
-rows.forEach((r) => {
-  const purchasePrice =
-    Number(r.ratePer) * Number(r.qty || 1);
+  rows.forEach((r) => {
+    const purchasePrice = Number(r.ratePer) * Number(r.qty || 1);
 
-  let otherChargesAmount = 0;
+    let otherChargesAmount = 0;
 
-  if (freightInsuranceOther > 0 && totalValue > 0) {
-    otherChargesAmount =
-      (purchasePrice / totalValue) *
-      freightInsuranceOther;
-  }
+    if (freightInsuranceOther > 0 && totalValue > 0) {
+      otherChargesAmount = (purchasePrice / totalValue) * freightInsuranceOther;
+    }
 
-  const taxableAmount =
-    purchasePrice + otherChargesAmount;
+    const taxableAmount = purchasePrice + otherChargesAmount;
 
-const gstAmount = isPartySelected
-  ? (taxableAmount * Number(r.gstPercent || 0)) / 100
-  : 0;
+    const gstAmount = isPartySelected
+      ? (taxableAmount * Number(r.gstPercent || 0)) / 100
+      : 0;
 
-  totalGST += gstAmount;
-  totalOtherCharges += otherChargesAmount;
-  totalNetAmount += taxableAmount + gstAmount;
-});
+    totalGST += gstAmount;
+    totalOtherCharges += otherChargesAmount;
+    totalNetAmount += taxableAmount + gstAmount;
+  });
 
-// Taxable value after adding charges
-const newTaxableValue =
-  totalValue + totalOtherCharges;
+  // Taxable value after adding charges
+  const newTaxableValue = totalValue + totalOtherCharges;
 
-// State-wise GST
-const totalCgst =
-  isPartySelected && isSameState
-    ? Number((totalGST / 2).toFixed(2))
-    : 0;
+  // State-wise GST
+  const totalCgst =
+    isPartySelected && isSameState ? Number((totalGST / 2).toFixed(2)) : 0;
 
-const totalSgst =
-  isPartySelected && isSameState
-    ? Number((totalGST / 2).toFixed(2))
-    : 0;
+  const totalSgst =
+    isPartySelected && isSameState ? Number((totalGST / 2).toFixed(2)) : 0;
 
-const totalIgst =
-  isPartySelected && !isSameState
-    ? Number(totalGST.toFixed(2))
-    : 0;
+  const totalIgst =
+    isPartySelected && !isSameState ? Number(totalGST.toFixed(2)) : 0;
 
-// Grand Total
-const grandTotal = Number(
-  (
-    totalValue +
-    totalOtherCharges +
-    totalGST +
-    roundNum
-  ).toFixed(2)
-);
+  // Grand Total
+  const grandTotal = Number(
+    (totalValue + totalOtherCharges + totalGST + roundNum).toFixed(2),
+  );
   const getAccounts = async () => {
     try {
       const res = await apiHelper.get("/accounts");
@@ -559,7 +526,7 @@ const grandTotal = Number(
 
   useEffect(() => {
     getAccounts();
-      getCompany();
+    getCompany();
   }, []);
   const partyOptions = parties.map((p) => ({
     label: p.name,
@@ -606,51 +573,41 @@ const grandTotal = Number(
   //   setVehicleModalOpen(false);
   //   setVehicleSearch("");
   // };
-const handleVehicleSelect = (v: VehicleOption) => {
+  const handleVehicleSelect = (v: VehicleOption) => {
+    const qty = 1;
 
-  const qty = 1;
+    const rate = Number(v.purchasePriceNoGST);
 
-  const rate = Number(v.purchasePriceNoGST);
+    const gstPercent = Number(v.taxSlab);
 
-  const gstPercent = Number(v.taxSlab);
+    const taxable = rate * qty;
 
+    const gstAmount = (taxable * gstPercent) / 100;
 
+    const amount = taxable + gstAmount;
 
-  const taxable = rate * qty;
+    setDraft({
+      ...emptyDraft(),
 
-  const gstAmount = taxable * gstPercent / 100;
+      item: v.itemName,
 
-  const amount = taxable + gstAmount;
+      itemCode: v.itemCode,
 
+      color: v.colour,
 
+      qty,
 
-  setDraft({
+      ratePer: String(rate),
 
-    ...emptyDraft(),
+      gstPercent: String(gstPercent),
 
-    item: v.itemName,
+      amount: String(amount),
+    });
 
-    itemCode: v.itemCode,
+    setVehicleModalOpen(false);
 
-    color: v.colour,
-
-    qty,
-
-    ratePer: String(rate),
-
-    gstPercent: String(gstPercent),
-
-    amount: String(amount),
-
-  });
-
-
-
-  setVehicleModalOpen(false);
-
-  setVehicleSearch("");
-
-};
+    setVehicleSearch("");
+  };
   const saveDraftRow = () => {
     // Validate all required fields
     if (!draft.item.trim()) {
@@ -791,101 +748,102 @@ const handleVehicleSelect = (v: VehicleOption) => {
     }));
   };
   const handleCreateAccount = async () => {
-  try {
-    const required: (keyof NewAccountData)[] = [
-      "accountName",
-      "mobile",
-      "countryCode",
-      "stateCode",
-      "district",
-      "city",
-      "address",
-      "panCard",
-      "aadharCard",
-      "group",
-    ];
+    try {
+      const required: (keyof NewAccountData)[] = [
+        "accountName",
+        "mobile",
+        "countryCode",
+        "stateCode",
+        "district",
+        "city",
+        "address",
+        "panCard",
+        "aadharCard",
+        "group",
+      ];
 
-    const missing = required.filter((k) => !String(accountForm[k]).trim());
+      const missing = required.filter((k) => !String(accountForm[k]).trim());
 
-    // Supplier & Sundry Creditor require Opening Balance
-   if (accountForm.group === "Sundry Creditor") {
-  if (!accountForm.openingBalance.trim()) {
-    missing.push("openingBalance");
-  }
-}
-
-    // Only Sundry Creditor requires Dr/Cr selection
-    if (accountForm.group === "Sundry Creditor") {
-      if (!accountForm.drCr.trim()) {
-        missing.push("drCr");
+      // Supplier & Sundry Creditor require Opening Balance
+      if (accountForm.group === "Sundry Creditor") {
+        if (!accountForm.openingBalance.trim()) {
+          missing.push("openingBalance");
+        }
       }
+
+      // Only Sundry Creditor requires Dr/Cr selection
+      if (accountForm.group === "Sundry Creditor") {
+        if (!accountForm.drCr.trim()) {
+          missing.push("drCr");
+        }
+      }
+
+      setAccountTouched(true);
+
+      if (missing.length > 0) return;
+
+      const res = await apiHelper.post("/accounts", {
+        accountName: accountForm.accountName,
+        printName: accountForm.accountName,
+
+        mobile: accountForm.mobile,
+
+        country: accountForm.country,
+        countryCode: accountForm.countryCode,
+
+        state: accountForm.state,
+        stateCode: accountForm.stateCode,
+
+        district: accountForm.district,
+        city: accountForm.city,
+
+        address1: accountForm.address,
+
+        panCard: accountForm.panCard,
+        aadharNo: accountForm.aadharCard,
+
+        group: accountForm.group,
+
+        openingBalance:
+          accountForm.group === "Sundry Creditor"
+            ? Number(accountForm.openingBalance)
+            : 0,
+
+        // Supplier -> Always Cr
+        drCr:
+          accountForm.group === "Supplier"
+            ? "Cr"
+            : accountForm.group === "Sundry Creditor"
+              ? accountForm.drCr
+              : null,
+      });
+
+      const account = res.data;
+
+      console.log("API Response:", account);
+
+      if (!account?.id) {
+        console.log("Invalid Response:", account);
+        return;
+      }
+
+      const newParty = {
+        id: account.id,
+        name: account.accountName,
+        mobile: Number(accountForm.mobile),
+        stateCode: accountForm.stateCode,
+      };
+
+      setParties((prev) => [...prev, newParty]);
+      setPartyId(account.id);
+
+      setAccountModalOpen(false);
+      setAccountForm(emptyAccount);
+      setAccountTouched(false);
+    } catch (error) {
+      console.error(error);
     }
-
-    setAccountTouched(true);
-
-    if (missing.length > 0) return;
-
-    const res = await apiHelper.post("/accounts", {
-      accountName: accountForm.accountName,
-      printName: accountForm.accountName,
-
-      mobile: accountForm.mobile,
-
-      country: accountForm.country,
-      countryCode: accountForm.countryCode,
-
-      state: accountForm.state,
-      stateCode: accountForm.stateCode,
-
-      district: accountForm.district,
-      city: accountForm.city,
-
-      address1: accountForm.address,
-
-      panCard: accountForm.panCard,
-      aadharNo: accountForm.aadharCard,
-
-      group: accountForm.group,
-
-      openingBalance:
-      
-        accountForm.group === "Sundry Creditor"
-          ? Number(accountForm.openingBalance)
-          : 0,
-
-      // Supplier -> Always Cr
-      drCr:
-        accountForm.group === "Supplier"
-          ? "Cr"
-          : accountForm.group === "Sundry Creditor"
-          ? accountForm.drCr
-          : null,
-    });
-
-    const account = res.data;
-
-    console.log("API Response:", account);
-
-    if (!account?.id) {
-      console.log("Invalid Response:", account);
-      return;
-    }
-
-    const newParty = {
-      id: account.id,
-      name: account.accountName,
-    };
-
-    setParties((prev) => [...prev, newParty]);
-    setPartyId(account.id);
-
-    setAccountModalOpen(false);
-    setAccountForm(emptyAccount);
-    setAccountTouched(false);
-  } catch (error) {
-    console.error(error);
-  }
-};
+  };
   const getParties = async () => {
     try {
       const res = await apiHelper.get("/accounts");
@@ -906,7 +864,7 @@ const handleVehicleSelect = (v: VehicleOption) => {
             id: acc.id,
             name: acc.accountName,
             mobile: acc.mobile,
-             stateCode: acc.stateCode
+            stateCode: acc.stateCode,
           })),
       );
     } catch (error) {
@@ -940,9 +898,9 @@ const handleVehicleSelect = (v: VehicleOption) => {
         totalQty: totalQuantity,
         totalAmount,
         grandTotal,
-  cgst: totalCgst,
-  sgst: totalSgst,
-  igst: totalIgst,
+        cgst: totalCgst,
+        sgst: totalSgst,
+        igst: totalIgst,
 
         items: rows,
       };
@@ -1067,7 +1025,6 @@ const handleVehicleSelect = (v: VehicleOption) => {
                       }
                     : null
                 }
-                 
                 onChange={(val: any) => setCashAccount(val.value)}
                 displayField="label"
                 placeholder="Search Cash Account"
@@ -1084,7 +1041,6 @@ const handleVehicleSelect = (v: VehicleOption) => {
                     field: "openingBalance",
                     width: "1fr",
                   },
-               
                 ]}
               />
             </div>
@@ -1137,7 +1093,6 @@ const handleVehicleSelect = (v: VehicleOption) => {
                     field: "openingBalance",
                     width: "1fr",
                   },
-                
                 ]}
               />
             </div>
@@ -1237,7 +1192,7 @@ const handleVehicleSelect = (v: VehicleOption) => {
               displayField="label"
             />
           </div>
-          
+
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
               Due Date
@@ -1648,44 +1603,43 @@ const handleVehicleSelect = (v: VehicleOption) => {
                     ₹{fmt(newTaxableValue)}
                   </span>
                 </div>
-               {/* GST */}
-{isPartySelected && (
-  isSameState ? (
-    <>
-      {/* CGST */}
-      <div className="flex items-center justify-between border-b border-gray-200/60 pb-2 dark:border-gray-700/60">
-        <span className="text-sm text-gray-600 dark:text-gray-400">
-          CGST
-        </span>
-        <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
-          ₹{fmt(totalCgst)}
-        </span>
-      </div>
+                {/* GST */}
+                {isPartySelected &&
+                  (isSameState ? (
+                    <>
+                      {/* CGST */}
+                      <div className="flex items-center justify-between border-b border-gray-200/60 pb-2 dark:border-gray-700/60">
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                          CGST
+                        </span>
+                        <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                          ₹{fmt(totalCgst)}
+                        </span>
+                      </div>
 
-      {/* SGST */}
-      <div className="flex items-center justify-between border-b border-gray-200/60 pb-2 dark:border-gray-700/60">
-        <span className="text-sm text-gray-600 dark:text-gray-400">
-          SGST
-        </span>
-        <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
-          ₹{fmt(totalSgst)}
-        </span>
-      </div>
-    </>
-  ) : (
-    <>
-      {/* IGST */}
-      <div className="flex items-center justify-between border-b border-gray-200/60 pb-2 dark:border-gray-700/60">
-        <span className="text-sm text-gray-600 dark:text-gray-400">
-          IGST
-        </span>
-        <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
-          ₹{fmt(totalIgst)}
-        </span>
-      </div>
-    </>
-  )
-)}
+                      {/* SGST */}
+                      <div className="flex items-center justify-between border-b border-gray-200/60 pb-2 dark:border-gray-700/60">
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                          SGST
+                        </span>
+                        <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                          ₹{fmt(totalSgst)}
+                        </span>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      {/* IGST */}
+                      <div className="flex items-center justify-between border-b border-gray-200/60 pb-2 dark:border-gray-700/60">
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                          IGST
+                        </span>
+                        <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                          ₹{fmt(totalIgst)}
+                        </span>
+                      </div>
+                    </>
+                  ))}
                 <div className="flex items-center justify-between rounded-lg bg-blue-600/10 p-2 dark:bg-blue-500/20">
                   <span className="text-sm font-bold text-gray-900 dark:text-white">
                     Grand Total

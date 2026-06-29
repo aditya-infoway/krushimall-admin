@@ -754,7 +754,7 @@ const DynamicReport: React.FC = () => {
         </div>
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-sm">
-            <thead className="dark:bg-dark-600 bg-gray-50">
+            <thead className="dark:bg-dark-600 bg-gray-50 whitespace-nowrap">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Sr. No
@@ -794,7 +794,7 @@ const DynamicReport: React.FC = () => {
                 </th>
               </tr>
             </thead>
-            <tbody className="dark:divide-dark-600 divide-y divide-gray-200">
+            <tbody className="dark:divide-dark-600 divide-y divide-gray-200 whitespace-nowrap">
               {currentItems.map((item) => {
                 // Calculate total enquiry for this row
                 const totalEnquiry =
