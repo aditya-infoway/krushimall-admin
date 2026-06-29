@@ -40,6 +40,30 @@ export default function General() {
     value: city.name,
     label: city.name,
   }));
+  const prefixForOptions = [
+  { value: "CUSTOMER", label: "CUSTOMER" },
+  { value: "PURCHASE", label: "PURCHASE" },
+  { value: "VEHICLE", label: "VEHICLE" },
+  { value: "QUOTATION", label: "QUOTATION" },
+  { value: "LEAD", label: "LEAD" },
+  { value: "JOBCARD", label: "JOB CARD" },
+  { value: "INVOICE", label: "INVOICE" },
+];
+// const prefixForOptions = [
+//   "CUSTOMER",
+//   "PURCHASE",
+//   "VEHICLE",
+//   "QUOTATION",
+//   "LEAD",
+//   "JOBCARD",
+//   "INVOICE",
+// ].map((item) => ({
+//   value: item,
+//   label: item,
+//   isDisabled: prefixes.some(
+//     (p) => p.prefixFor === item && p.id !== editingId
+//   ),
+// }));
   useEffect(() => {
     fetchCompany();
     fetchPrefixes();
@@ -521,7 +545,7 @@ export default function General() {
       <div className="mt-8 flex justify-end gap-3">
         {!isEditing ? (
           <Button color="primary" onClick={() => setIsEditing(true)}>
-            Edit
+           <PencilSquareIcon className="size-4" />
           </Button>
         ) : (
           <>
@@ -545,7 +569,7 @@ export default function General() {
         <h3 className="mb-4 text-lg font-semibold">Prefix Settings</h3>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <Input
+          {/* <Input
             label="Prefix For"
             value={newPrefix.prefixFor}
             onChange={(e) =>
@@ -555,7 +579,28 @@ export default function General() {
               })
             }
             placeholder="CUSTOMER"
-          />
+          /> */}
+          <div>
+  <label className="mb-1 inline-block">
+    Prefix For
+  </label>
+
+  <Select
+    classNamePrefix="react-select"
+    styles={customSelectStyles}
+    options={prefixForOptions}
+    value={prefixForOptions.find(
+      (item) => item.value === newPrefix.prefixFor
+    )}
+    onChange={(selected: any) =>
+      setNewPrefix({
+        ...newPrefix,
+        prefixFor: selected?.value || "",
+      })
+    }
+    placeholder="Select Prefix"
+  />
+</div>
 
           <Input
             label="Prefix"

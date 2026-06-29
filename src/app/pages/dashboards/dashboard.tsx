@@ -962,7 +962,7 @@ export default function Dashboard() {
           </div>
           <div className="custom-scrollbar flex-1 overflow-x-auto">
             <table className="w-full border-collapse text-sm">
-              <thead className="dark:bg-dark-600 bg-gray-50">
+              <thead className="dark:bg-dark-600 bg-gray-50 whitespace-nowrap">
                 <tr>
                   <th className="px-4 py-3 text-center text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                     Customer Name
@@ -993,21 +993,21 @@ export default function Dashboard() {
                     <td className="px-4 py-3 text-center font-medium text-gray-900 dark:text-white">
                       {item.customerName}
                     </td>
-                    <td className="px-4 py-3 text-center text-gray-600 dark:text-gray-300">
+                    <td className="px-4 py-3 text-center text-gray-600 dark:text-gray-300 whitespace-nowrap">
                       {item.number}
                     </td>
-                    <td className="px-4 py-3 text-center text-gray-600 dark:text-gray-300">
+                    <td className="px-4 py-3 text-center text-gray-600 dark:text-gray-300 whitespace-nowrap">
                       {item.model}
                     </td>
                     <td className="px-4 py-3 text-center text-gray-600 dark:text-gray-300">
                       {item.totalService}
                     </td>
-                    <td className="px-4 py-3 text-center text-gray-600 dark:text-gray-300">
+                    <td className="px-4 py-3 text-center text-gray-600 dark:text-gray-300 whitespace-nowrap">
                       {item.type}
                     </td>
                     <td className="px-4 py-3 text-center">
                       <span
-                        className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(item.status)}`}
+                        className={`inline-flex rounded-full px-3 py-1 whitespace-nowrap text-xs font-medium ${getStatusColor(item.status)}`}
                       >
                         {item.status}
                       </span>

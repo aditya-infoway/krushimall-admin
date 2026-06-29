@@ -1,7 +1,7 @@
 // src/app/pages/purchase/tractor/add.tsx
 import React, { useState, useMemo, useEffect } from "react";
 import type { PurchaseRegisterRow } from "./register";
-import { useNavigate } from "react-router-dom";
+import { useNavigate,useParams  } from "react-router-dom";
 import {
   XMarkIcon,
   CheckIcon,
@@ -46,23 +46,38 @@ interface VehicleOption {
 
 interface ItemRow {
   id: string;
+
   item: string;
   itemCode: string;
+
+  shortName: string;
+  hsnCode: string;
+  taxSlab: string;
+
+  modelName: string;
+  variantName: string;
+
+  typeOfFuel: string;
+  fuelCapacity: string;
+
   color: string;
+
   chassisNo: string;
   engineNo: string;
+
   qty: number;
   ratePer: string;
   gstPercent: string;
   amount: string;
   saved: boolean;
+   inwardStatus: "Pending" | "Inward";
 }
 
 interface PartyOption {
   id: string;
   name: string;
   mobile: number;
-    stateCode: string;
+  stateCode: string;
 }
 
 interface NewAccountData {
@@ -173,16 +188,31 @@ const nextRowId = () => `row-${rowIdSeq++}`;
 const DEFAULT_QTY = 1;
 
 const emptyDraft = (): ItemRow => ({
-  id: nextRowId(),
+   id: nextRowId(),
+
   item: "",
   itemCode: "",
+
+  shortName: "",
+  hsnCode: "",
+  taxSlab: "",
+
+  modelName: "",
+  variantName: "",
+
+  typeOfFuel: "",
+  fuelCapacity: "",
+
   color: "",
+
   chassisNo: "",
   engineNo: "",
+
   qty: DEFAULT_QTY,
   ratePer: "",
   gstPercent: "",
   amount: "",
+
   saved: false,
 });
 
@@ -274,7 +304,10 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
   onBack,
   // onSaved,
 }) => {
-  const navigate = useNavigate();
+const navigate = useNavigate();
+const { id } = useParams();
+
+const isEdit = !!id;
   const [date, setDate] = useState(() => {
     const d = new Date();
     return d.toISOString().split("T")[0];
@@ -331,27 +364,22 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
   ];
   const [company, setCompany] = useState<any>(null);
 
-const getCompany = async () => {
-  try {
-    const res = await apiHelper.get("/company");
+  const getCompany = async () => {
+    try {
+      const res = await apiHelper.get("/company");
 
-    const companyData = Array.isArray(res.data)
-      ? res.data[0]
-      : res.data;
+      const companyData = Array.isArray(res.data) ? res.data[0] : res.data;
 
-    setCompany(companyData);
-
-   
-  } catch (err) {
-    console.error(err);
-  }
-};
+      setCompany(companyData);
+    } catch (err) {
+      console.error(err);
+    }
+  };
   const getTractors = async () => {
     try {
       const res = await apiHelper.get("/tractors");
 
       const tractors = res.data || [];
-
 
       setVehicleOptions(
         tractors.map((item: any) => ({
@@ -426,15 +454,12 @@ const getCompany = async () => {
       label: c.name,
     }));
   }, [accountForm.countryCode, accountForm.stateCode]);
-const selectedParty = parties.find(
-  (p) => p.id === partyId
-);
+  const selectedParty = parties.find((p) => p.id === partyId);
 
-const isSameState =
-  company?.stateCode === selectedParty?.stateCode;
+  const isSameState = company?.stateCode === selectedParty?.stateCode;
   // Use cityOptions for district as well
-  
-const isPartySelected = !!partyId;
+
+  const isPartySelected = !!partyId;
   const districtOptions = cityOptions;
 
   // ----- derived totals -----
@@ -447,92 +472,67 @@ const isPartySelected = !!partyId;
   // const freightInsuranceOther = freightNum + insuranceNum + otherNum;
   // const newTaxableValue = totalAmount + freightInsuranceOther;
   // const grandTotal = newTaxableValue + roundNum;
- const totalQuantity = rows.reduce(
-  (sum, r) => sum + Number(r.qty || 0),
-  0
-);
+  const totalQuantity = rows.reduce((sum, r) => sum + Number(r.qty || 0), 0);
 
-const totalAmount = rows.reduce(
-  (sum, r) => sum + (Number(r.amount) || 0),
-  0
-);
-const totalPurchasePrice = rows.reduce(
-  (sum, r) =>
-    sum + Number(r.ratePer) * Number(r.qty || 1),
-  0
-);
-const freightNum = Number(freightCharge) || 0;
-const insuranceNum = Number(insurance) || 0;
-const otherNum = Number(otherCharge) || 0;
-const roundNum = Number(roundAmount) || 0;
+  const totalAmount = rows.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
+  const totalPurchasePrice = rows.reduce(
+    (sum, r) => sum + Number(r.ratePer) * Number(r.qty || 1),
+    0,
+  );
+  const freightNum = Number(freightCharge) || 0;
+  const insuranceNum = Number(insurance) || 0;
+  const otherNum = Number(otherCharge) || 0;
+  const roundNum = Number(roundAmount) || 0;
 
-const freightInsuranceOther =
-  freightNum + insuranceNum + otherNum;
+  const freightInsuranceOther = freightNum + insuranceNum + otherNum;
 
-// Purchase value (Without GST)
-const totalValue = rows.reduce(
-  (sum, r) =>
-    sum + Number(r.ratePer) * Number(r.qty || 1),
-  0
-);
+  // Purchase value (Without GST)
+  const totalValue = rows.reduce(
+    (sum, r) => sum + Number(r.ratePer) * Number(r.qty || 1),
+    0,
+  );
 
-let totalGST = 0;
-let totalOtherCharges = 0;
-let totalNetAmount = 0;
+  let totalGST = 0;
+  let totalOtherCharges = 0;
+  let totalNetAmount = 0;
 
-rows.forEach((r) => {
-  const purchasePrice =
-    Number(r.ratePer) * Number(r.qty || 1);
+  rows.forEach((r) => {
+    const purchasePrice = Number(r.ratePer) * Number(r.qty || 1);
 
-  let otherChargesAmount = 0;
+    let otherChargesAmount = 0;
 
-  if (freightInsuranceOther > 0 && totalValue > 0) {
-    otherChargesAmount =
-      (purchasePrice / totalValue) *
-      freightInsuranceOther;
-  }
+    if (freightInsuranceOther > 0 && totalValue > 0) {
+      otherChargesAmount = (purchasePrice / totalValue) * freightInsuranceOther;
+    }
 
-  const taxableAmount =
-    purchasePrice + otherChargesAmount;
+    const taxableAmount = purchasePrice + otherChargesAmount;
 
-const gstAmount = isPartySelected
-  ? (taxableAmount * Number(r.gstPercent || 0)) / 100
-  : 0;
+    const gstAmount = isPartySelected
+      ? (taxableAmount * Number(r.gstPercent || 0)) / 100
+      : 0;
 
-  totalGST += gstAmount;
-  totalOtherCharges += otherChargesAmount;
-  totalNetAmount += taxableAmount + gstAmount;
-});
+    totalGST += gstAmount;
+    totalOtherCharges += otherChargesAmount;
+    totalNetAmount += taxableAmount + gstAmount;
+  });
 
-// Taxable value after adding charges
-const newTaxableValue =
-  totalValue + totalOtherCharges;
+  // Taxable value after adding charges
+  const newTaxableValue = totalValue + totalOtherCharges;
 
-// State-wise GST
-const totalCgst =
-  isPartySelected && isSameState
-    ? Number((totalGST / 2).toFixed(2))
-    : 0;
+  // State-wise GST
+  const totalCgst =
+    isPartySelected && isSameState ? Number((totalGST / 2).toFixed(2)) : 0;
 
-const totalSgst =
-  isPartySelected && isSameState
-    ? Number((totalGST / 2).toFixed(2))
-    : 0;
+  const totalSgst =
+    isPartySelected && isSameState ? Number((totalGST / 2).toFixed(2)) : 0;
 
-const totalIgst =
-  isPartySelected && !isSameState
-    ? Number(totalGST.toFixed(2))
-    : 0;
+  const totalIgst =
+    isPartySelected && !isSameState ? Number(totalGST.toFixed(2)) : 0;
 
-// Grand Total
-const grandTotal = Number(
-  (
-    totalValue +
-    totalOtherCharges +
-    totalGST +
-    roundNum
-  ).toFixed(2)
-);
+  // Grand Total
+  const grandTotal = Number(
+    (totalValue + totalOtherCharges + totalGST + roundNum).toFixed(2),
+  );
   const getAccounts = async () => {
     try {
       const res = await apiHelper.get("/accounts");
@@ -559,7 +559,7 @@ const grandTotal = Number(
 
   useEffect(() => {
     getAccounts();
-      getCompany();
+    getCompany();
   }, []);
   const partyOptions = parties.map((p) => ({
     label: p.name,
@@ -606,44 +606,45 @@ const grandTotal = Number(
   //   setVehicleModalOpen(false);
   //   setVehicleSearch("");
   // };
-const handleVehicleSelect = (v: VehicleOption) => {
+  const handleVehicleSelect = (v: VehicleOption) => {
+    const qty = 1;
 
-  const qty = 1;
+    const rate = Number(v.purchasePriceNoGST);
 
-  const rate = Number(v.purchasePriceNoGST);
+    const gstPercent = Number(v.taxSlab);
 
-  const gstPercent = Number(v.taxSlab);
+    const taxable = rate * qty;
 
+    const gstAmount = (taxable * gstPercent) / 100;
 
+    const amount = taxable + gstAmount;
 
-  const taxable = rate * qty;
+    setDraft({
+      ...emptyDraft(),
 
-  const gstAmount = taxable * gstPercent / 100;
+      item: v.itemName,
 
-  const amount = taxable + gstAmount;
+      itemCode: v.itemCode,
 
+      color: v.colour,
+      shortName: v.shortName,
+hsnCode: v.hsnCode,
+taxSlab: v.taxSlab,
 
+modelName: v.model,
+variantName: v.variant,
 
-  setDraft({
+typeOfFuel: v.typeOfFuel,
+fuelCapacity: v.fuelCapacity,
 
-    ...emptyDraft(),
+      qty,
 
-    item: v.itemName,
+      ratePer: String(rate),
 
-    itemCode: v.itemCode,
+      gstPercent: String(gstPercent),
 
-    color: v.colour,
-
-    qty,
-
-    ratePer: String(rate),
-
-    gstPercent: String(gstPercent),
-
-    amount: String(amount),
-
-  });
-
+      amount: String(amount),
+    });
 
 
   setVehicleModalOpen(false);
@@ -791,101 +792,102 @@ const handleVehicleSelect = (v: VehicleOption) => {
     }));
   };
   const handleCreateAccount = async () => {
-  try {
-    const required: (keyof NewAccountData)[] = [
-      "accountName",
-      "mobile",
-      "countryCode",
-      "stateCode",
-      "district",
-      "city",
-      "address",
-      "panCard",
-      "aadharCard",
-      "group",
-    ];
+    try {
+      const required: (keyof NewAccountData)[] = [
+        "accountName",
+        "mobile",
+        "countryCode",
+        "stateCode",
+        "district",
+        "city",
+        "address",
+        "panCard",
+        "aadharCard",
+        "group",
+      ];
 
-    const missing = required.filter((k) => !String(accountForm[k]).trim());
+      const missing = required.filter((k) => !String(accountForm[k]).trim());
 
-    // Supplier & Sundry Creditor require Opening Balance
-   if (accountForm.group === "Sundry Creditor") {
-  if (!accountForm.openingBalance.trim()) {
-    missing.push("openingBalance");
-  }
-}
-
-    // Only Sundry Creditor requires Dr/Cr selection
-    if (accountForm.group === "Sundry Creditor") {
-      if (!accountForm.drCr.trim()) {
-        missing.push("drCr");
+      // Supplier & Sundry Creditor require Opening Balance
+      if (accountForm.group === "Sundry Creditor") {
+        if (!accountForm.openingBalance.trim()) {
+          missing.push("openingBalance");
+        }
       }
+
+      // Only Sundry Creditor requires Dr/Cr selection
+      if (accountForm.group === "Sundry Creditor") {
+        if (!accountForm.drCr.trim()) {
+          missing.push("drCr");
+        }
+      }
+
+      setAccountTouched(true);
+
+      if (missing.length > 0) return;
+
+      const res = await apiHelper.post("/accounts", {
+        accountName: accountForm.accountName,
+        printName: accountForm.accountName,
+
+        mobile: accountForm.mobile,
+
+        country: accountForm.country,
+        countryCode: accountForm.countryCode,
+
+        state: accountForm.state,
+        stateCode: accountForm.stateCode,
+
+        district: accountForm.district,
+        city: accountForm.city,
+
+        address1: accountForm.address,
+
+        panCard: accountForm.panCard,
+        aadharNo: accountForm.aadharCard,
+
+        group: accountForm.group,
+
+        openingBalance:
+          accountForm.group === "Sundry Creditor"
+            ? Number(accountForm.openingBalance)
+            : 0,
+
+        // Supplier -> Always Cr
+        drCr:
+          accountForm.group === "Supplier"
+            ? "Cr"
+            : accountForm.group === "Sundry Creditor"
+              ? accountForm.drCr
+              : null,
+      });
+
+      const account = res.data;
+
+      console.log("API Response:", account);
+
+      if (!account?.id) {
+        console.log("Invalid Response:", account);
+        return;
+      }
+
+      const newParty = {
+        id: account.id,
+        name: account.accountName,
+        mobile: Number(accountForm.mobile),
+        stateCode: accountForm.stateCode,
+      };
+
+      setParties((prev) => [...prev, newParty]);
+      setPartyId(account.id);
+
+      setAccountModalOpen(false);
+      setAccountForm(emptyAccount);
+      setAccountTouched(false);
+    } catch (error) {
+      console.error(error);
     }
-
-    setAccountTouched(true);
-
-    if (missing.length > 0) return;
-
-    const res = await apiHelper.post("/accounts", {
-      accountName: accountForm.accountName,
-      printName: accountForm.accountName,
-
-      mobile: accountForm.mobile,
-
-      country: accountForm.country,
-      countryCode: accountForm.countryCode,
-
-      state: accountForm.state,
-      stateCode: accountForm.stateCode,
-
-      district: accountForm.district,
-      city: accountForm.city,
-
-      address1: accountForm.address,
-
-      panCard: accountForm.panCard,
-      aadharNo: accountForm.aadharCard,
-
-      group: accountForm.group,
-
-      openingBalance:
-      
-        accountForm.group === "Sundry Creditor"
-          ? Number(accountForm.openingBalance)
-          : 0,
-
-      // Supplier -> Always Cr
-      drCr:
-        accountForm.group === "Supplier"
-          ? "Cr"
-          : accountForm.group === "Sundry Creditor"
-          ? accountForm.drCr
-          : null,
-    });
-
-    const account = res.data;
-
-    console.log("API Response:", account);
-
-    if (!account?.id) {
-      console.log("Invalid Response:", account);
-      return;
-    }
-
-    const newParty = {
-      id: account.id,
-      name: account.accountName,
-    };
-
-    setParties((prev) => [...prev, newParty]);
-    setPartyId(account.id);
-
-    setAccountModalOpen(false);
-    setAccountForm(emptyAccount);
-    setAccountTouched(false);
-  } catch (error) {
-    console.error(error);
-  }
-};
+  };
   const getParties = async () => {
     try {
       const res = await apiHelper.get("/accounts");
@@ -906,7 +908,7 @@ const handleVehicleSelect = (v: VehicleOption) => {
             id: acc.id,
             name: acc.accountName,
             mobile: acc.mobile,
-             stateCode: acc.stateCode
+            stateCode: acc.stateCode,
           })),
       );
     } catch (error) {
@@ -914,11 +916,86 @@ const handleVehicleSelect = (v: VehicleOption) => {
     }
   };
 
-  useEffect(() => {
+ useEffect(() => {
+  getParties();
+  getTractors();
+
+  if (isEdit) {
+    getPurchase(id!);
+  } else {
     getBillNo();
-    getParties();
-    getTractors();
-  }, []);
+  }
+}, [id]);
+const getPurchase = async (id: string) => {
+  try {
+    const res = await apiHelper.get(`/purchases/${id}`);
+
+    const purchase = res.data;
+
+    setBillNo(purchase.billNo);
+    setPartyId(String(purchase.accountId));
+    setPurchaseBillNo(purchase.purchaseBillNo || "");
+    setPurchaseDate(
+      purchase.purchaseDate?.split("T")[0] || ""
+    );
+    setPurchaseLocation(
+  purchase.purchaseLocation || "Main Branch"
+);
+
+setDueDate(
+  purchase.dueDate
+    ? purchase.dueDate.split("T")[0]
+    : ""
+);
+    setTerms(purchase.terms);
+    setNarration(purchase.narration);
+
+    setFreightCharge(String(purchase.freightCharge));
+    setInsurance(String(purchase.insurance));
+    setOtherCharge(String(purchase.otherCharge));
+    setRoundAmount(String(purchase.roundAmount));
+
+    setBillVerify(
+      purchase.status === "VERIFY"
+        ? "verify"
+        : "not_verify"
+    );
+
+    setRows(
+      purchase.items.map((item: any) => ({
+      id: String(item.id),
+
+    item: item.itemName,
+    itemCode: item.itemCode,
+
+    shortName: item.shortName || "",
+    hsnCode: item.hsnCode || "",
+    taxSlab: item.taxSlab || "",
+
+    modelName: item.modelName || "",
+    variantName: item.variantName || "",
+
+    typeOfFuel: item.fuelType || "",
+    fuelCapacity: item.fuelCapacity || "",
+
+    color: item.color,
+
+    chassisNo: item.chassisNo,
+    engineNo: item.engineNo,
+
+    qty: item.qty,
+    ratePer: String(item.ratePer),
+    gstPercent: String(item.gstPercent),
+    amount: String(item.amount),
+
+    saved: true,
+      inwardStatus: item.status || "Pending",
+      }))
+    );
+  } catch (err) {
+    console.log(err);
+  }
+};
   const updateAccountForm = (key: keyof NewAccountData, value: string) => {
     setAccountForm((f) => ({ ...f, [key]: value }));
   };
@@ -929,6 +1006,8 @@ const handleVehicleSelect = (v: VehicleOption) => {
         accountId: partyId,
         purchaseDate: purchaseDate || date,
         purchaseBillNo,
+          purchaseLocation,
+  dueDate,
         terms,
         narration,
 
@@ -940,16 +1019,22 @@ const handleVehicleSelect = (v: VehicleOption) => {
         totalQty: totalQuantity,
         totalAmount,
         grandTotal,
-  cgst: totalCgst,
-  sgst: totalSgst,
-  igst: totalIgst,
+        cgst: totalCgst,
+        sgst: totalSgst,
+        igst: totalIgst,
 
         items: rows,
       };
 
-      const res = await apiHelper.post("/purchases", payload);
+    if (isEdit) {
+  await apiHelper.put(`/purchases/${id}`, payload);
+  alert("Purchase Updated Successfully");
+} else {
+  await apiHelper.post("/purchases", payload);
+ 
+}
 
-      console.log(res);
+   
 
       alert("Purchase Saved Successfully");
       navigate("/purchase/tractor");
@@ -970,7 +1055,12 @@ const handleVehicleSelect = (v: VehicleOption) => {
       alert(error.response?.data?.message || "Failed to save purchase");
     }
   };
+const handleVerify = async () => {
+  await apiHelper.put(`/purchases/${id}/verify`, null);
+  setBillVerify("verify");
 
+  alert("Purchase Verified");
+};
   const handleBack = () => {
     if (onBack) {
       onBack();
@@ -1067,7 +1157,6 @@ const handleVehicleSelect = (v: VehicleOption) => {
                       }
                     : null
                 }
-                 
                 onChange={(val: any) => setCashAccount(val.value)}
                 displayField="label"
                 placeholder="Search Cash Account"
@@ -1084,7 +1173,6 @@ const handleVehicleSelect = (v: VehicleOption) => {
                     field: "openingBalance",
                     width: "1fr",
                   },
-               
                 ]}
               />
             </div>
@@ -1137,7 +1225,6 @@ const handleVehicleSelect = (v: VehicleOption) => {
                     field: "openingBalance",
                     width: "1fr",
                   },
-                
                 ]}
               />
             </div>
@@ -1237,7 +1324,7 @@ const handleVehicleSelect = (v: VehicleOption) => {
               displayField="label"
             />
           </div>
-          
+
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
               Due Date
@@ -1470,16 +1557,22 @@ const handleVehicleSelect = (v: VehicleOption) => {
                         ₹{r.ratePer}
                       </td>
                       <td className="border border-gray-500 px-3 py-2.5 text-center dark:border-gray-500">
-                        <button
-                          onClick={() => removeRow(r.id)}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400"
-                        >
-                          <XMarkIcon className="h-4 w-4" />
-                        </button>
+                       <button
+  disabled={r.inwardStatus === "Inward"}
+  onClick={() => removeRow(r.id)}
+    className={`inline-flex h-8 w-8 items-center justify-center rounded-lg 
+  ${
+    r.inwardStatus === "Inward"
+      ? "cursor-not-allowed bg-gray-400 text-white"
+      : "border border-red-200 bg-red-50 text-red-600 hover:bg-red-100"
+  }`}
+>
+  <XMarkIcon className="h-4 w-4" />
+</button>
                       </td>
                     </tr>
                   ))}
-
+ 
                   {/* Empty state */}
                   {rows.length === 0 && (
                     <tr>
@@ -1596,19 +1689,21 @@ const handleVehicleSelect = (v: VehicleOption) => {
                   Bill Status:
                 </span>
                 <label className="flex cursor-pointer items-center gap-2 text-sm">
-                  <Radio
-                    checked={billVerify === "not_verify"}
-                    onChange={() => setBillVerify("not_verify")}
-                  />
+                 <Radio
+  checked={billVerify === "not_verify"}
+  disabled={billVerify === "verify"}
+  onChange={() => setBillVerify("not_verify")}
+/>
                   <span className="text-gray-600 dark:text-gray-400">
                     Not Verify
                   </span>
                 </label>
                 <label className="flex cursor-pointer items-center gap-2 text-sm">
-                  <Radio
-                    checked={billVerify === "verify"}
-                    onChange={() => setBillVerify("verify")}
-                  />
+                <Radio
+  checked={billVerify === "verify"}
+  disabled={billVerify === "verify"}
+  onChange={handleVerify}
+/>
                   <span className="text-gray-600 dark:text-gray-400">
                     Verify
                   </span>
@@ -1648,44 +1743,43 @@ const handleVehicleSelect = (v: VehicleOption) => {
                     ₹{fmt(newTaxableValue)}
                   </span>
                 </div>
-               {/* GST */}
-{isPartySelected && (
-  isSameState ? (
-    <>
-      {/* CGST */}
-      <div className="flex items-center justify-between border-b border-gray-200/60 pb-2 dark:border-gray-700/60">
-        <span className="text-sm text-gray-600 dark:text-gray-400">
-          CGST
-        </span>
-        <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
-          ₹{fmt(totalCgst)}
-        </span>
-      </div>
+                {/* GST */}
+                {isPartySelected &&
+                  (isSameState ? (
+                    <>
+                      {/* CGST */}
+                      <div className="flex items-center justify-between border-b border-gray-200/60 pb-2 dark:border-gray-700/60">
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                          CGST
+                        </span>
+                        <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                          ₹{fmt(totalCgst)}
+                        </span>
+                      </div>
 
-      {/* SGST */}
-      <div className="flex items-center justify-between border-b border-gray-200/60 pb-2 dark:border-gray-700/60">
-        <span className="text-sm text-gray-600 dark:text-gray-400">
-          SGST
-        </span>
-        <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
-          ₹{fmt(totalSgst)}
-        </span>
-      </div>
-    </>
-  ) : (
-    <>
-      {/* IGST */}
-      <div className="flex items-center justify-between border-b border-gray-200/60 pb-2 dark:border-gray-700/60">
-        <span className="text-sm text-gray-600 dark:text-gray-400">
-          IGST
-        </span>
-        <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
-          ₹{fmt(totalIgst)}
-        </span>
-      </div>
-    </>
-  )
-)}
+                      {/* SGST */}
+                      <div className="flex items-center justify-between border-b border-gray-200/60 pb-2 dark:border-gray-700/60">
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                          SGST
+                        </span>
+                        <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                          ₹{fmt(totalSgst)}
+                        </span>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      {/* IGST */}
+                      <div className="flex items-center justify-between border-b border-gray-200/60 pb-2 dark:border-gray-700/60">
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                          IGST
+                        </span>
+                        <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                          ₹{fmt(totalIgst)}
+                        </span>
+                      </div>
+                    </>
+                  ))}
                 <div className="flex items-center justify-between rounded-lg bg-blue-600/10 p-2 dark:bg-blue-500/20">
                   <span className="text-sm font-bold text-gray-900 dark:text-white">
                     Grand Total
@@ -1703,9 +1797,10 @@ const handleVehicleSelect = (v: VehicleOption) => {
         <div className="flex justify-center px-3 pb-4 sm:px-4 sm:pb-6">
           <button
             onClick={handleSave}
+
             className="bg-primary-500 hover:bg-primary-500 w-full rounded-lg px-8 py-2.5 text-sm font-bold text-white transition-colors sm:w-auto sm:px-12 sm:py-3"
           >
-            Save
+            {isEdit ? "Update" : "Save"}
           </button>
         </div>
       </div>

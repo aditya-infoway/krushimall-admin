@@ -27,7 +27,7 @@ export interface PurchaseRegisterRow {
   supplierName: string;
   billNo: string;
   purchaseBillNo: string;
-  location: string;
+  purchaseLocation: string;
   totalQuantity: number;
   totalAmount: number;
   freightInsuranceOther: number;
@@ -38,7 +38,9 @@ export interface PurchaseRegisterRow {
   transportName: string;
   mobileNo: string;
   vehicalNo: string;
-  status: "Pending" | "Verified" | "Cancelled";
+  status: string;
+  verified: boolean;
+  allInward: boolean;
 }
 
 interface TractorPurchaseRegisterProps {
@@ -168,7 +170,7 @@ const TractorPurchaseRegister: React.FC<TractorPurchaseRegisterProps> = ({
           supplierName: item.account?.accountName || "",
           billNo: item.billNo,
           purchaseBillNo: item.purchaseBillNo,
-          location: item.location || "",
+          purchaseLocation: item.purchaseLocation || "",
           totalQuantity: item.totalQty,
           totalAmount: Number(item.totalAmount),
           freightInsuranceOther:
@@ -182,7 +184,10 @@ const TractorPurchaseRegister: React.FC<TractorPurchaseRegisterProps> = ({
           transportName: "",
           mobileNo: "",
           vehicalNo: "",
-          status: "Pending",
+          status: item.status === "VERIFY" ? "Verified" : "Pending",
+
+          verified: item.verified,
+          allInward: item.allInward,
         })),
       );
     } catch (error) {
@@ -398,16 +403,24 @@ const TractorPurchaseRegister: React.FC<TractorPurchaseRegisterProps> = ({
                     <Td className="py-4 text-center">
                       <div className="flex items-center justify-center gap-1.5">
                         <button
+                          disabled={item.allInward}
                           onClick={() => handleEditRow(item)}
-                          title="Edit"
-                          className="text-blue-500 transition-colors hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                          className={`${
+                            item.allInward
+                              ? "cursor-not-allowed text-gray-400"
+                              : "text-blue-500 hover:text-blue-700"
+                          }`}
                         >
                           <PencilIcon className="size-4.5" />
                         </button>
                         <button
+                          disabled={!item.verified}
                           onClick={() => handleInward(item)}
-                          title="Inward"
-                          className="text-green-500 transition-colors hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
+                          className={`${
+                            !item.verified
+                              ? "cursor-not-allowed text-gray-400"
+                              : "text-green-500 hover:text-green-700"
+                          }`}
                         >
                           <ArrowDownCircleIcon className="size-5" />
                         </button>
@@ -420,7 +433,7 @@ const TractorPurchaseRegister: React.FC<TractorPurchaseRegisterProps> = ({
                     <Td className="py-4 font-medium">{item.supplierName}</Td>
                     <Td className="py-4">{item.billNo}</Td>
                     <Td className="py-4">{item.purchaseBillNo}</Td>
-                    <Td className="py-4">{item.location}</Td>
+                    <Td className="py-4">{item.purchaseLocation}</Td>
                     <Td className="py-4 text-right">{item.totalQuantity}</Td>
                     <Td className="py-4 text-right">
                       ₹{fmt(item.totalAmount)}

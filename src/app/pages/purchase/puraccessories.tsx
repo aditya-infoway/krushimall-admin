@@ -15,6 +15,7 @@ import { Radio } from "@/components/ui";
 import emptyStateImage from "@/assets/notfound.png";
 import { Country, State, City } from "country-state-city";
 import Select from "react-select";
+import { components } from 'react-select';
 import apiHelper from "@/utils/apiHelper";
 
 // ---------- Types ----------

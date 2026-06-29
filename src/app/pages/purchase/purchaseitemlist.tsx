@@ -6,7 +6,8 @@ import {
   DocumentArrowDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  PlusIcon,
+  // PlusIcon,
+    EyeIcon,
   ArrowDownCircleIcon,
   XMarkIcon,
   CurrencyRupeeIcon,
@@ -40,6 +41,18 @@ export interface PurchaseItemRow {
   gstPercent: number;
   amount: number;
   status: "Pending" | "Inward" | "Completed";
+   mfgDate?: string;
+  keyNo?: string;
+  batteryMake?: string;
+  batteryNo?: string;
+  first1TyerNo?: string;
+  first2TyerNo?: string;
+  second1TyerNo?: string;
+  second2TyerNo?: string;
+  location?: string;
+  grnNumber?: string;
+  grnDate?: string;
+  grnRecordDate?: string;
 }
 
 export interface InwardDrawerData {
@@ -110,6 +123,7 @@ const columns = [
   "GST%",
   "Amount",
   "Status",
+  "columns",
   "Action",
 ];
 
@@ -122,7 +136,7 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [rows, setRows] = useState<PurchaseItemRow[]>([]);
   const [loading, setLoading] = useState(false);
-
+const [isView, setIsView] = useState(false);
   // Drawer states
   const [showDrawer, setShowDrawer] = useState(false);
   const [selectedItem, setSelectedItem] = useState<PurchaseItemRow | null>(
@@ -157,71 +171,55 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
     }
   }, [id]);
 
-  const fetchPurchaseItems = async () => {
-    try {
-      setLoading(true);
-      // Replace with actual API call
-      // const response = await apiHelper.get(`/purchases/${id}/items`);
-      // const data = response.data;
+ const fetchPurchaseItems = async () => {
+  try {
+    setLoading(true);
 
-      // Sample data
-      const sampleData: PurchaseItemRow[] = [
-        {
-          id: "1",
-          itemName: "Mahindra 265 DI",
-          hsnCode: "8701",
-          model: "265 DI",
-          variant: "Deluxe",
-          colour: "Red",
-          chassisNo: "CH-2024-001245",
-          engineNo: "ENG-2024-001245",
-          vehicleSrNo: "VSN-2024-001",
-          quantity: 1,
-          perRate: 450000,
-          gstPercent: 18,
-          amount: 531000,
-          status: "Pending",
-        },
-        {
-          id: "2",
-          itemName: "Swaraj 744 FE",
-          hsnCode: "8701",
-          model: "744 FE",
-          variant: "Standard",
-          colour: "Blue",
-          chassisNo: "CH-2024-001789",
-          engineNo: "ENG-2024-001789",
-          vehicleSrNo: "VSN-2024-002",
-          quantity: 1,
-          perRate: 380000,
-          gstPercent: 18,
-          amount: 448400,
-          status: "Inward",
-        },
-        {
-          id: "3",
-          itemName: "Eicher 380 Tractor",
-          hsnCode: "8701",
-          model: "380",
-          variant: "Premium",
-          colour: "Green",
-          chassisNo: "CH-2024-002345",
-          engineNo: "ENG-2024-002345",
-          vehicleSrNo: "VSN-2024-003",
-          quantity: 2,
-          perRate: 320000,
-          gstPercent: 18,
-          amount: 755200,
-          status: "Completed",
-        },
-      ];
-      setRows(sampleData);
-    } catch (error) {
-      console.error("Failed to fetch purchase items:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    const res = await apiHelper.get(`/purchases/${id}`);
+
+    const purchase = res.data;
+
+    setRows(
+      purchase.items.map((item: any) => ({
+         id: String(item.id),
+
+    itemName: item.itemName,
+    hsnCode: item.hsnCode || "",
+    model: item.modelName || "",
+    variant: item.variantName || "",
+    colour: item.color,
+
+    chassisNo: item.chassisNo,
+    engineNo: item.engineNo,
+
+    vehicleSrNo: item.vehicleSrNo || "",
+
+    quantity: Number(item.qty),
+    perRate: Number(item.ratePer),
+    gstPercent: Number(item.gstPercent),
+    amount: Number(item.amount),
+
+    status: item.status || "Pending",
+      mfgDate: item.mfgDate || "",
+    keyNo: item.keyNo || "",
+    batteryMake: item.batteryMake || "",
+    batteryNo: item.batteryNo || "",
+    first1TyerNo: item.first1TyerNo || "",
+    first2TyerNo: item.first2TyerNo || "",
+    second1TyerNo: item.second1TyerNo || "",
+    second2TyerNo: item.second2TyerNo || "",
+    location: item.location || "",
+    grnNumber: item.grnNumber || "",
+    grnDate: item.grnDate || "",
+    grnRecordDate: item.grnRecordDate || "",
+      }))
+    );
+  } catch (error) {
+    console.error("Failed to fetch purchase items:", error);
+  } finally {
+    setLoading(false);
+  }
+};
 
   // Filter rows
   const filteredRows = useMemo(() => {
@@ -287,57 +285,86 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
     if (onAddItem) onAddItem();
   };
 
-  const handleInwardClick = (item: PurchaseItemRow) => {
-    setSelectedItem(item);
-    // Pre-fill drawer with existing data if available
-    setInwardData({
-      vehicleSrNo: item.vehicleSrNo || "",
-      chassisNo: item.chassisNo || "",
-      engineNo: item.engineNo || "",
-      mfgDate: "",
-      keyNo: "",
-      batteryMake: "",
-      batteryNo: "",
-      first1TyerNo: "",
-      first2TyerNo: "",
-      second1TyerNo: "",
-      second2TyerNo: "",
-      location: "",
-      grnNumber: "",
-      grnDate: "",
-      grnRecordDate: "",
-    });
-    setShowDrawer(true);
-  };
+const handleInwardClick = async (item: PurchaseItemRow) => {
+  const vehicleSrNo =
+    item.vehicleSrNo || (await getVehicleSerialNo());
 
-  const handleInwardSubmit = async () => {
-    try {
-      // Replace with actual API call
-      // await apiHelper.post(`/purchases/${id}/items/${selectedItem?.id}/inward`, inwardData);
+  setSelectedItem(item);
 
-      // Update status to Inward
-      setRows((prev) =>
-        prev.map((row) =>
-          row.id === selectedItem?.id ? { ...row, status: "Inward" } : row,
-        ),
-      );
+  setInwardData({
+    vehicleSrNo,
+    chassisNo: item.chassisNo || "",
+    engineNo: item.engineNo || "",
+    mfgDate: "",
+    keyNo: "",
+    batteryMake: "",
+    batteryNo: "",
+    first1TyerNo: "",
+    first2TyerNo: "",
+    second1TyerNo: "",
+    second2TyerNo: "",
+    location: "",
+    grnNumber: "",
+    grnDate: "",
+    grnRecordDate: "",
+  });
 
-      setShowDrawer(false);
-      setSelectedItem(null);
-      // Show success toast here
-    } catch (error) {
-      console.error("Failed to submit inward:", error);
-    }
-  };
+  setShowDrawer(true);
+};
+
+const handleInwardSubmit = async () => {
+  try {
+    await apiHelper.put(
+      `/purchases/purchase-items/${selectedItem?.id}/inward`,
+      inwardData
+    );
+
+    await fetchPurchaseItems();
+    setShowDrawer(false);
+  } catch (err) {
+    console.log(err);
+  }
+};
 
   const handleInwardChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setInwardData((prev) => ({ ...prev, [name]: value }));
   };
+const getVehicleSerialNo = async () => {
+  const res = await apiHelper.get("/purchases/vehicle-serial-no");
 
+  console.log(res);
+
+  return res.vehicleSrNo;
+};
+const handleViewClick = (item: PurchaseItemRow) => {
+  setSelectedItem(item);
+
+  setInwardData({
+    vehicleSrNo: item.vehicleSrNo,
+    chassisNo: item.chassisNo,
+    engineNo: item.engineNo,
+    mfgDate: item.mfgDate || "",
+    keyNo: item.keyNo || "",
+    batteryMake: item.batteryMake || "",
+    batteryNo: item.batteryNo || "",
+    first1TyerNo: item.first1TyerNo || "",
+    first2TyerNo: item.first2TyerNo || "",
+    second1TyerNo: item.second1TyerNo || "",
+    second2TyerNo: item.second2TyerNo || "",
+    location: item.location || "",
+    grnNumber: item.grnNumber || "",
+    grnDate: item.grnDate || "",
+    grnRecordDate: item.grnRecordDate || "",
+  });
+
+  setIsView(true);
+   setShowDrawer(true);
+};
   return (
     <div className="relative min-h-screen space-y-6 p-4 pb-28 text-gray-900 md:p-6 dark:text-gray-100">
       {/* Header */}
+
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-xl font-semibold text-gray-900 md:text-2xl dark:text-white">
@@ -349,6 +376,7 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          {/* Excel Button */}
           <button
             type="button"
             className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
@@ -356,9 +384,31 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
             <DocumentArrowDownIcon className="size-4.5 text-gray-400" />
             Excel
           </button>
+
+          {/* Back Button */}
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="bg-primary-500 hover:bg-primary-600 inline-flex cursor-pointer items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white transition-colors"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="size-4.5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M10 19l-7-7m0 0l7-7m-7 7h18"
+              />
+            </svg>
+            Back
+          </button>
         </div>
       </div>
-
       {/* Search and Filter */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative w-full max-w-md">
@@ -394,7 +444,6 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
           />
         </div>
       </div>
-
       {/* Table */}
       <div className="dark:bg-dark-800 dark:border-dark-700 rounded-xl border border-gray-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
@@ -459,6 +508,9 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
                 <Th className="w-20 py-3.5 text-center text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Inward
                 </Th>
+                 <Th className="w-20 py-3.5 text-center text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                  View
+                </Th>
               </Tr>
             </THead>
 
@@ -514,14 +566,43 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
                       </span>
                     </Td>
                     <Td className="py-4 text-center">
-                      <button
-                        onClick={() => handleInwardClick(item)}
-                        title="Inward"
-                        className="text-green-500 transition-colors hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
-                      >
-                        <ArrowDownCircleIcon className="size-5" />
-                      </button>
+                     {item.status === "Pending" ? (
+  <button
+    onClick={() => handleInwardClick(item)}
+    title="Inward"
+    className="text-green-500 transition-colors hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 cursor-pointer"
+  >
+    <ArrowDownCircleIcon className="size-5" />
+  </button>
+) : (
+  <button
+    disabled
+    title="Already Inward"
+    className="cursor-not-allowed text-gray-400"
+  >
+    <ArrowDownCircleIcon className="size-5" />
+  </button>
+)}
                     </Td>
+                   <Td className="py-4 text-center ">
+  {item.status === "Inward" ? (
+    <button
+      onClick={() => handleViewClick(item)}
+      title="View"
+      className="text-blue-500 transition-colors hover:text-blue-700 cursor-pointer"
+    >
+      <EyeIcon className="size-5" />
+    </button>
+  ) : (
+    <button
+      disabled
+      title="View Disabled"
+      className="cursor-not-allowed text-gray-400 "
+    >
+      <EyeIcon className="size-5" />
+    </button>
+  )}
+</Td>
                   </Tr>
                 );
               })}
@@ -623,7 +704,6 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
           </div>
         )}
       </div>
-
       {/* Inward Drawer */}
       <Transition appear show={showDrawer} as={Fragment}>
         <Dialog
@@ -680,7 +760,7 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
                       type="text"
                       name="vehicleSrNo"
                       value={inwardData.vehicleSrNo}
-                      onChange={handleInwardChange}
+                      readOnly
                       placeholder="Enter vehicle serial number"
                     />
                   </div>
@@ -694,6 +774,7 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
                       name="chassisNo"
                       value={inwardData.chassisNo}
                       onChange={handleInwardChange}
+                      readOnly
                       placeholder="Enter chassis number"
                     />
                   </div>
@@ -706,6 +787,7 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
                       type="text"
                       name="engineNo"
                       value={inwardData.engineNo}
+                      readOnly
                       onChange={handleInwardChange}
                       placeholder="Enter engine number"
                     />
@@ -717,6 +799,7 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
                     </label>
                     <DatePicker
                       placeholder="Select MFG Date"
+                        disabled={isView}
                       value={inwardData.mfgDate}
                       onChange={(selectedDates: Date[]) => {
                         if (selectedDates && selectedDates.length > 0) {
@@ -740,6 +823,7 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
                     </label>
                     <Input
                       type="text"
+                        readOnly={isView}
                       name="keyNo"
                       value={inwardData.keyNo}
                       onChange={handleInwardChange}
@@ -753,6 +837,7 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
                     </label>
                     <Input
                       type="text"
+                        readOnly={isView}
                       name="batteryMake"
                       value={inwardData.batteryMake}
                       onChange={handleInwardChange}
@@ -766,6 +851,7 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
                     </label>
                     <Input
                       type="text"
+                        readOnly={isView}
                       name="batteryNo"
                       value={inwardData.batteryNo}
                       onChange={handleInwardChange}
@@ -779,6 +865,7 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
                     </label>
                     <Input
                       type="text"
+                        readOnly={isView}
                       name="first1TyerNo"
                       value={inwardData.first1TyerNo}
                       onChange={handleInwardChange}
@@ -792,6 +879,7 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
                     </label>
                     <Input
                       type="text"
+                        readOnly={isView}
                       name="first2TyerNo"
                       value={inwardData.first2TyerNo}
                       onChange={handleInwardChange}
@@ -805,6 +893,7 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
                     </label>
                     <Input
                       type="text"
+                        readOnly={isView}
                       name="second1TyerNo"
                       value={inwardData.second1TyerNo}
                       onChange={handleInwardChange}
@@ -818,6 +907,7 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
                     </label>
                     <Input
                       type="text"
+                        readOnly={isView}
                       name="second2TyerNo"
                       value={inwardData.second2TyerNo}
                       onChange={handleInwardChange}
@@ -831,6 +921,7 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
                     </label>
                     <Input
                       type="text"
+                        readOnly={isView}
                       name="location"
                       value={inwardData.location}
                       onChange={handleInwardChange}
@@ -844,6 +935,7 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
                     </label>
                     <Input
                       type="text"
+                        readOnly={isView}
                       name="grnNumber"
                       value={inwardData.grnNumber}
                       onChange={handleInwardChange}
@@ -857,6 +949,7 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
                     </label>
                     <DatePicker
                       placeholder="Select GRN Date"
+                       disabled={isView}
                       value={inwardData.grnDate}
                       onChange={(selectedDates: Date[]) => {
                         if (selectedDates && selectedDates.length > 0) {
@@ -881,6 +974,7 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
                     <DatePicker
                       placeholder="Select GRN Record Date"
                       value={inwardData.grnRecordDate}
+                       disabled={isView}
                       onChange={(selectedDates: Date[]) => {
                         if (selectedDates && selectedDates.length > 0) {
                           const date = selectedDates[0];
@@ -909,6 +1003,7 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
                 >
                   Cancel
                 </Button>
+                {!isView && (
                 <Button
                   color="primary"
                   type="button"
@@ -917,6 +1012,7 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
                 >
                   Submit Inward
                 </Button>
+                )}
               </div>
             </DialogPanel>
           </TransitionChild>
