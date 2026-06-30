@@ -34,7 +34,7 @@ import {
   MapPinIcon,
   UserIcon,
 } from "@heroicons/react/24/outline";
-import { Button,  } from "@/components/ui";
+import { Button } from "@/components/ui";
 import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/Table";
 import { LeadDetailsModal } from "./model";
 import apiHelper, { getBaseUrl } from "@/utils/apiHelper";
@@ -136,9 +136,9 @@ export default function LeadBuilder() {
   //   console.log(`Viewing lead ${id}...`);
   // };
 
- const handleFollowUp = (id: number) => {
- navigate(`/leadmaster/Followup/${id}`);
-};
+  const handleFollowUp = (id: number) => {
+    navigate(`/leadmaster/Followup/${id}`);
+  };
   const handlePayment = (id: number) => {
     console.log(`Payment for lead ${id}...`);
   };
@@ -163,12 +163,9 @@ export default function LeadBuilder() {
     console.log(`Cancel for lead ${id}...`);
   };
 
-const handleOrderBill = (id: number) => {
-  window.open(
-    `${getBaseUrl()}/api/leads/${id}/Quotation`,
-    "_blank"
-  );
-};
+  const handleOrderBill = (id: number) => {
+    window.open(`${getBaseUrl()}/api/leads/${id}/Quotation`, "_blank");
+  };
   return (
     <div className="relative min-h-screen space-y-6 p-4 pb-28 text-gray-900 md:p-6 dark:text-gray-100">
       {/* Page Header */}
@@ -214,9 +211,7 @@ const handleOrderBill = (id: number) => {
                 <Th className="w-45 min-w-45">Vehicle Detail</Th>
                 <Th className="w-45 min-w-45">Purchase Detail</Th>
                 <Th className="w-40 min-w-40 text-center">Update</Th>
-                <Th className="w-45 min-w-45 text-center">
-                  Process / Billing
-                </Th>
+                <Th className="w-45 min-w-45 text-center">Process / Billing</Th>
                 <Th className="w-40 min-w-40">Status</Th>
                 <Th className="w-20 text-center">Action</Th>
               </Tr>
@@ -285,18 +280,18 @@ const handleOrderBill = (id: number) => {
                       <div className="text-gray-600 dark:text-gray-400">
                         Purchase:{" "}
                         {lead.expectedPurchaseDate
-                          ? new Date(
-                              lead.expectedPurchaseDate,
-                            ).toLocaleDateString()
-                          : "-"}
+  ? new Date(lead.expectedPurchaseDate).toLocaleDateString(
+      "en-GB"
+    )
+  : "-"}
                       </div>
                       <div className="text-gray-600 dark:text-gray-400">
                         Delivery:{" "}
                         {lead.expectedDeliveryDate
-                          ? new Date(
-                              lead.expectedDeliveryDate,
-                            ).toLocaleDateString()
-                          : "-"}
+  ? new Date(lead.expectedDeliveryDate).toLocaleDateString(
+      "en-GB"
+    )
+  : "-"}
                       </div>
                     </div>
                   </Td>
@@ -307,28 +302,28 @@ const handleOrderBill = (id: number) => {
                       {/* Follow-up: Red border */}
                       <button
                         onClick={() => handleFollowUp(lead.id)}
-                        className="w-full rounded-full border border-red-500 py-0.5 text-[12px] text-red-600 cursor-pointer"
+                        className="w-full cursor-pointer rounded-full border border-red-500 py-0.5 text-[12px] text-red-600"
                       >
                         Follow-up
                       </button>
                       {/* Payment: Green border */}
                       <button
                         onClick={() => handlePayment(lead.id)}
-                        className="w-full rounded-full border border-green-500 py-0.5 text-[12px] text-green-600 cursor-pointer"
+                        className="w-full cursor-pointer rounded-full border border-green-500 py-0.5 text-[12px] text-green-600"
                       >
                         Payment
                       </button>
                       {/* Send Quotation: Yellow/Orange border */}
                       <button
                         onClick={() => handleOrderBill(lead.id)}
-                        className="w-full rounded-full border border-yellow-500 py-0.5 text-[12px] text-yellow-600 cursor-pointer"
+                        className="w-full cursor-pointer rounded-full border border-yellow-500 py-0.5 text-[12px] text-yellow-600"
                       >
                         Send Quotation
                       </button>
                       {/* Test Drive: Red border */}
                       <button
                         onClick={() => handleTestDrive(lead.id)}
-                        className="w-full rounded-full border border-red-500 py-0.5 text-[12px] text-red-600 cursor-pointer"
+                        className="w-full cursor-pointer rounded-full border border-red-500 py-0.5 text-[12px] text-red-600"
                       >
                         Test Drive
                       </button>
@@ -339,27 +334,24 @@ const handleOrderBill = (id: number) => {
                     <div className="flex w-full flex-col gap-1.5">
                       <button
                         onClick={() => handleCreateOrder(lead.id)}
-                        className="w-full rounded-md border border-emerald-500 py-0.5 text-[12px] text-emerald-600 cursor-pointer"
+                        className="w-full cursor-pointer rounded-md border border-emerald-500 py-0.5 text-[12px] text-emerald-600"
                       >
                         Create Order
                       </button>
                       <button
                         onClick={() => handleCreateBooking(lead.id)}
-                        className="w-full rounded-md border border-red-500 py-0.5 text-[12px] text-red-600 cursor-pointer"
+                        className="w-full cursor-pointer rounded-md border border-red-500 py-0.5 text-[12px] text-red-600"
                       >
                         Create Booking
                       </button>
                       <button
                         onClick={() => handleCancel(lead.id)}
-                        className="w-full rounded-md border border-blue-900 py-0.5 text-[12px] text-blue-900 cursor-pointer"
+                        className="w-full cursor-pointer rounded-md border border-blue-900 py-0.5 text-[12px] text-blue-900"
                       >
                         Cancel
                       </button>
                       {/* Solid Red Button */}
-                      <button
-                      
-                        className="w-full rounded-md border border-red-600 py-0.5 text-[12px] text-red-600 cursor-pointer"
-                      >
+                      <button className="w-full cursor-pointer rounded-md border border-red-600 py-0.5 text-[12px] text-red-600">
                         Order Bill
                       </button>
                     </div>
@@ -368,6 +360,22 @@ const handleOrderBill = (id: number) => {
                   {/* Status Column - Vertical */}
                   <Td>
                     <div className="space-y-1">
+                      <div className="flex items-center gap-5 text-[12px]">
+                        <span className="w-14 shrink-0 font-medium text-gray-600 dark:text-gray-400">
+                          Lead Status:
+                        </span>
+                        <span
+                          className={`rounded-full px-2 py-1 text-xs font-medium text-white ${
+                            lead.leadColor === "red"
+                              ? "bg-red-500"
+                              : lead.leadColor === "orange"
+                                ? "bg-orange-500"
+                                : "bg-sky-500"
+                          }`}
+                        >
+                          {lead.leadTemperature}
+                        </span>
+                      </div>
                       <div className="flex items-center gap-3 text-[12px]">
                         <span className="w-14 shrink-0 font-medium text-gray-600 dark:text-gray-400">
                           Payment:

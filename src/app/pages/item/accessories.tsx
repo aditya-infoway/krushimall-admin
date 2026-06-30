@@ -32,19 +32,13 @@ import Select, { components } from "react-select";
 const CheckboxOption = (props: any) => {
   return (
     <components.Option {...props}>
-      <div className="flex items-center justify-between w-full">
+      <div className="flex w-full items-center justify-between">
         <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={props.isSelected}
-            readOnly
-          />
+          <input type="checkbox" checked={props.isSelected} readOnly />
           <span>{props.data.variantName}</span>
         </div>
 
-        <span className="text-xs text-white">
-          {props.data.model}
-        </span>
+        <span className="text-xs text-white">{props.data.model}</span>
       </div>
     </components.Option>
   );
@@ -57,6 +51,7 @@ interface AccessoryItem {
   codeNo: string;
   shortName: string;
   hsnCode: string;
+   unit: string;
   taxSlab: string;
   group: string;
   purchasePrice: string;
@@ -74,6 +69,7 @@ interface FormValues {
   codeNo: string;
   shortName: string;
   hsnCode: string;
+   unit: string;
   taxSlab: string;
   group: string;
   purchasePrice: string;
@@ -109,7 +105,17 @@ const entriesOptions = [
   { id: 50, name: "50" },
   { id: 100, name: "100" },
 ];
-
+const unitOptions = [
+  // { label: "NOS", value: "NOS" },
+  { label: "PCS", value: "PCS" },
+  { label: "SET", value: "SET" },
+  { label: "BOX", value: "BOX" },
+  // { label: "KIT", value: "KIT" },
+  // { label: "LTR", value: "LTR" },
+  { label: "KG", value: "KG" },
+   { label: "GM", value: "GM" },
+  // { label: "MTR", value: "MTR" },
+];
 const statusOptions = [
   { label: "Active", value: "ACTIVE" },
   { label: "Inactive", value: "INACTIVE" },
@@ -122,6 +128,7 @@ const statusFilterOptions = [
 ];
 
 const taxSlabOptions = [
+    { label: "GST 0%", value: "0" },
   { label: "GST 5%", value: "5" },
   { label: "GST 12%", value: "12" },
   { label: "GST 18%", value: "18" },
@@ -134,8 +141,6 @@ const groupOptions = [
   { label: "Hydraulics", value: "Hydraulics" },
   { label: "General Accessories", value: "General Accessories" },
 ];
-
-
 
 const typeOptions = [
   { label: "Accessories", value: "Accessories" },
@@ -156,31 +161,31 @@ const Accessories = () => {
   const [selectedTypeFilter, setSelectedTypeFilter] = useState("All");
   const [loading, setLoading] = useState(false);
   const [selectedVariants, setSelectedVariants] = useState<any[]>([]);
-const [variantOptions, setVariantOptions] = useState([]);
+  const [variantOptions, setVariantOptions] = useState([]);
 
-const fetchShowroomVariants = async () => {
-  try {
-    const res = await apiHelper.get("/showroom-variant");
+  const fetchShowroomVariants = async () => {
+    try {
+      const res = await apiHelper.get("/showroom-variant");
 
-    const data = res.data?.data || res.data || [];
+      const data = res.data?.data || res.data || [];
 
-    console.log("Showroom Variant Response:", data);
+      console.log("Showroom Variant Response:", data);
 
-    setVariantOptions(
-      data.map((item: any) => ({
-        value: item.id,
-        label: `${item.variantName} - ${item.model}`,
-        variantName: item.variantName,
-        model: item.model,
-      }))
-    );
-  } catch (error) {
-    console.error("Error fetching showroom variants", error);
-  }
-};
-useEffect(() => {
-  fetchShowroomVariants();
-}, []);
+      setVariantOptions(
+        data.map((item: any) => ({
+          value: item.id,
+          label: `${item.variantName} - ${item.model}`,
+          variantName: item.variantName,
+          model: item.model,
+        })),
+      );
+    } catch (error) {
+      console.error("Error fetching showroom variants", error);
+    }
+  };
+  useEffect(() => {
+    fetchShowroomVariants();
+  }, []);
   // ─── Form State ─────────────────────────────────────────────────────────
   const [formData, setFormData] = useState<FormValues>({
     type: "Accessories",
@@ -188,6 +193,7 @@ useEffect(() => {
     codeNo: "",
     shortName: "",
     hsnCode: "",
+      unit: "",
     taxSlab: "",
     group: "",
     purchasePrice: "",
@@ -229,20 +235,19 @@ useEffect(() => {
     }
   };
 
-
   const handleTypeChange = (type: "Accessories" | "Parts") => {
-  setFormData((prev) => ({
-    ...prev,
-    type,
-    itemName: "",
-    codeNo: "",
-  }));
-  // Clear errors for these fields if they exist
-  const newErrors = { ...errors };
-  delete newErrors.itemName;
-  delete newErrors.codeNo;
-  setErrors(newErrors);
-};
+    setFormData((prev) => ({
+      ...prev,
+      type,
+      itemName: "",
+      codeNo: "",
+    }));
+    // Clear errors for these fields if they exist
+    const newErrors = { ...errors };
+    delete newErrors.itemName;
+    delete newErrors.codeNo;
+    setErrors(newErrors);
+  };
 
   const handleOpenAddDrawer = () => {
     setEditId(null);
@@ -252,6 +257,7 @@ useEffect(() => {
       codeNo: "",
       shortName: "",
       hsnCode: "",
+        unit: "",
       taxSlab: "",
       group: "",
       purchasePrice: "",
@@ -265,38 +271,39 @@ useEffect(() => {
     setShowDrawer(true);
   };
 
-const handleOpenEditDrawer = (item: any) => {
-  setEditId(item.id);
+  const handleOpenEditDrawer = (item: any) => {
+    setEditId(item.id);
 
-  setFormData({
-    type: item.type,
-    itemName: item.itemName || "",
-    codeNo: item.codeNo || "",
-    shortName: item.shortName || "",
-    hsnCode: item.hsnCode || "",
-    taxSlab: item.taxSlab || "",
-    group: item.group || "",
+    setFormData({
+      type: item.type,
+      itemName: item.itemName || "",
+      codeNo: item.codeNo || "",
+      shortName: item.shortName || "",
+      hsnCode: item.hsnCode || "",
+      unit: item.unit || "",
+      taxSlab: item.taxSlab || "",
+      group: item.group || "",
 
-    purchasePrice: String(item.purchasePrice ?? ""),
-    salesPrice: String(item.salesPrice ?? ""),
-    mrp: String(item.mrp ?? ""),
-    opStock: String(item.opStock ?? ""),
+      purchasePrice: String(item.purchasePrice ?? ""),
+      salesPrice: String(item.salesPrice ?? ""),
+      mrp: String(item.mrp ?? ""),
+      opStock: String(item.opStock ?? ""),
 
-    variant: "",
-    status: item.status || "ACTIVE",
-  });
+      variant: "",
+      status: item.status || "ACTIVE",
+    });
 
-  setSelectedVariants(
-    (item.showroomVariants || []).map((v: any) => ({
-      value: v.id,
-      label: `${v.variantName} - ${v.model}`,
-      variantName: v.variantName,
-      model: v.model,
-    }))
-  );
+    setSelectedVariants(
+      (item.showroomVariants || []).map((v: any) => ({
+        value: v.id,
+        label: `${v.variantName} - ${v.model}`,
+        variantName: v.variantName,
+        model: v.model,
+      })),
+    );
 
-  setShowDrawer(true);
-};
+    setShowDrawer(true);
+  };
 
   const handleDelete = async (id: number) => {
     try {
@@ -356,10 +363,11 @@ const handleOpenEditDrawer = (item: any) => {
     if (!formData.salesPrice.trim())
       newErrors.salesPrice = "Sales Price is required";
     if (!formData.mrp.trim()) newErrors.mrp = "MRP is required";
-    if (!formData.opStock.trim()) newErrors.opStock = "Opening Stock is required";
- if (selectedVariants.length === 0) {
-  newErrors.variant = "Variant is required";
-}
+    if (!formData.opStock.trim())
+      newErrors.opStock = "Opening Stock is required";
+    if (selectedVariants.length === 0) {
+      newErrors.variant = "Variant is required";
+    }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -368,27 +376,28 @@ const handleOpenEditDrawer = (item: any) => {
     if (!validate()) return;
 
     try {
-    const payload = {
-  type: formData.type,
-  itemName: formData.itemName,
-  codeNo: formData.codeNo,
-  shortName: formData.shortName,
-  hsnCode: formData.hsnCode,
-  taxSlab: formData.taxSlab,
-  group: formData.group,
-  purchasePrice: formData.purchasePrice,
-  salesPrice: formData.salesPrice,
-  mrp: formData.mrp,
-  opStock: formData.opStock,
+      const payload = {
+        type: formData.type,
+        itemName: formData.itemName,
+        codeNo: formData.codeNo,
+        shortName: formData.shortName,
+        hsnCode: formData.hsnCode,
+         unit: formData.unit,
+        taxSlab: formData.taxSlab,
+        group: formData.group,
+        purchasePrice: formData.purchasePrice,
+        salesPrice: formData.salesPrice,
+        mrp: formData.mrp,
+        opStock: formData.opStock,
 
-showroomVariants: selectedVariants.map((v: any) => ({
-  id: v.value,
-  variantName: v.variantName,
-  model: v.model,
-})),
+        showroomVariants: selectedVariants.map((v: any) => ({
+          id: v.value,
+          variantName: v.variantName,
+          model: v.model,
+        })),
 
-  status: formData.status,
-};
+        status: formData.status,
+      };
 
       if (editId) {
         await apiHelper.put(`/accessories/${editId}`, payload);
@@ -452,84 +461,84 @@ showroomVariants: selectedVariants.map((v: any) => ({
     { id: "Accessories", name: "Accessories" },
     { id: "Parts", name: "Parts" },
   ];
- const customSelectStyles = {
-  control: (provided: any, state: any) => ({
-    ...provided,
-    backgroundColor: "transparent",
-    borderColor: state.isFocused
-      ? "var(--color-primary-600)"
-      : "var(--color-gray-700)",
-        borderRadius: "7px",
-    boxShadow: state.isFocused
-      ? "0 0 0 1px var(--color-primary-600)"
-      : "none",
-    minHeight: "30px",
+  const customSelectStyles = {
+    control: (provided: any, state: any) => ({
+      ...provided,
+      backgroundColor: "transparent",
+      borderColor: state.isFocused
+        ? "var(--color-primary-600)"
+        : "var(--color-gray-700)",
+      borderRadius: "7px",
+      boxShadow: state.isFocused
+        ? "0 0 0 1px var(--color-primary-600)"
+        : "none",
+      minHeight: "30px",
 
-    "&:hover": {
-      borderColor: "var(--color-primary-500)",
-    },
-  }),
+      "&:hover": {
+        borderColor: "var(--color-primary-500)",
+      },
+    }),
 
-  valueContainer: (provided: any) => ({
-    ...provided,
-    color: "var(--color-dark-100)",
-  }),
+    valueContainer: (provided: any) => ({
+      ...provided,
+      color: "var(--color-dark-100)",
+    }),
 
-  singleValue: (provided: any) => ({
-    ...provided,
-    color: "var(--color-dark-100)",
-  }),
+    singleValue: (provided: any) => ({
+      ...provided,
+      color: "var(--color-dark-100)",
+    }),
 
-  input: (provided: any) => ({
-    ...provided,
-    color: "var(--color-dark-100)",
-  }),
+    input: (provided: any) => ({
+      ...provided,
+      color: "var(--color-dark-100)",
+    }),
 
-  placeholder: (provided: any) => ({
-    ...provided,
-    color: "var(--color-gray-400)",
-  }),
+    placeholder: (provided: any) => ({
+      ...provided,
+      color: "var(--color-gray-400)",
+    }),
 
-  menu: (provided: any) => ({
-    ...provided,
-    backgroundColor: "var(--color-dark-700)",
-    border: "1px solid var(--color-primary-600)",
-    borderRadius: "12px",
-    overflow: "hidden",
-  }),
+    menu: (provided: any) => ({
+      ...provided,
+      backgroundColor: "var(--color-dark-700)",
+      border: "1px solid var(--color-primary-600)",
+      borderRadius: "12px",
+      overflow: "hidden",
+    }),
 
-  menuList: (provided: any) => ({
-    ...provided,
-    padding: 0,
-  }),
+    menuList: (provided: any) => ({
+      ...provided,
+      padding: 0,
+    }),
 
-  option: (provided: any, state: any) => ({
-    ...provided,
-    backgroundColor: state.isSelected
-      ? "var(--color-primary-600)"
-      : state.isFocused
-        ? "var(--color-primary-500)"
-        : "var(--color-dark-700)",
-    color: "#fff",
-    cursor: "pointer",
-  }),
+    option: (provided: any, state: any) => ({
+      ...provided,
+      backgroundColor: state.isSelected
+        ? "var(--color-primary-600)"
+        : state.isFocused
+          ? "var(--color-primary-500)"
+          : "var(--color-dark-700)",
+      color: "#fff",
+      cursor: "pointer",
+    }),
 
-  dropdownIndicator: (provided: any, state: any) => ({
-    ...provided,
-    color: state.isFocused
-      ? "var(--color-primary-600)"
-      : "var(--color-gray-400)",
-  }),
+    dropdownIndicator: (provided: any, state: any) => ({
+      ...provided,
+      color: state.isFocused
+        ? "var(--color-primary-600)"
+        : "var(--color-gray-400)",
+    }),
 
-  clearIndicator: (provided: any) => ({
-    ...provided,
-    color: "var(--color-gray-400)",
-  }),
+    clearIndicator: (provided: any) => ({
+      ...provided,
+      color: "var(--color-gray-400)",
+    }),
 
-  indicatorSeparator: () => ({
-    display: "none",
-  }),
-};
+    indicatorSeparator: () => ({
+      display: "none",
+    }),
+  };
   return (
     <div className="relative min-h-screen space-y-6 p-4 pb-28 text-gray-900 md:p-6 dark:text-gray-100">
       {/* Header */}
@@ -602,9 +611,8 @@ showroomVariants: selectedVariants.map((v: any) => ({
               <Listbox
                 data={typeFilterOptions}
                 value={
-                  typeFilterOptions.find(
-                    (o) => o.id === selectedTypeFilter,
-                  ) || typeFilterOptions[0]
+                  typeFilterOptions.find((o) => o.id === selectedTypeFilter) ||
+                  typeFilterOptions[0]
                 }
                 placeholder="All Types"
                 onChange={(opt: any) => {
@@ -670,6 +678,9 @@ showroomVariants: selectedVariants.map((v: any) => ({
                 </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   HSN Code
+                </Th>
+                  <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                  Unit
                 </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Tax Slab
@@ -742,6 +753,9 @@ showroomVariants: selectedVariants.map((v: any) => ({
                       {item.hsnCode}
                     </Td>
                     <Td className="dark:text-dark-200 py-4 text-gray-600">
+                      {item.unit}
+                    </Td>
+                    <Td className="dark:text-dark-200 py-4 text-gray-600">
                       {item.taxSlab}%
                     </Td>
                     <Td className="dark:text-dark-200 py-4 text-gray-600">
@@ -756,7 +770,7 @@ showroomVariants: selectedVariants.map((v: any) => ({
                     <Td className="dark:text-dark-200 py-4 text-gray-600">
                       ₹{item.mrp}
                     </Td>
-                    <Td className="dark:text-dark-200 py-4 text-gray-600 text-center">
+                    <Td className="dark:text-dark-200 py-4 text-center text-gray-600">
                       {item.opStock}
                     </Td>
                     <Td className="py-4">
@@ -1003,7 +1017,7 @@ showroomVariants: selectedVariants.map((v: any) => ({
       <Transition appear show={showDrawer} as={Fragment}>
         <Dialog
           as="div"
-          className="relative z-[100]"
+          className="relative z-100"
           onClose={() => setShowDrawer(false)}
         >
           <TransitionChild
@@ -1032,7 +1046,9 @@ showroomVariants: selectedVariants.map((v: any) => ({
                 {/* Header */}
                 <div className="dark:border-dark-500 flex items-center justify-between border-b border-gray-200 px-4 py-3 sm:px-5 sm:py-4">
                   <h2 className="dark:text-dark-50 text-base font-semibold text-gray-800 sm:text-lg">
-                    {editId !== null ? "Edit Accessories Item" : "Add Accessories Item"}
+                    {editId !== null
+                      ? "Edit Accessories Item"
+                      : "Add Accessories Item"}
                   </h2>
                   <Button
                     onClick={() => setShowDrawer(false)}
@@ -1049,67 +1065,81 @@ showroomVariants: selectedVariants.map((v: any) => ({
                 <div className="grow space-y-4 overflow-y-auto p-4 sm:space-y-5 sm:p-5">
                   {/* Type */}
                   {/* Type - Using Radio buttons */}
-{/* Type - Using Radio buttons */}
-<div>
-  <label className="dark:text-dark-200 mb-2 block text-sm font-medium text-gray-700">
-    Type <span className="text-red-500">*</span>
-  </label>
-  <div className="flex gap-6">
-    <label className="flex cursor-pointer items-center gap-2 text-sm text-gray-800 dark:text-gray-200">
-      <Radio
-        checked={formData.type === "Accessories"}
-        onChange={() => handleTypeChange("Accessories")}
-      />
-      Accessories
-    </label>
-    <label className="flex cursor-pointer items-center gap-2 text-sm text-gray-800 dark:text-gray-200">
-      <Radio
-        checked={formData.type === "Parts"}
-        onChange={() => handleTypeChange("Parts")}
-      />
-      Parts
-    </label>
-  </div>
-</div>
+                  {/* Type - Using Radio buttons */}
+                  <div>
+                    <label className="dark:text-dark-200 mb-2 block text-sm font-medium text-gray-700">
+                      Type <span className="text-red-500">*</span>
+                    </label>
+                    <div className="flex gap-6">
+                      <label className="flex cursor-pointer items-center gap-2 text-sm text-gray-800 dark:text-gray-200">
+                        <Radio
+                          checked={formData.type === "Accessories"}
+                          onChange={() => handleTypeChange("Accessories")}
+                        />
+                        Accessories
+                      </label>
+                      <label className="flex cursor-pointer items-center gap-2 text-sm text-gray-800 dark:text-gray-200">
+                        <Radio
+                          checked={formData.type === "Parts"}
+                          onChange={() => handleTypeChange("Parts")}
+                        />
+                        Parts
+                      </label>
+                    </div>
+                  </div>
 
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
-                  <div>
-  <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
-    {formData.type === "Accessories" ? "Accessories Name" : "Part Name"} <span className="text-red-500">*</span>
-  </label>
-  <Input
-    type="text"
-    placeholder={formData.type === "Accessories" ? "Enter Accessories Name" : "Enter Part Name"}
-    value={formData.itemName}
-    onChange={(e) =>
-      handleInputChange("itemName", e.target.value)
-    }
-  />
-  {errors.itemName && (
-    <span className="text-xs text-orange-500">
-      {errors.itemName}
-    </span>
-  )}
-</div>
+                    <div>
+                      <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
+                        {formData.type === "Accessories"
+                          ? "Accessories Name"
+                          : "Part Name"}{" "}
+                        <span className="text-red-500">*</span>
+                      </label>
+                      <Input
+                        type="text"
+                        placeholder={
+                          formData.type === "Accessories"
+                            ? "Enter Accessories Name"
+                            : "Enter Part Name"
+                        }
+                        value={formData.itemName}
+                        onChange={(e) =>
+                          handleInputChange("itemName", e.target.value)
+                        }
+                      />
+                      {errors.itemName && (
+                        <span className="text-xs text-orange-500">
+                          {errors.itemName}
+                        </span>
+                      )}
+                    </div>
 
-                   <div>
-  <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
-    {formData.type === "Accessories" ? "Accessories Code" : "Item Code"} <span className="text-red-500">*</span>
-  </label>
-  <Input
-    type="text"
-    placeholder={formData.type === "Accessories" ? "Enter Accessories Code" : "Enter Item Code"}
-    value={formData.codeNo}
-    onChange={(e) =>
-      handleInputChange("codeNo", e.target.value)
-    }
-  />
-  {errors.codeNo && (
-    <span className="text-xs text-orange-500">
-      {errors.codeNo}
-    </span>
-  )}
-</div>
+                    <div>
+                      <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
+                        {formData.type === "Accessories"
+                          ? "Accessories Code"
+                          : "Item Code"}{" "}
+                        <span className="text-red-500">*</span>
+                      </label>
+                      <Input
+                        type="text"
+                        placeholder={
+                          formData.type === "Accessories"
+                            ? "Enter Accessories Code"
+                            : "Enter Item Code"
+                        }
+                        value={formData.codeNo}
+                        onChange={(e) =>
+                          handleInputChange("codeNo", e.target.value)
+                        }
+                      />
+                      {errors.codeNo && (
+                        <span className="text-xs text-orange-500">
+                          {errors.codeNo}
+                        </span>
+                      )}
+                    </div>
 
                     <div>
                       <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
@@ -1138,6 +1168,25 @@ showroomVariants: selectedVariants.map((v: any) => ({
                         }
                       />
                     </div>
+                     <div>
+                      <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
+                        Unit
+                      </label>
+                    <Combobox
+  data={unitOptions}
+  displayField="label"
+  value={
+    unitOptions.find(
+      (u) => u.value === formData.unit
+    ) || null
+  }
+  onChange={(val: any) =>
+    handleInputChange("unit", val?.value || "")
+  }
+  placeholder="Select Unit"
+  searchFields={["label"]}
+/>
+                    </div>
 
                     <div>
                       <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
@@ -1146,10 +1195,14 @@ showroomVariants: selectedVariants.map((v: any) => ({
                       <Combobox
                         data={taxSlabOptions}
                         displayField="label"
-                        value={taxSlabOptions.find((t) => t.value === formData.taxSlab) || null}
-                        onChange={(val: { label: string; value: string } | null) =>
-                          handleInputChange("taxSlab", val?.value || "")
+                        value={
+                          taxSlabOptions.find(
+                            (t) => t.value === formData.taxSlab,
+                          ) || null
                         }
+                        onChange={(
+                          val: { label: string; value: string } | null,
+                        ) => handleInputChange("taxSlab", val?.value || "")}
                         placeholder="Search Tax Slab"
                         searchFields={["label"]}
                       />
@@ -1162,10 +1215,14 @@ showroomVariants: selectedVariants.map((v: any) => ({
                       <Combobox
                         data={groupOptions}
                         displayField="label"
-                        value={groupOptions.find((g) => g.value === formData.group) || null}
-                        onChange={(val: { label: string; value: string } | null) =>
-                          handleInputChange("group", val?.value || "")
+                        value={
+                          groupOptions.find(
+                            (g) => g.value === formData.group,
+                          ) || null
                         }
+                        onChange={(
+                          val: { label: string; value: string } | null,
+                        ) => handleInputChange("group", val?.value || "")}
                         placeholder="Search Group"
                         searchFields={["label"]}
                       />
@@ -1253,21 +1310,21 @@ showroomVariants: selectedVariants.map((v: any) => ({
                       <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
                         Variant <span className="text-red-500">*</span>
                       </label>
-                  <Select
-  isMulti
-  closeMenuOnSelect={false}
-  hideSelectedOptions={false}
-    styles={customSelectStyles}
-  options={variantOptions}
-  value={selectedVariants}
-  onChange={(selected) =>
-    setSelectedVariants(selected as any[])
-  }
-  components={{
-    Option: CheckboxOption,
-  }}
-  placeholder="Select Variant"
-/>
+                      <Select
+                        isMulti
+                        closeMenuOnSelect={false}
+                        hideSelectedOptions={false}
+                        styles={customSelectStyles}
+                        options={variantOptions}
+                        value={selectedVariants}
+                        onChange={(selected) =>
+                          setSelectedVariants(selected as any[])
+                        }
+                        components={{
+                          Option: CheckboxOption,
+                        }}
+                        placeholder="Select Variant"
+                      />
                       {errors.variant && (
                         <span className="text-xs text-orange-500">
                           {errors.variant}
@@ -1284,10 +1341,20 @@ showroomVariants: selectedVariants.map((v: any) => ({
                     <Combobox
                       data={statusOptions}
                       displayField="label"
-                       value={statusOptions.find((s) => s.value === formData.status) as { label: string; value: "ACTIVE" | "INACTIVE" } | null || null}
-                      onChange={(val: { label: string; value: "ACTIVE" | "INACTIVE" } | null) =>
-                        handleInputChange("status", val?.value || "ACTIVE")
+                      value={
+                        (statusOptions.find(
+                          (s) => s.value === formData.status,
+                        ) as {
+                          label: string;
+                          value: "ACTIVE" | "INACTIVE";
+                        } | null) || null
                       }
+                      onChange={(
+                        val: {
+                          label: string;
+                          value: "ACTIVE" | "INACTIVE";
+                        } | null,
+                      ) => handleInputChange("status", val?.value || "ACTIVE")}
                       placeholder="Select Status"
                     />
                   </div>

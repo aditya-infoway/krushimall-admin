@@ -256,7 +256,7 @@ const AccessoriesPurchaseRegister: React.FC<
         <div className="overflow-x-auto">
           <Table
             hoverable
-            className="w-full min-w-[1600px] text-left [&_.table-th]:font-semibold"
+            className="w-full min-w-400 text-left [&_.table-th]:font-semibold"
           >
             <THead className="dark:bg-dark-700/60 dark:border-dark-600 border-b border-gray-200 bg-gray-100">
               <Tr>
