@@ -7,7 +7,7 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   // PlusIcon,
-    EyeIcon,
+  EyeIcon,
   ArrowDownCircleIcon,
   XMarkIcon,
   CurrencyRupeeIcon,
@@ -41,7 +41,7 @@ export interface PurchaseItemRow {
   gstPercent: number;
   amount: number;
   status: "Pending" | "Inward" | "Completed";
-   mfgDate?: string;
+  mfgDate?: string;
   keyNo?: string;
   batteryMake?: string;
   batteryNo?: string;
@@ -136,13 +136,13 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [rows, setRows] = useState<PurchaseItemRow[]>([]);
   const [loading, setLoading] = useState(false);
-const [isView, setIsView] = useState(false);
+  const [isView, setIsView] = useState(false);
   // Drawer states
   const [showDrawer, setShowDrawer] = useState(false);
   const [selectedItem, setSelectedItem] = useState<PurchaseItemRow | null>(
     null,
   );
-
+  const [errors, setErrors] = useState<any>({});
   // Inward form data
   const [inwardData, setInwardData] = useState<InwardDrawerData>({
     vehicleSrNo: "",
@@ -163,7 +163,16 @@ const [isView, setIsView] = useState(false);
   });
 
   const navigate = useNavigate();
+  const [showTransportModal, setShowTransportModal] = useState(false);
 
+  const [transportData, setTransportData] = useState({
+    transporterName: "",
+    mobileNumber: "",
+    vehicleNumber: "",
+  });
+
+  const [transportErrors, setTransportErrors] = useState<any>({});
+  const [transportSaved, setTransportSaved] = useState(false);
   // Fetch purchase items
   useEffect(() => {
     if (id) {
@@ -171,55 +180,55 @@ const [isView, setIsView] = useState(false);
     }
   }, [id]);
 
- const fetchPurchaseItems = async () => {
-  try {
-    setLoading(true);
+  const fetchPurchaseItems = async () => {
+    try {
+      setLoading(true);
 
-    const res = await apiHelper.get(`/purchases/${id}`);
+      const res = await apiHelper.get(`/purchases/${id}`);
 
-    const purchase = res.data;
+      const purchase = res.data;
+      setTransportSaved(purchase.transportSaved);
+      setRows(
+        purchase.items.map((item: any) => ({
+          id: String(item.id),
 
-    setRows(
-      purchase.items.map((item: any) => ({
-         id: String(item.id),
+          itemName: item.itemName,
+          hsnCode: item.hsnCode || "",
+          model: item.modelName || "",
+          variant: item.variantName || "",
+          colour: item.color,
 
-    itemName: item.itemName,
-    hsnCode: item.hsnCode || "",
-    model: item.modelName || "",
-    variant: item.variantName || "",
-    colour: item.color,
+          chassisNo: item.chassisNo,
+          engineNo: item.engineNo,
 
-    chassisNo: item.chassisNo,
-    engineNo: item.engineNo,
+          vehicleSrNo: item.vehicleSrNo || "",
 
-    vehicleSrNo: item.vehicleSrNo || "",
+          quantity: Number(item.qty),
+          perRate: Number(item.ratePer),
+          gstPercent: Number(item.gstPercent),
+          amount: Number(item.amount),
 
-    quantity: Number(item.qty),
-    perRate: Number(item.ratePer),
-    gstPercent: Number(item.gstPercent),
-    amount: Number(item.amount),
-
-    status: item.status || "Pending",
-      mfgDate: item.mfgDate || "",
-    keyNo: item.keyNo || "",
-    batteryMake: item.batteryMake || "",
-    batteryNo: item.batteryNo || "",
-    first1TyerNo: item.first1TyerNo || "",
-    first2TyerNo: item.first2TyerNo || "",
-    second1TyerNo: item.second1TyerNo || "",
-    second2TyerNo: item.second2TyerNo || "",
-    location: item.location || "",
-    grnNumber: item.grnNumber || "",
-    grnDate: item.grnDate || "",
-    grnRecordDate: item.grnRecordDate || "",
-      }))
-    );
-  } catch (error) {
-    console.error("Failed to fetch purchase items:", error);
-  } finally {
-    setLoading(false);
-  }
-};
+          status: item.status || "Pending",
+          mfgDate: item.mfgDate || "",
+          keyNo: item.keyNo || "",
+          batteryMake: item.batteryMake || "",
+          batteryNo: item.batteryNo || "",
+          first1TyerNo: item.first1TyerNo || "",
+          first2TyerNo: item.first2TyerNo || "",
+          second1TyerNo: item.second1TyerNo || "",
+          second2TyerNo: item.second2TyerNo || "",
+          location: item.location || "",
+          grnNumber: item.grnNumber || "",
+          grnDate: item.grnDate || "",
+          grnRecordDate: item.grnRecordDate || "",
+        })),
+      );
+    } catch (error) {
+      console.error("Failed to fetch purchase items:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Filter rows
   const filteredRows = useMemo(() => {
@@ -285,82 +294,155 @@ const [isView, setIsView] = useState(false);
     if (onAddItem) onAddItem();
   };
 
-const handleInwardClick = async (item: PurchaseItemRow) => {
-  const vehicleSrNo =
-    item.vehicleSrNo || (await getVehicleSerialNo());
+  const handleInwardClick = async (item: PurchaseItemRow) => {
+    const vehicleSrNo = item.vehicleSrNo || (await getVehicleSerialNo());
 
-  setSelectedItem(item);
+    setSelectedItem(item);
 
-  setInwardData({
-    vehicleSrNo,
-    chassisNo: item.chassisNo || "",
-    engineNo: item.engineNo || "",
-    mfgDate: "",
-    keyNo: "",
-    batteryMake: "",
-    batteryNo: "",
-    first1TyerNo: "",
-    first2TyerNo: "",
-    second1TyerNo: "",
-    second2TyerNo: "",
-    location: "",
-    grnNumber: "",
-    grnDate: "",
-    grnRecordDate: "",
-  });
+    setInwardData({
+      vehicleSrNo,
+      chassisNo: item.chassisNo || "",
+      engineNo: item.engineNo || "",
+      mfgDate: "",
+      keyNo: "",
+      batteryMake: "",
+      batteryNo: "",
+      first1TyerNo: "",
+      first2TyerNo: "",
+      second1TyerNo: "",
+      second2TyerNo: "",
+      location: "",
+      grnNumber: "",
+      grnDate: "",
+      grnRecordDate: "",
+    });
 
-  setShowDrawer(true);
-};
+    setShowDrawer(true);
+  };
+  const validateInward = () => {
+    const newErrors: any = {};
 
-const handleInwardSubmit = async () => {
-  try {
-    await apiHelper.put(
-      `/purchases/purchase-items/${selectedItem?.id}/inward`,
-      inwardData
-    );
+    if (!inwardData.mfgDate) newErrors.mfgDate = "MFG Date is required";
 
-    await fetchPurchaseItems();
-    setShowDrawer(false);
-  } catch (err) {
-    console.log(err);
-  }
-};
+    if (!inwardData.keyNo.trim()) newErrors.keyNo = "Key No is required";
+
+    if (!inwardData.batteryMake.trim())
+      newErrors.batteryMake = "Battery Make is required";
+
+    if (!inwardData.batteryNo.trim())
+      newErrors.batteryNo = "Battery No is required";
+
+    if (!inwardData.first1TyerNo.trim())
+      newErrors.first1TyerNo = "First 1 Tyre No is required";
+
+    if (!inwardData.first2TyerNo.trim())
+      newErrors.first2TyerNo = "First 2 Tyre No is required";
+
+    if (!inwardData.second1TyerNo.trim())
+      newErrors.second1TyerNo = "Second 1 Tyre No is required";
+
+    if (!inwardData.second2TyerNo.trim())
+      newErrors.second2TyerNo = "Second 2 Tyre No is required";
+
+    if (!inwardData.location.trim())
+      newErrors.location = "Location is required";
+
+    if (!inwardData.grnNumber.trim())
+      newErrors.grnNumber = "GRN Number is required";
+
+    if (!inwardData.grnDate) newErrors.grnDate = "GRN Date is required";
+
+    if (!inwardData.grnRecordDate)
+      newErrors.grnRecordDate = "GRN Record Date is required";
+
+    setErrors(newErrors);
+
+    return Object.keys(newErrors).length === 0;
+  };
+  const validateTransport = () => {
+    const errors: any = {};
+
+    if (!transportData.transporterName.trim())
+      errors.transporterName = "Transporter Name is required";
+
+    if (!transportData.mobileNumber.trim())
+      errors.mobileNumber = "Mobile Number is required";
+
+    if (!transportData.vehicleNumber.trim())
+      errors.vehicleNumber = "Vehicle Number is required";
+
+    setTransportErrors(errors);
+
+    return Object.keys(errors).length === 0;
+  };
+  const handleTransportSave = async () => {
+    if (!validateTransport()) return;
+
+    await apiHelper.put(`/purchases/${id}/transport`, transportData);
+    setTransportSaved(true);
+    setShowTransportModal(false);
+  };
+  const handleInwardSubmit = async () => {
+    if (!validateInward()) return;
+    try {
+      await apiHelper.put(
+        `/purchases/purchase-items/${selectedItem?.id}/inward`,
+        inwardData,
+      );
+
+      await fetchPurchaseItems();
+      setShowDrawer(false);
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   const handleInwardChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setInwardData((prev) => ({ ...prev, [name]: value }));
+
+    setInwardData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
+    if (errors[name]) {
+      setErrors((prev: any) => ({
+        ...prev,
+        [name]: "",
+      }));
+    }
   };
-const getVehicleSerialNo = async () => {
-  const res = await apiHelper.get("/purchases/vehicle-serial-no");
+  const getVehicleSerialNo = async () => {
+    const res = await apiHelper.get("/purchases/vehicle-serial-no");
 
-  console.log(res);
+    console.log(res);
 
-  return res.vehicleSrNo;
-};
-const handleViewClick = (item: PurchaseItemRow) => {
-  setSelectedItem(item);
+    return res.vehicleSrNo;
+  };
+  const handleViewClick = (item: PurchaseItemRow) => {
+    setSelectedItem(item);
 
-  setInwardData({
-    vehicleSrNo: item.vehicleSrNo,
-    chassisNo: item.chassisNo,
-    engineNo: item.engineNo,
-    mfgDate: item.mfgDate || "",
-    keyNo: item.keyNo || "",
-    batteryMake: item.batteryMake || "",
-    batteryNo: item.batteryNo || "",
-    first1TyerNo: item.first1TyerNo || "",
-    first2TyerNo: item.first2TyerNo || "",
-    second1TyerNo: item.second1TyerNo || "",
-    second2TyerNo: item.second2TyerNo || "",
-    location: item.location || "",
-    grnNumber: item.grnNumber || "",
-    grnDate: item.grnDate || "",
-    grnRecordDate: item.grnRecordDate || "",
-  });
+    setInwardData({
+      vehicleSrNo: item.vehicleSrNo,
+      chassisNo: item.chassisNo,
+      engineNo: item.engineNo,
+      mfgDate: item.mfgDate || "",
+      keyNo: item.keyNo || "",
+      batteryMake: item.batteryMake || "",
+      batteryNo: item.batteryNo || "",
+      first1TyerNo: item.first1TyerNo || "",
+      first2TyerNo: item.first2TyerNo || "",
+      second1TyerNo: item.second1TyerNo || "",
+      second2TyerNo: item.second2TyerNo || "",
+      location: item.location || "",
+      grnNumber: item.grnNumber || "",
+      grnDate: item.grnDate || "",
+      grnRecordDate: item.grnRecordDate || "",
+    });
 
-  setIsView(true);
-   setShowDrawer(true);
-};
+    setIsView(true);
+    setShowDrawer(true);
+  };
   return (
     <div className="relative min-h-screen space-y-6 p-4 pb-28 text-gray-900 md:p-6 dark:text-gray-100">
       {/* Header */}
@@ -406,6 +488,13 @@ const handleViewClick = (item: PurchaseItemRow) => {
               />
             </svg>
             Back
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowTransportModal(true)}
+            className="bg-primary-500 hover:bg-primary-600 inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white"
+          >
+            Add Transport
           </button>
         </div>
       </div>
@@ -508,7 +597,7 @@ const handleViewClick = (item: PurchaseItemRow) => {
                 <Th className="w-20 py-3.5 text-center text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Inward
                 </Th>
-                 <Th className="w-20 py-3.5 text-center text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                <Th className="w-20 py-3.5 text-center text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   View
                 </Th>
               </Tr>
@@ -566,43 +655,52 @@ const handleViewClick = (item: PurchaseItemRow) => {
                       </span>
                     </Td>
                     <Td className="py-4 text-center">
-                     {item.status === "Pending" ? (
-  <button
-    onClick={() => handleInwardClick(item)}
-    title="Inward"
-    className="text-green-500 transition-colors hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 cursor-pointer"
-  >
-    <ArrowDownCircleIcon className="size-5" />
-  </button>
-) : (
-  <button
-    disabled
-    title="Already Inward"
-    className="cursor-not-allowed text-gray-400"
-  >
-    <ArrowDownCircleIcon className="size-5" />
-  </button>
-)}
+                      {item.status === "Pending" ? (
+                        <button
+                          disabled={!transportSaved}
+                          onClick={() => handleInwardClick(item)}
+                          title={
+                            transportSaved
+                              ? "Inward"
+                              : "Please add transport first"
+                          }
+                          className={`${
+                            transportSaved
+                              ? "cursor-pointer text-green-500 hover:text-green-700"
+                              : "cursor-not-allowed text-gray-400"
+                          }`}
+                        >
+                          <ArrowDownCircleIcon className="size-5" />
+                        </button>
+                      ) : (
+                        <button
+                          disabled
+                          title="Already Inward"
+                          className="cursor-not-allowed text-gray-400"
+                        >
+                          <ArrowDownCircleIcon className="size-5" />
+                        </button>
+                      )}
                     </Td>
-                   <Td className="py-4 text-center ">
-  {item.status === "Inward" ? (
-    <button
-      onClick={() => handleViewClick(item)}
-      title="View"
-      className="text-blue-500 transition-colors hover:text-blue-700 cursor-pointer"
-    >
-      <EyeIcon className="size-5" />
-    </button>
-  ) : (
-    <button
-      disabled
-      title="View Disabled"
-      className="cursor-not-allowed text-gray-400 "
-    >
-      <EyeIcon className="size-5" />
-    </button>
-  )}
-</Td>
+                    <Td className="py-4 text-center">
+                      {item.status === "Inward" ? (
+                        <button
+                          onClick={() => handleViewClick(item)}
+                          title="View"
+                          className="cursor-pointer text-blue-500 transition-colors hover:text-blue-700"
+                        >
+                          <EyeIcon className="size-5" />
+                        </button>
+                      ) : (
+                        <button
+                          disabled
+                          title="View Disabled"
+                          className="cursor-not-allowed text-gray-400"
+                        >
+                          <EyeIcon className="size-5" />
+                        </button>
+                      )}
+                    </Td>
                   </Tr>
                 );
               })}
@@ -705,10 +803,139 @@ const handleViewClick = (item: PurchaseItemRow) => {
         )}
       </div>
       {/* Inward Drawer */}
+      <Transition appear show={showTransportModal} as={Fragment}>
+        <Dialog
+          as="div"
+          className="relative z-100"
+          onClose={() => setShowTransportModal(false)}
+        >
+          <TransitionChild
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-gray-900/50 backdrop-blur dark:bg-black/40" />
+          </TransitionChild>
+
+          <TransitionChild
+            as={Fragment}
+            enter="ease-out transform-gpu duration-200"
+            enterFrom="translate-x-full"
+            enterTo="translate-x-0"
+            leave="ease-in transform-gpu duration-200"
+            leaveFrom="translate-x-0"
+            leaveTo="translate-x-full"
+          >
+            <DialogPanel className="dark:bg-dark-700 fixed top-0 right-0 flex h-full w-full max-w-lg flex-col bg-white shadow-2xl">
+              {/* Header */}
+              <div className="flex items-center justify-between border-b px-5 py-4">
+                <h2 className="text-lg font-semibold">Add Transport</h2>
+
+                <Button
+                  variant="flat"
+                  isIcon
+                  onClick={() => setShowTransportModal(false)}
+                >
+                  <XMarkIcon className="size-5" />
+                </Button>
+              </div>
+
+              {/* Body */}
+              <div className="grow space-y-4 overflow-y-auto p-5">
+                <div>
+                  <label className="mb-1 block text-sm font-medium">
+                    Transporter Name
+                  </label>
+                  <Input
+                    value={transportData.transporterName}
+                    placeholder="Transporter Name"
+                    onChange={(e) =>
+                      setTransportData({
+                        ...transportData,
+                        transporterName: e.target.value,
+                      })
+                    }
+                  />
+                  {transportErrors.transporterName && (
+                    <p className="text-sm text-red-500">
+                      {transportErrors.transporterName}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-medium">
+                    Mobile Number
+                  </label>
+                  <Input
+                    value={transportData.mobileNumber}
+                    placeholder="Mobile Number"
+                    onChange={(e) =>
+                      setTransportData({
+                        ...transportData,
+                        mobileNumber: e.target.value,
+                      })
+                    }
+                  />
+                  {transportErrors.mobileNumber && (
+                    <p className="text-sm text-red-500">
+                      {transportErrors.mobileNumber}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-medium">
+                    Vehicle Number
+                  </label>
+                  <Input
+                    value={transportData.vehicleNumber}
+                    placeholder="Vehicle Number"
+                    onChange={(e) =>
+                      setTransportData({
+                        ...transportData,
+                        vehicleNumber: e.target.value,
+                      })
+                    }
+                  />
+                  {transportErrors.vehicleNumber && (
+                    <p className="text-sm text-red-500">
+                      {transportErrors.vehicleNumber}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="flex gap-3 border-t p-5">
+                <Button
+                  variant="outlined"
+                  className="w-1/2"
+                  onClick={() => setShowTransportModal(false)}
+                >
+                  Cancel
+                </Button>
+
+                <Button
+                  color="primary"
+                  className="w-1/2"
+                  onClick={handleTransportSave}
+                >
+                  Save
+                </Button>
+              </div>
+            </DialogPanel>
+          </TransitionChild>
+        </Dialog>
+      </Transition>
       <Transition appear show={showDrawer} as={Fragment}>
         <Dialog
           as="div"
-          className="relative z-[100]"
+          className="relative z-100"
           onClose={() => setShowDrawer(false)}
         >
           <TransitionChild
@@ -799,7 +1026,7 @@ const handleViewClick = (item: PurchaseItemRow) => {
                     </label>
                     <DatePicker
                       placeholder="Select MFG Date"
-                        disabled={isView}
+                      disabled={isView}
                       value={inwardData.mfgDate}
                       onChange={(selectedDates: Date[]) => {
                         if (selectedDates && selectedDates.length > 0) {
@@ -815,6 +1042,11 @@ const handleViewClick = (item: PurchaseItemRow) => {
                         }
                       }}
                     />
+                    {errors.mfgDate && (
+                      <p className="mt-1 text-sm text-red-500">
+                        {errors.mfgDate}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -823,12 +1055,17 @@ const handleViewClick = (item: PurchaseItemRow) => {
                     </label>
                     <Input
                       type="text"
-                        readOnly={isView}
+                      readOnly={isView}
                       name="keyNo"
                       value={inwardData.keyNo}
                       onChange={handleInwardChange}
                       placeholder="Enter key number"
                     />
+                    {errors.keyNo && (
+                      <p className="mt-1 text-sm text-red-500">
+                        {errors.keyNo}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -837,12 +1074,17 @@ const handleViewClick = (item: PurchaseItemRow) => {
                     </label>
                     <Input
                       type="text"
-                        readOnly={isView}
+                      readOnly={isView}
                       name="batteryMake"
                       value={inwardData.batteryMake}
                       onChange={handleInwardChange}
                       placeholder="Enter battery make"
                     />
+                    {errors.batteryMake && (
+                      <p className="mt-1 text-sm text-red-500">
+                        {errors.batteryMake}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -851,12 +1093,17 @@ const handleViewClick = (item: PurchaseItemRow) => {
                     </label>
                     <Input
                       type="text"
-                        readOnly={isView}
+                      readOnly={isView}
                       name="batteryNo"
                       value={inwardData.batteryNo}
                       onChange={handleInwardChange}
                       placeholder="Enter battery number"
                     />
+                    {errors.batteryNo && (
+                      <p className="mt-1 text-sm text-red-500">
+                        {errors.batteryNo}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -865,12 +1112,17 @@ const handleViewClick = (item: PurchaseItemRow) => {
                     </label>
                     <Input
                       type="text"
-                        readOnly={isView}
+                      readOnly={isView}
                       name="first1TyerNo"
                       value={inwardData.first1TyerNo}
                       onChange={handleInwardChange}
                       placeholder="Enter first 1 tyer number"
                     />
+                    {errors.first1TyerNo && (
+                      <p className="mt-1 text-sm text-red-500">
+                        {errors.first1TyerNo}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -879,12 +1131,17 @@ const handleViewClick = (item: PurchaseItemRow) => {
                     </label>
                     <Input
                       type="text"
-                        readOnly={isView}
+                      readOnly={isView}
                       name="first2TyerNo"
                       value={inwardData.first2TyerNo}
                       onChange={handleInwardChange}
                       placeholder="Enter first 2 tyer number"
                     />
+                    {errors.first2TyerNo && (
+                      <p className="mt-1 text-sm text-red-500">
+                        {errors.first2TyerNo}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -893,12 +1150,17 @@ const handleViewClick = (item: PurchaseItemRow) => {
                     </label>
                     <Input
                       type="text"
-                        readOnly={isView}
+                      readOnly={isView}
                       name="second1TyerNo"
                       value={inwardData.second1TyerNo}
                       onChange={handleInwardChange}
                       placeholder="Enter second 1 tyer number"
                     />
+                    {errors.second1TyerNo && (
+                      <p className="mt-1 text-sm text-red-500">
+                        {errors.second1TyerNo}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -907,12 +1169,17 @@ const handleViewClick = (item: PurchaseItemRow) => {
                     </label>
                     <Input
                       type="text"
-                        readOnly={isView}
+                      readOnly={isView}
                       name="second2TyerNo"
                       value={inwardData.second2TyerNo}
                       onChange={handleInwardChange}
                       placeholder="Enter second 2 tyer number"
                     />
+                    {errors.second2TyerNo && (
+                      <p className="mt-1 text-sm text-red-500">
+                        {errors.second2TyerNo}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -921,12 +1188,17 @@ const handleViewClick = (item: PurchaseItemRow) => {
                     </label>
                     <Input
                       type="text"
-                        readOnly={isView}
+                      readOnly={isView}
                       name="location"
                       value={inwardData.location}
                       onChange={handleInwardChange}
                       placeholder="Enter location"
                     />
+                    {errors.location && (
+                      <p className="mt-1 text-sm text-red-500">
+                        {errors.location}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -935,12 +1207,17 @@ const handleViewClick = (item: PurchaseItemRow) => {
                     </label>
                     <Input
                       type="text"
-                        readOnly={isView}
+                      readOnly={isView}
                       name="grnNumber"
                       value={inwardData.grnNumber}
                       onChange={handleInwardChange}
                       placeholder="Enter GRN number"
                     />
+                    {errors.grnNumber && (
+                      <p className="mt-1 text-sm text-red-500">
+                        {errors.grnNumber}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -949,7 +1226,7 @@ const handleViewClick = (item: PurchaseItemRow) => {
                     </label>
                     <DatePicker
                       placeholder="Select GRN Date"
-                       disabled={isView}
+                      disabled={isView}
                       value={inwardData.grnDate}
                       onChange={(selectedDates: Date[]) => {
                         if (selectedDates && selectedDates.length > 0) {
@@ -965,6 +1242,11 @@ const handleViewClick = (item: PurchaseItemRow) => {
                         }
                       }}
                     />
+                    {errors.grnDate && (
+                      <p className="mt-1 text-sm text-red-500">
+                        {errors.grnDate}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -974,7 +1256,7 @@ const handleViewClick = (item: PurchaseItemRow) => {
                     <DatePicker
                       placeholder="Select GRN Record Date"
                       value={inwardData.grnRecordDate}
-                       disabled={isView}
+                      disabled={isView}
                       onChange={(selectedDates: Date[]) => {
                         if (selectedDates && selectedDates.length > 0) {
                           const date = selectedDates[0];
@@ -989,6 +1271,11 @@ const handleViewClick = (item: PurchaseItemRow) => {
                         }
                       }}
                     />
+                    {errors.grnRecordDate && (
+                      <p className="mt-1 text-sm text-red-500">
+                        {errors.grnRecordDate}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1004,14 +1291,14 @@ const handleViewClick = (item: PurchaseItemRow) => {
                   Cancel
                 </Button>
                 {!isView && (
-                <Button
-                  color="primary"
-                  type="button"
-                  onClick={handleInwardSubmit}
-                  className="h-10 w-1/2"
-                >
-                  Submit Inward
-                </Button>
+                  <Button
+                    color="primary"
+                    type="button"
+                    onClick={handleInwardSubmit}
+                    className="h-10 w-1/2"
+                  >
+                    Submit Inward
+                  </Button>
                 )}
               </div>
             </DialogPanel>

@@ -15,11 +15,11 @@ import { Radio } from "@/components/ui";
 import emptyStateImage from "@/assets/notfound.png";
 import { Country, State, City } from "country-state-city";
 import Select from "react-select";
-import { components } from 'react-select';
+import { components } from "react-select";
 import apiHelper from "@/utils/apiHelper";
-
+// import { Combobox } from "@/components/shared/form/StyledCombobox";
 // ---------- Types ----------
-
+import { Combobox } from "@/components/shared/form/Combobox";
 interface AccessoriesPurchaseBillProps {
   onBack?: () => void;
   onSaved?: (row: any) => void;
@@ -35,21 +35,29 @@ interface AccessoryOption {
 
 interface ItemRow {
   id: string;
+
+  accessoryId?: number;
+
   item: string;
   itemCode: string;
   hsn: string;
   unit: string;
+
   qty: number;
+  stock?: number;
+
   pPrice: string;
   gstPercent: string;
+  gstAmount?: number;
   netAmount: string;
 }
 
 interface PartyOption {
   id: string;
   name: string;
+  mobile: number;
+  stateCode: string;
 }
-
 interface NewAccountData {
   accountName: string;
   mobile: string;
@@ -62,6 +70,9 @@ interface NewAccountData {
   address: string;
   panCard: string;
   aadharCard: string;
+  group: string;
+  openingBalance: string;
+  drCr: string;
 }
 
 // Accessories Item Form Data (matches the main Accessories form)
@@ -71,6 +82,7 @@ interface AccessoryItemFormData {
   codeNo: string;
   shortName: string;
   hsnCode: string;
+  unit: string;
   taxSlab: string;
   group: string;
   purchasePrice: string;
@@ -188,8 +200,11 @@ const emptyAccount: NewAccountData = {
   address: "",
   panCard: "",
   aadharCard: "",
-};
 
+  group: "",
+  openingBalance: "",
+  drCr: "",
+};
 // ─── Options for Accessories Form ──────────────────────────────────────
 const statusOptions = [
   { label: "Active", value: "ACTIVE" },
@@ -197,6 +212,7 @@ const statusOptions = [
 ];
 
 const taxSlabOptions = [
+  { label: "GST 0%", value: "0" },
   { label: "GST 5%", value: "5" },
   { label: "GST 12%", value: "12" },
   { label: "GST 18%", value: "18" },
@@ -221,7 +237,17 @@ const variantOptions = [
   { label: "Variant 2", value: "variant2" },
   { label: "Variant 3", value: "variant3" },
 ];
-
+const unitOptions = [
+  // { label: "NOS", value: "NOS" },
+  { label: "PCS", value: "PCS" },
+  { label: "SET", value: "SET" },
+  { label: "BOX", value: "BOX" },
+  // { label: "KIT", value: "KIT" },
+  // { label: "LTR", value: "LTR" },
+  { label: "KG", value: "KG" },
+  { label: "GM", value: "GM" },
+  // { label: "MTR", value: "MTR" },
+];
 const colourOptions = [
   { label: "Red", value: "red" },
   { label: "Blue", value: "blue" },
@@ -371,6 +397,7 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
     codeNo: "",
     shortName: "",
     hsnCode: "",
+    unit: "",
     taxSlab: "",
     group: "",
     purchasePrice: "",
@@ -392,7 +419,9 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
   const [addTractorModalOpen, setAddTractorModalOpen] = useState(false);
   const [tractorForm, setTractorForm] = useState<TractorData>(emptyTractor);
   const [tractorTouched, setTractorTouched] = useState(false);
-
+  const [accountErrors, setAccountErrors] = useState<
+    Partial<Record<keyof NewAccountData, string>>
+  >({});
   // ── Bank Details drawer state ────────────────────────────────────────
   const [bankDetailsModalOpen, setBankDetailsModalOpen] = useState(false);
   const [bankDetails, setBankDetails] =
@@ -403,23 +432,48 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
   const [accountModalOpen, setAccountModalOpen] = useState(false);
   const [accountForm, setAccountForm] = useState<NewAccountData>(emptyAccount);
   const [accountTouched, setAccountTouched] = useState(false);
-
+  const [accessories, setAccessories] = useState<any[]>([]);
+  
   // ── API Functions ────────────────────────────────────────────────────
-
-  // Get Bill Number
-  const getBillNo = async () => {
+  const fetchAccessories = async () => {
     try {
-      const res = await apiHelper.get("/purchases/generate-bill-no");
-      setBillNo(res.billNo || "");
-    } catch (error) {
-      console.error("Error fetching bill number:", error);
+      const res = await apiHelper.get("/accessories");
+
+      console.log("Accessories API:", res);
+
+      setAccessories(
+        Array.isArray(res.data?.data)
+          ? res.data.data
+          : Array.isArray(res.data)
+            ? res.data
+            : [],
+      );
+    } catch (err) {
+      console.log(err);
+      setAccessories([]);
     }
   };
 
+  useEffect(() => {
+    fetchAccessories();
+  }, []);
+  // Get Bill Number
+const getBillNo = async () => {
+  try {
+    const res = await apiHelper.get(
+      "/accessories-purchase/generate-bill-no"
+    );
+
+    setBillNo(res.billNo);
+  } catch (error) {
+    console.error(error);
+  }
+};
   // Get Parties (Accounts)
   const getParties = async () => {
     try {
       const res = await apiHelper.get("/accounts");
+
       const accounts = Array.isArray(res.data?.data)
         ? res.data.data
         : Array.isArray(res.data)
@@ -427,13 +481,20 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
           : [];
 
       setParties(
-        accounts.map((acc: any) => ({
-          id: acc.id,
-          name: acc.accountName,
-        })),
+        accounts
+          .filter(
+            (acc: any) =>
+              acc.group === "Supplier" || acc.group === "Sundry Creditor",
+          )
+          .map((acc: any) => ({
+            id: acc.id,
+            name: acc.accountName,
+            mobile: acc.mobile,
+            stateCode: acc.stateCode,
+          })),
       );
     } catch (error) {
-      console.error("Error fetching parties:", error);
+      console.error(error);
     }
   };
 
@@ -468,7 +529,43 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
       console.error("Error fetching accounts:", error);
     }
   };
+  const groupOptions = [
+    { label: "Supplier", value: "Supplier" },
+    { label: "Sundry Creditor", value: "Sundry Creditor" },
+  ];
+  const drCrOptions = [
+    { label: "Dr", value: "Dr" },
+    { label: "Cr", value: "Cr" },
+  ];
+  const partyOptions = parties.map((p) => ({
+    label: p.name,
+    mobile: p.mobile,
 
+    value: p.id,
+  }));
+  const [company, setCompany] = useState<any>(null);
+
+const getCompany = async () => {
+  try {
+    const res = await apiHelper.get("/company");
+
+    const companyData = Array.isArray(res.data)
+      ? res.data[0]
+      : res.data;
+
+    setCompany(companyData);
+  } catch (err) {
+    console.log(err);
+  }
+};
+const selectedParty = parties.find(
+  (p) => p.id === partyId
+);
+
+const isPartySelected = !!partyId;
+
+const isSameState =
+  company?.stateCode === selectedParty?.stateCode;
   // ── Fetch Showroom Variants ──────────────────────────────────────────
   const fetchShowroomVariants = async () => {
     try {
@@ -492,11 +589,15 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
     getBillNo();
     getParties();
     getAccounts();
+    getCompany();
     fetchShowroomVariants();
   }, []);
 
   // ── Accessories Form Handlers ────────────────────────────────────────
-  const handleAccessoryFormChange = (field: keyof AccessoryItemFormData, value: any) => {
+  const handleAccessoryFormChange = (
+    field: keyof AccessoryItemFormData,
+    value: any,
+  ) => {
     setAccessoryForm((prev) => ({ ...prev, [field]: value }));
     if (accessoryFormErrors[field]) {
       const newErrors = { ...accessoryFormErrors };
@@ -548,6 +649,7 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
         codeNo: accessoryForm.codeNo,
         shortName: accessoryForm.shortName,
         hsnCode: accessoryForm.hsnCode,
+        unit: accessoryForm.unit,
         taxSlab: accessoryForm.taxSlab,
         group: accessoryForm.group,
         purchasePrice: accessoryForm.purchasePrice,
@@ -563,12 +665,12 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
       };
 
       await apiHelper.post("/accessories", payload);
-      
+
       alert("Accessory item created successfully!");
-      
+
       setAddAccessoryModalOpen(false);
       resetAccessoryForm();
-      
+
       // Refresh accessories list if needed
       // getAccessories();
     } catch (error) {
@@ -584,6 +686,7 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
       codeNo: "",
       shortName: "",
       hsnCode: "",
+      unit: "",
       taxSlab: "",
       group: "",
       purchasePrice: "",
@@ -627,7 +730,86 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
   const updateAccountForm = (key: keyof NewAccountData, value: string) => {
     setAccountForm((f) => ({ ...f, [key]: value }));
   };
+  const getAccountError = (field: keyof NewAccountData) => {
+    if (!accountTouched) return "";
 
+    switch (field) {
+      case "accountName":
+        return !accountForm.accountName.trim()
+          ? "Account Name is required"
+          : "";
+
+      case "group":
+        return !accountForm.group ? "Group is required" : "";
+
+      case "openingBalance":
+        return accountForm.group === "Sundry Creditor" &&
+          !accountForm.openingBalance.trim()
+          ? "Opening Balance is required"
+          : "";
+
+      case "drCr":
+        return accountForm.group === "Sundry Creditor" && !accountForm.drCr
+          ? "Dr / Cr is required"
+          : "";
+
+      case "mobile":
+        if (!accountForm.mobile.trim()) return "Mobile is required";
+        if (!/^[0-9]{10}$/.test(accountForm.mobile))
+          return "Mobile must be 10 digits";
+        return "";
+
+      case "countryCode":
+        return !accountForm.countryCode ? "Country is required" : "";
+
+      case "stateCode":
+        return !accountForm.stateCode ? "State is required" : "";
+
+      case "district":
+        return !accountForm.district ? "District is required" : "";
+
+      case "city":
+        return !accountForm.city ? "City is required" : "";
+
+      case "address":
+        return !accountForm.address.trim() ? "Address is required" : "";
+
+      case "panCard":
+        return !accountForm.panCard.trim() ? "PAN Card is required" : "";
+
+      case "aadharCard":
+        return !accountForm.aadharCard.trim() ? "Aadhar Card is required" : "";
+
+      default:
+        return "";
+    }
+  };
+  const validateField = (field: keyof NewAccountData, value: string) => {
+    let error = "";
+
+    switch (field) {
+      case "panCard":
+        if (!value.trim()) {
+          error = "PAN Card is required";
+        } else if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/i.test(value)) {
+          error = "Enter a valid PAN Card number";
+        }
+        break;
+
+      case "aadharCard":
+        if (!value.trim()) {
+          error = "Aadhar Card is required";
+        } else if (!/^\d{12}$/.test(value)) {
+          error = "Enter a valid Aadhar Card number";
+        }
+        break;
+    }
+
+    setAccountErrors((prev) => ({
+      ...prev,
+      [field]: error,
+    }));
+  };
   const handleCreateAccount = async () => {
     try {
       const required: (keyof NewAccountData)[] = [
@@ -640,9 +822,25 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
         "address",
         "panCard",
         "aadharCard",
+        "group",
       ];
 
-      const missing = required.filter((k) => !accountForm[k]?.trim());
+      const missing = required.filter((k) => !String(accountForm[k]).trim());
+
+      // Supplier & Sundry Creditor require Opening Balance
+      if (accountForm.group === "Sundry Creditor") {
+        if (!accountForm.openingBalance.trim()) {
+          missing.push("openingBalance");
+        }
+      }
+
+      // Only Sundry Creditor requires Dr/Cr selection
+      if (accountForm.group === "Sundry Creditor") {
+        if (!accountForm.drCr.trim()) {
+          missing.push("drCr");
+        }
+      }
+
       setAccountTouched(true);
 
       if (missing.length > 0) return;
@@ -650,19 +848,42 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
       const res = await apiHelper.post("/accounts", {
         accountName: accountForm.accountName,
         printName: accountForm.accountName,
+
         mobile: accountForm.mobile,
+
         country: accountForm.country,
         countryCode: accountForm.countryCode,
+
         state: accountForm.state,
         stateCode: accountForm.stateCode,
+
         district: accountForm.district,
         city: accountForm.city,
+
         address1: accountForm.address,
+
         panCard: accountForm.panCard,
         aadharNo: accountForm.aadharCard,
+
+        group: accountForm.group,
+
+        openingBalance:
+          accountForm.group === "Sundry Creditor"
+            ? Number(accountForm.openingBalance)
+            : 0,
+
+        // Supplier -> Always Cr
+        drCr:
+          accountForm.group === "Supplier"
+            ? "Cr"
+            : accountForm.group === "Sundry Creditor"
+              ? accountForm.drCr
+              : null,
       });
 
       const account = res.data;
+
+      console.log("API Response:", account);
 
       if (!account?.id) {
         console.log("Invalid Response:", account);
@@ -672,6 +893,8 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
       const newParty = {
         id: account.id,
         name: account.accountName,
+        mobile: Number(accountForm.mobile),
+        stateCode: accountForm.stateCode,
       };
 
       setParties((prev) => [...prev, newParty]);
@@ -680,12 +903,8 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
       setAccountModalOpen(false);
       setAccountForm(emptyAccount);
       setAccountTouched(false);
-
-      // Refresh accounts list
-      await getAccounts();
     } catch (error) {
-      console.error("Error creating account:", error);
-      alert("Failed to create account. Please try again.");
+      console.error(error);
     }
   };
 
@@ -744,28 +963,62 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
   }, [accountForm.countryCode, accountForm.stateCode]);
 
   const districtOptions = cityOptions;
+  const calculateNetAmount = (qty: number, price: number, gst: number) => {
+    const basicAmount = qty * price;
+    const gstAmount = (basicAmount * gst) / 100;
+    const netAmount = basicAmount + gstAmount;
 
+    return netAmount.toFixed(2);
+  };
   // ── Draft Row Handlers ───────────────────────────────────────────────
-  const updateDraft = (key: keyof ItemRow, value: string | number) =>
-    setDraft((d) => ({ ...d, [key]: value }));
+  const updateDraft = (key: keyof ItemRow, value: string | number) => {
+    setDraft((prev) => {
+      const updated = {
+        ...prev,
+        [key]: value,
+      };
+
+      updated.netAmount = calculateNetAmount(
+        Number(updated.qty || 0),
+        Number(updated.pPrice || 0),
+        Number(updated.gstPercent || 0),
+      );
+
+      return updated;
+    });
+  };
 
   const filteredAccessories = useMemo(() => {
-    if (!accessorySearch.trim()) return ACCESSORY_OPTIONS;
     const q = accessorySearch.toLowerCase();
-    return ACCESSORY_OPTIONS.filter((a) =>
-      `${a.itemName} ${a.modalName} ${a.itemCodeNo} ${a.hsnCode}`
+
+    return (accessories || []).filter((a: any) =>
+      `${a.itemName}
+     ${a.codeNo}
+     ${a.hsnCode}
+     ${a.modelName || ""}
+     ${a.variantName || ""}`
         .toLowerCase()
         .includes(q),
     );
-  }, [accessorySearch]);
+  }, [accessorySearch, accessories]);
+  const handleAccessorySelect = (a: any) => {
+    const qty = draft.qty || 1;
+    const price = Number(a.purchasePrice || 0);
+    const gst = Number(a.taxSlab || 0);
 
-  const handleAccessorySelect = (a: AccessoryOption) => {
-    setDraft((d) => ({
-      ...d,
+    setDraft((prev) => ({
+      ...prev,
+        accessoryId: a.id,
       item: a.itemName,
-      itemCode: a.itemCodeNo,
+      itemCode: a.codeNo,
       hsn: a.hsnCode,
+      unit: a.unit,
+      qty,
+      pPrice: String(price),
+      gstPercent: String(gst),
+      netAmount: calculateNetAmount(qty, price, gst),
     }));
+
     setAccessoryDrawerOpen(false);
     setAccessorySearch("");
   };
@@ -804,7 +1057,33 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
       return;
     }
 
-    setRows((r) => [...r, draft]);
+    setRows((prev) => {
+      const index = prev.findIndex((row) => row.itemCode === draft.itemCode);
+
+      // Item already exists
+      if (index !== -1) {
+        const updated = [...prev];
+
+        const oldQty = Number(updated[index].qty);
+        const newQty = oldQty + Number(draft.qty);
+
+        updated[index] = {
+          ...updated[index],
+          qty: newQty,
+          netAmount: calculateNetAmount(
+            newQty,
+            Number(updated[index].pPrice),
+            Number(updated[index].gstPercent),
+          ),
+        };
+
+        return updated;
+      }
+
+      // New item
+      return [...prev, draft];
+    });
+
     setDraft(emptyDraft());
   };
 
@@ -812,18 +1091,86 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
     setRows((r) => r.filter((row) => row.id !== id));
 
   // ── Derived totals ──────────────────────────────────────────────────
-  const totalQuantity = rows.reduce((sum, r) => sum + (Number(r.qty) || 0), 0);
-  const totalAmount = rows.reduce(
-    (sum, r) => sum + (Number(r.netAmount) || 0),
-    0,
-  );
-  const freightNum = Number(freightCharge) || 0;
-  const insuranceNum = Number(insurance) || 0;
-  const otherNum = Number(otherCharge) || 0;
-  const roundNum = Number(roundAmount) || 0;
-  const freightInsuranceOther = freightNum + insuranceNum + otherNum;
-  const newTaxableValue = totalAmount + freightInsuranceOther;
-  const grandTotal = newTaxableValue + roundNum;
+const totalQuantity = rows.reduce(
+  (sum, r) => sum + Number(r.qty || 0),
+  0
+);
+
+const freightNum = Number(freightCharge) || 0;
+const insuranceNum = Number(insurance) || 0;
+const otherNum = Number(otherCharge) || 0;
+const roundNum = Number(roundAmount) || 0;
+
+const freightInsuranceOther =
+  freightNum +
+  insuranceNum +
+  otherNum;
+
+// Purchase value without GST
+const totalValue = rows.reduce(
+  (sum, r) =>
+    sum +
+    Number(r.pPrice) * Number(r.qty || 1),
+  0
+);
+
+let totalGST = 0;
+let totalOtherCharges = 0;
+let totalNetAmount = 0;
+const totalAmount = totalNetAmount;
+rows.forEach((r) => {
+  const purchasePrice =
+    Number(r.pPrice) * Number(r.qty || 1);
+
+  let otherChargesAmount = 0;
+
+  if (freightInsuranceOther > 0 && totalValue > 0) {
+    otherChargesAmount =
+      (purchasePrice / totalValue) *
+      freightInsuranceOther;
+  }
+
+  const taxableAmount =
+    purchasePrice +
+    otherChargesAmount;
+
+  const gstAmount = isPartySelected
+    ? (taxableAmount *
+        Number(r.gstPercent || 0)) /
+      100
+    : 0;
+
+  totalGST += gstAmount;
+  totalOtherCharges += otherChargesAmount;
+  totalNetAmount += taxableAmount + gstAmount;
+});
+
+const newTaxableValue =
+  totalValue + totalOtherCharges;
+
+const totalCgst =
+  isPartySelected && isSameState
+    ? Number((totalGST / 2).toFixed(2))
+    : 0;
+
+const totalSgst =
+  isPartySelected && isSameState
+    ? Number((totalGST / 2).toFixed(2))
+    : 0;
+
+const totalIgst =
+  isPartySelected && !isSameState
+    ? Number(totalGST.toFixed(2))
+    : 0;
+
+const grandTotal = Number(
+  (
+    totalValue +
+    totalOtherCharges +
+    totalGST +
+    roundNum
+  ).toFixed(2)
+);
 
   const fmt = (n: number) =>
     n.toLocaleString("en-IN", {
@@ -841,24 +1188,78 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
 
   const handleSave = async () => {
     try {
-      const payload = {
-        accountId: partyId,
-        purchaseDate: purchaseDate || date,
-        purchaseBillNo,
-        terms,
-        narration,
-        freightCharge,
-        insurance,
-        otherCharge,
-        roundAmount,
-        totalQty: totalQuantity,
-        totalAmount,
-        grandTotal,
-        items: rows,
-      };
+    const payload = {
+  accountId: partyId,
 
-      await apiHelper.post("/purchases/accessories", payload);
-      
+  purchaseDate: purchaseDate || date,
+  purchaseBillNo,
+  purchaseLocation,
+  dueDate,
+
+  terms,
+  narration,
+
+  cashAccountId:
+    terms === "Cash" ? cashAccount : null,
+
+  bankAccountId:
+    terms === "Bank" ? bankAccount : null,
+
+  paymentMode: bankDetails.paymentMode,
+  chequeNo: bankDetails.chequeNo,
+  chequeDate: bankDetails.chequeDate,
+  clearDate: bankDetails.clearDate,
+  bankNarration: bankDetails.narration,
+
+  freightCharge,
+  insurance,
+  otherCharge,
+  roundAmount,
+
+  taxableValue: newTaxableValue,
+
+  totalQty: totalQuantity,
+  totalAmount: totalNetAmount,
+
+  cgst: totalCgst,
+  sgst: totalSgst,
+  igst: totalIgst,
+
+  grandTotal,
+
+  verifyStatus: billVerify,
+
+  items: rows.map((row: any) => ({
+    accessoryId: row.accessoryId || null,
+
+    item: row.item,
+    itemCode: row.itemCode,
+    hsn: row.hsn,
+    unit: row.unit,
+
+    qty: Number(row.qty),
+
+    stock: Number(row.qty),
+
+    pPrice: Number(row.pPrice),
+
+    gstPercent: Number(row.gstPercent),
+
+    gstAmount:
+      (
+        Number(row.qty) *
+        Number(row.pPrice) *
+        Number(row.gstPercent)
+      ) / 100,
+
+    netAmount: Number(row.netAmount),
+  })),
+};
+      await apiHelper.post(
+  "/accessories-purchase",
+  payload
+);
+
       alert("Purchase Saved Successfully");
       navigate("/purchase/accessories");
     } catch (error) {
@@ -877,7 +1278,7 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
           </h1>
           <button
             onClick={handleBack}
-            className="w-full rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-700 sm:w-auto sm:px-5"
+            className="bg-primary-500 hover:bg-primary-500 w-full rounded-lg px-4 py-2 text-sm font-semibold text-white transition-colors sm:w-auto sm:px-5"
           >
             ← Back
           </button>
@@ -923,10 +1324,13 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
               <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Cash Account
               </label>
-              <Listbox
+
+              <Combobox
                 data={cashAccounts.map((acc) => ({
                   label: acc.accountName,
                   value: acc.id,
+                  mobile: acc.mobile,
+                  openingBalance: acc.openingBalance,
                 }))}
                 value={
                   cashAccounts.find((acc) => acc.id === cashAccount)
@@ -935,54 +1339,85 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
                           cashAccounts.find((acc) => acc.id === cashAccount)
                             ?.accountName || "",
                         value: cashAccount,
+                        mobile:
+                          cashAccounts.find((acc) => acc.id === cashAccount)
+                            ?.mobile || "",
+                        openingBalance:
+                          cashAccounts.find((acc) => acc.id === cashAccount)
+                            ?.openingBalance || 0,
                       }
                     : null
                 }
                 onChange={(val: any) => setCashAccount(val.value)}
                 displayField="label"
-                placeholder="Select Cash Account"
+                placeholder="Search Cash Account"
+                searchFields={["label", "mobile"]}
+                columns={[
+                  {
+                    header: "Account",
+                    field: "label",
+                    width: "2fr",
+                  },
+
+                  {
+                    header: "Opening",
+                    field: "openingBalance",
+                    width: "1fr",
+                  },
+                ]}
               />
             </div>
           )}
-
           {terms === "Bank" && (
             <div className="col-span-1">
               <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Bank Account
               </label>
-              <div className="flex w-full gap-2">
-                <div className="min-w-0 flex-1">
-                  <Listbox
-                    data={bankAccounts.map((acc) => ({
-                      label: acc.accountName,
-                      value: acc.id,
-                    }))}
-                    value={
-                      bankAccounts.find((acc) => acc.id === bankAccount)
-                        ? {
-                            label:
-                              bankAccounts.find((acc) => acc.id === bankAccount)
-                                ?.accountName || "",
-                            value: bankAccount,
-                          }
-                        : null
-                    }
-                    onChange={(val: any) => {
-                      setBankAccount(val.value);
-                      setBankDetailsModalOpen(true);
-                    }}
-                    displayField="label"
-                    placeholder="Select Bank Account"
-                  />
-                </div>
-                <button
-                  onClick={() => setBankDetailsModalOpen(true)}
-                  className="flex h-[38px] w-[38px] flex-shrink-0 items-center justify-center rounded-lg border border-gray-300 text-blue-600 hover:bg-gray-50 dark:border-gray-600 dark:text-blue-400 dark:hover:bg-gray-700"
-                  title="Add Bank Details"
-                >
-                  <BuildingOffice2Icon className="h-5 w-5" />
-                </button>
-              </div>
+
+              <Combobox
+                data={bankAccounts.map((acc) => ({
+                  label: acc.accountName,
+                  value: acc.id,
+                  mobile: acc.mobile,
+                  openingBalance: acc.openingBalance,
+                }))}
+                value={
+                  bankAccounts.find((acc) => acc.id === bankAccount)
+                    ? {
+                        label:
+                          bankAccounts.find((acc) => acc.id === bankAccount)
+                            ?.accountName || "",
+                        value: bankAccount,
+                        mobile:
+                          bankAccounts.find((acc) => acc.id === bankAccount)
+                            ?.mobile || "",
+                        openingBalance:
+                          bankAccounts.find((acc) => acc.id === bankAccount)
+                            ?.openingBalance || 0,
+                      }
+                    : null
+                }
+                onChange={(val: any) => {
+                  setBankAccount(val.value);
+                  setBankDetailsModalOpen(true);
+                }}
+                displayField="label"
+                placeholder="Search Bank Account"
+                searchFields={["label", "mobile"]}
+                columns={[
+                  {
+                    header: "Account",
+                    field: "label",
+                    width: "2fr",
+                  },
+
+                  {
+                    header: "Opening",
+                    field: "openingBalance",
+                    width: "1fr",
+                  },
+                ]}
+              />
             </div>
           )}
 
@@ -992,20 +1427,25 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
             </label>
             <div className="flex w-full gap-2">
               <div className="min-w-0 flex-1">
-                <Listbox
-                  data={parties.map((p) => ({ label: p.name, value: p.id }))}
-                  value={
-                    parties.find((p) => p.id === partyId)
-                      ? {
-                          label:
-                            parties.find((p) => p.id === partyId)?.name || "",
-                          value: partyId,
-                        }
-                      : null
-                  }
+                <Combobox
+                  data={partyOptions}
+                  value={partyOptions.find((x) => x.value === partyId) || null}
                   onChange={(val: any) => setPartyId(val.value)}
                   displayField="label"
-                  placeholder="Select party"
+                  searchFields={["label", "mobile"]}
+                  columns={[
+                    {
+                      header: "Party",
+                      field: "label",
+                      width: "2fr",
+                    },
+                    {
+                      header: "Mobile",
+                      field: "mobile",
+                      width: "1fr",
+                    },
+                  ]}
+                  placeholder="Search Party"
                 />
               </div>
               <button
@@ -1107,223 +1547,227 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
           </div>
         </div>
 
-        {/* Item table - Keep the same as before */}
         <div className="px-3 pb-3 sm:px-4 sm:pb-4 md:px-6">
-          <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-            <table className="w-full min-w-[900px] border-collapse text-sm">
-              <thead className="bg-gray-100 dark:bg-gray-700">
-                <tr>
-                  <th className="px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
-                    ITEM
-                  </th>
-                  <th className="px-3 py-2.5 text-left text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
-                    ITEM NAME
-                  </th>
-                  <th className="px-3 py-2.5 text-left text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
-                    ITEM CODE
-                  </th>
-                  <th className="px-3 py-2.5 text-left text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
-                    HSN
-                  </th>
-                  <th className="px-3 py-2.5 text-left text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
-                    UNIT
-                  </th>
-                  <th className="px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
-                    QTY
-                  </th>
-                  <th className="px-3 py-2.5 text-left text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
-                    P. PRICE
-                  </th>
-                  <th className="px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
-                    GST %
-                  </th>
-                  <th className="px-3 py-2.5 text-right text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
-                    NET AMOUNT
-                  </th>
-                  <th className="px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
-                    ACTION
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {/* Draft row */}
-                <tr className="bg-gray-50 dark:bg-gray-700/50">
-                  <td className="px-2 py-1.5 text-center">
-                    <button
-                      onClick={() => setAccessoryDrawerOpen(true)}
-                      className="rounded border border-blue-600 px-3 py-1 text-sm font-semibold text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20"
-                    >
-                      Add
-                    </button>
-                  </td>
-                  <td className="px-2 py-1.5">
-                    <input
-                      placeholder="Enter Item Name"
-                      value={draft.item}
-                      onChange={(e) => updateDraft("item", e.target.value)}
-                      className="w-full rounded border border-gray-300 px-2 py-1 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
-                    />
-                  </td>
-                  <td className="px-2 py-1.5">
-                    <input
-                      placeholder="Enter Code"
-                      value={draft.itemCode}
-                      onChange={(e) => updateDraft("itemCode", e.target.value)}
-                      className="w-full rounded border border-gray-300 px-2 py-1 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
-                    />
-                  </td>
-                  <td className="px-2 py-1.5">
-                    <input
-                      placeholder="HSN"
-                      value={draft.hsn}
-                      onChange={(e) => updateDraft("hsn", e.target.value)}
-                      className="w-full rounded border border-gray-300 px-2 py-1 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
-                    />
-                  </td>
-                  <td className="px-2 py-1.5">
-                    <input
-                      placeholder="Unit"
-                      value={draft.unit}
-                      onChange={(e) => updateDraft("unit", e.target.value)}
-                      className="w-full rounded border border-gray-300 px-2 py-1 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
-                    />
-                  </td>
-                  <td className="px-2 py-1.5">
-                    <input
-                      type="number"
-                      min={1}
-                      value={draft.qty || ""}
-                      onChange={(e) =>
-                        updateDraft("qty", Number(e.target.value))
-                      }
-                      className="w-full rounded border border-gray-300 px-2 py-1 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
-                    />
-                  </td>
-                  <td className="px-2 py-1.5">
-                    <input
-                      placeholder="Rate"
-                      value={draft.pPrice}
-                      onChange={(e) => updateDraft("pPrice", e.target.value)}
-                      className="w-full rounded border border-gray-300 px-2 py-1 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
-                    />
-                  </td>
-                  <td className="px-2 py-1.5">
-                    <input
-                      placeholder="GST"
-                      value={draft.gstPercent}
-                      onChange={(e) =>
-                        updateDraft("gstPercent", e.target.value)
-                      }
-                      className="w-full rounded border border-gray-300 px-2 py-1 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
-                    />
-                  </td>
-                  <td className="px-2 py-1.5">
-                    <input
-                      placeholder="Amount"
-                      value={draft.netAmount}
-                      onChange={(e) => updateDraft("netAmount", e.target.value)}
-                      className="w-full rounded border border-gray-300 px-2 py-1 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
-                    />
-                  </td>
-                  <td className="px-2 py-1.5 text-center">
-                    <button
-                      onClick={saveDraftRow}
-                      disabled={!draft.item.trim()}
-                      className={`inline-flex h-8 w-8 items-center justify-center rounded-lg text-white ${
-                        draft.item.trim()
-                          ? "bg-green-600 hover:bg-green-700"
-                          : "cursor-not-allowed bg-gray-300"
-                      }`}
-                    >
-                      <CheckIcon className="h-4 w-4" />
-                    </button>
-                  </td>
-                </tr>
-
-                {/* Saved rows */}
-                {rows.map((r, index) => (
-                  <tr
-                    key={r.id}
-                    className={`border-t border-gray-200 dark:border-gray-700 ${
-                      index % 2 === 0
-                        ? "bg-white dark:bg-gray-800/50"
-                        : "bg-gray-50 dark:bg-gray-700/30"
-                    }`}
-                  >
-                    <td className="px-3 py-2.5 text-center font-medium text-gray-500 dark:text-gray-400">
-                      {index + 1}
-                    </td>
-                    <td className="px-3 py-2.5 font-medium text-gray-900 dark:text-gray-200">
-                      {r.item}
-                    </td>
-                    <td className="px-3 py-2.5 text-gray-700 dark:text-gray-300">
-                      {r.itemCode}
-                    </td>
-                    <td className="px-3 py-2.5 text-gray-700 dark:text-gray-300">
-                      {r.hsn}
-                    </td>
-                    <td className="px-3 py-2.5 text-gray-700 dark:text-gray-300">
-                      {r.unit}
-                    </td>
-                    <td className="px-3 py-2.5 text-center font-semibold text-gray-900 dark:text-gray-200">
-                      {r.qty}
-                    </td>
-                    <td className="px-3 py-2.5 text-gray-700 dark:text-gray-300">
-                      {r.pPrice}
-                    </td>
-                    <td className="px-3 py-2.5 text-center text-gray-700 dark:text-gray-300">
-                      {r.gstPercent}%
-                    </td>
-                    <td className="px-3 py-2.5 text-right font-semibold text-gray-900 dark:text-gray-200">
-                      ₹{r.netAmount}
-                    </td>
-                    <td className="px-3 py-2.5 text-center">
+          <div className="overflow-x-auto rounded border border-gray-200 dark:border-gray-700">
+            <div className="h-96 overflow-y-auto">
+              <table className="w-full border-collapse text-sm">
+                <thead className="sticky top-0 z-10 bg-gray-100 dark:bg-gray-700">
+                  <tr>
+                    <th className="border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
+                      ITEM
+                    </th>
+                    <th className="border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
+                      ITEM NAME
+                    </th>
+                    <th className="border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
+                      ITEM CODE
+                    </th>
+                    <th className="border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
+                      HSN
+                    </th>
+                    <th className="border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
+                      UNIT
+                    </th>
+                    <th className="border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
+                      QTY
+                    </th>
+                    <th className="border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
+                      P. PRICE
+                    </th>
+                    <th className="border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
+                      GST %
+                    </th>
+                    <th className="border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
+                      NET AMOUNT
+                    </th>
+                    <th className="border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
+                      ACTION
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {/* Draft row */}
+                  <tr className="sticky top-9 z-10 bg-gray-700">
+                    <td className="border border-gray-500 px-2 py-1.5 text-center dark:border-gray-500">
                       <button
-                        onClick={() => removeRow(r.id)}
-                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400"
+                        onClick={() => setAccessoryDrawerOpen(true)}
+                        className="rounded border border-blue-600 px-3 py-1 text-sm font-semibold text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20"
                       >
-                        <XMarkIcon className="h-4 w-4" />
+                        <PlusIcon className="h-5 w-5" />
+                      </button>
+                    </td>
+                    <td className="border border-gray-500 px-2 py-1.5 dark:border-gray-500">
+                      <input
+                        placeholder="Enter Item Name"
+                        value={draft.item}
+                        onChange={(e) => updateDraft("item", e.target.value)}
+                        className="w-full rounded border border-gray-300 px-2 py-1 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
+                      />
+                    </td>
+                    <td className="border border-gray-500 px-2 py-1.5 dark:border-gray-500">
+                      <input
+                        placeholder="Enter Code"
+                        value={draft.itemCode}
+                        onChange={(e) =>
+                          updateDraft("itemCode", e.target.value)
+                        }
+                        className="w-full rounded border border-gray-300 px-2 py-1 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
+                      />
+                    </td>
+                    <td className="border border-gray-500 px-2 py-1.5 dark:border-gray-500">
+                      <input
+                        placeholder="HSN"
+                        value={draft.hsn}
+                        onChange={(e) => updateDraft("hsn", e.target.value)}
+                        className="w-full rounded border border-gray-300 px-2 py-1 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
+                      />
+                    </td>
+                    <td className="border border-gray-500 px-2 py-1.5 dark:border-gray-500">
+                      <input
+                        placeholder="Unit"
+                        value={draft.unit}
+                        onChange={(e) => updateDraft("unit", e.target.value)}
+                        className="w-full rounded border border-gray-300 px-2 py-1 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
+                      />
+                    </td>
+                    <td className="border border-gray-500 px-2 py-1.5 dark:border-gray-500">
+                      <input
+                        type="number"
+                        min={1}
+                        value={draft.qty || ""}
+                        onChange={(e) =>
+                          updateDraft("qty", Number(e.target.value))
+                        }
+                        className="w-full rounded border border-gray-300 px-2 py-1 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
+                      />
+                    </td>
+                    <td className="border border-gray-500 px-2 py-1.5 dark:border-gray-500">
+                      <input
+                        placeholder="Rate"
+                        value={draft.pPrice}
+                        onChange={(e) => updateDraft("pPrice", e.target.value)}
+                        className="w-full rounded border border-gray-300 px-2 py-1 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
+                      />
+                    </td>
+                    <td className="border border-gray-500 px-2 py-1.5 dark:border-gray-500">
+                      <input
+                        placeholder="GST"
+                        value={draft.gstPercent}
+                        onChange={(e) =>
+                          updateDraft("gstPercent", e.target.value)
+                        }
+                        className="w-full rounded border border-gray-300 px-2 py-1 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
+                      />
+                    </td>
+                    <td className="border border-gray-500 px-2 py-1.5 dark:border-gray-500">
+                      <input
+                        placeholder="Amount"
+                        value={draft.netAmount}
+                        onChange={(e) =>
+                          updateDraft("netAmount", e.target.value)
+                        }
+                        className="w-full rounded border border-gray-300 px-2 py-1 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
+                      />
+                    </td>
+                    <td className="border border-gray-500 px-2 py-1.5 text-center">
+                      <button
+                        onClick={saveDraftRow}
+                        disabled={!draft.item.trim()}
+                        className={`inline-flex h-8 w-8 items-center justify-center rounded-lg text-white ${
+                          draft.item.trim()
+                            ? "bg-green-600 hover:bg-green-700"
+                            : "cursor-not-allowed bg-gray-300"
+                        }`}
+                      >
+                        <CheckIcon className="h-4 w-4" />
                       </button>
                     </td>
                   </tr>
-                ))}
 
-                {/* Empty state */}
-                {rows.length === 0 && (
-                  <tr>
-                    <td colSpan={10} className="py-12 text-center">
-                      <div className="flex flex-col items-center justify-center gap-3">
-                        <img
-                          src={emptyStateImage}
-                          alt="No items added"
-                          className="max-h-32 w-auto opacity-60 sm:max-h-40"
-                          onError={(e) => {
-                            const target = e.currentTarget;
-                            target.style.display = "none";
-                            const parent = target.parentElement;
-                            if (parent) {
-                              const emoji = document.createElement("div");
-                              emoji.className = "text-5xl opacity-60";
-                              emoji.textContent = "📦";
-                              parent.insertBefore(emoji, parent.firstChild);
-                            }
-                          }}
-                        />
-                        <span className="text-sm text-gray-500 dark:text-gray-400">
-                          No items added yet. Click{" "}
-                          <span className="font-semibold text-blue-600">
-                            Add
-                          </span>{" "}
-                          to add items.
-                        </span>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                  {/* Saved rows */}
+                  {rows.map((r, index) => (
+                    <tr
+                      key={r.id}
+                      className={`border-t border-gray-200 dark:border-gray-700 ${
+                        index % 2 === 0
+                          ? "bg-white dark:bg-gray-800/50"
+                          : "bg-gray-50 dark:bg-gray-700/30"
+                      }`}
+                    >
+                      <td className="border border-gray-500 px-3 py-2.5 text-center font-medium text-gray-500 dark:text-gray-400">
+                        {index + 1}
+                      </td>
+                      <td className="border border-gray-500 px-3 py-2.5 font-medium text-gray-900 dark:text-gray-200">
+                        {r.item}
+                      </td>
+                      <td className="border border-gray-500 px-3 py-2.5 text-gray-700 dark:text-gray-300">
+                        {r.itemCode}
+                      </td>
+                      <td className="border border-gray-500 px-3 py-2.5 text-gray-700 dark:text-gray-300">
+                        {r.hsn}
+                      </td>
+                      <td className="border border-gray-500 px-3 py-2.5 text-gray-700 dark:text-gray-300">
+                        {r.unit}
+                      </td>
+                      <td className="border border-gray-500 px-3 py-2.5 text-center font-semibold text-gray-900 dark:text-gray-200">
+                        {r.qty}
+                      </td>
+                      <td className="border border-gray-500 px-3 py-2.5 text-gray-700 dark:text-gray-300">
+                        {r.pPrice}
+                      </td>
+                      <td className="border border-gray-500 px-3 py-2.5 text-center text-gray-700 dark:text-gray-300">
+                        {r.gstPercent}%
+                      </td>
+                      <td className="border border-gray-500 px-3 py-2.5 text-right font-semibold text-gray-900 dark:text-gray-200">
+                        ₹{r.netAmount}
+                      </td>
+                      <td className="border border-gray-500 px-3 py-2.5 text-center">
+                        <button
+                          onClick={() => removeRow(r.id)}
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400"
+                        >
+                          <XMarkIcon className="h-4 w-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+
+                  {/* Empty state */}
+                  {rows.length === 0 && (
+                    <tr>
+                      <td colSpan={10} className="py-12 text-center">
+                        <div className="flex flex-col items-center justify-center gap-3">
+                          <img
+                            src={emptyStateImage}
+                            alt="No items added"
+                            className="max-h-32 w-auto opacity-60 sm:max-h-40"
+                            onError={(e) => {
+                              const target = e.currentTarget;
+                              target.style.display = "none";
+                              const parent = target.parentElement;
+                              if (parent) {
+                                const emoji = document.createElement("div");
+                                emoji.className = "text-5xl opacity-60";
+                                emoji.textContent = "📦";
+                                parent.insertBefore(emoji, parent.firstChild);
+                              }
+                            }}
+                          />
+                          <span className="text-sm text-gray-500 dark:text-gray-400">
+                            No items added yet. Click{" "}
+                            <span className="font-semibold text-blue-600">
+                              Add
+                            </span>{" "}
+                            to add items.
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
-
           {/* Totals */}
           <div className="mt-4 flex flex-col justify-between gap-2 border-t border-gray-200 pt-4 text-sm font-semibold text-gray-700 sm:flex-row dark:border-gray-700 dark:text-gray-300">
             <span>
@@ -1335,7 +1779,7 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
             <span>
               Total Amount:{" "}
               <span className="font-bold text-gray-900 dark:text-white">
-                ₹{fmt(totalAmount)}
+                ₹{fmt(totalValue)}
               </span>
             </span>
           </div>
@@ -1423,7 +1867,7 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
           </div>
 
           <div className="lg:col-span-2">
-            <div className="rounded-lg border border-gray-200 bg-gradient-to-br from-blue-50 to-white p-4 shadow-sm dark:border-gray-700 dark:from-gray-800 dark:to-gray-800/50">
+            <div className="rounded-lg border border-gray-200 bg-linear-to-br from-blue-50 to-white p-4 shadow-sm dark:border-gray-700 dark:from-gray-800 dark:to-gray-800/50">
               <h3 className="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
                 Bill Summary
               </h3>
@@ -1433,7 +1877,7 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
                     Total Value
                   </span>
                   <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
-                    ₹{fmt(totalAmount)}
+                    ₹{fmt(totalValue)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between border-b border-gray-200/60 pb-2 dark:border-gray-700/60">
@@ -1452,6 +1896,42 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
                     ₹{fmt(newTaxableValue)}
                   </span>
                 </div>
+                  {isPartySelected &&
+                  (isSameState ? (
+                    <>
+                      {/* CGST */}
+                      <div className="flex items-center justify-between border-b border-gray-200/60 pb-2 dark:border-gray-700/60">
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                          CGST
+                        </span>
+                        <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                          ₹{fmt(totalCgst)}
+                        </span>
+                      </div>
+
+                      {/* SGST */}
+                      <div className="flex items-center justify-between border-b border-gray-200/60 pb-2 dark:border-gray-700/60">
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                          SGST
+                        </span>
+                        <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                          ₹{fmt(totalSgst)}
+                        </span>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      {/* IGST */}
+                      <div className="flex items-center justify-between border-b border-gray-200/60 pb-2 dark:border-gray-700/60">
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                          IGST
+                        </span>
+                        <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                          ₹{fmt(totalIgst)}
+                        </span>
+                      </div>
+                    </>
+                  ))}
                 <div className="flex items-center justify-between rounded-lg bg-blue-600/10 p-2 dark:bg-blue-500/20">
                   <span className="text-sm font-bold text-gray-900 dark:text-white">
                     Grand Total
@@ -1469,7 +1949,7 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
         <div className="flex justify-center px-3 pb-4 sm:px-4 sm:pb-6">
           <button
             onClick={handleSave}
-            className="w-full rounded-lg bg-red-600 px-8 py-2.5 text-sm font-bold text-white transition-colors hover:bg-red-700 sm:w-auto sm:px-12 sm:py-3"
+            className="bg-primary-500 hover:bg-primary-500 w-full rounded-lg px-8 py-2.5 text-sm font-bold text-white transition-colors sm:w-auto sm:px-12 sm:py-3"
           >
             Save
           </button>
@@ -1522,7 +2002,7 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
                       setAccessoryDrawerOpen(false);
                       setAddAccessoryModalOpen(true);
                     }}
-                    className="flex h-[42px] w-[42px] flex-shrink-0 items-center justify-center rounded-lg bg-blue-700 text-white hover:bg-blue-800"
+                    className="flex h-10.5 w-10.5 shrink-0 items-center justify-center rounded-lg bg-blue-700 text-white hover:bg-blue-800"
                   >
                     <PlusIcon className="h-5 w-5" />
                   </button>
@@ -1531,32 +2011,71 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
                 <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
                   <table className="w-full border-collapse text-sm">
                     <thead>
-                      <tr className="bg-gray-100 text-left dark:bg-gray-700">
+                      <tr className="bg-gray-100 text-left whitespace-nowrap dark:bg-gray-700">
                         <th className="w-12 p-2">#</th>
                         <th className="p-2">Item Name</th>
-                        <th className="p-2">Modal Name</th>
-                        <th className="p-2">Item Code No</th>
+                        <th className="p-2">Item Code </th>
                         <th className="p-2">HSN Code</th>
+                        <th className="p-2">Modal</th>
+                        <th className="p-2">Variant</th>
+                        <th className="p-2">purchase price</th>
+                        <th className="p-2">Tax</th>
+                        <th className="p-2">Stock</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredAccessories.map((a, idx) => (
+                      {filteredAccessories.map((a: any) => (
                         <tr
                           key={a.id}
-                          onClick={() => handleAccessorySelect(a)}
-                          className="cursor-pointer border-t border-gray-200 hover:bg-blue-50 dark:border-gray-700 dark:hover:bg-blue-900/20"
+                          className="border-t border-gray-200 hover:bg-blue-50 dark:border-gray-700 dark:hover:bg-blue-900/20"
                         >
-                          <td className="p-2 text-gray-500">{idx + 1}</td>
+                          <td className="p-2 text-center">
+                            <button
+                              onClick={() => handleAccessorySelect(a)}
+                              className="inline-flex h-6 w-6 cursor-pointer items-center justify-center rounded bg-green-600 text-white hover:bg-green-700"
+                            >
+                              ✓
+                            </button>
+                          </td>
                           <td className="p-2">{a.itemName}</td>
-                          <td className="p-2">{a.modalName}</td>
-                          <td className="p-2">{a.itemCodeNo}</td>
+
+                          <td className="p-2">{a.codeNo}</td>
+
                           <td className="p-2">{a.hsnCode}</td>
+
+                          <td className="p-2">
+                            {a.showroomVariantDetails?.length
+                              ? a.showroomVariantDetails
+                                  .map((v: any) => v.model?.modelName)
+                                  .join(", ")
+                              : "-"}
+                          </td>
+
+                          <td className="p-2">
+                            {" "}
+                            {a.showroomVariantDetails?.length
+                              ? a.showroomVariantDetails
+                                  .map((v: any) => v.variantName)
+                                  .join(", ")
+                              : "-"}
+                          </td>
+
+                          <td className="p-2">
+                            ₹{Number(a.purchasePrice || 0).toFixed(2)}
+                          </td>
+
+                          <td className="p-2">{a.taxSlab || "-"}</td>
+
+                          <td className="p-2">
+                            {a.currentStock ?? a.opStock ?? 0}
+                          </td>
                         </tr>
                       ))}
+
                       {filteredAccessories.length === 0 && (
                         <tr>
                           <td
-                            colSpan={5}
+                            colSpan={9}
                             className="p-4 text-center text-gray-400 dark:text-gray-500"
                           >
                             No items found
@@ -1646,10 +2165,7 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
                         }
                         value={accessoryForm.itemName}
                         onChange={(e) =>
-                          handleAccessoryFormChange(
-                            "itemName",
-                            e.target.value,
-                          )
+                          handleAccessoryFormChange("itemName", e.target.value)
                         }
                         className={`w-full ${
                           accessoryFormTouched && !accessoryForm.itemName.trim()
@@ -1727,7 +2243,24 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
                         className="w-full"
                       />
                     </div>
-
+                    <div>
+                      <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
+                        Unit
+                      </label>
+                      <Listbox
+                        data={unitOptions}
+                        value={
+                          unitOptions.find(
+                            (u) => u.value === accessoryForm.unit,
+                          ) || null
+                        }
+                        onChange={(val: any) =>
+                          handleAccessoryFormChange("unit", val.value)
+                        }
+                        displayField="label"
+                        placeholder="Select Unit"
+                      />
+                    </div>
                     {/* Tax Slab */}
                     <div>
                       <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
@@ -1896,7 +2429,7 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
                         components={{
                           Option: (props: any) => (
                             <components.Option {...props}>
-                              <div className="flex items-center justify-between w-full">
+                              <div className="flex w-full items-center justify-between">
                                 <div className="flex items-center gap-2">
                                   <input
                                     type="checkbox"
@@ -1958,7 +2491,7 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
                   </button>
                   <button
                     onClick={handleSaveAccessoryItem}
-                    className="w-full rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 sm:w-auto sm:px-6"
+                    className="bg-primary-500 hover:bg-primary-500 w-full rounded-lg px-4 py-2 text-sm font-semibold text-white sm:w-auto sm:px-6"
                   >
                     Save Accessory
                   </button>
@@ -2429,7 +2962,7 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
                   </button>
                   <button
                     onClick={handleSaveBankDetails}
-                    className="w-full rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 sm:w-auto sm:px-6"
+                    className="bg-primary-500 hover:bg-primary-500 w-full rounded-lg px-4 py-2 text-sm font-semibold text-white sm:w-auto sm:px-6"
                   >
                     Add Bank Details
                   </button>
@@ -2451,7 +2984,7 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
               setAccountTouched(false);
             }}
           />
-          <div className="absolute top-0 right-0 h-full w-full max-w-2xl transform bg-white shadow-2xl transition-transform sm:w-3/4 lg:w-1/2 dark:bg-gray-800">
+          <div className="absolute top-0 right-0 h-full w-full max-w-3xl transform bg-white shadow-2xl transition-transform sm:w-3/4 lg:w-1/2 dark:bg-gray-800">
             <div className="flex h-full flex-col">
               <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 sm:px-6 sm:py-4 dark:border-gray-700">
                 <h2 className="text-lg font-bold text-gray-900 dark:text-white">
@@ -2481,13 +3014,84 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
                       onChange={(e) =>
                         updateAccountForm("accountName", e.target.value)
                       }
-                      className={`w-full ${
-                        accountTouched && !accountForm.accountName.trim()
-                          ? "border-red-500"
-                          : ""
-                      }`}
+                      className={`w-full ${accountTouched && !accountForm.accountName.trim() ? "border-red-500" : ""}`}
                     />
+                    {getAccountError("accountName") && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {getAccountError("accountName")}
+                      </p>
+                    )}
                   </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-medium">
+                      Group
+                    </label>
+
+                    <Listbox
+                      data={groupOptions}
+                      value={
+                        groupOptions.find(
+                          (x) => x.value === accountForm.group,
+                        ) || null
+                      }
+                      onChange={(val: any) =>
+                        updateAccountForm("group", val?.value || "")
+                      }
+                      placeholder="Select Group"
+                    />
+                    {getAccountError("group") && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {getAccountError("group")}
+                      </p>
+                    )}
+                  </div>
+
+                  {accountForm.group === "Sundry Creditor" && (
+                    <>
+                      <div>
+                        <label className="mb-1 block text-xs font-medium">
+                          Opening Balance
+                        </label>
+
+                        <Input
+                          placeholder="Opening Balance"
+                          value={accountForm.openingBalance}
+                          onChange={(e) =>
+                            updateAccountForm("openingBalance", e.target.value)
+                          }
+                        />
+                        {getAccountError("openingBalance") && (
+                          <p className="mt-1 text-xs text-red-500">
+                            {getAccountError("openingBalance")}
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="mb-1 block text-xs font-medium">
+                          Dr / Cr
+                        </label>
+
+                        <Listbox
+                          data={drCrOptions}
+                          value={
+                            drCrOptions.find(
+                              (x) => x.value === accountForm.drCr,
+                            ) || null
+                          }
+                          onChange={(val: any) =>
+                            updateAccountForm("drCr", val?.value || "")
+                          }
+                          placeholder="Select Dr / Cr"
+                        />
+                        {getAccountError("drCr") && (
+                          <p className="mt-1 text-xs text-red-500">
+                            {getAccountError("drCr")}
+                          </p>
+                        )}
+                      </div>
+                    </>
+                  )}
                   {/* Mobile */}
                   <div>
                     <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
@@ -2499,15 +3103,16 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
                       onChange={(e) =>
                         updateAccountForm("mobile", e.target.value)
                       }
-                      className={`w-full ${
-                        accountTouched && !accountForm.mobile.trim()
-                          ? "border-red-500"
-                          : ""
-                      }`}
+                      className={`w-full ${accountTouched && !accountForm.mobile.trim() ? "border-red-500" : ""}`}
                     />
+                    {getAccountError("mobile") && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {getAccountError("mobile")}
+                      </p>
+                    )}
                   </div>
 
-                  {/* Country */}
+                  {/* Country - Dynamic with react-select */}
                   <div>
                     <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
                       Country <span className="text-red-500">*</span>
@@ -2519,15 +3124,11 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
                       placeholder="Search Country"
                       value={
                         countryOptions.find(
-                          (option) =>
-                            option.value === accountForm.countryCode,
+                          (option) => option.value === accountForm.countryCode,
                         ) || null
                       }
                       onChange={(selected) => {
-                        updateAccountForm(
-                          "countryCode",
-                          selected?.value || "",
-                        );
+                        updateAccountForm("countryCode", selected?.value || "");
                         updateAccountForm("country", selected?.label || "");
                         updateAccountForm("stateCode", "");
                         updateAccountForm("state", "");
@@ -2535,14 +3136,14 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
                         updateAccountForm("city", "");
                       }}
                     />
-                    {accountTouched && !accountForm.countryCode && (
+                    {getAccountError("countryCode") && (
                       <p className="mt-1 text-xs text-red-500">
-                        Please select a country.
+                        {getAccountError("countryCode")}
                       </p>
                     )}
                   </div>
 
-                  {/* State */}
+                  {/* State - Dynamic with react-select */}
                   <div>
                     <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
                       State <span className="text-red-500">*</span>
@@ -2565,14 +3166,14 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
                         updateAccountForm("city", "");
                       }}
                     />
-                    {accountTouched && !accountForm.stateCode && (
+                    {getAccountError("stateCode") && (
                       <p className="mt-1 text-xs text-red-500">
-                        Please select a state.
+                        {getAccountError("stateCode")}
                       </p>
                     )}
                   </div>
 
-                  {/* District */}
+                  {/* District - Dynamic with react-select */}
                   <div>
                     <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
                       District <span className="text-red-500">*</span>
@@ -2592,14 +3193,14 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
                         updateAccountForm("district", selected?.value || "");
                       }}
                     />
-                    {accountTouched && !accountForm.district && (
+                    {getAccountError("district") && (
                       <p className="mt-1 text-xs text-red-500">
-                        Please select a district.
+                        {getAccountError("district")}
                       </p>
                     )}
                   </div>
 
-                  {/* City */}
+                  {/* City - Dynamic with react-select */}
                   <div>
                     <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
                       City <span className="text-red-500">*</span>
@@ -2619,9 +3220,9 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
                         updateAccountForm("city", selected?.value || "");
                       }}
                     />
-                    {accountTouched && !accountForm.city && (
+                    {getAccountError("city") && (
                       <p className="mt-1 text-xs text-red-500">
-                        Please select a city.
+                        {getAccountError("city")}
                       </p>
                     )}
                   </div>
@@ -2637,12 +3238,13 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
                       onChange={(e) =>
                         updateAccountForm("address", e.target.value)
                       }
-                      className={`w-full ${
-                        accountTouched && !accountForm.address.trim()
-                          ? "border-red-500"
-                          : ""
-                      }`}
+                      className={`w-full ${accountTouched && !accountForm.address.trim() ? "border-red-500" : ""}`}
                     />
+                    {getAccountError("address") && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {getAccountError("address")}
+                      </p>
+                    )}
                   </div>
 
                   {/* PAN Card */}
@@ -2653,15 +3255,21 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
                     <Input
                       placeholder="PAN Card Number"
                       value={accountForm.panCard}
-                      onChange={(e) =>
-                        updateAccountForm("panCard", e.target.value)
-                      }
-                      className={`w-full ${
-                        accountTouched && !accountForm.panCard.trim()
-                          ? "border-red-500"
-                          : ""
-                      }`}
+                      onChange={(e) => {
+                        updateAccountForm(
+                          "panCard",
+                          e.target.value.toUpperCase(),
+                        );
+                        validateField("panCard", e.target.value.toUpperCase());
+                      }}
+                      error={accountErrors.panCard}
+                      className={`w-full ${accountTouched && !accountForm.panCard.trim() ? "border-red-500" : ""}`}
                     />
+                    {/* {getAccountError("panCard") && (
+  <p className="mt-1 text-xs text-red-500">
+    {getAccountError("panCard")}
+  </p>
+)} */}
                   </div>
                   {/* Aadhar Card */}
                   <div>
@@ -2671,15 +3279,18 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
                     <Input
                       placeholder="Aadhar Number"
                       value={accountForm.aadharCard}
-                      onChange={(e) =>
-                        updateAccountForm("aadharCard", e.target.value)
-                      }
-                      className={`w-full ${
-                        accountTouched && !accountForm.aadharCard.trim()
-                          ? "border-red-500"
-                          : ""
-                      }`}
+                      onChange={(e) => {
+                        updateAccountForm("aadharCard", e.target.value);
+                        validateField("aadharCard", e.target.value);
+                      }}
+                      error={accountErrors.aadharCard}
+                      className={`w-full ${accountTouched && !accountForm.aadharCard.trim() ? "border-red-500" : ""}`}
                     />
+                    {/* {getAccountError("aadharCard") && (
+  <p className="mt-1 text-xs text-red-500">
+    {getAccountError("aadharCard")}
+  </p>
+)} */}
                   </div>
                 </div>
               </div>
@@ -2697,7 +3308,7 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
                   </button>
                   <button
                     onClick={handleCreateAccount}
-                    className="w-full rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 sm:w-auto sm:px-6"
+                    className="bg-primary-500 hover:bg-primary-500 w-full cursor-pointer rounded-lg px-4 py-2 text-sm font-semibold text-white sm:w-auto sm:px-6"
                   >
                     Create Account
                   </button>
