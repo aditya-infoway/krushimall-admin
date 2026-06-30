@@ -181,9 +181,9 @@ const TractorPurchaseRegister: React.FC<TractorPurchaseRegisterProps> = ({
           sgstAmount: 0,
           igstAmount: 0,
           grandTotal: Number(item.grandTotal),
-          transportName: "",
-          mobileNo: "",
-          vehicalNo: "",
+          transportName: item.transporterName || "",
+          mobileNo: item.mobileNumber || "",
+          vehicalNo: item.vehicleNumber || "",
           status: item.status === "VERIFY" ? "Verified" : "Pending",
 
           verified: item.verified,
@@ -402,28 +402,24 @@ const TractorPurchaseRegister: React.FC<TractorPurchaseRegisterProps> = ({
                     </Td>
                     <Td className="py-4 text-center">
                       <div className="flex items-center justify-center gap-1.5">
-                        <button
-                          disabled={item.allInward}
-                          onClick={() => handleEditRow(item)}
-                          className={`${
-                            item.allInward
-                              ? "cursor-not-allowed text-gray-400"
-                              : "text-blue-500 hover:text-blue-700"
-                          }`}
-                        >
-                          <PencilIcon className="size-4.5" />
-                        </button>
-                        <button
-                          disabled={!item.verified}
-                          onClick={() => handleInward(item)}
-                          className={`${
-                            !item.verified
-                              ? "cursor-not-allowed text-gray-400"
-                              : "text-green-500 hover:text-green-700"
-                          }`}
-                        >
-                          <ArrowDownCircleIcon className="size-5" />
-                        </button>
+                        {!item.allInward && (
+                          <button
+                            onClick={() => handleEditRow(item)}
+                            className="cursor-pointer text-blue-500 hover:text-blue-700"
+                            title="Edit"
+                          >
+                            <PencilIcon className="size-4.5" />
+                          </button>
+                        )}
+                        {item.verified && (
+                          <button
+                            onClick={() => handleInward(item)}
+                            className="cursor-pointer text-green-500 hover:text-green-700"
+                            title="Inward"
+                          >
+                            <ArrowDownCircleIcon className="size-5" />
+                          </button>
+                        )}
                       </div>
                     </Td>
                     <Td className="py-4 whitespace-nowrap">

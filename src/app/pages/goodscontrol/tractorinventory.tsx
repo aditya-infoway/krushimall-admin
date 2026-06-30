@@ -18,9 +18,9 @@ import apiHelper from "@/utils/apiHelper";
 
 // ---------- Types ----------
 export interface TractorInventoryRow {
-  id: string;
+ id: number;
   stock: "On" | "Off";
-  status: "Available" | "Sold" | "In Transit" | "Pending" | "Reserved";
+status: "Present" | "Sold" | "In Transit" | "Pending" | "Reserved";
   location: string;
   currentLocation: string;
   billNo: string;
@@ -74,7 +74,7 @@ const stockFilterOptions = [
 
 const statusFilterOptions = [
   { id: "All", name: "All Statuses" },
-  { id: "Available", name: "Available" },
+  { id: "Present", name: "Present" },
   { id: "Sold", name: "Sold" },
   { id: "In Transit", name: "In Transit" },
   { id: "Pending", name: "Pending" },
@@ -82,7 +82,7 @@ const statusFilterOptions = [
 ];
 
 const statusColors: Record<TractorInventoryRow["status"], string> = {
-  Available:
+  Present:
     "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
   Sold: "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400",
   "In Transit":
@@ -153,106 +153,19 @@ const TractorInventory: React.FC<TractorInventoryProps> = ({
   const navigate = useNavigate();
 
   // Sample data - replace with API call
-  useEffect(() => {
-    // Simulate API call
-    const sampleData: TractorInventoryRow[] = [
-      {
-        id: "1",
-        stock: "On",
-        status: "Available",
-        location: "Warehouse A",
-        currentLocation: "Showroom 1",
-        billNo: "BILL-2024-001",
-        purchaseBillNo: "PUR-2024-045",
-        supplierName: "Tractor World Pvt Ltd",
-        itemName: "Mahindra 265 DI",
-        model: "265 DI",
-        variant: "Deluxe",
-        colour: "Red",
-        fuelType: "Diesel",
-        serialNo: "SN-2024-001245",
-        mfgDate: "2024-01-15",
-        chassisNo: "CH-2024-001245",
-        engineNo: "ENG-2024-001245",
-        keyNumber: "KEY-001",
-        batteryMake: "Exide",
-        batteryNo: "BAT-001",
-        first1Tyer: "CEAT 12.4-28",
-        first2Tyer: "CEAT 12.4-28",
-        second1Tyer: "MRF 6.00-16",
-        second2Tyer: "MRF 6.00-16",
-        grnDate: "2024-01-20",
-        grnRecordDate: "2024-01-21",
-        grnNo: "GRN-2024-001",
-        inWardDate: "2024-01-22",
-        inWardTime: "10:30 AM",
-      },
-      {
-        id: "2",
-        stock: "Off",
-        status: "Sold",
-        location: "Warehouse B",
-        currentLocation: "Customer Site",
-        billNo: "BILL-2024-002",
-        purchaseBillNo: "PUR-2024-078",
-        supplierName: "AgriTech Solutions",
-        itemName: "Swaraj 744 FE",
-        model: "744 FE",
-        variant: "Standard",
-        colour: "Blue",
-        fuelType: "Diesel",
-        serialNo: "SN-2024-001789",
-        mfgDate: "2024-02-10",
-        chassisNo: "CH-2024-001789",
-        engineNo: "ENG-2024-001789",
-        keyNumber: "KEY-002",
-        batteryMake: "Luminous",
-        batteryNo: "BAT-002",
-        first1Tyer: "MRF 14.9-28",
-        first2Tyer: "MRF 14.9-28",
-        second1Tyer: "CEAT 7.50-16",
-        second2Tyer: "CEAT 7.50-16",
-        grnDate: "2024-02-15",
-        grnRecordDate: "2024-02-16",
-        grnNo: "GRN-2024-002",
-        inWardDate: "2024-02-17",
-        inWardTime: "02:15 PM",
-      },
-      {
-        id: "3",
-        stock: "On",
-        status: "In Transit",
-        location: "Warehouse A",
-        currentLocation: "In Transit",
-        billNo: "BILL-2024-003",
-        purchaseBillNo: "PUR-2024-112",
-        supplierName: "Farm Equipment Co",
-        itemName: "Eicher 380 Tractor",
-        model: "380",
-        variant: "Premium",
-        colour: "Green",
-        fuelType: "Diesel",
-        serialNo: "SN-2024-002345",
-        mfgDate: "2024-03-05",
-        chassisNo: "CH-2024-002345",
-        engineNo: "ENG-2024-002345",
-        keyNumber: "KEY-003",
-        batteryMake: "Amara Raja",
-        batteryNo: "BAT-003",
-        first1Tyer: "CEAT 13.6-28",
-        first2Tyer: "CEAT 13.6-28",
-        second1Tyer: "MRF 6.00-16",
-        second2Tyer: "MRF 6.00-16",
-        grnDate: "2024-03-10",
-        grnRecordDate: "2024-03-11",
-        grnNo: "GRN-2024-003",
-        inWardDate: "2024-03-12",
-        inWardTime: "11:45 AM",
-      },
-    ];
-    setRows(sampleData);
-  }, []);
+ useEffect(() => {
+  fetchInventory();
+}, []);
 
+const fetchInventory = async () => {
+  try {
+    const res = await apiHelper.get("/purchases/tractor-inventory");
+
+    setRows(res.data || []);
+  } catch (err) {
+    console.log(err);
+  }
+};
   // Add this function with your other handlers
   const handleToggleStock = async (id: string) => {
     const item = rows.find((row) => row.id === id);
@@ -351,27 +264,42 @@ const TractorInventory: React.FC<TractorInventoryProps> = ({
     );
   };
 
-  const handleAddTractor = () => {
-    navigate("/goodscontrol/tractorinventory/add");
-    if (onAddTractor) onAddTractor();
-  };
+  // const handleAddTractor = () => {
+  //   navigate("/goodscontrol/tractorinventory/add");
+  //   if (onAddTractor) onAddTractor();
+  // };
 
-  const handleEditRow = (row: TractorInventoryRow) => {
-    navigate(`/goodscontrol/tractorinventory/${row.id}`);
-    if (onEditRow) onEditRow(row);
-  };
+  // const handleEditRow = (row: TractorInventoryRow) => {
+  //   navigate(`/goodscontrol/tractorinventory/${row.id}`);
+  //   if (onEditRow) onEditRow(row);
+  // };
 
-  const handleDeleteRow = (row: TractorInventoryRow) => {
-    if (window.confirm(`Are you sure you want to delete this tractor?`)) {
-      if (onDeleteRow) onDeleteRow(row);
-    }
-  };
+  // const handleDeleteRow = (row: TractorInventoryRow) => {
+  //   if (window.confirm(`Are you sure you want to delete this tractor?`)) {
+  //     if (onDeleteRow) onDeleteRow(row);
+  //   }
+  // };
 
-  const handleViewRow = (row: TractorInventoryRow) => {
-    navigate(`/goodscontrol/tractorinventory/view/${row.id}`);
-    if (onViewRow) onViewRow(row);
-  };
+  // const handleViewRow = (row: TractorInventoryRow) => {
+  //   navigate(`/goodscontrol/tractorinventory/view/${row.id}`);
+  //   if (onViewRow) onViewRow(row);
+  // };
+const formatDate = (date?: string | null) => {
+  if (!date) return "-";
 
+  return new Date(date).toLocaleDateString("en-GB");
+};
+const formatDateTime = (date?: string | null) => {
+  if (!date) return "-";
+
+  return new Date(date).toLocaleString("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
   return (
     <div className="relative min-h-screen space-y-6 p-4 pb-28 text-gray-900 md:p-6 dark:text-gray-100">
       {/* Header */}
@@ -421,7 +349,7 @@ const TractorInventory: React.FC<TractorInventoryProps> = ({
               left: `calc(${
                 selectedStatusFilter === "All"
                   ? "4px"
-                  : selectedStatusFilter === "Available"
+                  : selectedStatusFilter === "Present"
                     ? "calc(33.33% + 4px)"
                     : "calc(66.66% + 4px)"
               })`,
@@ -430,8 +358,8 @@ const TractorInventory: React.FC<TractorInventoryProps> = ({
           />
           {[
             { id: "All", label: "All" },
-            { id: "Available", label: "Present" },
-            { id: "Sold", label: "Transit" },
+            { id: "Present", label: "Present" },
+            { id: "In Transit", label: "Transit" },
           ].map((option) => (
             <button
               key={option.id}
@@ -455,7 +383,7 @@ const TractorInventory: React.FC<TractorInventoryProps> = ({
         <div className="overflow-x-auto">
           <Table
             hoverable
-            className="w-full min-w-[2200px] text-left [&_.table-th]:font-semibold"
+            className="w-full min-w-550 text-left [&_.table-th]:font-semibold"
           >
             <THead className="dark:bg-dark-700/60 dark:border-dark-600 border-b border-gray-200 bg-gray-100">
               <Tr>
@@ -622,7 +550,7 @@ const TractorInventory: React.FC<TractorInventoryProps> = ({
                     </Td>
                     <Td className="py-4">{item.fuelType}</Td>
                     <Td className="py-4 font-mono text-sm">{item.serialNo}</Td>
-                    <Td className="py-4">{item.mfgDate}</Td>
+                    <Td className="py-4">{formatDate(item.mfgDate)}</Td>
                     <Td className="py-4 font-mono text-sm">{item.chassisNo}</Td>
                     <Td className="py-4 font-mono text-sm">{item.engineNo}</Td>
                     <Td className="py-4 font-mono text-sm">{item.keyNumber}</Td>
@@ -632,11 +560,11 @@ const TractorInventory: React.FC<TractorInventoryProps> = ({
                     <Td className="py-4">{item.first2Tyer}</Td>
                     <Td className="py-4">{item.second1Tyer}</Td>
                     <Td className="py-4">{item.second2Tyer}</Td>
-                    <Td className="py-4">{item.grnDate}</Td>
-                    <Td className="py-4">{item.grnRecordDate}</Td>
+                    <Td className="py-4">{formatDate(item.grnDate)}</Td>
+                    <Td className="py-4">{formatDate(item.grnRecordDate)}</Td>
                     <Td className="py-4">{item.grnNo}</Td>
-                    <Td className="py-4">{item.inWardDate}</Td>
-                    <Td className="py-4">{item.inWardTime}</Td>
+                    <Td className="py-4">{formatDate(item.inWardDate)}</Td>
+                    <Td className="py-4">{formatDateTime(item.inWardTime)}</Td>
                   </Tr>
                 );
               })}
