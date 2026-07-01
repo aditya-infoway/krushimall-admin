@@ -72,6 +72,7 @@ const DatePicker = forwardRef<FlatpickrRef, DatePickerProps>(
     }, [locale]);
 
     const options = {
+      dateFormat: "d-m-Y",
       inline: isCalendar,
       locale: localeData,
       ...userOptions,

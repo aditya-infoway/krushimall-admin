@@ -1130,9 +1130,7 @@ function ReviewLeadSummaryStep({
             value={form.expectedPurchaseDate}
             onChange={(val) => handleChange("expectedPurchaseDate", val)}
             placeholder="DD-MM-YYYY"
-            options={{
-              dateFormat: "d-m-Y", // ← This is the key fix! Flatpickr format for dd-mm-yyyy
-            }}
+             options={{ dateFormat: "d-m-Y",disableMobile: true }}
           />
           {errors.expectedPurchaseDate && (
             <span className="text-xs text-orange-500">
@@ -1150,9 +1148,7 @@ function ReviewLeadSummaryStep({
             value={form.expectedDeliveryDate}
             onChange={(val) => handleChange("expectedDeliveryDate", val)}
             placeholder="DD-MM-YYYY"
-            options={{
-              dateFormat: "d-m-Y", // ← Fix here too
-            }}
+              options={{ dateFormat: "d-m-Y",disableMobile: true }}
           />
           {errors.expectedDeliveryDate && (
             <span className="text-xs text-orange-500">
@@ -1287,9 +1283,7 @@ function ReviewLeadSummaryStep({
             value={form.bookingDate}
             onChange={(val) => handleChange("bookingDate", val)}
             placeholder="DD-MM-YYYY"
-            options={{
-              dateFormat: "d-m-Y", // ← Fix here too
-            }}
+             options={{ dateFormat: "d-m-Y",disableMobile: true }}
           />
           {errors.bookingDate && (
             <span className="text-xs text-orange-500">
@@ -1310,9 +1304,7 @@ function ReviewLeadSummaryStep({
             value={form.followUpDate}
             onChange={(val) => handleChange("followUpDate", val)}
             placeholder="DD-MM-YYYY"
-            options={{
-              dateFormat: "d-m-Y", // ← Fix here too
-            }}
+              options={{ dateFormat: "d-m-Y",disableMobile: true }}
           />
           {errors.followUpDate && (
             <span className="text-xs text-orange-500">
@@ -1649,7 +1641,8 @@ function ReviewLeadSummaryStep({
                         value={form.chequeDate || ""}
                         onChange={(val) => handleChange("chequeDate", val)}
                         placeholder="Select Date"
-                        options={{ dateFormat: "d-m-Y" }}
+                        options={{ dateFormat: "d-m-Y",disableMobile: true }}
+                       
                       />
                     </div>
 
@@ -1662,7 +1655,7 @@ function ReviewLeadSummaryStep({
                         value={form.chequeClearDate || ""}
                         onChange={(val) => handleChange("chequeClearDate", val)}
                         placeholder="Select Date"
-                        options={{ dateFormat: "d-m-Y" }}
+                         options={{ dateFormat: "d-m-Y",disableMobile: true }}
                       />
                     </div>
 

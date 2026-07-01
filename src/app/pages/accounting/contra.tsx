@@ -741,6 +741,7 @@ const [showFilterBar, setShowFilterBar] = useState(false);
                         setDate(value);
                         if (errors.date) setErrors({ ...errors, date: "" });
                       }}
+                          options={{ disableMobile: true }}
                     />
                     {errors.date && (
                       <p className="mt-1 text-sm text-red-500">{errors.date}</p>

@@ -943,6 +943,7 @@ export default function CashReceipt() {
                       placeholder="Select date..."
                       value={form.date}
                       onChange={(date) => setForm({ ...form, date })}
+                        options={{ disableMobile: true }}
                     />
                   </div>
                 </div>

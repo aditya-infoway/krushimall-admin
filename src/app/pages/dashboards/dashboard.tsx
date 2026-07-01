@@ -753,31 +753,6 @@ export default function Dashboard() {
             Welcome to the admin dashboard!
           </p>
         </div>
-        <div className="mt-3 flex flex-wrap items-center gap-3 sm:mt-0">
-          {/* Date Picker */}
-          <div className="flex items-center gap-2">
-            <DatePicker placeholder="From Date" />
-            <span className="text-gray-400">to</span>
-            <DatePicker placeholder="To Date" />
-          </div>
-
-          {/* PDF Button */}
-          <button className="dark:border-dark-600 dark:bg-dark-700 dark:hover:bg-dark-600 flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:text-gray-300">
-            <DocumentArrowDownIcon className="h-4 w-4" />
-            PDF
-          </button>
-
-          {/* Excel Button */}
-          <button className="dark:border-dark-600 dark:bg-dark-700 dark:hover:bg-dark-600 flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:text-gray-300">
-            <ArrowDownTrayIcon className="h-4 w-4" />
-            Excel
-          </button>
-
-          {/* Refresh Button */}
-          <button className="dark:border-dark-600 dark:bg-dark-700 dark:hover:bg-dark-600 cursor-pointer rounded-lg border border-gray-300 bg-white p-2 text-gray-600 hover:bg-gray-50 dark:text-gray-300">
-            <ArrowPathIcon className="h-4 w-4" />
-          </button>
-        </div>
       </div>
 
       {/* 8 Stats Cards */}
@@ -993,21 +968,21 @@ export default function Dashboard() {
                     <td className="px-4 py-3 text-center font-medium text-gray-900 dark:text-white">
                       {item.customerName}
                     </td>
-                    <td className="px-4 py-3 text-center text-gray-600 dark:text-gray-300 whitespace-nowrap">
+                    <td className="px-4 py-3 text-center whitespace-nowrap text-gray-600 dark:text-gray-300">
                       {item.number}
                     </td>
-                    <td className="px-4 py-3 text-center text-gray-600 dark:text-gray-300 whitespace-nowrap">
+                    <td className="px-4 py-3 text-center whitespace-nowrap text-gray-600 dark:text-gray-300">
                       {item.model}
                     </td>
                     <td className="px-4 py-3 text-center text-gray-600 dark:text-gray-300">
                       {item.totalService}
                     </td>
-                    <td className="px-4 py-3 text-center text-gray-600 dark:text-gray-300 whitespace-nowrap">
+                    <td className="px-4 py-3 text-center whitespace-nowrap text-gray-600 dark:text-gray-300">
                       {item.type}
                     </td>
                     <td className="px-4 py-3 text-center">
                       <span
-                        className={`inline-flex rounded-full px-3 py-1 whitespace-nowrap text-xs font-medium ${getStatusColor(item.status)}`}
+                        className={`inline-flex rounded-full px-3 py-1 text-xs font-medium whitespace-nowrap ${getStatusColor(item.status)}`}
                       >
                         {item.status}
                       </span>
@@ -1080,20 +1055,26 @@ export default function Dashboard() {
             </div>
           </div>
           {/* Toggle Buttons inside table footer */}
-          <div className="dark:border-dark-600 dark:bg-dark-800 flex flex-shrink-0 flex-wrap items-center gap-2 border-t border-gray-200 bg-gray-50 p-2.5">
-            {toggleOptions.map((option) => (
-              <div key={option.id} className="flex items-center gap-1.5">
-                <ToggleSwitch
-                  active={modelToggle === option.id}
-                  onClick={() => setModelToggle(option.id)}
-                  label={option.label}
-                  color={getToggleActiveColor(option.id)}
-                />
-                <span className="min-w-[30px] text-xs font-medium text-gray-700 dark:text-gray-300">
-                  {option.label}
-                </span>
-              </div>
-            ))}
+          {/* Toggle Buttons inside table footer */}
+          <div className="dark:border-dark-600 dark:bg-dark-800 border-t border-gray-200 bg-gray-50 p-2.5">
+            <div className="grid grid-cols-4 gap-1 lg:grid-cols-4">
+              {toggleOptions.map((option) => (
+                <div
+                  key={option.id}
+                  className="flex items-center justify-center gap-1"
+                >
+                  <ToggleSwitch
+                    active={modelToggle === option.id}
+                    onClick={() => setModelToggle(option.id)}
+                    label={option.label}
+                    color={getToggleActiveColor(option.id)}
+                  />
+                  <span className="min-w-[20px] text-[9px] font-medium text-gray-700 lg:text-[10px] xl:text-xs dark:text-gray-300">
+                    {option.label}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -1154,20 +1135,25 @@ export default function Dashboard() {
             </div>
           </div>
           {/* Toggle Buttons inside table footer */}
-          <div className="dark:border-dark-600 dark:bg-dark-800 flex flex-shrink-0 flex-wrap items-center gap-2 border-t border-gray-200 bg-gray-50 p-2.5">
-            {toggleOptions.map((option) => (
-              <div key={option.id} className="flex items-center gap-1.5">
-                <ToggleSwitch
-                  active={sourceToggle === option.id}
-                  onClick={() => setSourceToggle(option.id)}
-                  label={option.label}
-                  color={getToggleActiveColor(option.id)}
-                />
-                <span className="min-w-[30px] text-xs font-medium text-gray-700 dark:text-gray-300">
-                  {option.label}
-                </span>
-              </div>
-            ))}
+          <div className="dark:border-dark-600 dark:bg-dark-800 border-t border-gray-200 bg-gray-50 p-2.5">
+            <div className="grid grid-cols-4 gap-1 lg:grid-cols-4">
+              {toggleOptions.map((option) => (
+                <div
+                  key={option.id}
+                  className="flex items-center justify-center gap-1"
+                >
+                  <ToggleSwitch
+                    active={sourceToggle === option.id}
+                    onClick={() => setSourceToggle(option.id)}
+                    label={option.label}
+                    color={getToggleActiveColor(option.id)}
+                  />
+                  <span className="min-w-[20px] text-[9px] font-medium text-gray-700 lg:text-[10px] xl:text-xs dark:text-gray-300">
+                    {option.label}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
