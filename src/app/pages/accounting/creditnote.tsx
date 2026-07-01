@@ -1,6 +1,6 @@
 import { Cog, Wrench } from "lucide-react";
 
-const AccessoriesInventory = () => {
+const CreditNote = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-white px-4">
       <div className="max-w-lg w-full text-center">
@@ -31,4 +31,4 @@ const AccessoriesInventory = () => {
   );
 };
 
-export default AccessoriesInventory;
+export default CreditNote;

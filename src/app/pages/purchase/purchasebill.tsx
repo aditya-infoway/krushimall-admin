@@ -214,6 +214,7 @@ const emptyDraft = (): ItemRow => ({
   amount: "",
 
   saved: false,
+   inwardStatus: "Pending", 
 });
 
 const emptyAccount: NewAccountData = {

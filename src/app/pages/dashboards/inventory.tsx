@@ -204,7 +204,7 @@ export default function Dashboard() {
 
   return (
     <div className="p-6 min-h-screen bg-gray-50 dark:bg-dark-800">
-    <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between">
+   <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between">
   <div>
     <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
       Inventory
@@ -213,7 +213,7 @@ export default function Dashboard() {
       Welcome to the admin inventory!
     </p>
   </div>
-  <div className="mt-3 flex flex-wrap items-center gap-3 sm:mt-0">
+  <div className="mt-3 flex flex-wrap items-center gap-2 sm:mt-0">
     {/* Date Picker */}
     <div className="flex items-center gap-2">
       <DatePicker placeholder="From Date" />
@@ -221,25 +221,27 @@ export default function Dashboard() {
       <DatePicker placeholder="To Date" />
     </div>
 
-    {/* PDF Button */}
-    <button className="flex items-center gap-1.5 cursor-pointer rounded-lg border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-dark-600">
-      <DocumentArrowDownIcon className="h-4 w-4" />
-      PDF
-    </button>
+    {/* Action Buttons Group */}
+    <div className="flex items-center gap-1.5">
+      {/* PDF Button */}
+      <button className="flex items-center justify-center gap-1 cursor-pointer rounded-lg border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 px-2 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-dark-600 sm:px-3 sm:py-2">
+        <DocumentArrowDownIcon className="h-4 w-4" />
+        <span className="hidden sm:inline">PDF</span>
+      </button>
 
-    {/* Excel Button */}
-    <button className="flex items-center gap-1.5 cursor-pointer rounded-lg border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-dark-600">
-      <ArrowDownTrayIcon className="h-4 w-4" />
-      Excel
-    </button>
+      {/* Excel Button */}
+      <button className="flex items-center justify-center gap-1 cursor-pointer rounded-lg border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 px-2 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-dark-600 sm:px-3 sm:py-2">
+        <ArrowDownTrayIcon className="h-4 w-4" />
+        <span className="hidden sm:inline">Excel</span>
+      </button>
 
-    {/* Refresh Button */}
-    <button className="rounded-lg cursor-pointer border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 p-2 text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-dark-600">
-      <ArrowPathIcon className="h-4 w-4" />
-    </button>
+      {/* Refresh Button */}
+      <button className="flex items-center justify-center rounded-lg cursor-pointer border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 p-1.5 text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-dark-600 sm:p-2">
+        <ArrowPathIcon className="h-4 w-4" />
+      </button>
+    </div>
   </div>
 </div>
-
       {/* 4 Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-xl shadow-lg p-5 text-white">
@@ -361,8 +363,8 @@ export default function Dashboard() {
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-dark-600">
                 {modelAnalysisData.map((item, index) => (
-                  <tr key={index} className="hover:bg-gray-50 dark:hover:bg-dark-600 transition-colors">
-                    <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">{item.model}</td>
+                  <tr key={index} className="hover:bg-gray-50 dark:hover:bg-dark-600 transition-colors whitespace-nowrap">
+                    <td className="px-4 py-3 font-medium text-gray-900 dark:text-white whitespace-nowrap">{item.model}</td>
                     <td className="px-4 py-3 text-center text-gray-600 dark:text-gray-300">{item.present}</td>
                     <td className="px-4 py-3 text-center text-gray-600 dark:text-gray-300">{item.transit}</td>
                     <td className="px-4 py-3 text-center text-gray-600 dark:text-gray-300">{item.purchase}</td>

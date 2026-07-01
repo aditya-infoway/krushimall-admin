@@ -27,6 +27,7 @@ export interface PurchaseRegisterRow {
   supplierName: string;
   billNo: string;
   purchaseBillNo: string;
+    location: string; 
   purchaseLocation: string;
   totalQuantity: number;
   totalAmount: number;

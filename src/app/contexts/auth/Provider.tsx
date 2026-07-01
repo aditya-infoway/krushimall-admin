@@ -82,7 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const init = async () => {
       try {
-     const authToken = sessionStorage.getItem("authToken");
+     const authToken = localStorage.getItem("authToken");
 
         if (authToken && isTokenValid(authToken)) {
           setSession(authToken);
@@ -143,15 +143,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return true;
-  } catch (err) {
+ } catch (err: any) {
+    const msg = err?.response?.data?.message 
+      || err?.message 
+      || JSON.stringify(err)
+    alert("Error: " + msg + "\nURL: " + err?.config?.url)
     dispatch({
       type: "LOGIN_ERROR",
       payload: {
-        errorMessage:
-          err instanceof Error ? err.message : "Login failed",
+        errorMessage: msg
       },
     });
-
     return false;
   }
 };
