@@ -19,6 +19,7 @@ import { components } from "react-select";
 import apiHelper from "@/utils/apiHelper";
 // import { Combobox } from "@/components/shared/form/StyledCombobox";
 // ---------- Types ----------
+import { useParams } from "react-router-dom";
 import { Combobox } from "@/components/shared/form/Combobox";
 interface AccessoriesPurchaseBillProps {
   onBack?: () => void;
@@ -42,7 +43,8 @@ interface ItemRow {
   itemCode: string;
   hsn: string;
   unit: string;
-
+  modelName?: string;
+  variantName?: string;
   qty: number;
   stock?: number;
 
@@ -50,6 +52,7 @@ interface ItemRow {
   gstPercent: string;
   gstAmount?: number;
   netAmount: string;
+  status?: string;
 }
 
 interface PartyOption {
@@ -353,7 +356,8 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
   onSaved,
 }) => {
   const navigate = useNavigate();
-
+  const { id } = useParams();
+  const isEdit = !!id;
   // ── Main Bill State ────────────────────────────────────────────────────
   const [date, setDate] = useState(() => {
     const d = new Date();
@@ -427,13 +431,106 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
   const [bankDetails, setBankDetails] =
     useState<BankDetailsData>(emptyBankDetails);
   const [bankDetailsTouched, setBankDetailsTouched] = useState(false);
-
+const formatLocalDate = (date: Date | null): string => { 
+  if (!date) return ""; 
+  const year = date.getFullYear(); 
+  const month = String(date.getMonth() + 1).padStart(2, '0'); 
+  const day = String(date.getDate()).padStart(2, '0'); 
+  return `${year}-${month}-${day}`; 
+}; 
+ 
+const parseLocalDate = (dateStr: string): Date | undefined => { 
+  if (!dateStr) return undefined; 
+  return new Date(dateStr + "T00:00:00"); 
+};
   // ── Create Account drawer state ──────────────────────────────────────
   const [accountModalOpen, setAccountModalOpen] = useState(false);
   const [accountForm, setAccountForm] = useState<NewAccountData>(emptyAccount);
   const [accountTouched, setAccountTouched] = useState(false);
   const [accessories, setAccessories] = useState<any[]>([]);
-  
+  const getPurchase = async () => {
+    try {
+      const res = await apiHelper.get(`/accessories-purchase/${id}`);
+
+      const purchase = res.data; // ✅ not res.data.data
+
+      setPartyId(String(purchase.accountId));
+      setBillNo(purchase.billNo);
+      setPurchaseBillNo(purchase.purchaseBillNo || "");
+      setPurchaseLocation(purchase.purchaseLocation || "");
+      setTerms(purchase.terms);
+
+      setPurchaseDate(purchase.purchaseDate?.split("T")[0]);
+
+      setDueDate(purchase.dueDate ? purchase.dueDate.split("T")[0] : "");
+
+      setNarration(purchase.narration || "");
+
+      setCashAccount(
+        purchase.cashAccountId ? String(purchase.cashAccountId) : "",
+      );
+
+      setBankAccount(
+        purchase.bankAccountId ? String(purchase.bankAccountId) : "",
+      );
+
+      setBankDetails({
+        paymentMode: purchase.paymentMode || "UPI",
+        chequeNo: purchase.chequeNo || "",
+        chequeDate: purchase.chequeDate
+          ? purchase.chequeDate.split("T")[0]
+          : "",
+        clearDate: purchase.clearDate ? purchase.clearDate.split("T")[0] : "",
+        narration: purchase.bankNarration || "",
+      });
+
+      setFreightCharge(String(purchase.freightCharge || 0));
+
+      setInsurance(String(purchase.insurance || 0));
+
+      setOtherCharge(String(purchase.otherCharge || 0));
+
+      setRoundAmount(String(purchase.roundAmount || 0));
+
+      setBillVerify(
+        purchase.verifyStatus === "verify" ? "verify" : "not_verify",
+      );
+      setRows(
+        purchase.items.map((item: any) => ({
+          id: String(item.id),
+
+          accessoryId: item.accessoryId,
+
+          item: item.itemName,
+
+          itemCode: item.itemCode,
+
+          hsn: item.hsnCode,
+
+          unit: item.unit,
+
+          modelName: item.modelName,
+
+          variantName: item.variantName,
+
+          qty: item.qty,
+
+          stock: item.stock,
+
+          pPrice: String(item.purchaseRate),
+
+          gstPercent: String(item.gstPercent),
+
+          gstAmount: item.gstAmount,
+
+          netAmount: String(item.netAmount),
+          status: item.status,
+        })),
+      );
+    } catch (err) {
+      console.log(err);
+    }
+  };
   // ── API Functions ────────────────────────────────────────────────────
   const fetchAccessories = async () => {
     try {
@@ -454,21 +551,16 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
     }
   };
 
-  useEffect(() => {
-    fetchAccessories();
-  }, []);
   // Get Bill Number
-const getBillNo = async () => {
-  try {
-    const res = await apiHelper.get(
-      "/accessories-purchase/generate-bill-no"
-    );
+  const getBillNo = async () => {
+    try {
+      const res = await apiHelper.get("/accessories-purchase/generate-bill-no");
 
-    setBillNo(res.billNo);
-  } catch (error) {
-    console.error(error);
-  }
-};
+      setBillNo(res.billNo);
+    } catch (error) {
+      console.error(error);
+    }
+  };
   // Get Parties (Accounts)
   const getParties = async () => {
     try {
@@ -480,24 +572,26 @@ const getBillNo = async () => {
           ? res.data
           : [];
 
-      setParties(
-        accounts
-          .filter(
-            (acc: any) =>
-              acc.group === "Supplier" || acc.group === "Sundry Creditor",
-          )
-          .map((acc: any) => ({
-            id: acc.id,
-            name: acc.accountName,
-            mobile: acc.mobile,
-            stateCode: acc.stateCode,
-          })),
-      );
-    } catch (error) {
-      console.error(error);
+      const mapped = accounts
+        .filter(
+          (acc: any) =>
+            acc.group === "Supplier" || acc.group === "Sundry Creditor",
+        )
+        .map((acc: any) => ({
+          id: String(acc.id),
+          name: acc.accountName,
+          mobile: acc.mobile,
+          stateCode: acc.stateCode,
+        }));
+
+      setParties(mapped);
+
+      return mapped;
+    } catch (e) {
+      console.log(e);
+      return [];
     }
   };
-
   // Get Cash & Bank Accounts
   const getAccounts = async () => {
     try {
@@ -545,27 +639,22 @@ const getBillNo = async () => {
   }));
   const [company, setCompany] = useState<any>(null);
 
-const getCompany = async () => {
-  try {
-    const res = await apiHelper.get("/company");
+  const getCompany = async () => {
+    try {
+      const res = await apiHelper.get("/company");
 
-    const companyData = Array.isArray(res.data)
-      ? res.data[0]
-      : res.data;
+      const companyData = Array.isArray(res.data) ? res.data[0] : res.data;
 
-    setCompany(companyData);
-  } catch (err) {
-    console.log(err);
-  }
-};
-const selectedParty = parties.find(
-  (p) => p.id === partyId
-);
+      setCompany(companyData);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+  const selectedParty = parties.find((p) => p.id === partyId);
 
-const isPartySelected = !!partyId;
+  const isPartySelected = !!partyId;
 
-const isSameState =
-  company?.stateCode === selectedParty?.stateCode;
+  const isSameState = company?.stateCode === selectedParty?.stateCode;
   // ── Fetch Showroom Variants ──────────────────────────────────────────
   const fetchShowroomVariants = async () => {
     try {
@@ -586,12 +675,22 @@ const isSameState =
 
   // ── Initialize Data ──────────────────────────────────────────────────
   useEffect(() => {
-    getBillNo();
-    getParties();
-    getAccounts();
-    getCompany();
-    fetchShowroomVariants();
-  }, []);
+    const loadData = async () => {
+      await getParties();
+      await getAccounts();
+      await getCompany();
+      await fetchShowroomVariants();
+      await fetchAccessories();
+
+      if (isEdit) {
+        await getPurchase(); // Fetch existing purchase & bill no
+      } else {
+        await getBillNo(); // Generate new bill no
+      }
+    };
+
+    loadData();
+  }, [id]);
 
   // ── Accessories Form Handlers ────────────────────────────────────────
   const handleAccessoryFormChange = (
@@ -1008,10 +1107,13 @@ const isSameState =
 
     setDraft((prev) => ({
       ...prev,
-        accessoryId: a.id,
+      accessoryId: a.id,
       item: a.itemName,
       itemCode: a.codeNo,
       hsn: a.hsnCode,
+      modelName: a.showroomVariantDetails?.[0]?.model?.modelName || "",
+      groupName: a.group,
+      variantName: a.showroomVariantDetails?.[0]?.variantName || "",
       unit: a.unit,
       qty,
       pPrice: String(price),
@@ -1075,6 +1177,7 @@ const isSameState =
             Number(updated[index].pPrice),
             Number(updated[index].gstPercent),
           ),
+            status: "Pending",
         };
 
         return updated;
@@ -1091,86 +1194,59 @@ const isSameState =
     setRows((r) => r.filter((row) => row.id !== id));
 
   // ── Derived totals ──────────────────────────────────────────────────
-const totalQuantity = rows.reduce(
-  (sum, r) => sum + Number(r.qty || 0),
-  0
-);
+  const totalQuantity = rows.reduce((sum, r) => sum + Number(r.qty || 0), 0);
 
-const freightNum = Number(freightCharge) || 0;
-const insuranceNum = Number(insurance) || 0;
-const otherNum = Number(otherCharge) || 0;
-const roundNum = Number(roundAmount) || 0;
+  const freightNum = Number(freightCharge) || 0;
+  const insuranceNum = Number(insurance) || 0;
+  const otherNum = Number(otherCharge) || 0;
+  const roundNum = Number(roundAmount) || 0;
 
-const freightInsuranceOther =
-  freightNum +
-  insuranceNum +
-  otherNum;
+  const freightInsuranceOther = freightNum + insuranceNum + otherNum;
 
-// Purchase value without GST
-const totalValue = rows.reduce(
-  (sum, r) =>
-    sum +
-    Number(r.pPrice) * Number(r.qty || 1),
-  0
-);
+  // Purchase value without GST
+  const totalValue = rows.reduce(
+    (sum, r) => sum + Number(r.pPrice) * Number(r.qty || 1),
+    0,
+  );
 
-let totalGST = 0;
-let totalOtherCharges = 0;
-let totalNetAmount = 0;
-const totalAmount = totalNetAmount;
-rows.forEach((r) => {
-  const purchasePrice =
-    Number(r.pPrice) * Number(r.qty || 1);
+  let totalGST = 0;
+  let totalOtherCharges = 0;
+  let totalNetAmount = 0;
+  const totalAmount = totalNetAmount;
+  rows.forEach((r) => {
+    const purchasePrice = Number(r.pPrice) * Number(r.qty || 1);
 
-  let otherChargesAmount = 0;
+    let otherChargesAmount = 0;
 
-  if (freightInsuranceOther > 0 && totalValue > 0) {
-    otherChargesAmount =
-      (purchasePrice / totalValue) *
-      freightInsuranceOther;
-  }
+    if (freightInsuranceOther > 0 && totalValue > 0) {
+      otherChargesAmount = (purchasePrice / totalValue) * freightInsuranceOther;
+    }
 
-  const taxableAmount =
-    purchasePrice +
-    otherChargesAmount;
+    const taxableAmount = purchasePrice + otherChargesAmount;
 
-  const gstAmount = isPartySelected
-    ? (taxableAmount *
-        Number(r.gstPercent || 0)) /
-      100
-    : 0;
+    const gstAmount = isPartySelected
+      ? (taxableAmount * Number(r.gstPercent || 0)) / 100
+      : 0;
 
-  totalGST += gstAmount;
-  totalOtherCharges += otherChargesAmount;
-  totalNetAmount += taxableAmount + gstAmount;
-});
+    totalGST += gstAmount;
+    totalOtherCharges += otherChargesAmount;
+    totalNetAmount += taxableAmount + gstAmount;
+  });
 
-const newTaxableValue =
-  totalValue + totalOtherCharges;
+  const newTaxableValue = totalValue + totalOtherCharges;
 
-const totalCgst =
-  isPartySelected && isSameState
-    ? Number((totalGST / 2).toFixed(2))
-    : 0;
+  const totalCgst =
+    isPartySelected && isSameState ? Number((totalGST / 2).toFixed(2)) : 0;
 
-const totalSgst =
-  isPartySelected && isSameState
-    ? Number((totalGST / 2).toFixed(2))
-    : 0;
+  const totalSgst =
+    isPartySelected && isSameState ? Number((totalGST / 2).toFixed(2)) : 0;
 
-const totalIgst =
-  isPartySelected && !isSameState
-    ? Number(totalGST.toFixed(2))
-    : 0;
+  const totalIgst =
+    isPartySelected && !isSameState ? Number(totalGST.toFixed(2)) : 0;
 
-const grandTotal = Number(
-  (
-    totalValue +
-    totalOtherCharges +
-    totalGST +
-    roundNum
-  ).toFixed(2)
-);
+  const grandTotal = Number(
+    (totalValue + totalOtherCharges + totalGST + roundNum).toFixed(2),
+  );
 
   const fmt = (n: number) =>
     n.toLocaleString("en-IN", {
@@ -1188,77 +1264,74 @@ const grandTotal = Number(
 
   const handleSave = async () => {
     try {
-    const payload = {
-  accountId: partyId,
+      const payload = {
+        accountId: partyId,
 
-  purchaseDate: purchaseDate || date,
-  purchaseBillNo,
-  purchaseLocation,
-  dueDate,
+        purchaseDate: purchaseDate || date,
+        purchaseBillNo,
+        purchaseLocation,
+        dueDate,
 
-  terms,
-  narration,
+        terms,
+        narration,
 
-  cashAccountId:
-    terms === "Cash" ? cashAccount : null,
+        cashAccountId: terms === "Cash" ? cashAccount : null,
 
-  bankAccountId:
-    terms === "Bank" ? bankAccount : null,
+        bankAccountId: terms === "Bank" ? bankAccount : null,
 
-  paymentMode: bankDetails.paymentMode,
-  chequeNo: bankDetails.chequeNo,
-  chequeDate: bankDetails.chequeDate,
-  clearDate: bankDetails.clearDate,
-  bankNarration: bankDetails.narration,
+        paymentMode: bankDetails.paymentMode,
+        chequeNo: bankDetails.chequeNo,
+        chequeDate: bankDetails.chequeDate,
+        clearDate: bankDetails.clearDate,
+        bankNarration: bankDetails.narration,
 
-  freightCharge,
-  insurance,
-  otherCharge,
-  roundAmount,
+        freightCharge,
+        insurance,
+        otherCharge,
+        roundAmount,
 
-  taxableValue: newTaxableValue,
+        taxableValue: newTaxableValue,
 
-  totalQty: totalQuantity,
-  totalAmount: totalNetAmount,
+        totalQty: totalQuantity,
+        totalAmount: totalNetAmount,
 
-  cgst: totalCgst,
-  sgst: totalSgst,
-  igst: totalIgst,
+        cgst: totalCgst,
+        sgst: totalSgst,
+        igst: totalIgst,
 
-  grandTotal,
+        grandTotal,
 
-  verifyStatus: billVerify,
+        verifyStatus: billVerify,
 
-  items: rows.map((row: any) => ({
-    accessoryId: row.accessoryId || null,
+        items: rows.map((row: any) => ({
+          accessoryId: row.accessoryId || null,
 
-    item: row.item,
-    itemCode: row.itemCode,
-    hsn: row.hsn,
-    unit: row.unit,
+          item: row.item,
+          itemCode: row.itemCode,
+          hsn: row.hsn,
+          unit: row.unit,
+          modelName: row.modelName,
+          variantName: row.variantName,
+          qty: Number(row.qty),
+          groupName: row.groupName,
+          stock: Number(row.qty),
 
-    qty: Number(row.qty),
+          pPrice: Number(row.pPrice),
 
-    stock: Number(row.qty),
+          gstPercent: Number(row.gstPercent),
 
-    pPrice: Number(row.pPrice),
+          gstAmount:
+            (Number(row.qty) * Number(row.pPrice) * Number(row.gstPercent)) /
+            100,
 
-    gstPercent: Number(row.gstPercent),
-
-    gstAmount:
-      (
-        Number(row.qty) *
-        Number(row.pPrice) *
-        Number(row.gstPercent)
-      ) / 100,
-
-    netAmount: Number(row.netAmount),
-  })),
-};
-      await apiHelper.post(
-  "/accessories-purchase",
-  payload
-);
+          netAmount: Number(row.netAmount),
+        })),
+      };
+      if (isEdit) {
+        await apiHelper.put(`/accessories-purchase/${id}`, payload);
+      } else {
+        await apiHelper.post("/accessories-purchase", payload);
+      }
 
       alert("Purchase Saved Successfully");
       navigate("/purchase/accessories");
@@ -1267,7 +1340,20 @@ const grandTotal = Number(
       alert("Failed to save purchase. Please try again.");
     }
   };
+  const handleVerify = async () => {
+    if (!id) return;
 
+    try {
+      await apiHelper.put(`/accessories-purchase/verify/${id}`, {});
+
+      setBillVerify("verify");
+
+      alert("Purchase Verified Successfully");
+    } catch (error) {
+      console.error(error);
+      alert("Failed to verify purchase");
+    }
+  };
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="bg-white shadow-sm dark:bg-gray-800">
@@ -1302,6 +1388,7 @@ const grandTotal = Number(
               }}
               placeholder="Select date..."
               className="w-full"
+
             />
           </div>
 
@@ -1381,22 +1468,22 @@ const grandTotal = Number(
                   mobile: acc.mobile,
                   openingBalance: acc.openingBalance,
                 }))}
-                value={
-                  bankAccounts.find((acc) => acc.id === bankAccount)
-                    ? {
-                        label:
-                          bankAccounts.find((acc) => acc.id === bankAccount)
-                            ?.accountName || "",
-                        value: bankAccount,
-                        mobile:
-                          bankAccounts.find((acc) => acc.id === bankAccount)
-                            ?.mobile || "",
-                        openingBalance:
-                          bankAccounts.find((acc) => acc.id === bankAccount)
-                            ?.openingBalance || 0,
-                      }
-                    : null
-                }
+              value={
+  (() => {
+    const selected = bankAccounts.find(
+      (acc) => Number(acc.id) === Number(bankAccount)
+    );
+
+    return selected
+      ? {
+          label: selected.accountName,
+          value: selected.id,
+          mobile: selected.mobile,
+          openingBalance: selected.openingBalance,
+        }
+      : null;
+  })()
+}
                 onChange={(val: any) => {
                   setBankAccount(val.value);
                   setBankDetailsModalOpen(true);
@@ -1488,18 +1575,17 @@ const grandTotal = Number(
               Purchase Date
             </label>
             <DatePicker
-              value={purchaseDate}
-              onChange={(selectedDates: Date[]) => {
-                const val = selectedDates[0];
-                setPurchaseDate(
-                  typeof val === "string"
-                    ? val
-                    : val?.toISOString?.()?.split?.("T")?.[0] || "",
-                );
-              }}
-              placeholder="Select date..."
-              className="w-full"
-            />
+            value={purchaseDate ? parseLocalDate(purchaseDate) : undefined}
+            onChange={(selectedDates: Date[]) => {
+              const val = selectedDates[0];
+              if (val instanceof Date && !isNaN(val.getTime())) {
+                setPurchaseDate(formatLocalDate(val));
+              }
+            }}
+            placeholder="Select date..."
+            className="w-full"
+            options={{ disableMobile: true }}
+          />
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -1520,19 +1606,19 @@ const grandTotal = Number(
             <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
               Due Date
             </label>
-            <DatePicker
-              value={dueDate}
-              onChange={(selectedDates: Date[]) => {
-                const val = selectedDates[0];
-                setDueDate(
-                  typeof val === "string"
-                    ? val
-                    : val?.toISOString?.()?.split?.("T")?.[0] || "",
-                );
-              }}
-              placeholder="Select date..."
-              className="w-full"
-            />
+             <DatePicker
+             value={dueDate ? parseLocalDate(dueDate) : undefined}
+             onChange={(selectedDates: Date[]) => {
+               const val = selectedDates[0];
+           
+               if (val instanceof Date && !isNaN(val.getTime())) {
+                 setDueDate(formatLocalDate(val));
+               }
+             }}
+             placeholder="Select date..."
+             className="w-full"
+             options={{ disableMobile: true }}
+           />
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -1722,12 +1808,18 @@ const grandTotal = Number(
                         ₹{r.netAmount}
                       </td>
                       <td className="border border-gray-500 px-3 py-2.5 text-center">
-                        <button
-                          onClick={() => removeRow(r.id)}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400"
-                        >
-                          <XMarkIcon className="h-4 w-4" />
-                        </button>
+                       {!r.status || r.status.toLowerCase() === "pending" ? (
+                          <button
+                            onClick={() => removeRow(r.id)}
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400"
+                          >
+                            <XMarkIcon className="h-4 w-4" />
+                          </button>
+                        ) : (
+                          <span className="font-semibold text-green-600">
+                            <CheckIcon className="mx-auto h-5 w-5 text-green-600" />
+                          </span>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -1847,16 +1939,19 @@ const grandTotal = Number(
                 <label className="flex cursor-pointer items-center gap-2 text-sm">
                   <Radio
                     checked={billVerify === "not_verify"}
+                    disabled={billVerify === "verify"}
                     onChange={() => setBillVerify("not_verify")}
                   />
                   <span className="text-gray-600 dark:text-gray-400">
                     Not Verify
                   </span>
                 </label>
+
                 <label className="flex cursor-pointer items-center gap-2 text-sm">
                   <Radio
                     checked={billVerify === "verify"}
-                    onChange={() => setBillVerify("verify")}
+                    disabled={billVerify === "verify"}
+                    onChange={handleVerify}
                   />
                   <span className="text-gray-600 dark:text-gray-400">
                     Verify
@@ -1896,7 +1991,7 @@ const grandTotal = Number(
                     ₹{fmt(newTaxableValue)}
                   </span>
                 </div>
-                  {isPartySelected &&
+                {isPartySelected &&
                   (isSameState ? (
                     <>
                       {/* CGST */}
@@ -1951,7 +2046,7 @@ const grandTotal = Number(
             onClick={handleSave}
             className="bg-primary-500 hover:bg-primary-500 w-full rounded-lg px-8 py-2.5 text-sm font-bold text-white transition-colors sm:w-auto sm:px-12 sm:py-3"
           >
-            Save
+            {isEdit ? "Update" : "Save"}
           </button>
         </div>
       </div>
@@ -2896,43 +2991,47 @@ const grandTotal = Number(
                       <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                         Cheque Date <span className="text-red-500">*</span>
                       </label>
-                      <DatePicker
-                        value={bankDetails.chequeDate}
-                        onChange={(selectedDates: Date[]) => {
-                          const val = selectedDates[0];
-                          updateBankDetails(
-                            "chequeDate",
-                            typeof val === "string"
-                              ? val
-                              : val?.toISOString?.()?.split?.("T")?.[0] || "",
-                          );
-                        }}
-                        placeholder="Select date..."
-                        className={`w-full ${
-                          bankDetailsTouched && !bankDetails.chequeDate.trim()
-                            ? "border-red-500"
-                            : ""
-                        }`}
-                      />
+                     <DatePicker
+  value={
+    bankDetails.chequeDate
+      ? parseLocalDate(bankDetails.chequeDate)
+      : undefined
+  }
+  options={{ disableMobile: true }}
+  onChange={(selectedDates: Date[]) => {
+    updateBankDetails(
+      "chequeDate",
+      formatLocalDate(selectedDates[0] || null)
+    );
+  }}
+  placeholder="Select date..."
+  className={`w-full ${
+    bankDetailsTouched && !bankDetails.chequeDate.trim()
+      ? "border-red-500"
+      : ""
+  }`}
+/>
                     </div>
                     <div className="sm:col-span-2">
                       <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                         Clear Date
                       </label>
-                      <DatePicker
-                        value={bankDetails.clearDate}
-                        onChange={(selectedDates: Date[]) => {
-                          const val = selectedDates[0];
-                          updateBankDetails(
-                            "clearDate",
-                            typeof val === "string"
-                              ? val
-                              : val?.toISOString?.()?.split?.("T")?.[0] || "",
-                          );
-                        }}
-                        placeholder="Select date..."
-                        className="w-full"
-                      />
+                  <DatePicker
+  value={
+    bankDetails.clearDate
+      ? parseLocalDate(bankDetails.clearDate)
+      : undefined
+  }
+  options={{ disableMobile: true }}
+  onChange={(selectedDates: Date[]) => {
+    updateBankDetails(
+      "clearDate",
+      formatLocalDate(selectedDates[0] || null)
+    );
+  }}
+  placeholder="Select date..."
+  className="w-full"
+/>
                     </div>
                   </div>
                 )}

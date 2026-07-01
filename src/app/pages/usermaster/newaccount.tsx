@@ -221,7 +221,7 @@ const NewAccount = () => {
       backgroundColor: "transparent",
       borderColor: state.isFocused
         ? "var(--color-primary-600)"
-        : "var(--color-gray-300)",
+        : "var(--color-gray-700)",
       boxShadow: state.isFocused
         ? "0 0 0 1px var(--color-primary-600)"
         : "none",
@@ -646,6 +646,7 @@ const NewAccount = () => {
               <DatePicker
                 label="Birthday On"
                 placeholder="Select Date"
+                 options={{ disableMobile: true }}
                 onChange={(val: Date[]) =>
                   setValue("birthday", val[0]?.toISOString() || "")
                 }
@@ -656,6 +657,7 @@ const NewAccount = () => {
               <DatePicker
                 label="Anniversary"
                 placeholder="Select Date"
+                 options={{ disableMobile: true }}
                 onChange={(val: Date[]) =>
                   setValue("anniversary", val[0]?.toISOString() || "")
                 }

@@ -464,8 +464,57 @@ const protectedRoutes: RouteObject = {
             },
           ],
         },
+         
       ],
     },
+    {
+          path: "accessories-inward/:id",
+          lazy: async () => ({
+            Component: (
+           await import("@/app/pages/purchase/accessoriesitemlist")
+            ).default,
+          }),
+        },
+    {
+      path: "accessories",
+      children: [
+        {
+          index: true,
+          lazy: async () => ({
+            Component: (
+              await import("@/app/pages/purchase/accessories")
+            ).default,
+          }),
+        },
+        {
+          path: "add",
+          lazy: async () => ({
+            Component: (
+              await import("@/app/pages/purchase/puraccessories")
+            ).default,
+          }),
+        },
+         {
+          path: "add/:id",
+          lazy: async () => ({
+            Component: (
+              await import("@/app/pages/purchase/puraccessories")
+            ).default,
+          }),
+        },
+         
+        // {
+        //   path: ":id",
+        //   lazy: async () => ({
+        //     Component: (
+        //       await import("@/app/pages/purchase/accessories/edit")
+        //     ).default,
+        //   }),
+        // },
+      ],
+    },
+  
+
 
     // The app layout supports only the main layout. Avoid using it for other layouts.
     {

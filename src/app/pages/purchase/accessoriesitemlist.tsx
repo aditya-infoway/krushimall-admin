@@ -33,6 +33,9 @@ export interface PurchaseItemRow {
   model: string;
   variant: string;
   colour: string;
+  itemCode : number;
+  group : string;
+  unit: string;
   chassisNo: string;
   engineNo: string;
   vehicleSrNo: string;
@@ -127,7 +130,7 @@ const columns = [
   "Action",
 ];
 
-const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
+const AccessoriesItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
   const { id } = useParams<{ id: string }>();
   const [search, setSearch] = useState("");
   const [rowsPerPage, setRowsPerPage] = useState(15);
@@ -184,45 +187,39 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
     try {
       setLoading(true);
 
-      const res = await apiHelper.get(`/purchases/${id}`);
+     const res = await apiHelper.get(
+  `/accessories-purchase/${id}`
+);
 
-      const purchase = res.data;
+const purchase = res.data;
       setTransportSaved(purchase.transportSaved);
-      setRows(
-        purchase.items.map((item: any) => ({
-          id: String(item.id),
+ setRows(
+  purchase.items.map((item: any) => ({
+    id: String(item.id),
 
-          itemName: item.itemName,
-          hsnCode: item.hsnCode || "",
-          model: item.modelName || "",
-          variant: item.variantName || "",
-          colour: item.color,
+    itemName: item.itemName,
+    itemCode: item.itemCode,
+    shortName: item.shortName || "",
+    hsnCode: item.hsnCode || "",
+    unit: item.unit || "",
+    taxSlab: item.taxSlab || "",
+    group: item.groupName || "",
+    model: item.modelName || "",
+    variant: item.variantName || "",
+    colour: "",
 
-          chassisNo: item.chassisNo,
-          engineNo: item.engineNo,
+    chassisNo: "",
+    engineNo: "",
+    vehicleSrNo: "",
 
-          vehicleSrNo: item.vehicleSrNo || "",
+    quantity: Number(item.qty),
+    perRate: Number(item.purchaseRate),
+    gstPercent: Number(item.gstPercent),
+    amount: Number(item.netAmount),
 
-          quantity: Number(item.qty),
-          perRate: Number(item.ratePer),
-          gstPercent: Number(item.gstPercent),
-          amount: Number(item.amount),
-
-          status: item.status || "Pending",
-          mfgDate: item.mfgDate || "",
-          keyNo: item.keyNo || "",
-          batteryMake: item.batteryMake || "",
-          batteryNo: item.batteryNo || "",
-          first1TyerNo: item.first1TyerNo || "",
-          first2TyerNo: item.first2TyerNo || "",
-          second1TyerNo: item.second1TyerNo || "",
-          second2TyerNo: item.second2TyerNo || "",
-          location: item.location || "",
-          grnNumber: item.grnNumber || "",
-          grnDate: item.grnDate || "",
-          grnRecordDate: item.grnRecordDate || "",
-        })),
-      );
+   status: item.status || "Pending",
+  }))
+);
     } catch (error) {
       console.error("Failed to fetch purchase items:", error);
     } finally {
@@ -281,13 +278,17 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
     }
   };
 
-  const handleSelectRow = (id: string) => {
-    setSelectedIds((prev) =>
-      prev.includes(id)
-        ? prev.filter((selectedId) => selectedId !== id)
-        : [...prev, id],
-    );
-  };
+const handleSelectRow = async (item: PurchaseItemRow) => {
+  try {
+    await apiHelper.put(`/accessories-purchase/item-status/${item.id}`, {
+      status: "Inward",
+    });
+
+    fetchPurchaseItems();
+  } catch (err) {
+    console.error(err);
+  }
+};
 
   const handleAddItem = () => {
     navigate(`/purchase/tractor/${id}/add-item`);
@@ -450,7 +451,7 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-xl font-semibold text-gray-900 md:text-2xl dark:text-white">
-            Purchase Item List
+          Accessories Item List
           </h1>
           <p className="dark:text-dark-300 mt-1 text-sm text-gray-500">
             Manage all purchase items from here
@@ -542,18 +543,18 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
           >
             <THead className="dark:bg-dark-700/60 dark:border-dark-600 border-b border-gray-200 bg-gray-100">
               <Tr>
-                <Th className="w-12 py-3.5 text-center">
-                  <Checkbox
-                    className="size-4.5"
-                    checked={isAllPageSelected}
-                    onChange={(e: any) => handleSelectAll(e.target.checked)}
-                  />
+                <Th className="w-16 py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                 Action
                 </Th>
+                
                 <Th className="w-16 py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   S.No
                 </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Item Name
+                </Th>
+                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                  Item Code
                 </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   HSN Code
@@ -564,18 +565,21 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Variant
                 </Th>
-                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  Colour
+                  <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+               Group
                 </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                  Unit
+                </Th>
+                {/* <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Chassis No.
                 </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Engine No.
-                </Th>
-                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                </Th> */}
+                {/* <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Vehicle Sr. No.
-                </Th>
+                </Th> */}
                 <Th className="py-3.5 text-right text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Quantity
                 </Th>
@@ -616,31 +620,30 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
                     <Td className="py-4 text-center">
                       <Checkbox
                         className="size-4.5"
-                        checked={isRowSelected}
-                        onChange={() => handleSelectRow(item.id)}
+                        checked={item.status === "Inward"}
+  disabled={item.status !== "Pending"}
+  onChange={() => handleSelectRow(item)}
                       />
                     </Td>
                     <Td className="py-4 font-medium text-gray-500">
                       {indexOfFirstItem + index + 1}
                     </Td>
                     <Td className="py-4 font-medium">{item.itemName}</Td>
+                      <Td className="py-4">{item.itemCode}</Td>
                     <Td className="py-4">{item.hsnCode}</Td>
                     <Td className="py-4">{item.model}</Td>
                     <Td className="py-4">{item.variant}</Td>
+                     <Td className="py-4">{item.group}</Td>
                     <Td className="py-4">
-                      <span className="inline-flex items-center gap-1.5">
-                        <span
-                          className="inline-block size-3 rounded-full border border-gray-300"
-                          style={{ backgroundColor: item.colour.toLowerCase() }}
-                        />
-                        {item.colour}
-                      </span>
+                     
+                        {item.unit}
+                 
                     </Td>
-                    <Td className="py-4 font-mono text-sm">{item.chassisNo}</Td>
-                    <Td className="py-4 font-mono text-sm">{item.engineNo}</Td>
-                    <Td className="py-4 font-mono text-sm">
+                    {/* <Td className="py-4 font-mono text-sm">{item.chassisNo}</Td>
+                    <Td className="py-4 font-mono text-sm">{item.engineNo}</Td> */}
+                    {/* <Td className="py-4 font-mono text-sm">
                       {item.vehicleSrNo}
-                    </Td>
+                    </Td> */}
                     <Td className="py-4 text-right">{item.quantity}</Td>
                     <Td className="py-4 text-right">₹{fmt(item.perRate)}</Td>
                     <Td className="py-4 text-right">{item.gstPercent}%</Td>
@@ -1309,4 +1312,4 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
   );
 };
 
-export default PurchaseItemList;
+export default AccessoriesItemList;

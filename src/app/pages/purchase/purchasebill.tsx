@@ -1,7 +1,7 @@
 // src/app/pages/purchase/tractor/add.tsx
 import React, { useState, useMemo, useEffect } from "react";
 import type { PurchaseRegisterRow } from "./register";
-import { useNavigate,useParams  } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   XMarkIcon,
   CheckIcon,
@@ -70,7 +70,7 @@ interface ItemRow {
   gstPercent: string;
   amount: string;
   saved: boolean;
-   inwardStatus: "Pending" | "Inward";
+  inwardStatus: "Pending" | "Inward";
 }
 
 interface PartyOption {
@@ -188,7 +188,7 @@ const nextRowId = () => `row-${rowIdSeq++}`;
 const DEFAULT_QTY = 1;
 
 const emptyDraft = (): ItemRow => ({
-   id: nextRowId(),
+  id: nextRowId(),
 
   item: "",
   itemCode: "",
@@ -305,10 +305,10 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
   onBack,
   // onSaved,
 }) => {
-const navigate = useNavigate();
-const { id } = useParams();
+  const navigate = useNavigate();
+  const { id } = useParams();
 
-const isEdit = !!id;
+  const isEdit = !!id;
   const [date, setDate] = useState(() => {
     const d = new Date();
     return d.toISOString().split("T")[0];
@@ -462,7 +462,18 @@ const isEdit = !!id;
 
   const isPartySelected = !!partyId;
   const districtOptions = cityOptions;
+  const formatLocalDate = (date: Date | null): string => {
+    if (!date) return "";
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
 
+  const parseLocalDate = (dateStr: string): Date | undefined => {
+    if (!dateStr) return undefined;
+    return new Date(dateStr + "T00:00:00");
+  };
   // ----- derived totals -----
   // const totalQuantity = rows.reduce((sum, r) => sum + (Number(r.qty) || 0), 0);
   // const totalAmount = rows.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
@@ -629,14 +640,14 @@ const isEdit = !!id;
 
       color: v.colour,
       shortName: v.shortName,
-hsnCode: v.hsnCode,
-taxSlab: v.taxSlab,
+      hsnCode: v.hsnCode,
+      taxSlab: v.taxSlab,
 
-modelName: v.model,
-variantName: v.variant,
+      modelName: v.model,
+      variantName: v.variant,
 
-typeOfFuel: v.typeOfFuel,
-fuelCapacity: v.fuelCapacity,
+      typeOfFuel: v.typeOfFuel,
+      fuelCapacity: v.fuelCapacity,
 
       qty,
 
@@ -647,12 +658,10 @@ fuelCapacity: v.fuelCapacity,
       amount: String(amount),
     });
 
+    setVehicleModalOpen(false);
 
-  setVehicleModalOpen(false);
-
-  setVehicleSearch("");
-
-};
+    setVehicleSearch("");
+  };
   const saveDraftRow = () => {
     // Validate all required fields
     if (!draft.item.trim()) {
@@ -792,6 +801,7 @@ fuelCapacity: v.fuelCapacity,
       [field]: error,
     }));
   };
+
   const handleCreateAccount = async () => {
     try {
       const required: (keyof NewAccountData)[] = [
@@ -890,113 +900,115 @@ fuelCapacity: v.fuelCapacity,
     }
   };
   const getParties = async () => {
-    try {
-      const res = await apiHelper.get("/accounts");
+    const res = await apiHelper.get("/accounts");
 
-      const accounts = Array.isArray(res.data?.data)
-        ? res.data.data
-        : Array.isArray(res.data)
-          ? res.data
-          : [];
+    const accounts = Array.isArray(res.data?.data) ? res.data.data : res.data;
 
-      setParties(
-        accounts
-          .filter(
-            (acc: any) =>
-              acc.group === "Supplier" || acc.group === "Sundry Creditor",
-          )
-          .map((acc: any) => ({
-            id: acc.id,
-            name: acc.accountName,
-            mobile: acc.mobile,
-            stateCode: acc.stateCode,
-          })),
-      );
-    } catch (error) {
-      console.error(error);
-    }
+    const list = accounts
+      .filter(
+        (acc: any) =>
+          acc.group === "Supplier" || acc.group === "Sundry Creditor",
+      )
+      .map((acc: any) => ({
+        id: String(acc.id),
+        name: acc.accountName,
+        mobile: acc.mobile,
+        stateCode: acc.stateCode,
+      }));
+
+    setParties(list);
+
+    return list;
   };
 
- useEffect(() => {
-  getParties();
-  getTractors();
+  useEffect(() => {
+    const load = async () => {
+      await getParties();
+      await getTractors();
 
-  if (isEdit) {
-    getPurchase(id!);
-  } else {
-    getBillNo();
-  }
-}, [id]);
-const getPurchase = async (id: string) => {
-  try {
-    const res = await apiHelper.get(`/purchases/${id}`);
+      if (isEdit) {
+        await getPurchase(id!);
+      } else {
+        getBillNo();
+      }
+    };
 
-    const purchase = res.data;
+    load();
+  }, [id]);
+  const getPurchase = async (id: string) => {
+    try {
+      const res = await apiHelper.get(`/purchases/${id}`);
 
-    setBillNo(purchase.billNo);
-    setPartyId(String(purchase.accountId));
-    setPurchaseBillNo(purchase.purchaseBillNo || "");
-    setPurchaseDate(
-      purchase.purchaseDate?.split("T")[0] || ""
-    );
-    setPurchaseLocation(
-  purchase.purchaseLocation || "Main Branch"
-);
+      const purchase = res.data;
+console.log(res.data);
+      setBillNo(purchase.billNo);
+      setPartyId(String(purchase.accountId));
+      setPurchaseBillNo(purchase.purchaseBillNo || "");
+      setPurchaseDate(purchase.purchaseDate?.split("T")[0] || "");
+      setPurchaseLocation(purchase.purchaseLocation || "Main Branch");
 
-setDueDate(
-  purchase.dueDate
-    ? purchase.dueDate.split("T")[0]
-    : ""
-);
-    setTerms(purchase.terms);
-    setNarration(purchase.narration);
+      setDueDate(purchase.dueDate ? purchase.dueDate.split("T")[0] : "");
+      setTerms(purchase.terms);
+      setTerms(purchase.terms);
 
-    setFreightCharge(String(purchase.freightCharge));
-    setInsurance(String(purchase.insurance));
-    setOtherCharge(String(purchase.otherCharge));
-    setRoundAmount(String(purchase.roundAmount));
+setPartyId(String(purchase.accountId || ""));
+setBankAccount(String(purchase.bankAccountId || ""));
 
-    setBillVerify(
-      purchase.status === "VERIFY"
-        ? "verify"
-        : "not_verify"
-    );
+setBankDetails({
+  paymentMode: purchase.paymentMode || "",
+  chequeNo: purchase.chequeNo || "",
+  chequeDate: purchase.chequeDate
+    ? purchase.chequeDate.split("T")[0]
+    : "",
+  clearDate: purchase.clearDate
+    ? purchase.clearDate.split("T")[0]
+    : "",
+  narration: purchase.bankNarration || "",
+});
+      setNarration(purchase.narration);
 
-    setRows(
-      purchase.items.map((item: any) => ({
-      id: String(item.id),
+      setFreightCharge(String(purchase.freightCharge));
+      setInsurance(String(purchase.insurance));
+      setOtherCharge(String(purchase.otherCharge));
+      setRoundAmount(String(purchase.roundAmount));
 
-    item: item.itemName,
-    itemCode: item.itemCode,
+      setBillVerify(purchase.status === "VERIFY" ? "verify" : "not_verify");
 
-    shortName: item.shortName || "",
-    hsnCode: item.hsnCode || "",
-    taxSlab: item.taxSlab || "",
+      setRows(
+        purchase.items.map((item: any) => ({
+          id: String(item.id),
 
-    modelName: item.modelName || "",
-    variantName: item.variantName || "",
+          item: item.itemName,
+          itemCode: item.itemCode,
 
-    typeOfFuel: item.fuelType || "",
-    fuelCapacity: item.fuelCapacity || "",
+          shortName: item.shortName || "",
+          hsnCode: item.hsnCode || "",
+          taxSlab: item.taxSlab || "",
 
-    color: item.color,
+          modelName: item.modelName || "",
+          variantName: item.variantName || "",
 
-    chassisNo: item.chassisNo,
-    engineNo: item.engineNo,
+          typeOfFuel: item.fuelType || "",
+          fuelCapacity: item.fuelCapacity || "",
 
-    qty: item.qty,
-    ratePer: String(item.ratePer),
-    gstPercent: String(item.gstPercent),
-    amount: String(item.amount),
+          color: item.color,
 
-    saved: true,
-      inwardStatus: item.status || "Pending",
-      }))
-    );
-  } catch (err) {
-    console.log(err);
-  }
-};
+          chassisNo: item.chassisNo,
+          engineNo: item.engineNo,
+
+          qty: item.qty,
+          ratePer: String(item.ratePer),
+          gstPercent: String(item.gstPercent),
+          amount: String(item.amount),
+
+          saved: true,
+          inwardStatus: item.status || "Pending",
+        })),
+      );
+    } catch (err) {
+      console.log(err);
+    }
+  };
   const updateAccountForm = (key: keyof NewAccountData, value: string) => {
     setAccountForm((f) => ({ ...f, [key]: value }));
   };
@@ -1007,11 +1019,17 @@ setDueDate(
         accountId: partyId,
         purchaseDate: purchaseDate || date,
         purchaseBillNo,
-          purchaseLocation,
-  dueDate,
+        purchaseLocation,
+        dueDate,
         terms,
         narration,
+        bankAccountId: bankAccount,
 
+        paymentMode: bankDetails.paymentMode,
+        chequeNo: bankDetails.chequeNo,
+        chequeDate: bankDetails.chequeDate,
+        clearDate: bankDetails.clearDate,
+        bankNarration: bankDetails.narration,
         freightCharge,
         insurance,
         otherCharge,
@@ -1027,15 +1045,12 @@ setDueDate(
         items: rows,
       };
 
-    if (isEdit) {
-  await apiHelper.put(`/purchases/${id}`, payload);
-  alert("Purchase Updated Successfully");
-} else {
-  await apiHelper.post("/purchases", payload);
- 
-}
-
-   
+      if (isEdit) {
+        await apiHelper.put(`/purchases/${id}`, payload);
+        alert("Purchase Updated Successfully");
+      } else {
+        await apiHelper.post("/purchases", payload);
+      }
 
       alert("Purchase Saved Successfully");
       navigate("/purchase/tractor");
@@ -1056,12 +1071,12 @@ setDueDate(
       alert(error.response?.data?.message || "Failed to save purchase");
     }
   };
-const handleVerify = async () => {
-  await apiHelper.put(`/purchases/${id}/verify`, null);
-  setBillVerify("verify");
+  const handleVerify = async () => {
+    await apiHelper.put(`/purchases/${id}/verify`, null);
+    setBillVerify("verify");
 
-  alert("Purchase Verified");
-};
+    alert("Purchase Verified");
+  };
   const handleBack = () => {
     if (onBack) {
       onBack();
@@ -1191,24 +1206,24 @@ const handleVerify = async () => {
                   mobile: acc.mobile,
                   openingBalance: acc.openingBalance,
                 }))}
-                value={
-                  bankAccounts.find((acc) => acc.id === bankAccount)
-                    ? {
-                        label:
-                          bankAccounts.find((acc) => acc.id === bankAccount)
-                            ?.accountName || "",
-                        value: bankAccount,
-                        mobile:
-                          bankAccounts.find((acc) => acc.id === bankAccount)
-                            ?.mobile || "",
-                        openingBalance:
-                          bankAccounts.find((acc) => acc.id === bankAccount)
-                            ?.openingBalance || 0,
-                      }
-                    : null
-                }
+              value={
+  (() => {
+    const selected = bankAccounts.find(
+      (acc) => Number(acc.id) === Number(bankAccount)
+    );
+
+    return selected
+      ? {
+          label: selected.accountName,
+          value: selected.id,
+          mobile: selected.mobile,
+          openingBalance: selected.openingBalance,
+        }
+      : null;
+  })()
+}
                 onChange={(val: any) => {
-                  setBankAccount(val.value);
+                   setBankAccount(String(val.value));
                   setBankDetailsModalOpen(true);
                 }}
                 displayField="label"
@@ -1297,14 +1312,13 @@ const handleVerify = async () => {
               Purchase Date
             </label>
             <DatePicker
-              value={purchaseDate}
+              value={purchaseDate ? parseLocalDate(purchaseDate) : undefined}
+              options={{ disableMobile: true }}
               onChange={(selectedDates: Date[]) => {
                 const val = selectedDates[0];
-                setPurchaseDate(
-                  typeof val === "string"
-                    ? val
-                    : val?.toISOString?.()?.split?.("T")?.[0] || "",
-                );
+                if (val instanceof Date && !isNaN(val.getTime())) {
+                  setPurchaseDate(formatLocalDate(val));
+                }
               }}
               placeholder="Select date..."
               className="w-full"
@@ -1331,14 +1345,14 @@ const handleVerify = async () => {
               Due Date
             </label>
             <DatePicker
-              value={dueDate}
+              value={dueDate ? parseLocalDate(dueDate) : undefined}
+              options={{ disableMobile: true }}
               onChange={(selectedDates: Date[]) => {
                 const val = selectedDates[0];
-                setDueDate(
-                  typeof val === "string"
-                    ? val
-                    : val?.toISOString?.()?.split?.("T")?.[0] || "",
-                );
+
+                if (val instanceof Date && !isNaN(val.getTime())) {
+                  setDueDate(formatLocalDate(val));
+                }
               }}
               placeholder="Select date..."
               className="w-full"
@@ -1558,22 +1572,21 @@ const handleVerify = async () => {
                         ₹{r.ratePer}
                       </td>
                       <td className="border border-gray-500 px-3 py-2.5 text-center dark:border-gray-500">
-                       <button
-  disabled={r.inwardStatus === "Inward"}
-  onClick={() => removeRow(r.id)}
-    className={`inline-flex h-8 w-8 items-center justify-center rounded-lg 
-  ${
-    r.inwardStatus === "Inward"
-      ? "cursor-not-allowed bg-gray-400 text-white"
-      : "border border-red-200 bg-red-50 text-red-600 hover:bg-red-100"
-  }`}
->
-  <XMarkIcon className="h-4 w-4" />
-</button>
+                        <button
+                          disabled={r.inwardStatus === "Inward"}
+                          onClick={() => removeRow(r.id)}
+                          className={`inline-flex h-8 w-8 items-center justify-center rounded-lg ${
+                            r.inwardStatus === "Inward"
+                              ? "cursor-not-allowed bg-gray-400 text-white"
+                              : "border border-red-200 bg-red-50 text-red-600 hover:bg-red-100"
+                          }`}
+                        >
+                          <XMarkIcon className="h-4 w-4" />
+                        </button>
                       </td>
                     </tr>
                   ))}
- 
+
                   {/* Empty state */}
                   {rows.length === 0 && (
                     <tr>
@@ -1690,21 +1703,21 @@ const handleVerify = async () => {
                   Bill Status:
                 </span>
                 <label className="flex cursor-pointer items-center gap-2 text-sm">
-                 <Radio
-  checked={billVerify === "not_verify"}
-  disabled={billVerify === "verify"}
-  onChange={() => setBillVerify("not_verify")}
-/>
+                  <Radio
+                    checked={billVerify === "not_verify"}
+                    disabled={billVerify === "verify"}
+                    onChange={() => setBillVerify("not_verify")}
+                  />
                   <span className="text-gray-600 dark:text-gray-400">
                     Not Verify
                   </span>
                 </label>
                 <label className="flex cursor-pointer items-center gap-2 text-sm">
-                <Radio
-  checked={billVerify === "verify"}
-  disabled={billVerify === "verify"}
-  onChange={handleVerify}
-/>
+                  <Radio
+                    checked={billVerify === "verify"}
+                    disabled={billVerify === "verify"}
+                    onChange={handleVerify}
+                  />
                   <span className="text-gray-600 dark:text-gray-400">
                     Verify
                   </span>
@@ -1798,7 +1811,6 @@ const handleVerify = async () => {
         <div className="flex justify-center px-3 pb-4 sm:px-4 sm:pb-6">
           <button
             onClick={handleSave}
-
             className="bg-primary-500 hover:bg-primary-500 w-full rounded-lg px-8 py-2.5 text-sm font-bold text-white transition-colors sm:w-auto sm:px-12 sm:py-3"
           >
             {isEdit ? "Update" : "Save"}
@@ -1984,18 +1996,24 @@ const handleVerify = async () => {
                         Cheque Date <span className="text-red-500">*</span>
                       </label>
                       <DatePicker
-                        value={bankDetails.chequeDate}
+                        value={
+                          bankDetails.chequeDate
+                            ? parseLocalDate(bankDetails.chequeDate)
+                            : undefined
+                        }
+                        options={{ disableMobile: true }}
                         onChange={(selectedDates: Date[]) => {
-                          const val = selectedDates[0];
                           updateBankDetails(
                             "chequeDate",
-                            typeof val === "string"
-                              ? val
-                              : val?.toISOString?.()?.split?.("T")?.[0] || "",
+                            formatLocalDate(selectedDates[0] || null),
                           );
                         }}
                         placeholder="Select date..."
-                        className={`w-full ${bankDetailsTouched && !bankDetails.chequeDate.trim() ? "border-red-500" : ""}`}
+                        className={`w-full ${
+                          bankDetailsTouched && !bankDetails.chequeDate.trim()
+                            ? "border-red-500"
+                            : ""
+                        }`}
                       />
                     </div>
                     <div className="sm:col-span-2">
@@ -2003,14 +2021,16 @@ const handleVerify = async () => {
                         Clear Date
                       </label>
                       <DatePicker
-                        value={bankDetails.clearDate}
+                        value={
+                          bankDetails.clearDate
+                            ? parseLocalDate(bankDetails.clearDate)
+                            : undefined
+                        }
+                        options={{ disableMobile: true }}
                         onChange={(selectedDates: Date[]) => {
-                          const val = selectedDates[0];
                           updateBankDetails(
                             "clearDate",
-                            typeof val === "string"
-                              ? val
-                              : val?.toISOString?.()?.split?.("T")?.[0] || "",
+                            formatLocalDate(selectedDates[0] || null),
                           );
                         }}
                         placeholder="Select date..."
@@ -2045,7 +2065,7 @@ const handleVerify = async () => {
                   </button>
                   <button
                     onClick={handleSaveBankDetails}
-                    className="w-full rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 sm:w-auto sm:px-6"
+                    className="bg-primary-500 hover:bg-primary-500 w-full rounded-lg px-4 py-2 text-sm font-semibold text-white sm:w-auto sm:px-6"
                   >
                     Add Bank Details
                   </button>
