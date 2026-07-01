@@ -147,7 +147,7 @@ const TractorInventory: React.FC<TractorInventoryProps> = ({
   const [rowsPerPage, setRowsPerPage] = useState(15);
   const [selectedStockFilter, setSelectedStockFilter] = useState("All");
   const [selectedStatusFilter, setSelectedStatusFilter] = useState("All");
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [rows, setRows] = useState<TractorInventoryRow[]>([]);
   const navigate = useNavigate();
@@ -167,33 +167,28 @@ const fetchInventory = async () => {
   }
 };
   // Add this function with your other handlers
-  const handleToggleStock = async (id: string) => {
-    const item = rows.find((row) => row.id === id);
-    if (!item) return;
+ const handleToggleStock = async (id: number) => {
+  const item = rows.find((row) => row.id === id);
+  if (!item) return;
 
-    const newStock = item.stock === "On" ? "Off" : "On";
+  const newStock = item.stock === "On" ? "Off" : "On";
 
-    // Update local state optimistically
+  setRows((prev) =>
+    prev.map((row) => (row.id === id ? { ...row, stock: newStock } : row))
+  );
+
+  try {
+    // await apiHelper.put(`/tractor-inventory/${id}`, { stock: newStock });
+    console.log(`Toggled stock to ${newStock} for item ${id}`);
+  } catch (error) {
     setRows((prev) =>
-      prev.map((row) => (row.id === id ? { ...row, stock: newStock } : row)),
+      prev.map((row) =>
+        row.id === id ? { ...row, stock: item.stock } : row
+      ),
     );
-
-    // Here you would make your API call
-    try {
-      // await apiHelper.put(`/tractor-inventory/${id}`, { stock: newStock });
-      console.log(`Toggled stock to ${newStock} for item ${id}`);
-    } catch (error) {
-      // Revert on error
-      setRows((prev) =>
-        prev.map((row) =>
-          row.id === id ? { ...row, stock: item.stock } : row,
-        ),
-      );
-      console.error("Failed to toggle stock:", error);
-    }
-  };
-
-  // Filter rows
+    console.error("Failed to toggle stock:", error);
+  }
+}; // Filter rows
   const filteredRows = useMemo(() => {
     let result = rows;
 
@@ -246,24 +241,23 @@ const fetchInventory = async () => {
     currentItems.length > 0 &&
     currentItems.every((item) => selectedIds.includes(item.id));
 
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      const pageIds = currentItems.map((item) => item.id);
-      setSelectedIds((prev) => Array.from(new Set([...prev, ...pageIds])));
-    } else {
-      const pageIds = currentItems.map((item) => item.id);
-      setSelectedIds((prev) => prev.filter((id) => !pageIds.includes(id)));
-    }
-  };
+ // Replace the entire function with:
+const handleSelectAll = (checked: boolean) => {
+  const pageIds = currentItems.map((item) => item.id); // Now returns number[]
+  if (checked) {
+    setSelectedIds((prev) => Array.from(new Set([...prev, ...pageIds])));
+  } else {
+    setSelectedIds((prev) => prev.filter((id) => !pageIds.includes(id)));
+  }
+};
 
-  const handleSelectRow = (id: string) => {
-    setSelectedIds((prev) =>
-      prev.includes(id)
-        ? prev.filter((selectedId) => selectedId !== id)
-        : [...prev, id],
-    );
-  };
-
+  const handleSelectRow = (id: number) => {
+  setSelectedIds((prev) =>
+    prev.includes(id)
+      ? prev.filter((selectedId) => selectedId !== id)
+      : [...prev, id],
+  );
+};
   // const handleAddTractor = () => {
   //   navigate("/goodscontrol/tractorinventory/add");
   //   if (onAddTractor) onAddTractor();

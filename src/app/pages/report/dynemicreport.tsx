@@ -414,6 +414,7 @@ const DynamicReport: React.FC = () => {
   return (
     <div className="dark:bg-dark-800 min-h-screen bg-gray-50 p-4 md:p-6">
       {/* Header */}
+      {/* Header */}
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -423,52 +424,35 @@ const DynamicReport: React.FC = () => {
             View detailed analysis and reports
           </p>
         </div>
-        <div className="mt-3 flex flex-wrap items-center gap-3 sm:mt-0">
+        <div className="mt-3 flex flex-wrap items-center gap-2 sm:mt-0">
+          {/* Date Picker */}
           <div className="flex items-center gap-2">
-            <DatePicker
-              placeholder="From Date"
-              value={fromDate}
-              onChange={(dates) => {
-                if (dates && dates.length > 0) {
-                  const date = dates[0];
-                  const formatted =
-                    date instanceof Date
-                      ? date.toISOString().split("T")[0]
-                      : date;
-                  setFromDate(formatted as string);
-                }
-              }}
-            />
+            <DatePicker placeholder="From Date" className="w-36" />
             <span className="text-gray-400">to</span>
-            <DatePicker
-              placeholder="To Date"
-              value={toDate}
-              onChange={(dates) => {
-                if (dates && dates.length > 0) {
-                  const date = dates[0];
-                  const formatted =
-                    date instanceof Date
-                      ? date.toISOString().split("T")[0]
-                      : date;
-                  setToDate(formatted as string);
-                }
-              }}
-            />
+            <DatePicker placeholder="To Date" className="w-36" />
           </div>
-          <button className="dark:border-dark-600 dark:bg-dark-700 dark:hover:bg-dark-600 flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:text-gray-300">
-            <DocumentArrowDownIcon className="h-4 w-4" />
-            PDF
-          </button>
-          <button className="dark:border-dark-600 dark:bg-dark-700 dark:hover:bg-dark-600 flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:text-gray-300">
-            <DocumentArrowDownIcon className="h-4 w-4" />
-            Excel
-          </button>
-          <button className="dark:border-dark-600 dark:bg-dark-700 dark:hover:bg-dark-600 rounded-lg border border-gray-300 bg-white p-2 text-gray-600 hover:bg-gray-50 dark:text-gray-300">
-            <ArrowPathIcon className="h-4 w-4" />
-          </button>
+
+          {/* Action Buttons Group */}
+          <div className="flex items-center gap-1.5">
+            {/* PDF Button */}
+            <button className="dark:border-dark-600 dark:bg-dark-700 dark:hover:bg-dark-600 flex h-9.5 cursor-pointer items-center justify-center gap-1 rounded-lg border border-gray-300 bg-white px-2 text-sm font-medium text-gray-600 hover:bg-gray-50 sm:px-3 dark:text-gray-300">
+              <DocumentArrowDownIcon className="h-4 w-4" />
+              <span className="hidden sm:inline">PDF</span>
+            </button>
+
+            {/* Excel Button */}
+            <button className="dark:border-dark-600 dark:bg-dark-700 dark:hover:bg-dark-600 flex h-9.5 cursor-pointer items-center justify-center gap-1 rounded-lg border border-gray-300 bg-white px-2 text-sm font-medium text-gray-600 hover:bg-gray-50 sm:px-3 dark:text-gray-300">
+              <DocumentArrowDownIcon className="h-4 w-4" />
+              <span className="hidden sm:inline">Excel</span>
+            </button>
+
+            {/* Refresh Button */}
+            <button className="dark:border-dark-600 dark:bg-dark-700 dark:hover:bg-dark-600 flex h-9.5 w-9.5 cursor-pointer items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 dark:text-gray-300">
+              <ArrowPathIcon className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       </div>
-
       {/* Chart + Model Analysis */}
       <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Left - Chart */}
@@ -648,29 +632,31 @@ const DynamicReport: React.FC = () => {
             </ResponsiveContainer>
           </div>
 
-          {/* Model Performance Summary */}
-          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {/* Model Performance Summary - Compact */}
+          <div className="mt-4 grid grid-cols-2 gap-1 sm:grid-cols-4">
             {chartData.map((item, index) => (
               <div
                 key={index}
-                className="dark:bg-dark-600/30 flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-2"
+                className="dark:bg-dark-600/30 flex items-center gap-1 rounded-lg bg-gray-50 px-1.5 py-1 sm:px-2"
               >
                 <span
-                  className={`h-2.5 w-2.5 rounded-full`}
+                  className={`h-2 w-2 flex-shrink-0 rounded-full sm:h-2.5 sm:w-2.5`}
                   style={{
                     backgroundColor: barColors[index % barColors.length],
                   }}
                 />
-                <span className="flex-1 text-xs font-medium text-gray-700 dark:text-gray-300">
+                <span className="text-[10px] font-medium whitespace-nowrap text-gray-700 sm:text-xs dark:text-gray-300">
                   {item.name}
                 </span>
-                <span className="text-xs font-bold text-gray-900 dark:text-white">
+                <span className="ml-auto flex-shrink-0 text-[10px] font-bold text-gray-900 sm:text-xs dark:text-white">
                   {item.value}
                 </span>
               </div>
             ))}
           </div>
         </div>
+   
+
         {/* Right - Model Wise Analysis */}
         <div className="dark:bg-dark-700 dark:border-dark-600 flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow lg:col-span-1">
           <div className="dark:border-dark-600 border-b border-gray-200 p-4">
@@ -678,17 +664,17 @@ const DynamicReport: React.FC = () => {
               Model Wise Analysis
             </h3>
           </div>
-          <div className="max-h-[340px] flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto">
             <table className="w-full border-collapse text-sm">
               <thead className="dark:bg-dark-600 sticky top-0 z-10 bg-gray-50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                  <th className="px-3 py-3 text-left text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                     Model
                   </th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                  <th className="px-3 py-3 text-center text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                     Enquiry
                   </th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                  <th className="px-3 py-3 text-center text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                     {getToggleLabel(activeToggle)} (%)
                   </th>
                 </tr>
@@ -699,13 +685,13 @@ const DynamicReport: React.FC = () => {
                     key={index}
                     className="dark:hover:bg-dark-600 transition-colors hover:bg-gray-50"
                   >
-                    <td className="px-4 py-2.5 text-sm font-medium text-gray-900 dark:text-white">
+                    <td className="max-w-[120px] truncate px-3 py-2.5 text-sm font-medium text-gray-900 dark:text-white">
                       {item.model}
                     </td>
-                    <td className="px-4 py-2.5 text-center text-sm text-gray-600 dark:text-gray-300">
+                    <td className="px-3 py-2.5 text-center text-sm text-gray-600 dark:text-gray-300">
                       {item.enquiry}
                     </td>
-                    <td className="px-4 py-2.5 text-center text-sm font-medium text-blue-600 dark:text-blue-400">
+                    <td className="px-3 py-2.5 text-center text-sm font-medium whitespace-nowrap text-blue-600 dark:text-blue-400">
                       {getValue(item, activeToggle)} (
                       {getPercentage(item, activeToggle)}%)
                     </td>
@@ -713,13 +699,13 @@ const DynamicReport: React.FC = () => {
                 ))}
                 {/* Total Row */}
                 <tr className="dark:bg-dark-600 bg-gray-100 font-semibold">
-                  <td className="px-4 py-2.5 text-gray-900 dark:text-white">
+                  <td className="px-3 py-2.5 text-gray-900 dark:text-white">
                     Total
                   </td>
-                  <td className="px-4 py-2.5 text-center text-gray-900 dark:text-white">
+                  <td className="px-3 py-2.5 text-center text-gray-900 dark:text-white">
                     {total.totalEnquiry}
                   </td>
-                  <td className="px-4 py-2.5 text-center text-blue-600 dark:text-blue-400">
+                  <td className="px-3 py-2.5 text-center whitespace-nowrap text-blue-600 dark:text-blue-400">
                     {total.totalValue} ({total.totalPercentage}%)
                   </td>
                 </tr>
@@ -727,20 +713,25 @@ const DynamicReport: React.FC = () => {
             </table>
           </div>
           {/* Toggle Buttons */}
-          <div className="dark:border-dark-600 dark:bg-dark-800 flex flex-wrap items-center gap-2 border-t border-gray-200 bg-gray-50 p-2.5">
-            {toggleOptions.map((option) => (
-              <div key={option.id} className="flex items-center gap-1.5">
-                <ToggleSwitch
-                  active={activeToggle === option.id}
-                  onClick={() => setActiveToggle(option.id)}
-                  label={option.label}
-                  color={getToggleActiveColor(option.id)}
-                />
-                <span className="min-w-[30px] text-xs font-medium text-gray-700 dark:text-gray-300">
-                  {option.label}
-                </span>
-              </div>
-            ))}
+          <div className="dark:border-dark-600 dark:bg-dark-800 flex-shrink-0 border-t border-gray-200 bg-gray-50 p-2">
+            <div className="grid grid-cols-4 gap-1">
+              {toggleOptions.map((option) => (
+                <div
+                  key={option.id}
+                  className="flex items-center justify-center gap-2"
+                >
+                  <ToggleSwitch
+                    active={activeToggle === option.id}
+                    onClick={() => setActiveToggle(option.id)}
+                    label={option.label}
+                    color={getToggleActiveColor(option.id)}
+                  />
+                  <span className="text-[8px] font-medium whitespace-nowrap text-gray-700 sm:text-[9px] dark:text-gray-300">
+                    {option.label}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>

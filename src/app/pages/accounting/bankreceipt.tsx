@@ -1027,6 +1027,7 @@ export default function BankReceipt() {
                       placeholder="Select date..."
                       value={form.date}
                       onChange={(date) => setForm({ ...form, date })}
+                       options={{ disableMobile: true }}
                     />
                   </div>
                 </div>
@@ -1142,6 +1143,7 @@ export default function BankReceipt() {
                       <DatePicker
                         placeholder="Select cheque date..."
                         value={form.chequeDate}
+                         options={{ disableMobile: true }}
                         onChange={(date) => {
                           setForm({ ...form, chequeDate: date });
                           if (errors.chequeDate)
@@ -1162,6 +1164,7 @@ export default function BankReceipt() {
                       <DatePicker
                         placeholder="Select cheque clear date..."
                         value={form.chequeClearDate}
+                         options={{ disableMobile: true }}
                         onChange={(date) => {
                           setForm({ ...form, chequeClearDate: date });
                           if (errors.chequeClearDate)

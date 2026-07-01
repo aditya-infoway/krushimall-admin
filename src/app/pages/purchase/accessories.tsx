@@ -7,13 +7,15 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   PencilIcon,
-  TrashIcon,
+  // TrashIcon,
+  ArrowDownCircleIcon,
   PlusIcon,
 } from "@heroicons/react/24/outline";
 import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/Table";
 import { Button, Checkbox } from "@/components/ui";
 import { Listbox } from "@/components/shared/form/StyledListbox";
-
+import { useEffect } from "react";
+import apiHelper from "@/utils/apiHelper";
 // ---------- Types ----------
 export interface AccessoriesPurchaseRegisterRow {
   id: string;
@@ -34,6 +36,7 @@ export interface AccessoriesPurchaseRegisterRow {
   mobileNo: string;
   vehicalNo: string;
   status: "Pending" | "Verified" | "Cancelled";
+  allItemsInward?: boolean;
 }
 
 interface AccessoriesPurchaseRegisterProps {
@@ -97,13 +100,17 @@ const columns = [
 
 const AccessoriesPurchaseRegister: React.FC<
   AccessoriesPurchaseRegisterProps
-> = ({ rows = [], onAddPurchase, onEditRow, onDeleteRow }) => {
+> = ({
+  onAddPurchase,
+  onEditRow,
+  onDeleteRow,
+}) => {
   const [search, setSearch] = useState("");
   const [rowsPerPage, setRowsPerPage] = useState(15);
   const [selectedStatusFilter, setSelectedStatusFilter] = useState("All");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-
+const [rows, setRows] = useState<AccessoriesPurchaseRegisterRow[]>([]);
   const navigate = useNavigate();
 
   // Filter rows
@@ -143,7 +150,67 @@ const AccessoriesPurchaseRegister: React.FC<
   const indexOfLastItem = currentPage * rowsPerPage;
   const indexOfFirstItem = indexOfLastItem - rowsPerPage;
   const currentItems = filteredRows.slice(indexOfFirstItem, indexOfLastItem);
+const fetchAccessoriesPurchases = async () => {
+  try {
+    const res = await apiHelper.get("/accessories-purchase");
 
+    const data = (res.data || []).map((item: any) => ({
+      id: String(item.id),
+
+      purchaseDate: item.purchaseDate
+        ? new Date(item.purchaseDate).toLocaleDateString("en-GB")
+        : "-",
+
+      terms: item.terms || "-",
+
+      supplierName:
+        item.account?.accountName || "-",
+
+      billNo: item.billNo,
+
+      purchaseBillNo:
+        item.purchaseBillNo || "-",
+
+      location:
+        item.purchaseLocation || "-",
+
+      totalQuantity: item.totalQty,
+
+      totalAmount: item.totalAmount,
+
+      freightInsuranceOther:
+        Number(item.freightCharge || 0) +
+        Number(item.insurance || 0) +
+        Number(item.otherCharge || 0),
+
+      cgstAmount: item.cgst,
+
+      sgstAmount: item.sgst,
+
+      igstAmount: item.igst,
+
+      grandTotal: item.grandTotal,
+
+      // Your schema doesn't have these fields
+      transportName: "-",
+      mobileNo: "-",
+      vehicalNo: "-",
+
+      status:
+        item.verifyStatus === "verify"
+          ? "Verified"
+          : "Pending",
+            allItemsInward: item.allItemsInward,
+    }));
+
+    setRows(data);
+  } catch (error) {
+    console.log(error);
+  }
+};
+useEffect(() => {
+  fetchAccessoriesPurchases();
+}, []);
   const isAllPageSelected =
     currentItems.length > 0 &&
     currentItems.every((item) => selectedIds.includes(item.id));
@@ -171,17 +238,18 @@ const AccessoriesPurchaseRegister: React.FC<
     onAddPurchase?.();
   };
 
-  const handleEditRow = (row: AccessoriesPurchaseRegisterRow) => {
-    navigate(`/purchase/accessories/${row.id}`);
-    onEditRow?.(row);
-  };
+ const handleEditRow = (row: AccessoriesPurchaseRegisterRow) => {
+  navigate(`/purchase/accessories/add/${row.id}`);
+};
 
   const handleDeleteRow = (row: AccessoriesPurchaseRegisterRow) => {
     if (window.confirm(`Are you sure you want to delete this purchase?`)) {
       onDeleteRow?.(row);
     }
   };
-
+ const handleInward = (row: AccessoriesPurchaseRegisterRow) => {
+ navigate(`/purchase/accessories-inward/${row.id}`);
+};
   return (
     <div className="relative min-h-screen space-y-6 p-4 pb-28 text-gray-900 md:p-6 dark:text-gray-100">
       {/* Header */}
@@ -348,22 +416,29 @@ const AccessoriesPurchaseRegister: React.FC<
                       {indexOfFirstItem + index + 1}
                     </Td>
                     <Td className="py-4 text-center">
-                      <div className="flex items-center justify-center gap-1">
-                        <button
-                          onClick={() => handleEditRow(item)}
-                          title="Edit"
-                          className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-                        >
-                          <PencilIcon className="size-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteRow(item)}
-                          title="Delete"
-                          className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
-                        >
-                          <TrashIcon className="size-4" />
-                        </button>
-                      </div>
+                     <div className="flex items-center justify-center gap-1">
+
+  {!item.allItemsInward && (
+    <button
+      onClick={() => handleEditRow(item)}
+      title="Edit"
+      className="cursor-pointer text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+    >
+      <PencilIcon className="size-4" />
+    </button>
+  )}
+
+  {item.status === "Verified" && (
+    <button
+      onClick={() => handleInward(item)}
+      title="Inward"
+      className="cursor-pointer text-green-500 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
+    >
+      <ArrowDownCircleIcon className="size-5" />
+    </button>
+  )}
+
+</div>
                     </Td>
                     <Td className="py-4 whitespace-nowrap">
                       {item.purchaseDate}

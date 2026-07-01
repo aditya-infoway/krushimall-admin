@@ -203,7 +203,18 @@ const cityOptions = Array.isArray(selectedStates)
     )
   : [];
 
-  
+  const formatLocalDate = (date: Date | null): string => {
+  if (!date) return "";
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+const parseLocalDate = (dateStr: string): Date | undefined => {
+  if (!dateStr) return undefined;
+  return new Date(dateStr + "T00:00:00");
+};
   const customSelectStyles = {
     control: (provided: any, state: any) => ({
       ...provided,
@@ -490,35 +501,22 @@ const cityOptions = Array.isArray(selectedStates)
             placeholder="Variant Code"
             disabled
           />
-          <Controller
-            name="launchYear"
-            control={control}
-            render={({ field: { onChange, value, ...rest } }) => (
-              <DatePicker
-                value={value || ""}
-                onChange={(date: any) => {
-                  if (!date) {
-                    onChange("");
-                    return;
-                  }
-
-                  const selectedDate = new Date(date);
-
-                  if (isNaN(selectedDate.getTime())) {
-                    onChange("");
-                    return;
-                  }
-
-                  onChange(selectedDate.toISOString().split("T")[0]);
-                }}
-                label="Launch Year"
-                error={errors?.launchYear?.message}
-                options={{ disableMobile: true }}
-                placeholder="Select launch date..."
-                {...rest}
-              />
-            )}
-          />
+         <Controller
+  name="launchYear"
+  control={control}
+  render={({ field }) => (
+    <DatePicker
+      value={field.value ? parseLocalDate(field.value) : undefined}
+      onChange={(selectedDates: Date[]) => {
+        field.onChange(formatLocalDate(selectedDates[0] || null));
+      }}
+      label="Launch Year"
+      error={errors?.launchYear?.message}
+      options={{ disableMobile: true }}
+      placeholder="Select launch date..."
+    />
+  )}
+/>
            <Input
             {...register("productName")}
             label="Website Display Product Name"

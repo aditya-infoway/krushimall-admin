@@ -1,11 +1,17 @@
 import { Cog, Wrench } from "lucide-react";
 
-const AccessoriesInventory = () => {
+const DebitNote = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-white px-4">
       <div className="max-w-lg w-full text-center">
         <div className="mx-auto w-24 h-24 rounded-2xl bg-blue-50 flex items-center justify-center relative shadow-sm">
-          <Cog className="text-red-600 animate-spin" size={48} strokeWidth={2} style={{ animationDuration: "8s" }} />
+          <Cog
+            className="text-red-600 animate-spin"
+            size={48}
+            strokeWidth={2}
+            style={{ animationDuration: "8s" }}
+          />
+
           <div className="absolute bottom-2 right-2 bg-white rounded-full p-1 shadow">
             <Wrench className="text-red-500" size={18} strokeWidth={2.5} />
           </div>
@@ -23,12 +29,12 @@ const AccessoriesInventory = () => {
         </h1>
 
         <p className="mt-6 text-gray-600 text-lg leading-8">
-          We are currently working hard behind the scenes to upgrade our platform.
-          A brand new experience is just around the corner.
+          We are currently working hard behind the scenes to upgrade our
+          platform. A brand new experience is just around the corner.
         </p>
       </div>
     </div>
   );
 };
 
-export default AccessoriesInventory;
+export default DebitNote;

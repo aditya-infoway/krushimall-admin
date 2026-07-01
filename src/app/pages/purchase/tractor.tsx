@@ -27,6 +27,7 @@ export interface PurchaseRegisterRow {
   supplierName: string;
   billNo: string;
   purchaseBillNo: string;
+    location: string; 
   purchaseLocation: string;
   totalQuantity: number;
   totalAmount: number;
@@ -423,7 +424,9 @@ const TractorPurchaseRegister: React.FC<TractorPurchaseRegisterProps> = ({
                       </div>
                     </Td>
                     <Td className="py-4 whitespace-nowrap">
-                      {item.purchaseDate}
+                       {item.purchaseDate
+    ? item.purchaseDate.split("-").reverse().join("-")
+    : ""}
                     </Td>
                     <Td className="py-4">{item.terms}</Td>
                     <Td className="py-4 font-medium">{item.supplierName}</Td>
