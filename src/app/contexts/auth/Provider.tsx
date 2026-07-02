@@ -3,7 +3,7 @@ import { useEffect, useReducer, ReactNode } from "react";
 
 // Local Imports
 import axios from "@/utils/axios";
-import { isTokenValid, setSession } from "@/utils/jwt";
+import { isTokenValid, setSession, storage } from "@/utils/jwt";
 import { AuthProvider as AuthContext, AuthContextType } from "./context";
 import { User } from "@/@types/user";
 
@@ -82,7 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const init = async () => {
       try {
-     const authToken = localStorage.getItem("authToken");
+        const authToken = storage.getItem("authToken");
 
         if (authToken && isTokenValid(authToken)) {
           setSession(authToken);
@@ -94,7 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             type: "INITIALIZE",
             payload: {
               isAuthenticated: true,
-               user: null,
+              user: null,
             },
           });
         } else {
@@ -121,42 +121,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     init();
   }, []);
 
- const login = async (credentials: {
-  email: string;
-  password: string;
-}): Promise<boolean> => {
-  dispatch({ type: "LOGIN_REQUEST" });
+  const login = async (credentials: {
+    email: string;
+    password: string;
+  }): Promise<boolean> => {
+    dispatch({ type: "LOGIN_REQUEST" });
 
-  try {
-    const response = await axios.post<{
-      token: string;
-      user: User;
-    }>("/auth/login", credentials);
+    try {
+      const response = await axios.post<{
+        token: string;
+        user: User;
+      }>("/auth/login", credentials);
 
-    const { token, user } = response.data;
+      const { token, user } = response.data;
 
-    setSession(token);
+      setSession(token);
 
-    dispatch({
-      type: "LOGIN_SUCCESS",
-      payload: { user },
-    });
+      dispatch({
+        type: "LOGIN_SUCCESS",
+        payload: { user },
+      });
 
-    return true;
- } catch (err: any) {
-    const msg = err?.response?.data?.message 
-      || err?.message 
-      || JSON.stringify(err)
-    alert("Error: " + msg + "\nURL: " + err?.config?.url)
-    dispatch({
-      type: "LOGIN_ERROR",
-      payload: {
-        errorMessage: msg
-      },
-    });
-    return false;
-  }
-};
+      return true;
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.message || err?.message || JSON.stringify(err);
+      alert("Error: " + msg + "\nURL: " + err?.config?.url);
+      dispatch({
+        type: "LOGIN_ERROR",
+        payload: {
+          errorMessage: msg,
+        },
+      });
+      return false;
+    }
+  };
   const logout = async () => {
     setSession(null);
     dispatch({ type: "LOGOUT" });

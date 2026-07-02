@@ -51,10 +51,11 @@ import {
 } from "@headlessui/react";
 import { Fragment } from "react";
 import { DatePicker } from "@/components/shared/form/Datepicker";
-import { Combobox } from "@/components/shared/form/StyledCombobox";
+// import { Combobox } from "@/components/shared/form/StyledCombobox";
+import { Combobox } from "@/components/shared/form/Combobox";
 import { Input, Radio, Textarea } from "@/components/ui";
-
-type EntryType = "Manual" | "Lead Cancel";
+import apiHelper from "@/utils/apiHelper";
+type EntryType = "Manual" | "Purchase" | "Lead Cancel";
 
 interface CashPayment {
   id: number;
@@ -126,7 +127,7 @@ const initialForm = {
   narration: "",
   createdType: "",
   createdBy: "",
-  leadNo: "",
+ leadNo: null as any,
 };
 
 const entriesOptions = [
@@ -149,7 +150,8 @@ export default function CashPayment() {
   const [form, setForm] = useState({ ...initialForm });
   const [showFilterBar, setShowFilterBar] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-
+  const [purchaseBill, setPurchaseBill] = useState<any>(null);
+  const [purchaseBills, setPurchaseBills] = useState<any[]>([]);
   // Filter states
   const [filterType, setFilterType] = useState("All");
   const [filterDateFrom, setFilterDateFrom] = useState<any>(null);
@@ -162,13 +164,134 @@ export default function CashPayment() {
     const matchesType = filterType === "All" || r.type === filterType;
     return matchesSearch && matchesType;
   });
-
+  const [cashAccounts, setCashAccounts] = useState<any[]>([]);
+  const [oppAccounts, setOppAccounts] = useState<any[]>([]);
   const totalItems = filteredRows.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredRows.slice(indexOfFirstItem, indexOfLastItem);
+  const [companyId, setCompanyId] = useState<number | null>(null);
+const [financialYearId, setFinancialYearId] = useState<number | null>(null);
+const getCompany = async () => {
+  try {
+  const res = await apiHelper.get("/company");
 
+console.log("Response:", res.data);
+
+if (!res.data || res.data.length === 0) {
+  console.log("No companies found");
+  return;
+}
+
+const company = res.data[0];
+
+setCompanyId(company.id);
+
+if (company.financialYears?.length > 0) {
+  setFinancialYearId(company.financialYears[0].id);
+}
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+useEffect(() => {
+  getCompany();
+}, []);
+  const getPurchaseBills = async () => {
+    try {
+      const res = await apiHelper.get("/purchases");
+
+      setPurchaseBills(
+        res.data.map((p: any) => ({
+          value: p.id,
+          label: p.billNo,
+          party: p.account?.accountName,
+          accountId: p.accountId,
+          // amount: p.grandTotal,
+        })),
+      );
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const getAccounts = async () => {
+    try {
+      const res = await apiHelper.get("/accounts");
+
+      const accounts = res.data;
+
+      // Cash accounts only
+      setCashAccounts(
+        accounts
+          .filter((a: any) => a.group === "Cash-in-Hand")
+          .map((a: any) => ({
+            value: a.id,
+            label: `${a.accountName} `,
+          })),
+      );
+
+      // All accounts
+      setOppAccounts(
+        accounts
+          .filter((a: any) => a.group !== "Cash-in-Hand") // Exclude Cash accounts
+          .map((a: any) => ({
+            value: a.id,
+            label: `${a.accountName} (${a.mobile})`,
+            balance: a.closingBalance,
+            balanceType: a.drCr,
+          })),
+      );
+    } catch (err) {
+      console.log(err);
+    }
+  };
+const getVoucherNo = async () => {
+  try {
+    const res = await apiHelper.get("/cash-payment/generate-voucher");
+
+   
+
+    setForm((prev) => ({
+      ...prev,
+      voucherNo: res.voucherNo,
+    }));
+  } catch (err) {
+    console.error(err);
+  }
+};
+const getCashPayments = async () => {
+  try {
+    const res = await apiHelper.get("/cash-payment");
+
+    setRows(
+      res.map((item: any) => ({
+        id: item.id,
+        date: item.date,
+        voucherNo: item.voucherNo,
+        type: item.type,
+        cashAccount: item.cashAccount?.accountName,
+        oppAccount: item.oppAccount?.accountName,
+        amount: item.amount,
+        narration: item.narration,
+        createdType: item.createdType,
+        createdBy: item.createdBy,
+        leadNo: item.lead?.leadNo,
+      }))
+    );
+  } catch (err) {
+    console.log(err);
+  }
+};
+  useEffect(() => {
+    getAccounts();
+    getPurchaseBills();
+      getVoucherNo();
+        getCashPayments();
+  }, []);
+  const purchaseBillOptions = purchaseBills;
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
@@ -189,12 +312,18 @@ export default function CashPayment() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleAdd = () => {
-    setEditId(null);
-    setForm({ ...initialForm });
-    setErrors({});
-    setShowDrawer(true);
-  };
+ const handleAdd = async () => {
+  setEditId(null);
+  setErrors({});
+
+  setForm({
+    ...initialForm,
+  });
+
+  await getVoucherNo();
+
+  setShowDrawer(true);
+};
 
   // Transform OPP_ACCOUNTS to include balance in label
   // Calculate the longest account name for proper alignment
@@ -253,36 +382,39 @@ export default function CashPayment() {
     setSelectedIds([]);
   };
 
-  const handleSubmit = () => {
-    if (!validateForm()) return;
-    const newEntry: CashPayment = {
-      id: editId !== null ? editId : rows.length + 1,
-      date:
-        form.date ||
-        new Date().toLocaleDateString("en-GB", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-        }),
-      voucherNo: form.voucherNo,
-      type: form.type,
-      cashAccount: form.cashAccount.value,
-      oppAccount: form.oppAccount.value,
-      amount: parseFloat(form.amount),
-      narration: form.narration,
-      createdType: form.createdType || "Manual",
-      createdBy: "Admin",
-      leadNo: form.type === "Lead Cancel" ? form.leadNo : undefined,
-    };
+const handleSubmit = async () => {
+  if (!validateForm()) return;
 
-    if (editId !== null) {
-      setRows(rows.map((row) => (row.id === editId ? newEntry : row)));
-    } else {
-      setRows([...rows, newEntry]);
-    }
+  try {
+    const payload = {
+       companyId,
+  financialYearId, // or from auth context
+      date: form.date || new Date(),
+      cashAccountId: form.cashAccount.value,
+      oppAccountId: form.oppAccount.value,
+      purchaseId:
+        form.type === "Purchase" && purchaseBill
+          ? purchaseBill.value
+          : null,
+      leadId:
+        form.type === "Lead Cancel" && form.leadNo
+          ? form.leadNo.id
+          : null,
+      amount: Number(form.amount),
+      narration: form.narration,
+    };
+console.log(payload);
+    await apiHelper.post("/cash-payment", payload);
+
     setShowDrawer(false);
-    setErrors({});
-  };
+
+    getCashPayments(); // refresh table
+    getVoucherNo();    // next voucher
+
+  } catch (err) {
+    console.log(err);
+  }
+};
 
   const isAllPageSelected =
     currentItems.length > 0 &&
@@ -424,7 +556,7 @@ export default function CashPayment() {
       {/* Main Table */}
       <div className="dark:bg-dark-800 dark:border-dark-700 rounded-xl border border-gray-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1000px] text-left [&_.table-th]:font-semibold">
+          <table className="w-full min-w-250 text-left [&_.table-th]:font-semibold">
             <thead className="dark:bg-dark-700/60 dark:border-dark-600 border-b border-gray-200 bg-gray-100">
               <tr>
                 <th className="w-10 py-3.5 text-center">
@@ -521,6 +653,9 @@ export default function CashPayment() {
                     </td>
                     <td className="py-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
                       {item.narration}
+                    </td>
+                    <td className="py-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
+                      {item.createdType}
                     </td>
                     <td className="py-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
                       {item.createdBy}
@@ -789,6 +924,15 @@ export default function CashPayment() {
                       }}
                     />
                     <Radio
+                      label="Purchase"
+                      name="type"
+                      checked={form.type === "Purchase"}
+                      onChange={() => {
+                        setForm({ ...form, type: "Purchase", leadNo: "" });
+                        if (errors.leadNo) setErrors({ ...errors, leadNo: "" });
+                      }}
+                    />
+                    <Radio
                       label="Lead Cancel"
                       name="type"
                       checked={form.type === "Lead Cancel"}
@@ -796,6 +940,43 @@ export default function CashPayment() {
                     />
                   </div>
 
+                  {form.type === "Purchase" && (
+                    <div className="w-full sm:max-w-md">
+                      <Combobox
+                        data={purchaseBillOptions}
+                        displayField="label"
+                        value={purchaseBill}
+                        placeholder="Search Purchase Bill No..."
+                        searchFields={["label", "party"]}
+                        columns={[
+                          {
+                            header: "Bill No",
+                            field: "label",
+                            width: "2fr",
+                          },
+                          {
+                            header: "Party",
+                            field: "party",
+                            width: "3fr",
+                          },
+                        ]}
+                        onChange={(bill: any) => {
+                          setPurchaseBill(bill);
+
+                          const account = oppAccounts.find(
+                            (a: any) =>
+                              Number(a.value) === Number(bill.accountId),
+                          );
+
+                          setForm((prev) => ({
+                            ...prev,
+                            amount: String(bill.amount),
+                            oppAccount: account || null,
+                          }));
+                        }}
+                      />
+                    </div>
+                  )}
                   {form.type === "Lead Cancel" && (
                     <div className="w-full sm:max-w-sm">
                       <Combobox
@@ -821,7 +1002,7 @@ export default function CashPayment() {
                       Cash Account <span className="text-red-500">*</span>
                     </label>
                     <Combobox
-                      data={CASH_ACCOUNTS}
+                      data={cashAccounts}
                       displayField="label"
                       value={form.cashAccount}
                       onChange={(value: any) => {
@@ -834,19 +1015,18 @@ export default function CashPayment() {
                       error={errors.cashAccount}
                     />
                   </div>
-                  <div>
-                    <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Voucher No.
-                    </label>
-                    <input
-                      type="text"
-                      value={form.voucherNo}
-                      onChange={(e) =>
-                        setForm({ ...form, voucherNo: e.target.value })
-                      }
-                      className="dark:border-dark-500 dark:bg-dark-600 w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm focus:border-red-500 focus:ring-2 focus:ring-red-500"
-                    />
-                  </div>
+                 <div>
+  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+    Voucher No.
+  </label>
+
+  <input
+    type="text"
+    value={form.voucherNo || ""}
+    readOnly
+    className="dark:border-dark-500 dark:bg-dark-600 w-full cursor-not-allowed rounded-lg border border-gray-300 bg-gray-100 px-4 py-2.5 text-sm"
+  />
+</div>
                   <div>
                     <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Date
@@ -871,7 +1051,7 @@ export default function CashPayment() {
                       </label>
                     </div>
                     <Combobox
-                      data={OPP_ACCOUNTS_WITH_BALANCE}
+                      data={oppAccounts}
                       displayField="label"
                       value={form.oppAccount}
                       onChange={(value: any) => {

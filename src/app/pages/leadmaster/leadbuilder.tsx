@@ -39,6 +39,7 @@ import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/Table";
 import { LeadDetailsModal } from "./model";
 import apiHelper, { getBaseUrl } from "@/utils/apiHelper";
 import { useNavigate } from "react-router";
+import { TestDriveModal } from "./testdrive";
 // ─── Types based on image_06d90a.jpg ────────────────────────
 type Lead = {
   id: number;
@@ -90,6 +91,10 @@ export default function LeadBuilder() {
   const [itemsPerPage, setItemsPerPage] = useState(10); // Changed from 5 to 10 to match Brand page
   const [showLeadModal, setShowLeadModal] = useState(false);
   const [leadData, setLeadData] = useState<any[]>([]);
+  const [showTestDriveModal, setShowTestDriveModal] = useState(false);
+  const [selectedLeadId, setSelectedLeadId] = useState<number | undefined>(
+    undefined,
+  );
   // Filter leads based on search
   const navigate = useNavigate();
   const filteredData = leadData.filter((lead: any) => {
@@ -148,12 +153,15 @@ export default function LeadBuilder() {
   // };
 
   const handleTestDrive = (id: number) => {
-    console.log(`Test drive for lead ${id}...`);
+    setSelectedLeadId(id);
+    setShowTestDriveModal(true);
   };
 
-  const handleCreateOrder = (id: number) => {
-    console.log(`Create order for lead ${id}...`);
-  };
+const handleCreateOrder = (id: number) => {
+  navigate(`/leadmaster/order/${id}`);
+};
+
+
 
   const handleCreateBooking = (id: number) => {
     console.log(`Create booking for lead ${id}...`);
@@ -280,18 +288,18 @@ export default function LeadBuilder() {
                       <div className="text-gray-600 dark:text-gray-400">
                         Purchase:{" "}
                         {lead.expectedPurchaseDate
-  ? new Date(lead.expectedPurchaseDate).toLocaleDateString(
-      "en-GB"
-    )
-  : "-"}
+                          ? new Date(
+                              lead.expectedPurchaseDate,
+                            ).toLocaleDateString("en-GB")
+                          : "-"}
                       </div>
                       <div className="text-gray-600 dark:text-gray-400">
                         Delivery:{" "}
                         {lead.expectedDeliveryDate
-  ? new Date(lead.expectedDeliveryDate).toLocaleDateString(
-      "en-GB"
-    )
-  : "-"}
+                          ? new Date(
+                              lead.expectedDeliveryDate,
+                            ).toLocaleDateString("en-GB")
+                          : "-"}
                       </div>
                     </div>
                   </Td>
@@ -598,6 +606,20 @@ export default function LeadBuilder() {
       <LeadDetailsModal
         isOpen={showLeadModal}
         onClose={() => setShowLeadModal(false)}
+      />
+
+      {/* Add Test Drive Modal */}
+      <TestDriveModal
+        isOpen={showTestDriveModal}
+        onClose={() => {
+          setShowTestDriveModal(false);
+          setSelectedLeadId(undefined);
+        }}
+        leadId={selectedLeadId}
+        onSuccess={() => {
+          // Optional: Refresh leads or show success message
+          fetchLeads();
+        }}
       />
     </div>
   );
