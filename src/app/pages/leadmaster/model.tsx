@@ -28,6 +28,8 @@ interface AccountForm {
   aadharCard: string;
 }
 
+
+
 interface FinanceType {
   wantsFinance: boolean;
   existingCustomerModel: string;
@@ -625,7 +627,7 @@ function CreateAccountModal({
     </Dialog>
   );
 }
-// ─── Step 3: Lead Info ──────────────────────────────────────────────────────
+
 // ─── Step 3: Lead Info ──────────────────────────────────────────────────────
 function LeadInfoStep({
   financeData,

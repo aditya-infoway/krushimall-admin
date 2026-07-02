@@ -153,25 +153,39 @@ const protectedRoutes: RouteObject = {
         },
 
         {
-          path: "leadmaster",
-          children: [
-            {
-              path: "leadbuilder",
-              lazy: async () => ({
-                Component: (await import("@/app/pages/leadmaster/leadbuilder"))
-                  .default,
-              }),
-            },
-            {
-              path: "Followup/:id",
-              lazy: async () => ({
-                Component: (await import("@/app/pages/leadmaster/followup"))
-                  .default,
-              }),
-            },
-          ],
+  path: "leadmaster",
+  children: [
+    {
+      path: "leadbuilder",
+      lazy: async () => ({
+        Component: (await import("@/app/pages/leadmaster/leadbuilder")).default,
+      }),
+    },
+    {
+      path: "Followup/:id",
+      lazy: async () => ({
+        Component: (await import("@/app/pages/leadmaster/followup")).default,
+      }),
+    },
+    {
+      path: "order",
+      children: [
+        {
+          index: true,
+          lazy: async () => ({
+            Component: (await import("@/app/pages/leadmaster/order")).default,
+          }),
         },
-
+        {
+          path: ":id",
+          lazy: async () => ({
+            Component: (await import("@/app/pages/leadmaster/order")).default,
+          }),
+        },
+      ],
+    },
+  ],
+},
         {
           path: "usermaster",
           children: [

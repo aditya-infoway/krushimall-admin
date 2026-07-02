@@ -3,7 +3,7 @@ import { NavigationTree } from "@/@types/navigation";
 export const enquirysettings: NavigationTree = {
  id: "enquirysettings",
  type: "root",
- title: "Enquiry Settings",
+ title: "Enquiry MASTER",
  icon: "settings",
  childs: [
   {

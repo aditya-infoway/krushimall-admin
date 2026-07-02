@@ -3,7 +3,7 @@ import { NavigationTree } from "@/@types/navigation";
 export const item: NavigationTree = {
   id: "item",
   type: "root",
-  title: "Item Data",
+  title: "Item MASTER",
   icon: "item",
   childs: [
     {

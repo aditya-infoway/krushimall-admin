@@ -18,9 +18,9 @@ import apiHelper from "@/utils/apiHelper";
 
 // ---------- Types ----------
 export interface TractorInventoryRow {
- id: number;
+  id: number;
   stock: "On" | "Off";
-status: "Present" | "Sold" | "In Transit" | "Pending" | "Reserved";
+  status: "Present" | "Sold" | "In Transit" | "Pending" | "Reserved";
   location: string;
   currentLocation: string;
   billNo: string;
@@ -153,42 +153,42 @@ const TractorInventory: React.FC<TractorInventoryProps> = ({
   const navigate = useNavigate();
 
   // Sample data - replace with API call
- useEffect(() => {
-  fetchInventory();
-}, []);
+  useEffect(() => {
+    fetchInventory();
+  }, []);
 
-const fetchInventory = async () => {
-  try {
-    const res = await apiHelper.get("/purchases/tractor-inventory");
+  const fetchInventory = async () => {
+    try {
+      const res = await apiHelper.get("/purchases/tractor-inventory");
 
-    setRows(res.data || []);
-  } catch (err) {
-    console.log(err);
-  }
-};
+      setRows(res.data || []);
+    } catch (err) {
+      console.log(err);
+    }
+  };
   // Add this function with your other handlers
- const handleToggleStock = async (id: number) => {
-  const item = rows.find((row) => row.id === id);
-  if (!item) return;
+  const handleToggleStock = async (id: number) => {
+    const item = rows.find((row) => row.id === id);
+    if (!item) return;
 
-  const newStock = item.stock === "On" ? "Off" : "On";
+    const newStock = item.stock === "On" ? "Off" : "On";
 
-  setRows((prev) =>
-    prev.map((row) => (row.id === id ? { ...row, stock: newStock } : row))
-  );
-
-  try {
-    // await apiHelper.put(`/tractor-inventory/${id}`, { stock: newStock });
-    console.log(`Toggled stock to ${newStock} for item ${id}`);
-  } catch (error) {
     setRows((prev) =>
-      prev.map((row) =>
-        row.id === id ? { ...row, stock: item.stock } : row
-      ),
+      prev.map((row) => (row.id === id ? { ...row, stock: newStock } : row)),
     );
-    console.error("Failed to toggle stock:", error);
-  }
-}; // Filter rows
+
+    try {
+      // await apiHelper.put(`/tractor-inventory/${id}`, { stock: newStock });
+      console.log(`Toggled stock to ${newStock} for item ${id}`);
+    } catch (error) {
+      setRows((prev) =>
+        prev.map((row) =>
+          row.id === id ? { ...row, stock: item.stock } : row,
+        ),
+      );
+      console.error("Failed to toggle stock:", error);
+    }
+  }; // Filter rows
   const filteredRows = useMemo(() => {
     let result = rows;
 
@@ -241,23 +241,23 @@ const fetchInventory = async () => {
     currentItems.length > 0 &&
     currentItems.every((item) => selectedIds.includes(item.id));
 
- // Replace the entire function with:
-const handleSelectAll = (checked: boolean) => {
-  const pageIds = currentItems.map((item) => item.id); // Now returns number[]
-  if (checked) {
-    setSelectedIds((prev) => Array.from(new Set([...prev, ...pageIds])));
-  } else {
-    setSelectedIds((prev) => prev.filter((id) => !pageIds.includes(id)));
-  }
-};
+  // Replace the entire function with:
+  const handleSelectAll = (checked: boolean) => {
+    const pageIds = currentItems.map((item) => item.id); // Now returns number[]
+    if (checked) {
+      setSelectedIds((prev) => Array.from(new Set([...prev, ...pageIds])));
+    } else {
+      setSelectedIds((prev) => prev.filter((id) => !pageIds.includes(id)));
+    }
+  };
 
   const handleSelectRow = (id: number) => {
-  setSelectedIds((prev) =>
-    prev.includes(id)
-      ? prev.filter((selectedId) => selectedId !== id)
-      : [...prev, id],
-  );
-};
+    setSelectedIds((prev) =>
+      prev.includes(id)
+        ? prev.filter((selectedId) => selectedId !== id)
+        : [...prev, id],
+    );
+  };
   // const handleAddTractor = () => {
   //   navigate("/goodscontrol/tractorinventory/add");
   //   if (onAddTractor) onAddTractor();
@@ -278,22 +278,22 @@ const handleSelectAll = (checked: boolean) => {
   //   navigate(`/goodscontrol/tractorinventory/view/${row.id}`);
   //   if (onViewRow) onViewRow(row);
   // };
-const formatDate = (date?: string | null) => {
-  if (!date) return "-";
+  const formatDate = (date?: string | null) => {
+    if (!date) return "-";
 
-  return new Date(date).toLocaleDateString("en-GB");
-};
-const formatDateTime = (date?: string | null) => {
-  if (!date) return "-";
+    return new Date(date).toLocaleDateString("en-GB");
+  };
+  const formatDateTime = (date?: string | null) => {
+    if (!date) return "-";
 
-  return new Date(date).toLocaleString("en-GB", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-};
+    return new Date(date).toLocaleString("en-GB", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
   return (
     <div className="relative min-h-screen space-y-6 p-4 pb-28 text-gray-900 md:p-6 dark:text-gray-100">
       {/* Header */}
@@ -319,7 +319,6 @@ const formatDateTime = (date?: string | null) => {
       </div>
 
       {/* Search and Filter */}
-      {/* Search and Filter */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative w-full max-w-md">
           <MagnifyingGlassIcon className="absolute top-1/2 left-3 size-4.5 -translate-y-1/2 text-gray-400" />
@@ -334,22 +333,25 @@ const formatDateTime = (date?: string | null) => {
             className="dark:border-dark-500 dark:bg-dark-800 focus:border-primary-500 focus:ring-primary-500/20 w-full rounded-lg border border-gray-300 bg-white py-2.5 pr-4 pl-10 text-sm transition-all duration-200 outline-none focus:ring-2"
           />
         </div>
-
         {/* Status Filter Toggle Buttons - Segmented Control Style */}
-        <div className="dark:bg-dark-700/80  relative inline-flex rounded-lg bg-gray-100/80 p-1 shadow-inner">
+        <div className="dark:bg-dark-700/80 relative flex w-full rounded-lg bg-gray-100/80 p-1 sm:inline-flex sm:w-auto">
+          {/* The Sliding Background */}
           <div
-            className="dark:bg-dark-600  absolute top-1 bottom-1 rounded-md bg-white shadow-md transition-all duration-300 ease-out"
+            className="dark:bg-dark-600 absolute top-1 bottom-1 rounded-md bg-white shadow-md transition-all duration-500 ease-in-out"
             style={{
-              left: `calc(${
+              // This ensures the pill is always 1/3 of the container minus the padding
+              width: "calc(33.33% - 8px)",
+              // We use percentages based on the 3 positions (0%, 33.33%, 66.66%)
+              // Adding the 4px offset to ensure it doesn't stick to the edge
+              left:
                 selectedStatusFilter === "All"
                   ? "4px"
                   : selectedStatusFilter === "Present"
                     ? "calc(33.33% + 4px)"
-                    : "calc(66.66% + 4px)"
-              })`,
-              width: `calc(33.33% - 8px)`,
+                    : "calc(66.66% + 4px)",
             }}
           />
+
           {[
             { id: "All", label: "All" },
             { id: "Present", label: "Present" },
@@ -361,7 +363,7 @@ const formatDateTime = (date?: string | null) => {
                 setSelectedStatusFilter(option.id);
                 setCurrentPage(1);
               }}
-              className={`relative z-10 rounded-md cursor-pointer px-6 py-1.5 text-sm font-medium transition-colors duration-200 ${
+              className={`relative z-10 flex-1 cursor-pointer rounded-md px-3 py-2 text-center text-xs font-medium transition-colors duration-300 sm:w-28 sm:text-sm ${
                 selectedStatusFilter === option.id
                   ? "text-gray-900 dark:text-white"
                   : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
@@ -370,7 +372,7 @@ const formatDateTime = (date?: string | null) => {
               {option.label}
             </button>
           ))}
-        </div>
+        </div>{" "}
       </div>
       {/* Table */}
       <div className="dark:bg-dark-800 dark:border-dark-700 rounded-xl border border-gray-200 bg-white shadow-sm">
