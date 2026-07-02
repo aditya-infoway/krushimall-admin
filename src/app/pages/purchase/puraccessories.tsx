@@ -820,9 +820,9 @@ const parseLocalDate = (dateStr: string): Date | undefined => {
 
   const handleCancelBankDetails = () => {
     setBankDetailsModalOpen(false);
-    setBankDetails(emptyBankDetails);
+  
     setBankDetailsTouched(false);
-    setBankAccount("");
+   
   };
 
   // ── Create Account Handlers ─────────────────────────────────────────
@@ -1460,51 +1460,62 @@ const parseLocalDate = (dateStr: string): Date | undefined => {
               <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Bank Account
               </label>
+ <div className="flex w-full items-end gap-2">
+  <div className="min-w-0 flex-1">
+    <Combobox
+      data={bankAccounts.map((acc) => ({
+        label: acc.accountName,
+        value: acc.id,
+        mobile: acc.mobile,
+        openingBalance: acc.openingBalance,
+      }))}
+      value={
+        (() => {
+          const selected = bankAccounts.find(
+            (acc) => Number(acc.id) === Number(bankAccount)
+          );
 
-              <Combobox
-                data={bankAccounts.map((acc) => ({
-                  label: acc.accountName,
-                  value: acc.id,
-                  mobile: acc.mobile,
-                  openingBalance: acc.openingBalance,
-                }))}
-              value={
-  (() => {
-    const selected = bankAccounts.find(
-      (acc) => Number(acc.id) === Number(bankAccount)
-    );
+          return selected
+            ? {
+                label: selected.accountName,
+                value: selected.id,
+                mobile: selected.mobile,
+                openingBalance: selected.openingBalance,
+              }
+            : null;
+        })()
+      }
+      onChange={(val: any) => {
+        setBankAccount(val.value);
+       
+      }}
+      displayField="label"
+      placeholder="Search Bank Account"
+      searchFields={["label", "mobile"]}
+      columns={[
+        {
+          header: "Account",
+          field: "label",
+          width: "2fr",
+        },
+        {
+          header: "Opening",
+          field: "openingBalance",
+          width: "1fr",
+        },
+      ]}
+    />
+  </div>
 
-    return selected
-      ? {
-          label: selected.accountName,
-          value: selected.id,
-          mobile: selected.mobile,
-          openingBalance: selected.openingBalance,
-        }
-      : null;
-  })()
-}
-                onChange={(val: any) => {
-                  setBankAccount(val.value);
-                  setBankDetailsModalOpen(true);
-                }}
-                displayField="label"
-                placeholder="Search Bank Account"
-                searchFields={["label", "mobile"]}
-                columns={[
-                  {
-                    header: "Account",
-                    field: "label",
-                    width: "2fr",
-                  },
-
-                  {
-                    header: "Opening",
-                    field: "openingBalance",
-                    width: "1fr",
-                  },
-                ]}
-              />
+  <button
+    type="button"
+    onClick={() => setBankDetailsModalOpen(true)}
+    className="flex h-9.5 w-9.5 shrink-0 items-center justify-center rounded-lg border border-gray-300 text-blue-600 hover:bg-gray-50 dark:border-gray-600 dark:text-blue-400 dark:hover:bg-gray-700"
+    title="Add Bank Details"
+  >
+    <BuildingOffice2Icon className="h-5 w-5" />
+  </button>
+</div>
             </div>
           )}
 

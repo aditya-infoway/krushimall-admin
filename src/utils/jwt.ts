@@ -1,5 +1,8 @@
+import { Capacitor } from "@capacitor/core";
 import { jwtDecode } from "jwt-decode";
-import axios from "./axios";
+import axiosInstance from "./axios";
+
+const storage = Capacitor.isNativePlatform() ? localStorage : sessionStorage;
 
 const isTokenValid = (authToken: string): boolean => {
   try {
@@ -19,16 +22,27 @@ const isTokenValid = (authToken: string): boolean => {
 
 const setSession = (authToken?: string | null): void => {
   if (typeof authToken === "string" && authToken.trim() !== "") {
-    // Store token in session storage
-    localStorage.setItem("authToken", authToken);
+    // Store token — localStorage on app, sessionStorage on web
+    storage.setItem("authToken", authToken);
 
-    axios.defaults.headers.common.Authorization = `Bearer ${authToken}`;
+    axiosInstance.defaults.headers.common.Authorization = `Bearer ${authToken}`;
   } else {
-    // Remove token from session storage
-   localStorage.removeItem("authToken");
+    // Remove token
+    storage.removeItem("authToken");
 
-    delete axios.defaults.headers.common.Authorization;
+    delete axiosInstance.defaults.headers.common.Authorization;
   }
 };
 
-export { isTokenValid, setSession };
+axiosInstance.interceptors.request.use((config) => {
+  const authToken = storage.getItem("authToken");
+  if (authToken && !isTokenValid(authToken)) {
+    storage.removeItem("authToken");
+    delete axiosInstance.defaults.headers.common.Authorization;
+    window.location.href = "/login";
+    return Promise.reject("Session expired");
+  }
+  return config;
+});
+
+export { isTokenValid, setSession, storage };

@@ -6,7 +6,7 @@ import {
   XMarkIcon,
   CheckIcon,
   MagnifyingGlassIcon,
-  // BuildingOffice2Icon,
+  BuildingOffice2Icon,
 } from "@heroicons/react/24/outline";
 import { Input } from "@/components/ui";
 import { Listbox } from "@/components/shared/form/StyledListbox";
@@ -78,6 +78,7 @@ interface PartyOption {
   name: string;
   mobile: number;
   stateCode: string;
+  openingBalance: number;
 }
 
 interface NewAccountData {
@@ -102,7 +103,7 @@ type TermsType = "Credit" | "Cash" | "Bank";
 type PaymentMode = "UPI" | "NEFT" | "RTGS" | "IMPS" | "CHEQUE" | "CARD";
 
 interface BankDetailsData {
-  paymentMode: PaymentMode | "";
+  paymentMode: PaymentMode | "UPI";
   chequeNo: string;
   chequeDate: string;
   clearDate: string;
@@ -110,7 +111,7 @@ interface BankDetailsData {
 }
 
 const emptyBankDetails: BankDetailsData = {
-  paymentMode: "",
+  paymentMode: "UPI",
   chequeNo: "",
   chequeDate: "",
   clearDate: "",
@@ -214,7 +215,7 @@ const emptyDraft = (): ItemRow => ({
   amount: "",
 
   saved: false,
-   inwardStatus: "Pending", 
+  inwardStatus: "Pending",
 });
 
 const emptyAccount: NewAccountData = {
@@ -424,9 +425,8 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
 
   const handleCancelBankDetails = () => {
     setBankDetailsModalOpen(false);
-    setBankDetails(emptyBankDetails);
+
     setBankDetailsTouched(false);
-    setBankAccount("");
   };
 
   // ─── Dynamic Location Data ──────────────────────────────────────────────────
@@ -576,7 +576,8 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
   const partyOptions = parties.map((p) => ({
     label: p.name,
     mobile: p.mobile,
-
+    openingBalance: p.openingBalance,
+    displayName: `${p.name} (${p.mobile})`,
     value: p.id,
   }));
   const fmt = (n: number) =>
@@ -914,6 +915,7 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
         name: acc.accountName,
         mobile: acc.mobile,
         stateCode: acc.stateCode,
+        openingBalance: acc.openingBalance,
       }));
 
     setParties(list);
@@ -940,7 +942,7 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
       const res = await apiHelper.get(`/purchases/${id}`);
 
       const purchase = res.data;
-console.log(res.data);
+      console.log(res.data);
       setBillNo(purchase.billNo);
       setPartyId(String(purchase.accountId));
       setPurchaseBillNo(purchase.purchaseBillNo || "");
@@ -951,20 +953,18 @@ console.log(res.data);
       setTerms(purchase.terms);
       setTerms(purchase.terms);
 
-setPartyId(String(purchase.accountId || ""));
-setBankAccount(String(purchase.bankAccountId || ""));
-
-setBankDetails({
-  paymentMode: purchase.paymentMode || "",
-  chequeNo: purchase.chequeNo || "",
-  chequeDate: purchase.chequeDate
-    ? purchase.chequeDate.split("T")[0]
-    : "",
-  clearDate: purchase.clearDate
-    ? purchase.clearDate.split("T")[0]
-    : "",
-  narration: purchase.bankNarration || "",
-});
+      setPartyId(String(purchase.accountId || ""));
+      setBankAccount(String(purchase.bankAccountId || ""));
+      setCashAccount(String(purchase.cashAccountId || ""));
+      setBankDetails({
+        paymentMode: purchase.paymentMode || "",
+        chequeNo: purchase.chequeNo || "",
+        chequeDate: purchase.chequeDate
+          ? purchase.chequeDate.split("T")[0]
+          : "",
+        clearDate: purchase.clearDate ? purchase.clearDate.split("T")[0] : "",
+        narration: purchase.bankNarration || "",
+      });
       setNarration(purchase.narration);
 
       setFreightCharge(String(purchase.freightCharge));
@@ -1024,7 +1024,7 @@ setBankDetails({
         terms,
         narration,
         bankAccountId: bankAccount,
-
+        cashAccountId: cashAccount,
         paymentMode: bankDetails.paymentMode,
         chequeNo: bankDetails.chequeNo,
         chequeDate: bankDetails.chequeDate,
@@ -1198,55 +1198,63 @@ setBankDetails({
               <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Bank Account
               </label>
+              <div className="flex w-full items-end gap-2">
+                <div className="min-w-0 flex-1">
+                  <Combobox
+                    data={bankAccounts.map((acc) => ({
+                      label: acc.accountName,
+                      value: acc.id,
+                      mobile: acc.mobile,
+                      openingBalance: acc.openingBalance,
+                    }))}
+                    value={(() => {
+                      const selected = bankAccounts.find(
+                        (acc) => Number(acc.id) === Number(bankAccount),
+                      );
 
-              <Combobox
-                data={bankAccounts.map((acc) => ({
-                  label: acc.accountName,
-                  value: acc.id,
-                  mobile: acc.mobile,
-                  openingBalance: acc.openingBalance,
-                }))}
-              value={
-  (() => {
-    const selected = bankAccounts.find(
-      (acc) => Number(acc.id) === Number(bankAccount)
-    );
+                      return selected
+                        ? {
+                            label: selected.accountName,
+                            value: selected.id,
+                            mobile: selected.mobile,
+                            openingBalance: selected.openingBalance,
+                          }
+                        : null;
+                    })()}
+                    onChange={(val: any) => {
+                      setBankAccount(val.value);
+                    }}
+                    displayField="label"
+                    placeholder="Search Bank Account"
+                    searchFields={["label", "mobile"]}
+                    columns={[
+                      {
+                        header: "Account",
+                        field: "label",
+                        width: "2fr",
+                      },
+                      {
+                        header: "Opening",
+                        field: "openingBalance",
+                        width: "1fr",
+                      },
+                    ]}
+                  />
+                </div>
 
-    return selected
-      ? {
-          label: selected.accountName,
-          value: selected.id,
-          mobile: selected.mobile,
-          openingBalance: selected.openingBalance,
-        }
-      : null;
-  })()
-}
-                onChange={(val: any) => {
-                   setBankAccount(String(val.value));
-                  setBankDetailsModalOpen(true);
-                }}
-                displayField="label"
-                placeholder="Search Bank Account"
-                searchFields={["label", "mobile"]}
-                columns={[
-                  {
-                    header: "Account",
-                    field: "label",
-                    width: "2fr",
-                  },
-
-                  {
-                    header: "Opening",
-                    field: "openingBalance",
-                    width: "1fr",
-                  },
-                ]}
-              />
+                <button
+                  type="button"
+                  onClick={() => setBankDetailsModalOpen(true)}
+                  className="flex h-9.5 w-9.5 shrink-0 items-center justify-center rounded-lg border border-gray-300 text-blue-600 hover:bg-gray-50 dark:border-gray-600 dark:text-blue-400 dark:hover:bg-gray-700"
+                  title="Add Bank Details"
+                >
+                  <BuildingOffice2Icon className="h-5 w-5" />
+                </button>
+              </div>
             </div>
           )}
 
-          <div className={terms === "Credit" ? "col-span-2" : "col-span-1"}>
+          <div className={terms === "Credit" ? "col-span-2" : "col-span-2"}>
             <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
               Party Name
             </label>
@@ -1256,17 +1264,17 @@ setBankDetails({
                   data={partyOptions}
                   value={partyOptions.find((x) => x.value === partyId) || null}
                   onChange={(val: any) => setPartyId(val.value)}
-                  displayField="label"
-                  searchFields={["label", "mobile"]}
+                  displayField="displayName"
+                  searchFields={["displayName", "mobile"]}
                   columns={[
                     {
                       header: "Party",
-                      field: "label",
-                      width: "2fr",
+                      field: "displayName",
+                      width: "3fr",
                     },
                     {
-                      header: "Mobile",
-                      field: "mobile",
+                      header: "OpeningBalance",
+                      field: "openingBalance",
                       width: "1fr",
                     },
                   ]}
