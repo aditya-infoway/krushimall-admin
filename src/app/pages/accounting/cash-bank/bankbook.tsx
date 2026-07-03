@@ -9,7 +9,8 @@ import {
 import { DatePicker } from "@/components/shared/form/Datepicker";
 import { Combobox } from "@/components/shared/form/Combobox";
 import { Listbox } from "@/components/shared/form/StyledListbox";
-
+import { useEffect } from "react";
+import apiHelper from "@/utils/apiHelper";
 interface BankBookRow {
   sr: number;
   date: string;
@@ -38,26 +39,7 @@ const BankBook: React.FC = () => {
   const [rowsPerPage] = useState(10);
 
   // Sample bank account options
-  const bankAccountOptions = [
-    {
-      id: "1",
-      name: "HDFC Bank - 4521",
-      mobile: "9876543210",
-      openingBalance: 50000,
-    },
-    {
-      id: "2",
-      name: "SBI Current - 7788",
-      mobile: "9876543211",
-      openingBalance: 75000,
-    },
-    {
-      id: "3",
-      name: "ICICI Bank - 1190",
-      mobile: "9876543212",
-      openingBalance: 25000,
-    },
-  ];
+const [bankAccountOptions, setBankAccountOptions] = useState<any[]>([]);
 
   // Transaction type options
   const transactionTypeOptions = [
@@ -65,29 +47,276 @@ const BankBook: React.FC = () => {
     { id: "receipt", name: "Receipt" },
     { id: "payment", name: "Payment" },
   ];
+const getBankAccounts = async () => {
+  try {
+    const res = await apiHelper.get("/accounts");
 
+    console.log("Account API Response:", res);
+
+    const accounts = res.data || [];
+
+    const banks = accounts.filter(
+      (item: any) => item.group === "Bank Accounts"
+    );
+
+    console.log("Filtered Bank Accounts:", banks);
+
+   setBankAccountOptions(
+  banks.map((item: any) => ({
+    id: item.id,
+    name: item.accountName,
+    mobile: item.mobile,
+    openingBalance: Number(item.openingBalance || 0),
+    closingBalance: Number(item.closingBalance || 0),
+    drCr: item.drCr,
+  }))
+);
+  } catch (err) {
+    console.log("Bank Account Error:", err);
+  }
+};;
   // Sample table data (empty for now)
-  const tableData: BankBookRow[] = [];
+const [tableData, setTableData] = useState<BankBookRow[]>([]);
 
   // Summary data
-  const summaryData = {
-    openingBalance: { value: "—", subtext: "Multiple banks selected" },
-    totalReceipts: { value: "₹0.00", subtext: "0 transactions" },
-    totalPayments: { value: "₹0.00", subtext: "0 transactions" },
-    closingBalance: { value: "₹0.00", subtext: "0 transactions" },
-  };
+ const [summaryData, setSummaryData] = useState({
+  openingBalance: {
+    value: "₹0.00",
+    subtext: "Selected Bank",
+  },
+  totalReceipts: {
+    value: "₹0.00",
+    subtext: "0 transactions",
+  },
+  totalPayments: {
+    value: "₹0.00",
+    subtext: "0 transactions",
+  },
+  closingBalance: {
+    value: "₹0.00",
+    subtext: "0 transactions",
+  },
+});;
 
   // Pagination
-  const totalItems = tableData.length;
-  const totalPages = Math.ceil(totalItems / rowsPerPage);
+
   const indexOfLastItem = currentPage * rowsPerPage;
   const indexOfFirstItem = indexOfLastItem - rowsPerPage;
-  const currentItems = tableData.slice(indexOfFirstItem, indexOfLastItem);
+const filteredTableData = tableData.filter((item) => {
+  // Search
+  const matchesSearch =
+    !searchTerm ||
+    item.voucherNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.accountName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.partyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.narration.toLowerCase().includes(searchTerm.toLowerCase());
 
-  const totalReceipt = 0;
-  const totalPayment = 0;
-  const balance = 0;
+  // Bank Account
+  const selectedBank = bankAccountOptions.find(
+    (x) => String(x.id) === String(bankAccount)
+  );
 
+  const matchesBank =
+    !bankAccount || item.accountName === selectedBank?.name;
+
+  // Transaction Type
+  const matchesType =
+    !transactionType ||
+    transactionType === "all" ||
+    (transactionType === "payment" && Number(item.payment) > 0) ||
+    (transactionType === "receipt" && Number(item.receipt) > 0);
+
+  // From Date
+  const matchesFrom =
+    !fromDate ||
+    new Date(item.date) >= new Date(fromDate);
+
+  // To Date
+  const matchesTo =
+    !toDate ||
+    new Date(item.date) <= new Date(toDate + "T23:59:59");
+
+  return (
+    matchesSearch &&
+    matchesBank &&
+    matchesType &&
+    matchesFrom &&
+    matchesTo
+  );
+});
+
+const totalItems = filteredTableData.length;
+
+const totalPages = Math.ceil(totalItems / rowsPerPage);
+
+const currentItems = filteredTableData.slice(
+  indexOfFirstItem,
+  indexOfLastItem
+);
+
+const totalReceipt = filteredTableData.reduce(
+  (sum, item) => sum + Number(item.receipt || 0),
+  0
+);
+
+const totalPayment = filteredTableData.reduce(
+  (sum, item) => sum + Number(item.payment || 0),
+  0
+);
+
+const balance = totalReceipt - totalPayment;
+useEffect(() => {
+  getBankBook();
+    getBankAccounts();
+}, []);
+const getBankBook = async () => {
+  try {
+    const [bankPayments] = await Promise.all([
+      apiHelper.get("/bank-payment"),
+      // apiHelper.get("/bank-receipt"),
+    ]);
+
+    const paymentData = (bankPayments || []).map(
+      (item: any, index: number) => ({
+        sr: index + 1,
+        date: item.date,
+        voucherNo: item.voucherNo,
+        type: item.type || "BP",
+        accountName: item.bankAccount?.accountName || "-",
+        partyName: item.oppAccount?.accountName || "-",
+        receipt: 0,
+        payment: Number(item.amount),
+        mode: item.paymentMode || "-",
+        chequeNo: item.chequeNo || "-",
+        chequeDate: item.chequeDate
+          ? new Date(item.chequeDate).toLocaleDateString("en-GB")
+          : "-",
+        clearDate: item.clearDate
+          ? new Date(item.clearDate).toLocaleDateString("en-GB")
+          : "-",
+        narration: item.narration || "",
+        createdType: item.createdType,
+        createdBy: item.createdBy,
+      })
+    );
+
+    // const receiptData = (bankReceipts || []).map(
+    //   (item: any, index: number) => ({
+    //     sr: paymentData.length + index + 1,
+    //     date: item.date,
+    //     voucherNo: item.voucherNo,
+    //     type: item.type || "BR",
+    //     accountName: item.bankAccount?.accountName || "-",
+    //     partyName: item.oppAccount?.accountName || "-",
+    //     receipt: Number(item.amount),
+    //     payment: 0,
+    //     mode: item.paymentMode || "-",
+    //     chequeNo: item.chequeNo || "-",
+    //     chequeDate: item.chequeDate
+    //       ? new Date(item.chequeDate).toLocaleDateString("en-GB")
+    //       : "-",
+    //     clearDate: item.clearDate
+    //       ? new Date(item.clearDate).toLocaleDateString("en-GB")
+    //       : "-",
+    //     narration: item.narration || "",
+    //     createdType: item.createdType,
+    //     createdBy: item.createdBy,
+    //   })
+    // );
+
+    const finalData = [...paymentData, ].sort(
+      (a, b) =>
+        new Date(b.date).getTime() -
+        new Date(a.date).getTime()
+    );
+
+ 
+
+    setTableData(finalData);
+  } catch (err) {
+    console.log(err);
+  }
+};
+useEffect(() => {
+  if (!tableData.length) return;
+
+  let filtered = tableData;
+
+  if (bankAccount) {
+    const selected = bankAccountOptions.find(
+      (x) => String(x.id) === String(bankAccount)
+    );
+
+    filtered = tableData.filter(
+      (x) => x.accountName === selected?.name
+    );
+
+    const opening = Number(selected?.openingBalance || 0);
+
+const receipt = filtered.reduce(
+  (sum, item) => sum + Number(item.receipt || 0),
+  0
+);
+
+const payment = filtered.reduce(
+  (sum, item) => sum + Number(item.payment || 0),
+  0
+);
+
+// Use database closing balance directly
+const closing = Number(selected?.closingBalance || 0);
+
+    setSummaryData({
+      openingBalance: {
+        value: `₹${opening.toFixed(2)}`,
+        subtext: selected?.name || "",
+      },
+      totalReceipts: {
+        value: `₹${receipt.toFixed(2)}`,
+        subtext: `${filtered.filter(x => Number(x.receipt) > 0).length} transactions`,
+      },
+      totalPayments: {
+        value: `₹${payment.toFixed(2)}`,
+        subtext: `${filtered.filter(x => Number(x.payment) > 0).length} transactions`,
+      },
+      closingBalance: {
+        value: `₹${closing.toFixed(2)}`,
+        subtext: `${filtered.length} transactions`,
+      },
+    });
+
+    setCurrentPage(1);
+  } else {
+    const receipt = tableData.reduce(
+      (sum, item) => sum + Number(item.receipt || 0),
+      0
+    );
+
+    const payment = tableData.reduce(
+      (sum, item) => sum + Number(item.payment || 0),
+      0
+    );
+
+    setSummaryData({
+      openingBalance: {
+        value: "₹0.00",
+        subtext: "All Bank Accounts",
+      },
+      totalReceipts: {
+        value: `₹${receipt.toFixed(2)}`,
+        subtext: `${tableData.filter(x => Number(x.receipt) > 0).length} transactions`,
+      },
+      totalPayments: {
+        value: `₹${payment.toFixed(2)}`,
+        subtext: `${tableData.filter(x => Number(x.payment) > 0).length} transactions`,
+      },
+      closingBalance: {
+        value: `₹${(receipt - payment).toFixed(2)}`,
+        subtext: `${tableData.length} transactions`,
+      },
+    });
+  }
+}, [bankAccount, tableData, bankAccountOptions]);
   return (
     <div className="dark:bg-dark-800 min-h-screen bg-gray-50 p-3 sm:p-4 lg:p-5 xl:p-6">
       <div className="mx-auto w-full max-w-[1920px]">
@@ -369,18 +598,18 @@ const BankBook: React.FC = () => {
                         {row.sr}
                       </td>
                       <td className="px-3 py-2.5 text-gray-900 dark:text-white">
-                        {row.date}
+                        {new Date(row.date).toLocaleDateString("en-GB")}
                       </td>
-                      <td className="px-3 py-2.5 text-gray-900 dark:text-white">
+                      <td className="px-3 py-2.5 text-gray-900 dark:text-white whitespace-nowrap">
                         {row.voucherNo}
                       </td>
                       <td className="px-3 py-2.5 text-gray-900 dark:text-white">
                         {row.type}
                       </td>
-                      <td className="px-3 py-2.5 text-gray-900 dark:text-white">
+                      <td className="px-3 py-2.5 text-gray-900 dark:text-white whitespace-nowrap">
                         {row.accountName}
                       </td>
-                      <td className="px-3 py-2.5 text-gray-900 dark:text-white">
+                      <td className="px-3 py-2.5 text-gray-900 dark:text-white whitespace-nowrap">
                         {row.partyName}
                       </td>
                       <td className="px-3 py-2.5 text-right text-green-600 dark:text-green-400">

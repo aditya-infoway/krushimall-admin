@@ -11,15 +11,17 @@ import {
 } from "react-icons/fi";
 import { RiFileExcel2Fill, RiFilePdfFill } from "react-icons/ri";
 import { DatePicker } from "@/components/shared/form/Datepicker";
-
+import { useEffect } from "react";
+import apiHelper from "@/utils/apiHelper";
 interface LedgerAccount {
-  srNo: number;
+  id: number;
   accountName: string;
   group: string;
   address: string;
   city: string;
   state: string;
-  closingBalance: string;
+  closingBalance: number;
+  drCr: string;
 }
 
 interface FilterData {
@@ -41,42 +43,48 @@ const LedgerReport: React.FC = () => {
   const [filterType, setFilterType] = useState("All");
   const [filterDateFrom, setFilterDateFrom] = useState<any>(null);
   const [filterDateTo, setFilterDateTo] = useState<any>(null);
-
+const [selectedAccount, setSelectedAccount] = useState<any>(null);
   const [filterData, setFilterData] = useState<FilterData>({
     fromDate: "01-04-2026",
     toDate: "03-07-2026",
     displayType: "",
   });
 
-  const ledgerData: LedgerAccount[] = [
-    {
-      srNo: 1,
-      accountName: "Cash account",
-      group: "Cash in Hand",
-      address: "Jalgaon",
-      city: "Jalgaon Jamod",
-      state: "Maharashtra",
-      closingBalance: "100000 DR",
-    },
-    {
-      srNo: 2,
-      accountName: "Denish patel",
-      group: "Sundry Debtors",
-      address: "Jalgaon",
-      city: "Aheri",
-      state: "Maharashtra",
-      closingBalance: "0 DR",
-    },
-  ];
-
+ const [ledgerData, setLedgerData] = useState<LedgerAccount[]>([]);
   const totalPages = Math.ceil(ledgerData.length / rowsPerPage);
   const startIndex = (currentPage - 1) * rowsPerPage;
   const endIndex = startIndex + rowsPerPage;
   const currentData = ledgerData.slice(startIndex, endIndex);
 
-  const handleViewClick = () => {
-    setIsDrawerOpen(true);
-  };
+  const getLedgerAccounts = async () => {
+  try {
+    const res = await apiHelper.get("/accounts");
+
+    console.log("Accounts:", res);
+
+    setLedgerData(
+      (res.data || res).map((item: any) => ({
+        id: item.id,
+        accountName: item.accountName,
+        group: item.group,
+        address: item.addressLine1 || "",
+        city: item.city || "",
+        state: item.state || "",
+        closingBalance: Number(item.closingBalance || 0),
+        drCr: item.drCr || "",
+      }))
+    );
+  } catch (err) {
+    console.log(err);
+  }
+};
+useEffect(() => {
+  getLedgerAccounts();
+}, []);
+const handleViewClick = (account: any) => {
+  setSelectedAccount(account);
+  setIsDrawerOpen(true);
+};
 
   const handleDrawerClose = () => {
     setIsDrawerOpen(false);
@@ -84,12 +92,13 @@ const LedgerReport: React.FC = () => {
 
   const handleDrawerOk = () => {
     setIsDrawerOpen(false);
-    navigate("/accounting/ledgerreport/ledgerdetails", {
-      state: {
-        accountName: "Cash account",
-        filterData: filterData,
-      },
-    });
+   navigate("/accounting/ledgerreport/ledgerdetails", {
+  state: {
+    accountId: selectedAccount.id,
+    accountName: selectedAccount.accountName,
+    filterData,
+  },
+});
   };
 
   // Get page numbers for pagination
@@ -226,13 +235,13 @@ const LedgerReport: React.FC = () => {
               </tr>
             </thead>
             <tbody className="dark:divide-dark-600 divide-y divide-gray-100">
-              {currentData.map((item) => (
+             {currentData.map((item, index) => (
                 <tr
-                  key={item.srNo}
+                   key={index}
                   className="dark:hover:bg-dark-600 transition-colors hover:bg-gray-50"
                 >
                   <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
-                    {item.srNo}
+                   {startIndex + index + 1}
                   </td>
                   <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">
                     {item.accountName}
@@ -250,12 +259,12 @@ const LedgerReport: React.FC = () => {
                     {item.state}
                   </td>
                   <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
-                    {item.closingBalance}
+                   ₹{Number(item.closingBalance).toFixed(2)} {item.drCr}
                   </td>
                   <td className="px-4 py-3 text-center">
                     <button
                       className="dark:border-dark-500 dark:bg-dark-700 hover:border-primary-500 dark:hover:bg-dark-600 flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 bg-white transition-all hover:bg-gray-50"
-                      onClick={handleViewClick}
+                    onClick={() => handleViewClick(item)}
                     >
                       <FiEye className="text-primary-500" size={16} />
                     </button>

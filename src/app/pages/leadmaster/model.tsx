@@ -28,8 +28,6 @@ interface AccountForm {
   aadharCard: string;
 }
 
-
-
 interface FinanceType {
   wantsFinance: boolean;
   existingCustomerModel: string;
@@ -37,12 +35,13 @@ interface FinanceType {
   existingVehicleYear: string;
   customerExpectedPrice: string;
   marketPrice: string;
-  exchangeBonus: string;
-  smiplShares: string;
+
+  chassisNo: string;
+  companyShare: string;
   dealerShares: string;
-  valueAddAccessories?: string;
+  rcNo?: string;
   insurance?: string;
-  totalValue?: string;
+  vehicleNo?: string;
 }
 
 interface ReviewSummaryType {
@@ -79,7 +78,7 @@ interface ReviewSummaryType {
 interface OptionType {
   id: number;
   name: string;
-    mobile: string;
+  mobile: string;
 }
 
 // Helper function to format date as dd-mm-yyyy
@@ -617,7 +616,7 @@ function CreateAccountModal({
             <button
               type="button"
               onClick={handleSubmit(handleFormSubmit)}
-              className="rounded-lg bg-primary-500 px-6 py-2 text-sm font-semibold text-white hover:bg-primary-500"
+              className="bg-primary-500 hover:bg-primary-500 rounded-lg px-6 py-2 text-sm font-semibold text-white"
             >
               Create Account
             </button>
@@ -653,7 +652,6 @@ function LeadInfoStep({
       setErrors(newErrors);
     }
   };
-
   const validate = () => {
     const newErrors: Record<string, string> = {};
 
@@ -661,23 +659,35 @@ function LeadInfoStep({
       if (!finance.existingCustomerModel?.trim())
         newErrors.finance_existingCustomerModel =
           "Existing Customer Model is required";
+
       if (!finance.existingCustomerVariant?.trim())
         newErrors.finance_existingCustomerVariant =
           "Existing Customer Variant is required";
+
       if (!finance.existingVehicleYear?.trim())
         newErrors.finance_existingVehicleYear =
           "Existing Vehicle Year is required";
+
       if (!finance.customerExpectedPrice?.trim())
         newErrors.finance_customerExpectedPrice =
           "Customer Expected Price is required";
+
       if (!finance.marketPrice?.trim())
         newErrors.finance_marketPrice = "Market Price is required";
-      if (!finance.exchangeBonus?.trim())
-        newErrors.finance_exchangeBonus = "Exchange Bonus is required";
-      if (!finance.smiplShares?.trim())
-        newErrors.finance_smiplShares = "SMIPL Shares is required";
+
+      if (!finance.chassisNo?.trim())
+        newErrors.finance_chassisNo = "Chassis No is required";
+
+      if (!finance.companyShare?.trim())
+        newErrors.finance_companyShare = "Company Share is required";
+
       if (!finance.dealerShares?.trim())
-        newErrors.finance_dealerShares = "Dealer Shares is required";
+        newErrors.finance_dealerShares = "Dealer Share is required";
+
+      if (!finance.rcNo?.trim()) newErrors.finance_rcNo = "RC No is required";
+
+      if (!finance.vehicleNo?.trim())
+        newErrors.finance_vehicleNo = "Vehicle No is required";
     }
 
     setErrors(newErrors);
@@ -827,18 +837,18 @@ function LeadInfoStep({
             {/* Exchange Bonus */}
             <div className="flex flex-col gap-1">
               <label className="dark:text-dark-200 text-sm font-medium text-gray-700">
-                Exchange Bonus
+                Chassis No
               </label>
               <input
                 type="text"
                 placeholder="0"
-                value={finance.exchangeBonus}
-                onChange={(e) => handleFinance("exchangeBonus", e.target.value)}
-                className={inputClass(`finance_exchangeBonus`)}
+                value={finance.chassisNo}
+                onChange={(e) => handleFinance("chassisNo", e.target.value)}
+                className={inputClass(`finance_chassisNo`)}
               />
-              {errors.finance_exchangeBonus && (
+              {errors.finance_chassisNo && (
                 <span className="text-xs text-orange-500">
-                  {errors.finance_exchangeBonus}
+                  {errors.finance_chassisNo}
                 </span>
               )}
             </div>
@@ -846,18 +856,18 @@ function LeadInfoStep({
             {/* SMIPL Shares */}
             <div className="flex flex-col gap-1">
               <label className="dark:text-dark-200 text-sm font-medium text-gray-700">
-                SMIPL Shares
+                Company Share
               </label>
               <input
                 type="text"
                 placeholder="0"
-                value={finance.smiplShares}
-                onChange={(e) => handleFinance("smiplShares", e.target.value)}
-                className={inputClass(`finance_smiplShares`)}
+                value={finance.companyShare}
+                onChange={(e) => handleFinance("companyShare", e.target.value)}
+                className={inputClass(`finance_companyShare`)}
               />
-              {errors.finance_smiplShares && (
+              {errors.finance_companyShare && (
                 <span className="text-xs text-orange-500">
-                  {errors.finance_smiplShares}
+                  {errors.finance_companyShare}
                 </span>
               )}
             </div>
@@ -884,17 +894,20 @@ function LeadInfoStep({
             {/* Value Add Accessories */}
             <div className="flex flex-col gap-1">
               <label className="dark:text-dark-200 text-sm font-medium text-gray-700">
-                Value Add Accessories
+                RC No
               </label>
               <input
                 type="text"
                 placeholder="Enter Value Add Accessories"
-                value={finance.valueAddAccessories || ""}
-                onChange={(e) =>
-                  handleFinance("valueAddAccessories", e.target.value)
-                }
-                className={inputClass(`finance_valueAddAccessories`)}
+                value={finance.rcNo}
+                onChange={(e) => handleFinance("rcNo", e.target.value)}
+                className={inputClass(`finance_rcNo`)}
               />
+              {errors.finance_rcNo && (
+                <span className="text-xs text-orange-500">
+                  {errors.finance_rcNo}
+                </span>
+              )}
             </div>
 
             {/* Insurance */}
@@ -914,16 +927,20 @@ function LeadInfoStep({
             {/* Total Value - Full width */}
             <div className="col-span-1 flex flex-col gap-1 sm:col-span-2">
               <label className="dark:text-dark-200 text-sm font-medium text-gray-700">
-                Total Value
+                Vehicle No
               </label>
               <input
                 type="text"
                 placeholder="0"
-                value={finance.totalValue || "0"}
-                onChange={(e) => handleFinance("totalValue", e.target.value)}
-                className={inputClass(`finance_totalValue`) + " max-w-xs"}
-                readOnly
+                value={finance.vehicleNo}
+                onChange={(e) => handleFinance("vehicleNo", e.target.value)}
+                className={inputClass(`finance_vehicleNo`) + " max-w-xs"}
               />
+              {errors.finance_vehicleNo && (
+                <span className="text-xs text-orange-500">
+                  {errors.finance_vehicleNo}
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -1132,7 +1149,7 @@ function ReviewLeadSummaryStep({
             value={form.expectedPurchaseDate}
             onChange={(val) => handleChange("expectedPurchaseDate", val)}
             placeholder="DD-MM-YYYY"
-             options={{ dateFormat: "d-m-Y",disableMobile: true }}
+            options={{ dateFormat: "d-m-Y", disableMobile: true }}
           />
           {errors.expectedPurchaseDate && (
             <span className="text-xs text-orange-500">
@@ -1150,7 +1167,7 @@ function ReviewLeadSummaryStep({
             value={form.expectedDeliveryDate}
             onChange={(val) => handleChange("expectedDeliveryDate", val)}
             placeholder="DD-MM-YYYY"
-              options={{ dateFormat: "d-m-Y",disableMobile: true }}
+            options={{ dateFormat: "d-m-Y", disableMobile: true }}
           />
           {errors.expectedDeliveryDate && (
             <span className="text-xs text-orange-500">
@@ -1285,7 +1302,7 @@ function ReviewLeadSummaryStep({
             value={form.bookingDate}
             onChange={(val) => handleChange("bookingDate", val)}
             placeholder="DD-MM-YYYY"
-             options={{ dateFormat: "d-m-Y",disableMobile: true }}
+            options={{ dateFormat: "d-m-Y", disableMobile: true }}
           />
           {errors.bookingDate && (
             <span className="text-xs text-orange-500">
@@ -1306,7 +1323,7 @@ function ReviewLeadSummaryStep({
             value={form.followUpDate}
             onChange={(val) => handleChange("followUpDate", val)}
             placeholder="DD-MM-YYYY"
-              options={{ dateFormat: "d-m-Y",disableMobile: true }}
+            options={{ dateFormat: "d-m-Y", disableMobile: true }}
           />
           {errors.followUpDate && (
             <span className="text-xs text-orange-500">
@@ -1643,8 +1660,7 @@ function ReviewLeadSummaryStep({
                         value={form.chequeDate || ""}
                         onChange={(val) => handleChange("chequeDate", val)}
                         placeholder="Select Date"
-                        options={{ dateFormat: "d-m-Y",disableMobile: true }}
-                       
+                        options={{ dateFormat: "d-m-Y", disableMobile: true }}
                       />
                     </div>
 
@@ -1657,7 +1673,7 @@ function ReviewLeadSummaryStep({
                         value={form.chequeClearDate || ""}
                         onChange={(val) => handleChange("chequeClearDate", val)}
                         placeholder="Select Date"
-                         options={{ dateFormat: "d-m-Y",disableMobile: true }}
+                        options={{ dateFormat: "d-m-Y", disableMobile: true }}
                       />
                     </div>
 
@@ -1713,13 +1729,14 @@ export function LeadDetailsModal({
 }) {
   const [step, setStep] = useState(1);
   const [selectedModel, setSelectedModel] = useState<OptionType | null>(null);
- const [selectedShowroomVariant, setSelectedShowroomVariant] =
-  useState<OptionType | null>(null);
+  const [selectedShowroomVariant, setSelectedShowroomVariant] =
+    useState<OptionType | null>(null);
 
-const [showroomVariants, setShowroomVariants] = useState([]);
+  const [showroomVariants, setShowroomVariants] = useState([]);
 
-const [filteredShowroomVariants, setFilteredShowroomVariants] =
-  useState<any[]>([]);
+  const [filteredShowroomVariants, setFilteredShowroomVariants] = useState<
+    any[]
+  >([]);
   const [selectedColor, setSelectedColor] = useState<OptionType | null>(null);
   const [selectedCustomer, setSelectedCustomer] = useState<OptionType | null>(
     null,
@@ -1760,7 +1777,7 @@ const [filteredShowroomVariants, setFilteredShowroomVariants] =
           .map((item: any) => ({
             id: item.id,
             name: item.employeeName,
-              role: item.role,
+            role: item.role,
           })),
       );
     } catch (error) {
@@ -1778,12 +1795,13 @@ const [filteredShowroomVariants, setFilteredShowroomVariants] =
     existingVehicleYear: "",
     customerExpectedPrice: "",
     marketPrice: "",
-    exchangeBonus: "",
-    smiplShares: "",
+
+    chassisNo: "",
+    companyShare: "",
     dealerShares: "",
-    valueAddAccessories: "",
+    rcNo: "",
     insurance: "",
-    totalValue: "",
+    vehicleNo: "",
   });
 
   const [reviewData, setReviewData] = useState<ReviewSummaryType>({
@@ -1820,9 +1838,8 @@ const [filteredShowroomVariants, setFilteredShowroomVariants] =
     const newErrors: Record<string, string> = {};
     if (currentStep === 1) {
       if (!selectedModel) newErrors.model = "Please select a model";
-     if (!selectedShowroomVariant)
-  newErrors.showroomVariant =
-    "Please select showroom variant";
+      if (!selectedShowroomVariant)
+        newErrors.showroomVariant = "Please select showroom variant";
       if (!selectedColor) newErrors.color = "Please select a color";
     }
     if (currentStep === 2) {
@@ -1867,8 +1884,7 @@ const [filteredShowroomVariants, setFilteredShowroomVariants] =
     try {
       const payload = {
         modelId: selectedModel?.id,
-     showroomVariantId:
-  selectedShowroomVariant?.id,
+        showroomVariantId: selectedShowroomVariant?.id,
         colourId: selectedColor?.id,
         customerId: selectedCustomer?.id,
         executiveId: selectedExecutive?.id,
@@ -1884,23 +1900,22 @@ const [filteredShowroomVariants, setFilteredShowroomVariants] =
           ? Number(financeData.marketPrice)
           : null,
 
-        exchangeBonus: financeData.exchangeBonus
-          ? Number(financeData.exchangeBonus)
-          : null,
+        chassisNo: financeData.chassisNo || null,
 
-        smiplShares: financeData.smiplShares
-          ? Number(financeData.smiplShares)
+        companyShare: financeData.companyShare
+          ? Number(financeData.companyShare)
           : null,
 
         dealerShares: financeData.dealerShares
           ? Number(financeData.dealerShares)
           : null,
 
+        rcNo: financeData.rcNo || null,
+
         insurance: financeData.insurance ? Number(financeData.insurance) : null,
 
-        totalValue: financeData.totalValue
-          ? Number(financeData.totalValue)
-          : null,
+        vehicleNo: financeData.vehicleNo || null,
+
         expectedPurchaseDate: reviewData.expectedPurchaseDate?.[0] || null,
 
         expectedDeliveryDate: reviewData.expectedDeliveryDate?.[0] || null,
@@ -1910,6 +1925,7 @@ const [filteredShowroomVariants, setFilteredShowroomVariants] =
         followUpDate: reviewData.followUpDate?.[0] || null,
 
         dmsEnquiryDate: reviewData.dmsEnquiryDate?.[0] || null,
+
         chequeNo: reviewData.chequeNo,
 
         chequeDate: reviewData.chequeDate?.[0] || null,
@@ -1948,8 +1964,8 @@ const [filteredShowroomVariants, setFilteredShowroomVariants] =
 
         panCard: formData.panCard,
         aadharNo: formData.aadharCard,
-         group: "Customer",
-      drCr: "Dr",
+        group: "Customer",
+        drCr: "Dr",
       });
 
       console.log("Create Response:", res.data);
@@ -1964,33 +1980,32 @@ const [filteredShowroomVariants, setFilteredShowroomVariants] =
     }
   };
 
- const fetchCustomers = async () => {
-  try {
-    const res = await apiHelper.get("/accounts");
+  const fetchCustomers = async () => {
+    try {
+      const res = await apiHelper.get("/accounts");
 
-    const data = Array.isArray(res.data)
-      ? res.data
-      : Array.isArray(res.data?.data)
-      ? res.data.data
-      : [];
+      const data = Array.isArray(res.data)
+        ? res.data
+        : Array.isArray(res.data?.data)
+          ? res.data.data
+          : [];
 
-    const filteredCustomers = data.filter(
-      (item: any) =>
-        item.group === "Customer" ||
-        item.group === "Sundry Debtors"
-    );
+      const filteredCustomers = data.filter(
+        (item: any) =>
+          item.group === "Customer" || item.group === "Sundry Debtors",
+      );
 
-    setCustomers(
-      filteredCustomers.map((item: any) => ({
-        id: item.id,
-        name: item.accountName,
+      setCustomers(
+        filteredCustomers.map((item: any) => ({
+          id: item.id,
+          name: item.accountName,
           mobile: item.mobile,
-      }))
-    );
-  } catch (error) {
-    console.error("Failed to fetch customers:", error);
-  }
-};
+        })),
+      );
+    } catch (error) {
+      console.error("Failed to fetch customers:", error);
+    }
+  };
   const fetchModels = async () => {
     const res = await apiHelper.get("/model");
     const data = Array.isArray(res.data) ? res.data : [];
@@ -2003,23 +2018,23 @@ const [filteredShowroomVariants, setFilteredShowroomVariants] =
     );
   };
 
-const fetchShowroomVariants = async () => {
-  try {
-    const res = await apiHelper.get("/showroom-variant");
+  const fetchShowroomVariants = async () => {
+    try {
+      const res = await apiHelper.get("/showroom-variant");
 
-    const data = Array.isArray(res.data?.data)
-      ? res.data.data
-      : Array.isArray(res.data)
-      ? res.data
-      : [];
+      const data = Array.isArray(res.data?.data)
+        ? res.data.data
+        : Array.isArray(res.data)
+          ? res.data
+          : [];
 
-    console.log("API Response:", data);
+      console.log("API Response:", data);
 
-    setShowroomVariants(data);
-  } catch (err) {
-    console.log(err);
-  }
-};
+      setShowroomVariants(data);
+    } catch (err) {
+      console.log(err);
+    }
+  };
   const fetchColors = async () => {
     const res = await apiHelper.get("/colours");
     const data = Array.isArray(res.data) ? res.data : [];
@@ -2028,7 +2043,7 @@ const fetchShowroomVariants = async () => {
       data.map((item: any) => ({
         id: item.id,
         name: item.colourName,
-       showroomVariantId: item.showroomVariantId,
+        showroomVariantId: item.showroomVariantId,
       })),
     );
   };
@@ -2038,42 +2053,41 @@ const fetchShowroomVariants = async () => {
     fetchColors();
     fetchCustomers();
   }, []);
- const handleModelChange = (model: any) => {
-  setSelectedModel(model);
+  const handleModelChange = (model: any) => {
+    setSelectedModel(model);
 
-  const filtered = showroomVariants.filter(
-    (v: any) => Number(v.modelId) === Number(model.id)
-  );
+    const filtered = showroomVariants.filter(
+      (v: any) => Number(v.modelId) === Number(model.id),
+    );
 
-  console.log("Filtered Showroom Variants:", filtered);
+    console.log("Filtered Showroom Variants:", filtered);
 
-  setFilteredShowroomVariants(
-    filtered.map((item: any) => ({
-      id: item.id,
-      name: item.variantName,
-      modelId: item.modelId,
-    }))
-  );
+    setFilteredShowroomVariants(
+      filtered.map((item: any) => ({
+        id: item.id,
+        name: item.variantName,
+        modelId: item.modelId,
+      })),
+    );
 
-  setSelectedShowroomVariant(null);
-  setSelectedColor(null);
-};
+    setSelectedShowroomVariant(null);
+    setSelectedColor(null);
+  };
 
- const handleShowroomVariantChange = (variant: any) => {
-  setSelectedShowroomVariant(variant);
+  const handleShowroomVariantChange = (variant: any) => {
+    setSelectedShowroomVariant(variant);
 
-  if (!variant) {
-    setFilteredColors([]);
-    return;
-  }
+    if (!variant) {
+      setFilteredColors([]);
+      return;
+    }
 
-  const filtered = colors.filter(
-    (c: any) =>
-      Number(c.showroomVariantId) === Number(variant.id)
-  );
+    const filtered = colors.filter(
+      (c: any) => Number(c.showroomVariantId) === Number(variant.id),
+    );
 
-  setFilteredColors(filtered);
-};
+    setFilteredColors(filtered);
+  };
 
   const handleColorChange = (val: OptionType | null) => {
     setSelectedColor(val);
@@ -2153,14 +2167,13 @@ const fetchShowroomVariants = async () => {
                   {selectedModel && (
                     <div className="flex flex-col gap-1">
                       <label className="dark:text-dark-200 text-sm font-medium text-gray-700">
-                       Select Showroom Variant
+                        Select Showroom Variant
                       </label>
                       <Combobox
-                      
                         displayField="name"
-                       data={filteredShowroomVariants}
-value={selectedShowroomVariant}
-onChange={handleShowroomVariantChange}
+                        data={filteredShowroomVariants}
+                        value={selectedShowroomVariant}
+                        onChange={handleShowroomVariantChange}
                         placeholder="Select Variant"
                         searchFields={["name"]}
                       />
@@ -2172,7 +2185,7 @@ onChange={handleShowroomVariantChange}
                     </div>
                   )}
 
-                  {selectedShowroomVariant  && (
+                  {selectedShowroomVariant && (
                     <div className="flex flex-col gap-1">
                       <label className="dark:text-dark-200 text-sm font-medium text-gray-700">
                         Select Color
@@ -2193,14 +2206,16 @@ onChange={handleShowroomVariantChange}
                     </div>
                   )}
 
-                  {selectedModel && selectedShowroomVariant && selectedColor && (
-                    <div className="mt-4 rounded-md border border-blue-200 bg-blue-50 p-3 dark:border-blue-800 dark:bg-blue-900/20">
-                      <p className="text-sm font-medium text-blue-900 dark:text-blue-200">
-                        Selected: {selectedModel.name} - {selectedShowroomVariant.name}{" "}
-                        - {selectedColor.name}
-                      </p>
-                    </div>
-                  )}
+                  {selectedModel &&
+                    selectedShowroomVariant &&
+                    selectedColor && (
+                      <div className="mt-4 rounded-md border border-blue-200 bg-blue-50 p-3 dark:border-blue-800 dark:bg-blue-900/20">
+                        <p className="text-sm font-medium text-blue-900 dark:text-blue-200">
+                          Selected: {selectedModel.name} -{" "}
+                          {selectedShowroomVariant.name} - {selectedColor.name}
+                        </p>
+                      </div>
+                    )}
                 </div>
               )}
 
@@ -2211,39 +2226,38 @@ onChange={handleShowroomVariantChange}
                   </h3>
                   <div className="flex items-start gap-2">
                     <div className="flex-1">
-                         <label className="dark:text-dark-200 text-sm font-medium text-gray-700 mb-1 inline-block">
-                    Customer Name
-                    </label>
-                     <Combobox
-  data={customers}
-  value={selectedCustomer}
-  onChange={(val: any) => {
-     console.log(val);
-    setSelectedCustomer(val);
+                      <label className="dark:text-dark-200 mb-1 inline-block text-sm font-medium text-gray-700">
+                        Customer Name
+                      </label>
+                      <Combobox
+                        data={customers}
+                        value={selectedCustomer}
+                        onChange={(val: any) => {
+                          console.log(val);
+                          setSelectedCustomer(val);
 
-    if (errors.customer) {
-      const newErrors = { ...errors };
-      delete newErrors.customer;
-      setErrors(newErrors);
-    }
-  }}
-  displayField="name"
-  placeholder="Search Customer"
-  searchFields={["label", "mobile"]}
-  columns={[
-    {
-      header: "Customer",
-      field: "name",
-      width: "2fr",
-    },
-    {
-      header: "Mobile",
-      field: "mobile",
-      width: "1.5fr",
-    },
-   
-  ]}
-/>
+                          if (errors.customer) {
+                            const newErrors = { ...errors };
+                            delete newErrors.customer;
+                            setErrors(newErrors);
+                          }
+                        }}
+                        displayField="name"
+                        placeholder="Search Customer"
+                        searchFields={["label", "mobile"]}
+                        columns={[
+                          {
+                            header: "Customer",
+                            field: "name",
+                            width: "2fr",
+                          },
+                          {
+                            header: "Mobile",
+                            field: "mobile",
+                            width: "1.5fr",
+                          },
+                        ]}
+                      />
                       {errors.customer && (
                         <span className="text-xs text-orange-500">
                           {errors.customer}
@@ -2261,38 +2275,38 @@ onChange={handleShowroomVariantChange}
                     <label className="dark:text-dark-200 text-sm font-medium text-gray-700">
                       Sales Executive
                     </label>
-                   <Combobox
-  data={executives.map((item: any) => ({
-    id: item.id,
-    name: item.name,
-    role: item.role,
-  }))}
-  displayField="name"
-  value={selectedExecutive}
-  onChange={(val: any) => {
-    setSelectedExecutive(val);
+                    <Combobox
+                      data={executives.map((item: any) => ({
+                        id: item.id,
+                        name: item.name,
+                        role: item.role,
+                      }))}
+                      displayField="name"
+                      value={selectedExecutive}
+                      onChange={(val: any) => {
+                        setSelectedExecutive(val);
 
-    if (errors.executive) {
-      const newErrors = { ...errors };
-      delete newErrors.executive;
-      setErrors(newErrors);
-    }
-  }}
-  placeholder="Select Sales Executive"
-  searchFields={["name", "role"]}
-  columns={[
-    {
-      header: "Name",
-      field: "name",
-      width: "2fr",
-    },
-    {
-      header: "Role",
-      field: "role",
-      width: "1fr",
-    },
-  ]}
-/>
+                        if (errors.executive) {
+                          const newErrors = { ...errors };
+                          delete newErrors.executive;
+                          setErrors(newErrors);
+                        }
+                      }}
+                      placeholder="Select Sales Executive"
+                      searchFields={["name", "role"]}
+                      columns={[
+                        {
+                          header: "Name",
+                          field: "name",
+                          width: "2fr",
+                        },
+                        {
+                          header: "Role",
+                          field: "role",
+                          width: "1fr",
+                        },
+                      ]}
+                    />
                     {errors.executive && (
                       <span className="text-xs text-orange-500">
                         {errors.executive}
