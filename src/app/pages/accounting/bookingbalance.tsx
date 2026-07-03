@@ -17,6 +17,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import { RiFileExcel2Fill, RiFilePdfFill } from "react-icons/ri";
 
 interface BookingRow {
   sr: number;
@@ -108,9 +109,9 @@ const BookingBalance: React.FC = () => {
             Booking Balance
           </h2>
           <div className="flex flex-wrap items-center gap-2">
-            <div className="relative">
-              <CalendarDaysIcon className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
-              <div className="dark:border-dark-600 dark:bg-dark-700 flex items-center gap-2 rounded-lg border border-gray-300 bg-white py-1.5 pr-3 pl-9">
+            <div className="relative flex items-center gap-0">
+              <CalendarDaysIcon className="absolute top-1/2 left-3 z-10 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <div className="dark:border-dark-600 dark:bg-dark-700 flex items-center gap-1 rounded-lg border border-gray-300 bg-white py-1.5 pr-2 pl-9">
                 <DatePicker
                   placeholder="From Date"
                   value={
@@ -130,7 +131,7 @@ const BookingBalance: React.FC = () => {
                       }
                     }
                   }}
-                  className="w-24 border-none p-0 text-sm outline-none"
+                  className="w-28 border-none p-0 text-sm outline-none"
                 />
                 <span className="text-gray-400">–</span>
                 <DatePicker
@@ -150,18 +151,27 @@ const BookingBalance: React.FC = () => {
                       }
                     }
                   }}
-                  className="w-24 border-none p-0 text-sm outline-none"
+                  className="w-28 border-none p-0 text-sm outline-none"
                 />
               </div>
             </div>
 
-            <button className="dark:border-dark-600 dark:bg-dark-700 dark:hover:bg-dark-600 flex h-9.5 cursor-pointer items-center justify-center gap-1 rounded-lg border border-gray-300 bg-white px-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:text-gray-300">
-              <DocumentArrowDownIcon className="h-4 w-4" />
-              <span className="hidden sm:inline">Excel</span>
+            {/* PDF Button - Icon only */}
+            <button className="dark:border-dark-600 dark:bg-dark-700 dark:hover:bg-dark-600 flex h-9.5 w-9.5 cursor-pointer items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 dark:text-gray-300">
+              <RiFilePdfFill className="h-4 w-4" />
             </button>
+           
+            {/* Excel Button - Icon only */}
+            <button className="dark:border-dark-600 dark:bg-dark-700 dark:hover:bg-dark-600 flex h-9.5 w-9.5 cursor-pointer items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 dark:text-gray-300">
+              <RiFileExcel2Fill className="h-4 w-4" />
+            </button>
+
+            {/* Refresh Button */}
             <button className="dark:border-dark-600 dark:bg-dark-700 dark:hover:bg-dark-600 flex h-9.5 w-9.5 cursor-pointer items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 dark:text-gray-300">
               <ArrowPathIcon className="h-4 w-4" />
             </button>
+
+            {/* Collapse Button */}
             <button
               onClick={() => setCollapsed((c) => !c)}
               className="dark:border-dark-600 dark:bg-dark-700 dark:hover:bg-dark-600 flex h-9.5 w-9.5 cursor-pointer items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 dark:text-gray-300"

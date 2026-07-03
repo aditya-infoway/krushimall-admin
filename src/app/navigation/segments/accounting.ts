@@ -68,7 +68,7 @@ export const accounting: NavigationTree = {
       type: "collapse",
       title: "Cash/Bank Register",
       path: "/accounting/cash-bank",
-      icon: "variant",
+      icon: "cashbank",
       childs: [
         {
           id: "cashbook",

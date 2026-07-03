@@ -535,6 +535,30 @@ const protectedRoutes: RouteObject = {
             },
           ],
         },
+
+        {
+          path: "followups",
+          children: [
+            {
+              index: true,
+              element: <Navigate to="todayfollowups" replace />,
+            },
+            {
+              path: "todayfollowups",
+              lazy: async () => ({
+                Component: (await import("@/app/pages/followup/todayfolloups"))
+                  .default,
+              }),
+            },
+            {
+              path: "follow-up/:id", // Add :id param
+              lazy: async () => ({
+                Component: (await import("@/app/pages/followup/follow-up"))
+                  .default,
+              }),
+            },
+          ],
+        },
       ],
     },
 
