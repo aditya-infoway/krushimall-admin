@@ -4,7 +4,7 @@ export const leadmaster: NavigationTree = {
  id: "leadmaster",
  type: "root",
  title: "Lead Master",
- icon: "master",
+ icon: "leadbuilder",
  childs: [
   {
    id: "leadbuilder",

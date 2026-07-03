@@ -349,6 +349,8 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
     useState<BankDetailsData>(emptyBankDetails);
   const [bankDetailsTouched, setBankDetailsTouched] = useState(false);
   const [vehicleOptions, setVehicleOptions] = useState<VehicleOption[]>([]);
+  const [companyId, setCompanyId] = useState<number | null>(null);
+const [financialYearId, setFinancialYearId] = useState<number | null>(null);
   const updateBankDetails = (key: keyof BankDetailsData, value: string) =>
     setBankDetails((b) => ({ ...b, [key]: value }));
   const [accountErrors, setAccountErrors] = useState<
@@ -366,17 +368,25 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
   ];
   const [company, setCompany] = useState<any>(null);
 
-  const getCompany = async () => {
-    try {
-      const res = await apiHelper.get("/company");
+const getCompany = async () => {
+  try {
+    const res = await apiHelper.get("/company");
 
-      const companyData = Array.isArray(res.data) ? res.data[0] : res.data;
+    const company = Array.isArray(res.data)
+      ? res.data[0]
+      : res.data;
 
-      setCompany(companyData);
-    } catch (err) {
-      console.error(err);
+    setCompany(company);
+
+    setCompanyId(company.id);
+
+    if (company.financialYears?.length > 0) {
+      setFinancialYearId(company.financialYears[0].id);
     }
-  };
+  } catch (err) {
+    console.log(err);
+  }
+};
   const getTractors = async () => {
     try {
       const res = await apiHelper.get("/tractors");
@@ -1016,6 +1026,8 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
   const handleSave = async () => {
     try {
       const payload = {
+          companyId,
+  financialYearId,
         accountId: partyId,
         purchaseDate: purchaseDate || date,
         purchaseBillNo,

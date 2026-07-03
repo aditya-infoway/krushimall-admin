@@ -25,10 +25,11 @@ import {
 } from "@headlessui/react";
 import { Fragment } from "react";
 import { DatePicker } from "@/components/shared/form/Datepicker";
-import { Combobox } from "@/components/shared/form/StyledCombobox";
+// import { Combobox } from "@/components/shared/form/StyledCombobox";
+import { Combobox } from "@/components/shared/form/Combobox";
 import { Input, Radio, Textarea } from "@/components/ui";
-
-type EntryType = "Manual" | "Lead Cancel";
+import apiHelper from "@/utils/apiHelper";
+type EntryType = "Manual" | "Purchase" | "Lead Cancel";
 type PaymentMode = "NEFT" | "RTGS" | "IMPS" | "Cheque" | "UPI";
 
 const PAYMENT_MODES = [
@@ -42,7 +43,7 @@ const PAYMENT_MODES = [
 const initialForm = {
   type: "Manual" as EntryType,
   bankAccount: null as any,
-  voucherNo: "BP/25-26/001",
+  voucherNo: "",
   date: null as any,
   oppAccount: null as any,
   amount: "",
@@ -61,8 +62,8 @@ interface BankPayment {
   date: string;
   voucherNo: string;
   type: EntryType;
-  bankAccount: string;
-  oppAccount: string;
+  bankAccountName: string;
+  oppAccountName: string;
   amount: number;
   paymentMode: PaymentMode;
   chequeNo?: string;
@@ -148,7 +149,8 @@ export default function BankPayment() {
   const [filterDateFrom, setFilterDateFrom] = useState<any>(null);
   const [filterDateTo, setFilterDateTo] = useState<any>(null);
   const [filterPaymentMode, setFilterPaymentMode] = useState("All");
-
+const [purchaseBill, setPurchaseBill] = useState<any>(null);
+  const [purchaseBills, setPurchaseBills] = useState<any[]>([]);
   const filteredRows = rows.filter((r) => {
     const matchesSearch = Object.values(r).some((v) =>
       String(v).toLowerCase().includes(search.toLowerCase()),
@@ -164,7 +166,137 @@ export default function BankPayment() {
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredRows.slice(indexOfFirstItem, indexOfLastItem);
+  const [bankAccounts, setBankAccounts] = useState<any[]>([]);
+   const [oppAccounts, setOppAccounts] = useState<any[]>([]);
+ const [companyId, setCompanyId] = useState<number | null>(null);
+const [financialYearId, setFinancialYearId] = useState<number | null>(null);
+const getCompany = async () => {
+  try {
+  const res = await apiHelper.get("/company");
 
+
+
+if (!res.data || res.data.length === 0) {
+  console.log("No companies found");
+  return;
+}
+
+const company = res.data[0];
+
+setCompanyId(company.id);
+
+if (company.financialYears?.length > 0) {
+  setFinancialYearId(company.financialYears[0].id);
+}
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+useEffect(() => {
+  getCompany();
+}, []);
+  const getPurchaseBills = async () => {
+    try {
+      const res = await apiHelper.get("/purchases");
+
+      setPurchaseBills(
+        res.data.map((p: any) => ({
+          value: p.id,
+          label: p.billNo,
+          party: p.account?.accountName,
+          accountId: p.accountId,
+          // amount: p.grandTotal,
+        })),
+      );
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+ const getAccounts = async () => {
+  try {
+    const res = await apiHelper.get("/accounts");
+
+    const accounts = res.data;
+
+    // Only Bank Accounts
+    setBankAccounts(
+      accounts
+        .filter((a: any) => a.group === "Bank Accounts")
+        .map((a: any) => ({
+          value: a.id,
+          label: `${a.accountName} (${a.mobile ?? ""})`,
+          balance: a.closingBalance,
+          balanceType: a.drCr,
+        }))
+    );
+
+    // All except Bank Accounts
+    setOppAccounts(
+      accounts
+        .filter((a: any) => a.group !== "Bank Accounts")
+        .map((a: any) => ({
+          value: a.id,
+          label: `${a.accountName} (${a.mobile ?? ""})`,
+          balance: a.closingBalance,
+          balanceType: a.drCr,
+        }))
+    );
+  } catch (err) {
+    console.log(err);
+  }
+};
+const getBankPayments = async () => {
+  try {
+    const res = await apiHelper.get("/bank-payment");
+
+    const data = res.map((item: any) => ({
+      id: item.id,
+      date: item.date,
+      voucherNo: item.voucherNo,
+      type: item.type,
+
+      bankAccount: item.bankAccount?.id,
+      bankAccountName: item.bankAccount?.accountName,
+
+      oppAccount: item.oppAccount?.id,
+      oppAccountName: item.oppAccount?.accountName,
+
+      amount: item.amount,
+      paymentMode: item.paymentMode,
+      chequeNo: item.chequeNo,
+      chequeDate: item.chequeDate,
+      chequeClearDate: item.clearDate,
+      narration: item.narration,
+      createdBy: item.createdBy,
+      createdType: item.createdType,
+    }));
+
+    setRows(data);
+  } catch (err) {
+    console.log(err);
+  }
+};
+const getVoucherNo = async () => {
+  try {
+    const res = await apiHelper.get("/bank-payment/voucher");
+
+    setForm((prev) => ({
+      ...prev,
+      voucherNo: res.voucherNo,
+    }));
+  } catch (err) {
+    console.log(err);
+  }
+};
+   useEffect(() => {
+      getAccounts();
+      getPurchaseBills();
+        
+          getBankPayments();
+    }, []);
+      const purchaseBillOptions = purchaseBills;
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
@@ -197,25 +329,36 @@ export default function BankPayment() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleAdd = () => {
-    setEditId(null);
-    setForm({
-      ...initialForm,
-      paymentMode: PAYMENT_MODES.find((m) => m.id === "UPI") || null,
-    });
-    setErrors({});
-    setShowDrawer(true);
-  };
+const handleAdd = async () => {
+  setEditId(null);
+
+  await getVoucherNo();
+
+  setForm((prev) => ({
+    ...initialForm,
+    voucherNo: prev.voucherNo,
+    paymentMode: PAYMENT_MODES.find((m) => m.id === "UPI") || null,
+  }));
+
+  setShowDrawer(true);
+};
 
   const handleEdit = (item: BankPayment) => {
     setEditId(item.id);
     setForm({
       type: item.type,
-      bankAccount:
-        BANK_ACCOUNTS.find((a) => a.value === item.bankAccount) || null,
+     bankAccount:
+  bankAccounts.find(
+    (a: any) => Number(a.value) === Number(item.bankAccount)
+  ) || null,
+
+oppAccount:
+  oppAccounts.find(
+    (a: any) => Number(a.value) === Number(item.oppAccount)
+  ) || null,
       voucherNo: item.voucherNo,
       date: item.date,
-      oppAccount: OPP_ACCOUNTS.find((a) => a.value === item.oppAccount) || null,
+     
       amount: String(item.amount),
       paymentMode:
         PAYMENT_MODES.find((a) => a.id === item.paymentMode) ||
@@ -242,42 +385,46 @@ export default function BankPayment() {
     setSelectedIds([]);
   };
 
-  const handleSubmit = () => {
-    if (!validateForm()) return;
-    const newEntry: BankPayment = {
-      id: editId !== null ? editId : rows.length + 1,
-      date:
-        form.date ||
-        new Date().toLocaleDateString("en-GB", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-        }),
-      voucherNo: form.voucherNo,
-      type: form.type,
-      bankAccount: form.bankAccount.value,
-      oppAccount: form.oppAccount.value,
-      amount: parseFloat(form.amount),
-      paymentMode: (form.paymentMode?.id || "UPI") as PaymentMode,
-      chequeNo: form.paymentMode?.id === "Cheque" ? form.chequeNo : undefined,
-      chequeDate:
-        form.paymentMode?.id === "Cheque" ? form.chequeDate : undefined,
-      chequeClearDate:
-        form.paymentMode?.id === "Cheque" ? form.chequeClearDate : undefined,
+ const handleSubmit = async () => {
+  if (!validateForm()) return;
+
+  try {
+    const payload = {
+      companyId,
+      financialYearId,
+
+      date: form.date,
+      bankAccountId: form.bankAccount.value,
+      oppAccountId: form.oppAccount.value,
+      amount: Number(form.amount),
+
+      paymentMode: form.paymentMode?.id,
+      chequeNo: form.chequeNo,
+      chequeDate: form.chequeDate,
+      clearDate: form.chequeClearDate,
+
       narration: form.narration,
-      createdType: form.createdType || "Manual",
-      createdBy: "Admin",
-      leadNo: form.type === "Lead Cancel" ? form.leadNo : undefined,
+
+      purchaseId:
+        form.type === "Purchase" ? purchaseBill?.value : null,
+
+      leadId: null,
     };
 
-    if (editId !== null) {
-      setRows(rows.map((row) => (row.id === editId ? newEntry : row)));
+    if (editId) {
+      await apiHelper.put(`/bank-payment/${editId}`, payload);
     } else {
-      setRows([...rows, newEntry]);
+      await apiHelper.post("/bank-payment", payload);
     }
+
+    await getBankPayments();
+    await getVoucherNo();
+
     setShowDrawer(false);
-    setErrors({});
-  };
+  } catch (err) {
+    console.log(err);
+  }
+};
 
   const isAllPageSelected =
     currentItems.length > 0 &&
@@ -466,7 +613,7 @@ export default function BankPayment() {
       {/* Main Table */}
       <div className="dark:bg-dark-800 dark:border-dark-700 rounded-xl border border-gray-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1200px] text-left [&_.table-th]:font-semibold">
+          <table className="w-full min-w-300 text-left [&_.table-th]:font-semibold">
             <thead className="dark:bg-dark-700/60 dark:border-dark-600 border-b border-gray-200 bg-gray-100">
               <tr>
                 <th className="w-10 px-2 py-3.5 text-center">
@@ -545,27 +692,22 @@ export default function BankPayment() {
                       {indexOfFirstItem + index + 1}
                     </td>
                     <td className="px-3 py-3 text-sm whitespace-nowrap text-gray-900 dark:text-gray-400">
-                      {item.date}
+                     {new Date(item.date).toLocaleDateString("en-GB")}
                     </td>
                     <td className="px-3 py-3 text-sm font-medium whitespace-nowrap text-gray-900 dark:text-gray-400">
                       {item.voucherNo}
                     </td>
-                    <td className="px-3 py-3 whitespace-nowrap">
+                  <td className="py-3 whitespace-nowrap">
                       <span
-                        className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${
-                          item.type === "Manual"
-                            ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
-                            : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                        }`}
-                      >
+                        className="inline-flex rounded-full px-2 py-0.5 text-xs font-semibold bg-primary-500">
                         {item.type}
                       </span>
                     </td>
                     <td className="px-3 py-3 text-sm whitespace-nowrap text-gray-600 dark:text-gray-400">
-                      {item.bankAccount}
+                      {item.bankAccountName}
                     </td>
                     <td className="px-3 py-3 text-sm whitespace-nowrap text-gray-600 dark:text-gray-400">
-                      {item.oppAccount}
+                      {item.oppAccountName}
                     </td>
                     <td className="px-3 py-3 text-sm font-semibold whitespace-nowrap text-gray-900 dark:text-gray-400">
                       ₹
@@ -648,7 +790,7 @@ export default function BankPayment() {
                                   onClick={() => handleDelete(item.id)}
                                   className={`${
                                     active
-                                      ? "bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-400"
+                                      ? "bg-red-50 text-primary-500 dark:bg-red-950/40 dark:text-primary-500"
                                       : "dark:text-dark-200 text-gray-700"
                                   } flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium`}
                                 >
@@ -717,7 +859,7 @@ export default function BankPayment() {
                               }}
                               className={`flex w-full items-center justify-between rounded-md px-3 py-1.5 text-sm font-medium ${
                                 opt.id === itemsPerPage
-                                  ? "bg-red-600 text-white"
+                                  ? "bg-primary-500 text-white"
                                   : active
                                     ? "dark:bg-dark-600 bg-gray-100 text-gray-900 dark:text-white"
                                     : "text-gray-700 dark:text-gray-200"
@@ -759,7 +901,7 @@ export default function BankPayment() {
                       onClick={() => setCurrentPage(page)}
                       className={`inline-flex size-8 items-center justify-center rounded-md text-sm font-medium transition-colors ${
                         page === currentPage
-                          ? "bg-red-600 text-white"
+                          ? "bg-primary-500 text-white"
                           : "dark:hover:bg-dark-700 text-gray-600 hover:bg-gray-100 dark:text-gray-300"
                       }`}
                     >
@@ -867,6 +1009,15 @@ export default function BankPayment() {
                         if (errors.leadNo) setErrors({ ...errors, leadNo: "" });
                       }}
                     />
+                      <Radio
+                                          label="Purchase"
+                                          name="type"
+                                          checked={form.type === "Purchase"}
+                                          onChange={() => {
+                                            setForm({ ...form, type: "Purchase", leadNo: "" });
+                                            if (errors.leadNo) setErrors({ ...errors, leadNo: "" });
+                                          }}
+                                        />
                     <Radio
                       label="Lead Cancel"
                       name="type"
@@ -874,7 +1025,43 @@ export default function BankPayment() {
                       onChange={() => setForm({ ...form, type: "Lead Cancel" })}
                     />
                   </div>
+ {form.type === "Purchase" && (
+                    <div className="w-full sm:max-w-md">
+                      <Combobox
+                        data={purchaseBillOptions}
+                        displayField="label"
+                        value={purchaseBill}
+                        placeholder="Search Purchase Bill No..."
+                        searchFields={["label", "party"]}
+                        columns={[
+                          {
+                            header: "Bill No",
+                            field: "label",
+                            width: "2fr",
+                          },
+                          {
+                            header: "Party",
+                            field: "party",
+                            width: "3fr",
+                          },
+                        ]}
+                        onChange={(bill: any) => {
+                          setPurchaseBill(bill);
 
+                          const account = oppAccounts.find(
+                            (a: any) =>
+                              Number(a.value) === Number(bill.accountId),
+                          );
+
+                          setForm((prev) => ({
+                            ...prev,
+                            amount: String(bill.amount),
+                            oppAccount: account || null,
+                          }));
+                        }}
+                      />
+                    </div>
+                  )}
                   {form.type === "Lead Cancel" && (
                     <div className="w-full sm:max-w-sm">
                       <Combobox
@@ -900,7 +1087,7 @@ export default function BankPayment() {
                       Bank Account <span className="text-red-500">*</span>
                     </label>
                     <Combobox
-                      data={BANK_ACCOUNTS}
+                      data={bankAccounts}
                       displayField="label"
                       value={form.bankAccount}
                       onChange={(value: any) => {
@@ -952,7 +1139,7 @@ export default function BankPayment() {
                       </label>
                     </div>
                     <Combobox
-                      data={OPP_ACCOUNTS_WITH_BALANCE}
+                      data={oppAccounts}
                       displayField="label"
                       value={form.oppAccount}
                       onChange={(value: any) => {
