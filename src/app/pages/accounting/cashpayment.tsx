@@ -177,7 +177,7 @@ const getCompany = async () => {
   try {
   const res = await apiHelper.get("/company");
 
-console.log("Response:", res.data);
+
 
 if (!res.data || res.data.length === 0) {
   console.log("No companies found");
@@ -623,19 +623,14 @@ console.log(payload);
                       {indexOfFirstItem + index + 1}
                     </td>
                     <td className="py-3 text-sm whitespace-nowrap text-gray-900 dark:text-gray-400">
-                      {item.date}
+                      {new Date(item.date).toLocaleDateString("en-GB")}
                     </td>
                     <td className="py-3 text-sm font-medium whitespace-nowrap text-gray-900 dark:text-gray-400">
                       {item.voucherNo}
                     </td>
                     <td className="py-3 whitespace-nowrap">
                       <span
-                        className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${
-                          item.type === "Manual"
-                            ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
-                            : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                        }`}
-                      >
+                        className="inline-flex rounded-full px-2 py-0.5 text-xs font-semibold bg-primary-500">
                         {item.type}
                       </span>
                     </td>
@@ -773,7 +768,7 @@ console.log(payload);
                               }}
                               className={`flex w-full items-center justify-between rounded-md px-3 py-1.5 text-sm font-medium ${
                                 opt.id === itemsPerPage
-                                  ? "bg-red-600 text-white"
+                                  ? "bg-primary-500 text-white"
                                   : active
                                     ? "dark:bg-dark-600 bg-gray-100 text-gray-900 dark:text-white"
                                     : "text-gray-700 dark:text-gray-200"
@@ -815,7 +810,7 @@ console.log(payload);
                       onClick={() => setCurrentPage(page)}
                       className={`inline-flex size-8 items-center justify-center rounded-md text-sm font-medium transition-colors ${
                         page === currentPage
-                          ? "bg-red-600 text-white"
+                          ? "bg-primary-500 text-white"
                           : "dark:hover:bg-dark-700 text-gray-600 hover:bg-gray-100 dark:text-gray-300"
                       }`}
                     >
@@ -860,7 +855,7 @@ console.log(payload);
             </div>
             <button
               onClick={handleBulkDelete}
-              className="flex items-center gap-1.5 rounded-lg bg-red-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-red-700"
+              className="flex items-center gap-1.5 rounded-lg bg-primary-500 px-3 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-primary-500"
             >
               <Trash2 className="size-4" />
               <span className="text-xs font-semibold">Delete Selected</span>
