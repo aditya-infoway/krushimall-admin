@@ -153,39 +153,43 @@ const protectedRoutes: RouteObject = {
         },
 
         {
-  path: "leadmaster",
-  children: [
-    {
-      path: "leadbuilder",
-      lazy: async () => ({
-        Component: (await import("@/app/pages/leadmaster/leadbuilder")).default,
-      }),
-    },
-    {
-      path: "Followup/:id",
-      lazy: async () => ({
-        Component: (await import("@/app/pages/leadmaster/followup")).default,
-      }),
-    },
-    {
-      path: "order",
-      children: [
-        {
-          index: true,
-          lazy: async () => ({
-            Component: (await import("@/app/pages/leadmaster/order")).default,
-          }),
+          path: "leadmaster",
+          children: [
+            {
+              path: "leadbuilder",
+              lazy: async () => ({
+                Component: (await import("@/app/pages/leadmaster/leadbuilder"))
+                  .default,
+              }),
+            },
+            {
+              path: "Followup/:id",
+              lazy: async () => ({
+                Component: (await import("@/app/pages/leadmaster/followup"))
+                  .default,
+              }),
+            },
+            {
+              path: "order",
+              children: [
+                {
+                  index: true,
+                  lazy: async () => ({
+                    Component: (await import("@/app/pages/leadmaster/order"))
+                      .default,
+                  }),
+                },
+                {
+                  path: ":id",
+                  lazy: async () => ({
+                    Component: (await import("@/app/pages/leadmaster/order"))
+                      .default,
+                  }),
+                },
+              ],
+            },
+          ],
         },
-        {
-          path: ":id",
-          lazy: async () => ({
-            Component: (await import("@/app/pages/leadmaster/order")).default,
-          }),
-        },
-      ],
-    },
-  ],
-},
         {
           path: "usermaster",
           children: [
@@ -298,69 +302,78 @@ const protectedRoutes: RouteObject = {
           ],
         },
 
-       {
-  path: "purchase",
-  children: [
-    {
-      path: "tractor",
-      children: [
         {
-          index: true,
-          lazy: async () => ({
-            Component: (await import("@/app/pages/purchase/tractor")).default,
-          }),
-        },
-        {
-          path: "add",
-          lazy: async () => ({
-            Component: (await import("@/app/pages/purchase/purchasebill")).default,
-          }),
-        },
-        {
-          path: ":id",
-          lazy: async () => ({
-            Component: (await import("@/app/pages/purchase/purchasebill")).default,
-          }),
-        },
-        {
-          path: "inward/:id",
-          lazy: async () => ({
-            Component: (await import("@/app/pages/purchase/purchaseitemlist")).default,
-          }),
-        },
-      ],
-    },
+          path: "purchase",
+          children: [
+            {
+              path: "tractor",
+              children: [
+                {
+                  index: true,
+                  lazy: async () => ({
+                    Component: (await import("@/app/pages/purchase/tractor"))
+                      .default,
+                  }),
+                },
+                {
+                  path: "add",
+                  lazy: async () => ({
+                    Component: (
+                      await import("@/app/pages/purchase/purchasebill")
+                    ).default,
+                  }),
+                },
+                {
+                  path: ":id",
+                  lazy: async () => ({
+                    Component: (
+                      await import("@/app/pages/purchase/purchasebill")
+                    ).default,
+                  }),
+                },
+                {
+                  path: "inward/:id",
+                  lazy: async () => ({
+                    Component: (
+                      await import("@/app/pages/purchase/purchaseitemlist")
+                    ).default,
+                  }),
+                },
+              ],
+            },
 
-    {
-      path: "accessories-inward/:id",
-      lazy: async () => ({
-        Component: (
-          await import("@/app/pages/purchase/accessoriesitemlist")
-        ).default,
-      }),
-    },
+            {
+              path: "accessories-inward/:id",
+              lazy: async () => ({
+                Component: (
+                  await import("@/app/pages/purchase/accessoriesitemlist")
+                ).default,
+              }),
+            },
 
-    {
-      path: "accessories",
-      children: [
-        {
-          index: true,
-          lazy: async () => ({
-            Component: (await import("@/app/pages/purchase/accessories")).default,
-          }),
+            {
+              path: "accessories",
+              children: [
+                {
+                  index: true,
+                  lazy: async () => ({
+                    Component: (
+                      await import("@/app/pages/purchase/accessories")
+                    ).default,
+                  }),
+                },
+                {
+                  path: "add",
+                  lazy: async () => ({
+                    Component: (
+                      await import("@/app/pages/purchase/puraccessories")
+                    ).default,
+                  }),
+                },
+              ],
+            },
+          ],
         },
-        {
-          path: "add",
-          lazy: async () => ({
-            Component: (
-              await import("@/app/pages/purchase/puraccessories")
-            ).default,
-          }),
-        },
-      ],
-    },
-  ],
-},
 
         {
           path: "accounting",
@@ -422,9 +435,65 @@ const protectedRoutes: RouteObject = {
                   .default,
               }),
             },
+
+            {
+              path: "cash-bank",
+              children: [
+                {
+                  index: true,
+                  element: <Navigate to="cashbook" replace />, // Redirect to cashbook by default
+                },
+                {
+                  path: "bankbook",
+                  lazy: async () => ({
+                    Component: (
+                      await import("@/app/pages/accounting/cash-bank/bankbook")
+                    ).default,
+                  }),
+                },
+                {
+                  path: "cashbook",
+                  lazy: async () => ({
+                    Component: (
+                      await import("@/app/pages/accounting/cash-bank/cashbook")
+                    ).default,
+                  }),
+                },
+              ],
+            },
+
+            {
+              path: "ledgerreport",
+              children: [
+                {
+                  index: true,
+                  lazy: async () => ({
+                    Component: (
+                      await import("@/app/pages/accounting/ledgerreport")
+                    ).default,
+                  }),
+                },
+                {
+                  path: "ledgerdetails",
+                  lazy: async () => ({
+                    Component: (
+                      await import("@/app/pages/accounting/ledgerdetails")
+                    ).default,
+                  }),
+                },
+              ],
+            },
+
+            {
+              path: "bookingbalance",
+              lazy: async () => ({
+                Component: (
+                  await import("@/app/pages/accounting/bookingbalance")
+                ).default,
+              }),
+            },
           ],
         },
-
         {
           path: "goodscontrol",
           children: [

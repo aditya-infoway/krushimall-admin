@@ -1,5 +1,5 @@
-import React, { useState, ChangeEvent, useEffect } from "react";
-import { useParams } from "react-router";
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router";
 import {
   ArrowLeftIcon,
   TruckIcon,
@@ -12,13 +12,11 @@ import {
   DocumentArrowDownIcon,
   ArrowPathIcon,
 } from "@heroicons/react/24/outline";
-import { Input, Textarea } from "@/components/ui";
+import { Input } from "@/components/ui";
 import { DatePicker } from "@/components/shared/form/Datepicker";
-import { Timepicker } from "@/components/shared/form/Timepicker";
 import { Combobox } from "@/components/shared/form/Combobox";
 import { Checkbox } from "@/components/ui/Form/Checkbox";
-import { useNavigate } from "react-router";
-
+import { FiEdit2 } from "react-icons/fi";
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
@@ -116,8 +114,11 @@ interface DeliveryChallan {
 const CardHeader: React.FC<{
   icon: React.ReactNode;
   title: string;
-}> = ({ icon, title }) => (
-  <div className="flex items-center justify-between rounded-t-lg bg-[#003399] px-4 py-2.5 text-white">
+  colorClass: string;
+}> = ({ icon, title, colorClass }) => (
+  <div
+    className={`flex items-center justify-between rounded-t-lg px-4 py-2.5 text-white ${colorClass}`}
+  >
     <span className="flex items-center gap-2 text-sm font-semibold">
       <span className="size-5">{icon}</span>
       {title}
@@ -127,7 +128,7 @@ const CardHeader: React.FC<{
       className="rounded p-1 text-white/90 transition-colors hover:bg-white/20"
       aria-label={`Edit ${title}`}
     >
-      ✎
+      <FiEdit2 size={16} />
     </button>
   </div>
 );
@@ -137,6 +138,19 @@ const Card: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     {children}
   </div>
 );
+
+/* Wrapper that pins the input to the bottom of its grid cell so that
+   labels of different lengths (1-line vs 2-line) don't cause the
+   input boxes to misalign horizontally within the same row. */
+const Field: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <div className="flex flex-col justify-end">{children}</div>
+);
+
+/* Consistent responsive class for every 2-column field grid:
+   - default (phone): 2 columns
+   - lg (outer grid becomes 3 cards/row, each card narrow): 1 column
+   - xl (cards wide enough again): 2 columns */
+const fieldGrid = "grid grid-cols-2 gap-3 p-4 lg:grid-cols-1 xl:grid-cols-2";
 
 /* ------------------------------------------------------------------ */
 /*  Main component                                                     */
@@ -308,201 +322,246 @@ const Order: React.FC = () => {
           </button>
         </div>
       </div>
+
       {/* Grid of 7 cards, 3 columns */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        {/* 1. Vehicle Charges */}
+        {/* 1. Vehicle Charges - Blue */}
         <Card>
           <CardHeader
             icon={<TruckIcon className="size-5" />}
             title="Vehicle Charges"
+            colorClass="bg-blue-700"
           />
-          <div className="grid grid-cols-2 gap-3 p-4">
-            <Input
-              label="Ex-Showroom Price"
-              placeholder="Enter Ex-Showroom Price"
-              value={vehicleCharges.exShowroomPrice}
-              onChange={(e) =>
-                setVehicleCharges((s) => ({
-                  ...s,
-                  exShowroomPrice: e.target.value,
-                }))
-              }
-            />
-            <Input
-              label="Insurance"
-              placeholder="Enter Insurance"
-              value={vehicleCharges.insurance}
-              onChange={(e) =>
-                setVehicleCharges((s) => ({ ...s, insurance: e.target.value }))
-              }
-            />
-            <Input
-              label="Road Side Assistance"
-              placeholder="Enter Road Side Assistance"
-              value={vehicleCharges.roadSideAssistance}
-              onChange={(e) =>
-                setVehicleCharges((s) => ({
-                  ...s,
-                  roadSideAssistance: e.target.value,
-                }))
-              }
-            />
-            <Input
-              label="Ex. Warranty (2+3)"
-              placeholder="Enter Ex. Warranty"
-              value={vehicleCharges.exWarranty2_3}
-              onChange={(e) =>
-                setVehicleCharges((s) => ({
-                  ...s,
-                  exWarranty2_3: e.target.value,
-                }))
-              }
-            />
-            <Input
-              label="Hypothecation Charges"
-              placeholder="Enter Hypothecation Charges"
-              value={vehicleCharges.hypothecationCharges}
-              onChange={(e) =>
-                setVehicleCharges((s) => ({
-                  ...s,
-                  hypothecationCharges: e.target.value,
-                }))
-              }
-            />
-            <Input
-              label="Ex-warranty (2+8)"
-              placeholder="Enter Ex-warranty"
-              value={vehicleCharges.exWarranty2_8}
-              onChange={(e) =>
-                setVehicleCharges((s) => ({
-                  ...s,
-                  exWarranty2_8: e.target.value,
-                }))
-              }
-            />
-            <Input
-              label="RTO & Registration Charges"
-              placeholder="Enter RTO Charges"
-              value={vehicleCharges.rtoRegistrationCharges}
-              onChange={(e) =>
-                setVehicleCharges((s) => ({
-                  ...s,
-                  rtoRegistrationCharges: e.target.value,
-                }))
-              }
-            />
-            <Input
-              label="RTO Other Charge"
-              placeholder="Enter RTO Other Charge"
-              value={vehicleCharges.rtoOtherCharge}
-              onChange={(e) =>
-                setVehicleCharges((s) => ({
-                  ...s,
-                  rtoOtherCharge: e.target.value,
-                }))
-              }
-            />
+          <div className={fieldGrid}>
+            <Field>
+              <Input
+                label="Ex-Showroom Price"
+                placeholder="Enter Ex-Showroom Price"
+                value={vehicleCharges.exShowroomPrice}
+                onChange={(e) =>
+                  setVehicleCharges((s) => ({
+                    ...s,
+                    exShowroomPrice: e.target.value,
+                  }))
+                }
+              />
+            </Field>
+            <Field>
+              <Input
+                label="Insurance"
+                placeholder="Enter Insurance"
+                value={vehicleCharges.insurance}
+                onChange={(e) =>
+                  setVehicleCharges((s) => ({
+                    ...s,
+                    insurance: e.target.value,
+                  }))
+                }
+              />
+            </Field>
+            <Field>
+              <Input
+                label="Road Side Assistance"
+                placeholder="Enter Road Side Assistance"
+                value={vehicleCharges.roadSideAssistance}
+                onChange={(e) =>
+                  setVehicleCharges((s) => ({
+                    ...s,
+                    roadSideAssistance: e.target.value,
+                  }))
+                }
+              />
+            </Field>
+            <Field>
+              <Input
+                label="Ex. Warranty (2+3)"
+                placeholder="Enter Ex. Warranty"
+                value={vehicleCharges.exWarranty2_3}
+                onChange={(e) =>
+                  setVehicleCharges((s) => ({
+                    ...s,
+                    exWarranty2_3: e.target.value,
+                  }))
+                }
+              />
+            </Field>
+            <Field>
+              <Input
+                label="Hypothecation Charges"
+                placeholder="Enter Hypothecation Charges"
+                value={vehicleCharges.hypothecationCharges}
+                onChange={(e) =>
+                  setVehicleCharges((s) => ({
+                    ...s,
+                    hypothecationCharges: e.target.value,
+                  }))
+                }
+              />
+            </Field>
+            <Field>
+              <Input
+                label="Ex-warranty (2+8)"
+                placeholder="Enter Ex-warranty"
+                value={vehicleCharges.exWarranty2_8}
+                onChange={(e) =>
+                  setVehicleCharges((s) => ({
+                    ...s,
+                    exWarranty2_8: e.target.value,
+                  }))
+                }
+              />
+            </Field>
+            <Field>
+              <Input
+                label="RTO & Registration Charges"
+                placeholder="Enter RTO Charges"
+                value={vehicleCharges.rtoRegistrationCharges}
+                onChange={(e) =>
+                  setVehicleCharges((s) => ({
+                    ...s,
+                    rtoRegistrationCharges: e.target.value,
+                  }))
+                }
+              />
+            </Field>
+            <Field>
+              <Input
+                label="RTO Other Charge"
+                placeholder="Enter RTO Other Charge"
+                value={vehicleCharges.rtoOtherCharge}
+                onChange={(e) =>
+                  setVehicleCharges((s) => ({
+                    ...s,
+                    rtoOtherCharge: e.target.value,
+                  }))
+                }
+              />
+            </Field>
           </div>
         </Card>
 
-        {/* 2. Allotment Details */}
+        {/* 2. Allotment Details - Teal */}
         <Card>
           <CardHeader
             icon={<ClipboardDocumentListIcon className="size-5" />}
             title="Allotment Details"
+            colorClass="bg-teal-700"
           />
           <div className="space-y-3 p-4">
-            <div className="grid grid-cols-2 gap-3">
-              <Input
-                label="Model"
-                placeholder="Enter Model"
-                value={allotment.model}
-                onChange={(e) =>
-                  setAllotment((s) => ({ ...s, model: e.target.value }))
-                }
-              />
-              <Input
-                label="Variant"
-                placeholder="Enter Variant"
-                value={allotment.variant}
-                onChange={(e) =>
-                  setAllotment((s) => ({ ...s, variant: e.target.value }))
-                }
-              />
-              <Input
-                label="Colour"
-                placeholder="Enter Colour"
-                value={allotment.colour}
-                onChange={(e) =>
-                  setAllotment((s) => ({ ...s, colour: e.target.value }))
-                }
-              />
-              <Input
-                label="Chassis No"
-                value={allotment.chassisNo}
-                placeholder="Select Vehicle"
-                onChange={(e) =>
-                  setAllotment((s) => ({ ...s, chassisNo: e.target.value }))
-                }
-              />
+            <div className={fieldGrid.replace("p-4", "")}>
+              <Field>
+                <Input
+                  label="Model"
+                  placeholder="Enter Model"
+                  value={allotment.model}
+                  onChange={(e) =>
+                    setAllotment((s) => ({ ...s, model: e.target.value }))
+                  }
+                />
+              </Field>
+              <Field>
+                <Input
+                  label="Variant"
+                  placeholder="Enter Variant"
+                  value={allotment.variant}
+                  onChange={(e) =>
+                    setAllotment((s) => ({ ...s, variant: e.target.value }))
+                  }
+                />
+              </Field>
+              <Field>
+                <Input
+                  label="Colour"
+                  placeholder="Enter Colour"
+                  value={allotment.colour}
+                  onChange={(e) =>
+                    setAllotment((s) => ({ ...s, colour: e.target.value }))
+                  }
+                />
+              </Field>
+              <Field>
+                <Input
+                  label="Chassis No"
+                  value={allotment.chassisNo}
+                  placeholder="Select Vehicle"
+                  onChange={(e) =>
+                    setAllotment((s) => ({
+                      ...s,
+                      chassisNo: e.target.value,
+                    }))
+                  }
+                />
+              </Field>
             </div>
 
             <p className="pt-1 text-xs font-semibold text-gray-500 dark:text-gray-400">
               Insurance Details
             </p>
 
-            <div className="grid grid-cols-2 gap-3">
-              <Input
-                label="Policy No"
-                value={allotment.policyNo}
-                placeholder="Enter Policy No."
-                onChange={(e) =>
-                  setAllotment((s) => ({ ...s, policyNo: e.target.value }))
-                }
-              />
-              <Input
-                label="Nominee Name"
-                value={allotment.nomineeName}
-                placeholder="Enter Nominee Name"
-                onChange={(e) =>
-                  setAllotment((s) => ({ ...s, nomineeName: e.target.value }))
-                }
-              />
-              <DatePicker
-                label="Nominee DOB"
-                placeholder="DD-MM-YYYY"
-                value={allotment.nomineeDob}
-                onChange={(val: any) =>
-                  setAllotment((s) => ({ ...s, nomineeDob: val }))
-                }
-                options={{ dateFormat: "d-m-Y" }}
-              />
-              <Combobox
-                label="Relation With Nominee"
-                data={relationOptions}
-                displayField="name"
-                value={
-                  relationOptions.find(
-                    (r) => r.name === allotment.relationWithNominee,
-                  ) || null
-                }
-                onChange={(val: any) =>
-                  setAllotment((s) => ({
-                    ...s,
-                    relationWithNominee: val?.name || "",
-                  }))
-                }
-                placeholder="Select Relation"
-              />
+            <div className={fieldGrid.replace("p-4", "")}>
+              <Field>
+                <Input
+                  label="Policy No"
+                  value={allotment.policyNo}
+                  placeholder="Enter Policy No."
+                  onChange={(e) =>
+                    setAllotment((s) => ({ ...s, policyNo: e.target.value }))
+                  }
+                />
+              </Field>
+              <Field>
+                <Input
+                  label="Nominee Name"
+                  value={allotment.nomineeName}
+                  placeholder="Enter Nominee Name"
+                  onChange={(e) =>
+                    setAllotment((s) => ({
+                      ...s,
+                      nomineeName: e.target.value,
+                    }))
+                  }
+                />
+              </Field>
+              <Field>
+                <DatePicker
+                  label="Nominee DOB"
+                  placeholder="DD-MM-YYYY"
+                  value={allotment.nomineeDob}
+                  onChange={(val: any) =>
+                    setAllotment((s) => ({ ...s, nomineeDob: val }))
+                  }
+                  options={{ dateFormat: "d-m-Y" }}
+                />
+              </Field>
+              <Field>
+                <Combobox
+                  label="Relation With Nominee"
+                  data={relationOptions}
+                  displayField="name"
+                  value={
+                    relationOptions.find(
+                      (r) => r.name === allotment.relationWithNominee,
+                    ) || null
+                  }
+                  onChange={(val: any) =>
+                    setAllotment((s) => ({
+                      ...s,
+                      relationWithNominee: val?.name || "",
+                    }))
+                  }
+                  placeholder="Select Relation"
+                />
+              </Field>
             </div>
           </div>
         </Card>
 
-        {/* 3. Hypothecation */}
+        {/* 3. Hypothecation - Indigo */}
         <Card>
           <CardHeader
             icon={<BuildingLibraryIcon className="size-5" />}
             title="Hypothecation"
+            colorClass="bg-indigo-700"
           />
           <div className="space-y-3 p-4">
             <div className="flex items-center gap-6">
@@ -533,377 +592,463 @@ const Order: React.FC = () => {
             </div>
 
             {hypothecation.type === "bank" ? (
-              <Combobox
-                label="Bank Of Finance"
-                data={bankOptions}
-                displayField="name"
-                value={
-                  bankOptions.find(
-                    (b) => b.name === hypothecation.bankOfFinance,
-                  ) || null
-                }
-                onChange={(val: any) =>
-                  setHypothecation((s) => ({
-                    ...s,
-                    bankOfFinance: val?.name || "",
-                  }))
-                }
-                placeholder="Select Bank"
-              />
-            ) : (
-              <>
-                <div className="grid grid-cols-2 gap-3">
-                  <Combobox
-                    label="Finance Done By"
-                    data={financeDoneByOptions}
-                    displayField="name"
-                    value={
-                      financeDoneByOptions.find(
-                        (f) => f.name === hypothecation.financeDoneBy,
-                      ) || null
-                    }
-                    onChange={(val: any) =>
-                      setHypothecation((s) => ({
-                        ...s,
-                        financeDoneBy: val?.name || "",
-                      }))
-                    }
-                    placeholder="Select"
-                  />
-                  <Input
-                    label="Finance Amount"
-                    placeholder="Enter inance Amount"
-                    value={hypothecation.financeAmount}
-                    onChange={(e) =>
-                      setHypothecation((s) => ({
-                        ...s,
-                        financeAmount: e.target.value,
-                      }))
-                    }
-                  />
-                  <Input
-                    label="EMI"
-                    placeholder="Enter EMI"
-                    value={hypothecation.emi}
-                    onChange={(e) =>
-                      setHypothecation((s) => ({ ...s, emi: e.target.value }))
-                    }
-                  />
-                  <Input
-                    label="Tenure (Months)"
-                    placeholder="Enter Tenure (Months)"
-                    value={hypothecation.tenureMonths}
-                    onChange={(e) =>
-                      setHypothecation((s) => ({
-                        ...s,
-                        tenureMonths: e.target.value,
-                      }))
-                    }
-                  />
-                  <Input
-                    label="Processing Charge"
-                    placeholder="Enter Processing Charge"
-                    value={hypothecation.apronCharge}
-                    onChange={(e) =>
-                      setHypothecation((s) => ({
-                        ...s,
-                        apronCharge: e.target.value,
-                      }))
-                    }
-                  />
-                  <Input
-                    label="Loan ROI"
-                    placeholder="Enter Loan ROI"
-                    value={hypothecation.loanRoi}
-                    onChange={(e) =>
-                      setHypothecation((s) => ({
-                        ...s,
-                        loanRoi: e.target.value,
-                      }))
-                    }
-                  />
-                  <Input
-                    label="Margin Money (Down Payment)"
-                    placeholder="Enter Margin Money (Down Payment)"
-                    value={hypothecation.marginMoney}
-                    onChange={(e) =>
-                      setHypothecation((s) => ({
-                        ...s,
-                        marginMoney: e.target.value,
-                      }))
-                    }
-                  />
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                      Payment Status
-                    </label>
-                    <div className="flex items-center gap-4 pt-1">
-                      <label className="flex cursor-pointer items-center gap-1 text-sm text-gray-700 dark:text-gray-300">
-                        <input
-                          type="radio"
-                          name="paymentStatus"
-                          checked={hypothecation.paymentStatus === "pending"}
-                          onChange={() =>
-                            setHypothecation((s) => ({
-                              ...s,
-                              paymentStatus: "pending",
-                            }))
-                          }
-                          className="dark:bg-dark-800 h-4 w-4 text-[#003399] focus:ring-[#003399]"
-                        />
-                        Pending
-                      </label>
-                      <label className="flex cursor-pointer items-center gap-1 text-sm text-gray-700 dark:text-gray-300">
-                        <input
-                          type="radio"
-                          name="paymentStatus"
-                          checked={hypothecation.paymentStatus === "received"}
-                          onChange={() =>
-                            setHypothecation((s) => ({
-                              ...s,
-                              paymentStatus: "received",
-                            }))
-                          }
-                          className="dark:bg-dark-800 h-4 w-4 text-[#003399] focus:ring-[#003399]"
-                        />
-                        Received
-                      </label>
-                    </div>
-                  </div>
-                </div>
-
+              <Field>
                 <Combobox
-                  label="Assign By"
-                  data={employeeOptions}
+                  label="Bank Of Finance"
+                  data={bankOptions}
                   displayField="name"
                   value={
-                    employeeOptions.find(
-                      (e) => e.name === hypothecation.assignBy,
+                    bankOptions.find(
+                      (b) => b.name === hypothecation.bankOfFinance,
                     ) || null
                   }
                   onChange={(val: any) =>
                     setHypothecation((s) => ({
                       ...s,
-                      assignBy: val?.name || "",
+                      bankOfFinance: val?.name || "",
                     }))
                   }
-                  placeholder="Select Employee"
+                  placeholder="Select Bank"
                 />
+              </Field>
+            ) : (
+              <>
+                <div className={fieldGrid.replace("p-4", "")}>
+                  <Field>
+                    <Combobox
+                      label="Finance Done By"
+                      data={financeDoneByOptions}
+                      displayField="name"
+                      value={
+                        financeDoneByOptions.find(
+                          (f) => f.name === hypothecation.financeDoneBy,
+                        ) || null
+                      }
+                      onChange={(val: any) =>
+                        setHypothecation((s) => ({
+                          ...s,
+                          financeDoneBy: val?.name || "",
+                        }))
+                      }
+                      placeholder="Select"
+                    />
+                  </Field>
+                  <Field>
+                    <Input
+                      label="Finance Amount"
+                      placeholder="Enter Finance Amount"
+                      value={hypothecation.financeAmount}
+                      onChange={(e) =>
+                        setHypothecation((s) => ({
+                          ...s,
+                          financeAmount: e.target.value,
+                        }))
+                      }
+                    />
+                  </Field>
+                  <Field>
+                    <Input
+                      label="EMI"
+                      placeholder="Enter EMI"
+                      value={hypothecation.emi}
+                      onChange={(e) =>
+                        setHypothecation((s) => ({
+                          ...s,
+                          emi: e.target.value,
+                        }))
+                      }
+                    />
+                  </Field>
+                  <Field>
+                    <Input
+                      label="Tenure (Months)"
+                      placeholder="Enter Tenure (Months)"
+                      value={hypothecation.tenureMonths}
+                      onChange={(e) =>
+                        setHypothecation((s) => ({
+                          ...s,
+                          tenureMonths: e.target.value,
+                        }))
+                      }
+                    />
+                  </Field>
+                  <Field>
+                    <Input
+                      label="Processing Charge"
+                      placeholder="Enter Processing Charge"
+                      value={hypothecation.apronCharge}
+                      onChange={(e) =>
+                        setHypothecation((s) => ({
+                          ...s,
+                          apronCharge: e.target.value,
+                        }))
+                      }
+                    />
+                  </Field>
+                  <Field>
+                    <Input
+                      label="Loan ROI"
+                      placeholder="Enter Loan ROI"
+                      value={hypothecation.loanRoi}
+                      onChange={(e) =>
+                        setHypothecation((s) => ({
+                          ...s,
+                          loanRoi: e.target.value,
+                        }))
+                      }
+                    />
+                  </Field>
+                  <Field>
+                    <Input
+                      label="Margin Money (Down Payment)"
+                      placeholder="Enter Margin Money"
+                      value={hypothecation.marginMoney}
+                      onChange={(e) =>
+                        setHypothecation((s) => ({
+                          ...s,
+                          marginMoney: e.target.value,
+                        }))
+                      }
+                    />
+                  </Field>
+                  <Field>
+                    <div className="flex min-w-0 flex-col gap-1">
+                      <label className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                        Payment Status
+                      </label>
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-1">
+                        <label className="flex cursor-pointer items-center gap-1 text-sm whitespace-nowrap text-gray-700 dark:text-gray-300">
+                          <input
+                            type="radio"
+                            name="paymentStatus"
+                            checked={hypothecation.paymentStatus === "pending"}
+                            onChange={() =>
+                              setHypothecation((s) => ({
+                                ...s,
+                                paymentStatus: "pending",
+                              }))
+                            }
+                            className="dark:bg-dark-800 h-4 w-4 text-[#003399] focus:ring-[#003399]"
+                          />
+                          Pending
+                        </label>
+                        <label className="flex cursor-pointer items-center gap-1 text-sm whitespace-nowrap text-gray-700 dark:text-gray-300">
+                          <input
+                            type="radio"
+                            name="paymentStatus"
+                            checked={hypothecation.paymentStatus === "received"}
+                            onChange={() =>
+                              setHypothecation((s) => ({
+                                ...s,
+                                paymentStatus: "received",
+                              }))
+                            }
+                            className="dark:bg-dark-800 h-4 w-4 text-[#003399] focus:ring-[#003399]"
+                          />
+                          Received
+                        </label>
+                      </div>
+                    </div>
+                  </Field>
+                  =
+                </div>
+
+                <Field>
+                  <Combobox
+                    label="Assign By"
+                    data={employeeOptions}
+                    displayField="name"
+                    value={
+                      employeeOptions.find(
+                        (e) => e.name === hypothecation.assignBy,
+                      ) || null
+                    }
+                    onChange={(val: any) =>
+                      setHypothecation((s) => ({
+                        ...s,
+                        assignBy: val?.name || "",
+                      }))
+                    }
+                    placeholder="Select Employee"
+                  />
+                </Field>
               </>
             )}
           </div>
         </Card>
 
-        {/* 4. Exchange Details */}
+        {/* 4. Exchange Details - Amber */}
         <Card>
           <CardHeader
             icon={<ArrowsRightLeftIcon className="size-5" />}
             title="Exchange Details"
+            colorClass="bg-amber-600"
           />
-          <div className="grid grid-cols-2 gap-3 p-4">
-            <Input
-              label="Existing Customer Model"
-              value={exchange.existingCustomerModel}
-              placeholder="Enter Customer Model"
-              onChange={(e) =>
-                setExchange((s) => ({
-                  ...s,
-                  existingCustomerModel: e.target.value,
-                }))
-              }
-            />
-            <Input
-              label="Existing Customer Variant"
-              value={exchange.existingCustomerVariant}
-              placeholder="Enter Customer Variant"
-              onChange={(e) =>
-                setExchange((s) => ({
-                  ...s,
-                  existingCustomerVariant: e.target.value,
-                }))
-              }
-            />
-            <Input
-              label="Existing Vehicle Year"
-              value={exchange.existingVehicleYear}
-              placeholder="Enter Existing Vehicle Year"
-              onChange={(e) =>
-                setExchange((s) => ({
-                  ...s,
-                  existingVehicleYear: e.target.value,
-                }))
-              }
-            />
-            <Input
-              label="Customer Expected Price"
-              value={exchange.customerExpectedPrice}
-              placeholder="Enter Customer Expected Price"
-              onChange={(e) =>
-                setExchange((s) => ({
-                  ...s,
-                  customerExpectedPrice: e.target.value,
-                }))
-              }
-            />
-            <Input
-              label="Market Price"
-              value={exchange.marketPrice}
-              placeholder="Enter Market Price"
-              onChange={(e) =>
-                setExchange((s) => ({ ...s, marketPrice: e.target.value }))
-              }
-            />
-            <Input
-              label="Exchange Bonus"
-              value={exchange.exchangeBonus}
-              placeholder="Enter Exchange Bonus"
-              onChange={(e) =>
-                setExchange((s) => ({ ...s, exchangeBonus: e.target.value }))
-              }
-            />
-            <Input
-              label="SMIPL Shares"
-              value={exchange.smiplShares}
-              placeholder="Enter SMIPL Shares"
-              onChange={(e) =>
-                setExchange((s) => ({ ...s, smiplShares: e.target.value }))
-              }
-            />
-            <Input
-              label="Dealer Shares"
-              value={exchange.dealerShares}
-              placeholder="Enter Dealer Shares"
-              onChange={(e) =>
-                setExchange((s) => ({ ...s, dealerShares: e.target.value }))
-              }
-            />
-            <Input
-              label="Value Add Accessories"
-              value={exchange.valueAddAccessories}
-              placeholder="Enter Value Add Accessories"
-              onChange={(e) =>
-                setExchange((s) => ({
-                  ...s,
-                  valueAddAccessories: e.target.value,
-                }))
-              }
-            />
-            <Input
-              label="Insurance"
-              placeholder="Enter Insurance"
-              value={exchange.insurance}
-              onChange={(e) =>
-                setExchange((s) => ({ ...s, insurance: e.target.value }))
-              }
-            />
+          <div className={fieldGrid}>
+            <Field>
+              <Input
+                label="Existing Customer Model"
+                value={exchange.existingCustomerModel}
+                placeholder="Enter Customer Model"
+                onChange={(e) =>
+                  setExchange((s) => ({
+                    ...s,
+                    existingCustomerModel: e.target.value,
+                  }))
+                }
+              />
+            </Field>
+            <Field>
+              <Input
+                label="Existing Customer Variant"
+                value={exchange.existingCustomerVariant}
+                placeholder="Enter Customer Variant"
+                onChange={(e) =>
+                  setExchange((s) => ({
+                    ...s,
+                    existingCustomerVariant: e.target.value,
+                  }))
+                }
+              />
+            </Field>
+            <Field>
+              <Input
+                label="Existing Vehicle Year"
+                value={exchange.existingVehicleYear}
+                placeholder="Enter Vehicle Year"
+                onChange={(e) =>
+                  setExchange((s) => ({
+                    ...s,
+                    existingVehicleYear: e.target.value,
+                  }))
+                }
+              />
+            </Field>
+            <Field>
+              <Input
+                label="Customer Expected Price"
+                value={exchange.customerExpectedPrice}
+                placeholder="Enter Expected Price"
+                onChange={(e) =>
+                  setExchange((s) => ({
+                    ...s,
+                    customerExpectedPrice: e.target.value,
+                  }))
+                }
+              />
+            </Field>
+            <Field>
+              <Input
+                label="Market Price"
+                value={exchange.marketPrice}
+                placeholder="Enter Market Price"
+                onChange={(e) =>
+                  setExchange((s) => ({ ...s, marketPrice: e.target.value }))
+                }
+              />
+            </Field>
+            <Field>
+              <Input
+                label="Exchange Bonus"
+                value={exchange.exchangeBonus}
+                placeholder="Enter Exchange Bonus"
+                onChange={(e) =>
+                  setExchange((s) => ({
+                    ...s,
+                    exchangeBonus: e.target.value,
+                  }))
+                }
+              />
+            </Field>
+            <Field>
+              <Input
+                label="SMIPL Shares"
+                value={exchange.smiplShares}
+                placeholder="Enter SMIPL Shares"
+                onChange={(e) =>
+                  setExchange((s) => ({ ...s, smiplShares: e.target.value }))
+                }
+              />
+            </Field>
+            <Field>
+              <Input
+                label="Dealer Shares"
+                value={exchange.dealerShares}
+                placeholder="Enter Dealer Shares"
+                onChange={(e) =>
+                  setExchange((s) => ({ ...s, dealerShares: e.target.value }))
+                }
+              />
+            </Field>
+            <Field>
+              <Input
+                label="Value Add Accessories"
+                value={exchange.valueAddAccessories}
+                placeholder="Enter Accessories Value"
+                onChange={(e) =>
+                  setExchange((s) => ({
+                    ...s,
+                    valueAddAccessories: e.target.value,
+                  }))
+                }
+              />
+            </Field>
+            <Field>
+              <Input
+                label="Insurance"
+                placeholder="Enter Insurance"
+                value={exchange.insurance}
+                onChange={(e) =>
+                  setExchange((s) => ({ ...s, insurance: e.target.value }))
+                }
+              />
+            </Field>
             <div className="col-span-2 mt-1 text-right text-sm font-semibold text-gray-700 dark:text-gray-300">
               Total Value: {totalValue}
             </div>
           </div>
         </Card>
 
-        {/* 5. Payment Details */}
+        {/* 5. Payment Details - Rose */}
         <Card>
           <CardHeader
             icon={<CreditCardIcon className="size-5" />}
             title="Payment Details"
+            colorClass="bg-rose-700"
           />
-          <div className="grid grid-cols-2 gap-3 p-4">
-            <Input
-              label="Discount"
-              value={payment.discount}
-              placeholder="Enter Discount"
-              onChange={(e) =>
-                setPayment((s) => ({ ...s, discount: e.target.value }))
-              }
-            />
-            <Input
-              label="Scheme Discount"
-              value={payment.schemeDiscount}
-              placeholder="Enter Scheme Discount"
-              onChange={(e) =>
-                setPayment((s) => ({ ...s, schemeDiscount: e.target.value }))
-              }
-            />
-            <Input
-              label="Exchange Discount"
-              value={payment.exchangeDiscount}
-              placeholder="Enter Exchange Discount"
-              onChange={(e) =>
-                setPayment((s) => ({ ...s, exchangeDiscount: e.target.value }))
-              }
-            />
-            <Input
-              label="Invoice Amount"
-              value={payment.invoiceAmount}
-              placeholder="Enter Invoice Amount"
-              onChange={(e) =>
-                setPayment((s) => ({ ...s, invoiceAmount: e.target.value }))
-              }
-            />
-            <Input
-              label="Total"
-              value={payment.total}
-              onChange={(e) =>
-                setPayment((s) => ({ ...s, total: e.target.value }))
-              }
-            />
-            <Input
-              label="Received Amount"
-              value={payment.receivedAmount}
-              onChange={(e) =>
-                setPayment((s) => ({ ...s, receivedAmount: e.target.value }))
-              }
-            />
-            <Input
-              label="Pending Amount"
-              value={payment.pendingAmount}
-              onChange={(e) =>
-                setPayment((s) => ({ ...s, pendingAmount: e.target.value }))
-              }
-            />
+          <div className={fieldGrid}>
+            <Field>
+              <Input
+                label="Discount"
+                value={payment.discount}
+                placeholder="Enter Discount"
+                onChange={(e) =>
+                  setPayment((s) => ({ ...s, discount: e.target.value }))
+                }
+              />
+            </Field>
+            <Field>
+              <Input
+                label="Scheme Discount"
+                value={payment.schemeDiscount}
+                placeholder="Enter Scheme Discount"
+                onChange={(e) =>
+                  setPayment((s) => ({
+                    ...s,
+                    schemeDiscount: e.target.value,
+                  }))
+                }
+              />
+            </Field>
+            <Field>
+              <Input
+                label="Exchange Discount"
+                value={payment.exchangeDiscount}
+                placeholder="Enter Exchange Discount"
+                onChange={(e) =>
+                  setPayment((s) => ({
+                    ...s,
+                    exchangeDiscount: e.target.value,
+                  }))
+                }
+              />
+            </Field>
+            <Field>
+              <Input
+                label="Invoice Amount"
+                value={payment.invoiceAmount}
+                placeholder="Enter Invoice Amount"
+                onChange={(e) =>
+                  setPayment((s) => ({
+                    ...s,
+                    invoiceAmount: e.target.value,
+                  }))
+                }
+              />
+            </Field>
+            <Field>
+              <Input
+                label="Total"
+                value={payment.total}
+                onChange={(e) =>
+                  setPayment((s) => ({ ...s, total: e.target.value }))
+                }
+              />
+            </Field>
+            <Field>
+              <Input
+                label="Received Amount"
+                value={payment.receivedAmount}
+                onChange={(e) =>
+                  setPayment((s) => ({
+                    ...s,
+                    receivedAmount: e.target.value,
+                  }))
+                }
+              />
+            </Field>
+            <Field>
+              <Input
+                label="Pending Amount"
+                value={payment.pendingAmount}
+                onChange={(e) =>
+                  setPayment((s) => ({
+                    ...s,
+                    pendingAmount: e.target.value,
+                  }))
+                }
+              />
+            </Field>
           </div>
         </Card>
 
         {/* 6. Broker Details + 7. Delivery Challan (in same column) */}
-        {/* Column 3: Broker Details + Delivery Challan */}
         <div className="flex flex-col gap-4">
-          {/* 6. Broker Details */}
+          {/* 6. Broker Details - Fuchsia */}
           <Card>
             <CardHeader
               icon={<UserGroupIcon className="size-5" />}
               title="Broker Details"
+              colorClass="bg-fuchsia-700"
             />
-            <div className="grid grid-cols-2 gap-3 p-4">
-              <Combobox
-                label="Broker Name"
-                data={brokerOptions}
-                displayField="name"
-                value={
-                  brokerOptions.find((b) => b.name === broker.brokerName) ||
-                  null
-                }
-                onChange={(val: any) =>
-                  setBroker((s) => ({ ...s, brokerName: val?.name || "" }))
-                }
-                placeholder="Select Broker"
-              />
-              <Input
-                label="Broker Amount"
-                value={broker.brokerAmount}
-                placeholder="Enter Broker Amount"
-                onChange={(e) =>
-                  setBroker((s) => ({ ...s, brokerAmount: e.target.value }))
-                }
-              />
+            <div className={fieldGrid}>
+              <Field>
+                <Combobox
+                  label="Broker Name"
+                  data={brokerOptions}
+                  displayField="name"
+                  value={
+                    brokerOptions.find((b) => b.name === broker.brokerName) ||
+                    null
+                  }
+                  onChange={(val: any) =>
+                    setBroker((s) => ({ ...s, brokerName: val?.name || "" }))
+                  }
+                  placeholder="Select Broker"
+                />
+              </Field>
+              <Field>
+                <Input
+                  label="Broker Amount"
+                  value={broker.brokerAmount}
+                  placeholder="Enter Broker Amount"
+                  onChange={(e) =>
+                    setBroker((s) => ({
+                      ...s,
+                      brokerAmount: e.target.value,
+                    }))
+                  }
+                />
+              </Field>
             </div>
           </Card>
 
-          {/* 7. Delivery Challan */}
+          {/* 7. Delivery Challan - Slate */}
           <Card>
             <CardHeader
               icon={<DocumentTextIcon className="size-5" />}
               title="Delivery Challan"
+              colorClass="bg-slate-700"
             />
             <div className="p-4">
               <div className="grid grid-cols-2 gap-x-4 gap-y-2">
@@ -981,7 +1126,10 @@ const Order: React.FC = () => {
                   label="All Guard"
                   checked={delivery.allGuard}
                   onChange={(e) =>
-                    setDelivery((s) => ({ ...s, allGuard: e.target.checked }))
+                    setDelivery((s) => ({
+                      ...s,
+                      allGuard: e.target.checked,
+                    }))
                   }
                 />
                 <Checkbox
@@ -995,7 +1143,10 @@ const Order: React.FC = () => {
                   label="Footrest"
                   checked={delivery.footrest}
                   onChange={(e) =>
-                    setDelivery((s) => ({ ...s, footrest: e.target.checked }))
+                    setDelivery((s) => ({
+                      ...s,
+                      footrest: e.target.checked,
+                    }))
                   }
                 />
                 <Checkbox
@@ -1016,21 +1167,30 @@ const Order: React.FC = () => {
                   label="Seat Cover"
                   checked={delivery.seatCover}
                   onChange={(e) =>
-                    setDelivery((s) => ({ ...s, seatCover: e.target.checked }))
+                    setDelivery((s) => ({
+                      ...s,
+                      seatCover: e.target.checked,
+                    }))
                   }
                 />
                 <Checkbox
                   label="Body Cover"
                   checked={delivery.bodyCover}
                   onChange={(e) =>
-                    setDelivery((s) => ({ ...s, bodyCover: e.target.checked }))
+                    setDelivery((s) => ({
+                      ...s,
+                      bodyCover: e.target.checked,
+                    }))
                   }
                 />
                 <Checkbox
                   label="Mirror Set"
                   checked={delivery.mirrorSet}
                   onChange={(e) =>
-                    setDelivery((s) => ({ ...s, mirrorSet: e.target.checked }))
+                    setDelivery((s) => ({
+                      ...s,
+                      mirrorSet: e.target.checked,
+                    }))
                   }
                 />
                 <Checkbox
