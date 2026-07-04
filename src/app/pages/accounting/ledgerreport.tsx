@@ -44,12 +44,21 @@ const LedgerReport: React.FC = () => {
   const [filterDateFrom, setFilterDateFrom] = useState<any>(null);
   const [filterDateTo, setFilterDateTo] = useState<any>(null);
 const [selectedAccount, setSelectedAccount] = useState<any>(null);
-  const [filterData, setFilterData] = useState<FilterData>({
-    fromDate: "01-04-2026",
-    toDate: "03-07-2026",
-    displayType: "",
-  });
+const formatDate = (date: Date) => {
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
 
+  return `${day}-${month}-${year}`;
+};
+
+const today = new Date();
+
+const [filterData, setFilterData] = useState<FilterData>({
+  fromDate: "01-04-2026", // or make this dynamic if needed
+  toDate: formatDate(today),
+  displayType: "",
+});
  const [ledgerData, setLedgerData] = useState<LedgerAccount[]>([]);
   const totalPages = Math.ceil(ledgerData.length / rowsPerPage);
   const startIndex = (currentPage - 1) * rowsPerPage;
@@ -263,7 +272,7 @@ const handleViewClick = (account: any) => {
                   </td>
                   <td className="px-4 py-3 text-center">
                     <button
-                      className="dark:border-dark-500 dark:bg-dark-700 hover:border-primary-500 dark:hover:bg-dark-600 flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 bg-white transition-all hover:bg-gray-50"
+                      className="dark:border-dark-500 dark:bg-dark-700 hover:border-primary-500 dark:hover:bg-dark-600 flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 bg-white transition-all hover:bg-gray-50 cursor-pointer"
                     onClick={() => handleViewClick(item)}
                     >
                       <FiEye className="text-primary-500" size={16} />
