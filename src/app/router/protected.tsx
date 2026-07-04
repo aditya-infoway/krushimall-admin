@@ -557,6 +557,13 @@ const protectedRoutes: RouteObject = {
                   .default,
               }),
             },
+            {
+              path: "history/:id",
+              lazy: async () => ({
+                Component: (await import("@/app/pages/followup/followuphistory"))
+                  .default,
+              }),
+            },
           ],
         },
       ],

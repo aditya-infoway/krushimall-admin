@@ -73,6 +73,8 @@ interface BankPayment {
   createdType: string;
   createdBy: string;
   leadNo?: string;
+    bankAccount: string; // Add this
+  oppAccount: string;
 }
 
 const BANK_ACCOUNTS = [
