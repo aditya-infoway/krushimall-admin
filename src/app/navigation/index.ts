@@ -9,6 +9,9 @@ import { accounting } from "./segments/accounting";
 import { goodcontrol } from "./segments/goodscontrol";
 import { report } from "./segments/report";
 import { followups } from "./segments/followups";
+import { bookregister } from "./segments/bookregister";
+import { ledgerreport } from "./segments/ledgerreport";
+import { bookingbalance } from "./segments/bookingbalance";
 
 
 
@@ -22,6 +25,9 @@ export const navigation = [
   item,
   purchase,
   accounting,
+  bookregister,
+  ledgerreport,
+  bookingbalance,
   goodcontrol,
   report,
   followups,

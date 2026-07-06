@@ -63,42 +63,10 @@ export const accounting: NavigationTree = {
       
     },
 
-     {
-      id: "cash-bank",
-      type: "collapse",
-      title: "Cash/Bank Register",
-      path: "/accounting/cash-bank",
-      icon: "cashbank",
-      childs: [
-        {
-          id: "cashbook",
-          type: "item",
-          title: "Cash Book",
-          path: "/accounting/cash-bank/cashbook",
-        },
-        {
-          id: "bankbook",
-          type: "item",
-          title: "Bank Book",
-          path: "/accounting/cash-bank/bankbook",
-        },
-      ],
-    },
+    
 
-     {
-      id: "bookingbalance",
-      type: "item",
-      title: "Booking Balance",
-      path: "/accounting/bookingbalance",
-      
-    },
+    
 
-     {
-      id: "ledgerreport",
-      type: "item",
-      title: "Ledger Report",
-      path: "/accounting/ledgerreport",
-      
-    },
+    
   ],
 };

@@ -44,7 +44,7 @@ const initialForm = {
   type: "Manual" as EntryType,
   bankAccount: null as any,
   voucherNo: "",
-  date: null as any,
+   date: [new Date()], 
   oppAccount: null as any,
   amount: "",
   paymentMode: PAYMENT_MODES.find((m) => m.id === "UPI") || null, // Default to UPI
@@ -73,7 +73,7 @@ interface BankPayment {
   createdType: string;
   createdBy: string;
   leadNo?: string;
-    bankAccount: string; // Add this
+  bankAccount: string; // Add this
   oppAccount: string;
 }
 
@@ -151,7 +151,7 @@ export default function BankPayment() {
   const [filterDateFrom, setFilterDateFrom] = useState<any>(null);
   const [filterDateTo, setFilterDateTo] = useState<any>(null);
   const [filterPaymentMode, setFilterPaymentMode] = useState("All");
-const [purchaseBill, setPurchaseBill] = useState<any>(null);
+  const [purchaseBill, setPurchaseBill] = useState<any>(null);
   const [purchaseBills, setPurchaseBills] = useState<any[]>([]);
   const filteredRows = rows.filter((r) => {
     const matchesSearch = Object.values(r).some((v) =>
@@ -169,35 +169,33 @@ const [purchaseBill, setPurchaseBill] = useState<any>(null);
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredRows.slice(indexOfFirstItem, indexOfLastItem);
   const [bankAccounts, setBankAccounts] = useState<any[]>([]);
-   const [oppAccounts, setOppAccounts] = useState<any[]>([]);
- const [companyId, setCompanyId] = useState<number | null>(null);
-const [financialYearId, setFinancialYearId] = useState<number | null>(null);
-const getCompany = async () => {
-  try {
-  const res = await apiHelper.get("/company");
+  const [oppAccounts, setOppAccounts] = useState<any[]>([]);
+  const [companyId, setCompanyId] = useState<number | null>(null);
+  const [financialYearId, setFinancialYearId] = useState<number | null>(null);
+  const getCompany = async () => {
+    try {
+      const res = await apiHelper.get("/company");
 
+      if (!res.data || res.data.length === 0) {
+        console.log("No companies found");
+        return;
+      }
 
+      const company = res.data[0];
 
-if (!res.data || res.data.length === 0) {
-  console.log("No companies found");
-  return;
-}
+      setCompanyId(company.id);
 
-const company = res.data[0];
+      if (company.financialYears?.length > 0) {
+        setFinancialYearId(company.financialYears[0].id);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
-setCompanyId(company.id);
-
-if (company.financialYears?.length > 0) {
-  setFinancialYearId(company.financialYears[0].id);
-}
-  } catch (err) {
-    console.error(err);
-  }
-};
-
-useEffect(() => {
-  getCompany();
-}, []);
+  useEffect(() => {
+    getCompany();
+  }, []);
   const getPurchaseBills = async () => {
     try {
       const res = await apiHelper.get("/purchases");
@@ -216,103 +214,103 @@ useEffect(() => {
     }
   };
 
- const getAccounts = async () => {
-  try {
-    const res = await apiHelper.get("/accounts");
+  const getAccounts = async () => {
+    try {
+      const res = await apiHelper.get("/accounts");
 
-    const accounts = res.data;
+      const accounts = res.data;
 
-    // Only Bank Accounts
-    setBankAccounts(
-      accounts
-        .filter((a: any) => a.group === "Bank Accounts")
-        .map((a: any) => ({
-          value: a.id,
-          label: `${a.accountName} (${a.mobile ?? ""})`,
-             mobile: a.mobile,
-      openingBalance: a.openingBalance,
-          balance: a.closingBalance,
-          balanceType: a.drCr,
-        }))
-    );
+      // Only Bank Accounts
+      setBankAccounts(
+        accounts
+          .filter((a: any) => a.group === "Bank Accounts")
+          .map((a: any) => ({
+            value: a.id,
+            label: `${a.accountName} (${a.mobile ?? ""})`,
+            mobile: a.mobile,
+            openingBalance: a.openingBalance,
+            balance: a.closingBalance,
+            balanceType: a.drCr,
+          })),
+      );
 
-    // All except Bank Accounts
-    setOppAccounts(
-      accounts
-        .filter((a: any) => a.group !== "Bank Accounts")
-        .map((a: any) => ({
-          value: a.id,
-          label: `${a.accountName} (${a.mobile ?? ""})`,
-             mobile: a.mobile,
-      openingBalance: a.openingBalance,
-          balance: a.closingBalance,
-          balanceType: a.drCr,
-        }))
-    );
-  } catch (err) {
-    console.log(err);
-  }
-};
-const getBankPayments = async () => {
-  try {
-    const res = await apiHelper.get("/bank-payment");
+      // All except Bank Accounts
+      setOppAccounts(
+        accounts
+          .filter((a: any) => a.group !== "Bank Accounts")
+          .map((a: any) => ({
+            value: a.id,
+            label: `${a.accountName} (${a.mobile ?? ""})`,
+            mobile: a.mobile,
+            openingBalance: a.openingBalance,
+            balance: a.closingBalance,
+            balanceType: a.drCr,
+          })),
+      );
+    } catch (err) {
+      console.log(err);
+    }
+  };
+  const getBankPayments = async () => {
+    try {
+      const res = await apiHelper.get("/bank-payment");
 
-    const data = res.map((item: any) => ({
-      id: item.id,
-      date: item.date,
-      voucherNo: item.voucherNo,
-      type: item.type,
+      const data = res.map((item: any) => ({
+        id: item.id,
+        date: item.date,
+        voucherNo: item.voucherNo,
+        type: item.type,
 
-      bankAccount: item.bankAccount?.id,
-      bankAccountName: item.bankAccount?.accountName,
+        bankAccount: item.bankAccount?.id,
+        bankAccountName: item.bankAccount?.accountName,
 
-      oppAccount: item.oppAccount?.id,
-      oppAccountName: item.oppAccount?.accountName,
+        oppAccount: item.oppAccount?.id,
+        oppAccountName: item.oppAccount?.accountName,
 
-      amount: item.amount,
-      paymentMode: item.paymentMode,
-      chequeNo: item.chequeNo,
-      chequeDate: item.chequeDate,
-      chequeClearDate: item.clearDate,
-      narration: item.narration,
-      createdBy: item.createdBy,
-      createdType: item.createdType,
-    }));
+        amount: item.amount,
+        paymentMode: item.paymentMode,
+        chequeNo: item.chequeNo,
+        chequeDate: item.chequeDate,
+        chequeClearDate: item.clearDate,
+        narration: item.narration,
+        createdBy: item.createdBy,
+        createdType: item.createdType,
+      }));
 
-    setRows(data);
-  } catch (err) {
-    console.log(err);
-  }
-};
-const getVoucherNo = async () => {
-  try {
-    const res = await apiHelper.get("/bank-payment/voucher");
+      setRows(data);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+  const getVoucherNo = async () => {
+    try {
+      const res = await apiHelper.get("/bank-payment/voucher");
 
-    setForm((prev) => ({
-      ...prev,
-      voucherNo: res.voucherNo,
-    }));
-  } catch (err) {
-    console.log(err);
-  }
-};
-   useEffect(() => {
-      getAccounts();
-      getPurchaseBills();
-        
-          getBankPayments();
-    }, []);
-      const purchaseBillOptions = purchaseBills;
+      setForm((prev) => ({
+        ...prev,
+        voucherNo: res.voucherNo,
+      }));
+    } catch (err) {
+      console.log(err);
+    }
+  };
+  useEffect(() => {
+    getAccounts();
+    getPurchaseBills();
+
+    getBankPayments();
+  }, []);
+  const purchaseBillOptions = purchaseBills;
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-   if (!form.bankAccount?.value) {
-  newErrors.bankAccount = "Bank Account is required";
-}
+    if (!form.bankAccount?.value) {
+      newErrors.bankAccount = "Bank Account is required";
+    }
 
-if (!form.oppAccount?.value) {
-  newErrors.oppAccount = "Opp. Account is required";
-}
+    if (!form.oppAccount?.value) {
+      newErrors.oppAccount = "Opp. Account is required";
+    }
     if (!form.amount || form.amount === "") {
       newErrors.amount = "Amount is required";
     }
@@ -336,36 +334,37 @@ if (!form.oppAccount?.value) {
     return Object.keys(newErrors).length === 0;
   };
 
-const handleAdd = async () => {
-  setEditId(null);
+  const handleAdd = async () => {
+    setEditId(null);
 
-  await getVoucherNo();
+    await getVoucherNo();
 
-  setForm((prev) => ({
-    ...initialForm,
-    voucherNo: prev.voucherNo,
-    paymentMode: PAYMENT_MODES.find((m) => m.id === "UPI") || null,
-  }));
+    setForm((prev) => ({
+      ...initialForm,
+      voucherNo: prev.voucherNo,
+      paymentMode: PAYMENT_MODES.find((m) => m.id === "UPI") || null,
+       date: [new Date()],
+    }));
 
-  setShowDrawer(true);
-};
+    setShowDrawer(true);
+  };
 
   const handleEdit = (item: BankPayment) => {
     setEditId(item.id);
     setForm({
       type: item.type,
-     bankAccount:
-  bankAccounts.find(
-    (a: any) => Number(a.value) === Number(item.bankAccount)
-  ) || null,
+      bankAccount:
+        bankAccounts.find(
+          (a: any) => Number(a.value) === Number(item.bankAccount),
+        ) || null,
 
-oppAccount:
-  oppAccounts.find(
-    (a: any) => Number(a.value) === Number(item.oppAccount)
-  ) || null,
+      oppAccount:
+        oppAccounts.find(
+          (a: any) => Number(a.value) === Number(item.oppAccount),
+        ) || null,
       voucherNo: item.voucherNo,
       date: item.date,
-     
+
       amount: String(item.amount),
       paymentMode:
         PAYMENT_MODES.find((a) => a.id === item.paymentMode) ||
@@ -392,46 +391,45 @@ oppAccount:
     setSelectedIds([]);
   };
 
- const handleSubmit = async () => {
-  if (!validateForm()) return;
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
 
-  try {
-    const payload = {
-      companyId,
-      financialYearId,
+    try {
+      const payload = {
+        companyId,
+        financialYearId,
 
-      date: form.date,
-      bankAccountId: form.bankAccount.value,
-      oppAccountId: form.oppAccount.value,
-      amount: Number(form.amount),
+        date: form.date,
+        bankAccountId: form.bankAccount.value,
+        oppAccountId: form.oppAccount.value,
+        amount: Number(form.amount),
 
-      paymentMode: form.paymentMode?.id,
-      chequeNo: form.chequeNo,
-      chequeDate: form.chequeDate,
-      clearDate: form.chequeClearDate,
+        paymentMode: form.paymentMode?.id,
+        chequeNo: form.chequeNo,
+        chequeDate: form.chequeDate,
+        clearDate: form.chequeClearDate,
 
-      narration: form.narration,
+        narration: form.narration,
 
-      purchaseId:
-        form.type === "Purchase" ? purchaseBill?.value : null,
+        purchaseId: form.type === "Purchase" ? purchaseBill?.value : null,
 
-      leadId: null,
-    };
+        leadId: null,
+      };
 
-    if (editId) {
-      await apiHelper.put(`/bank-payment/${editId}`, payload);
-    } else {
-      await apiHelper.post("/bank-payment", payload);
+      if (editId) {
+        await apiHelper.put(`/bank-payment/${editId}`, payload);
+      } else {
+        await apiHelper.post("/bank-payment", payload);
+      }
+
+      await getBankPayments();
+      await getVoucherNo();
+
+      setShowDrawer(false);
+    } catch (err) {
+      console.log(err);
     }
-
-    await getBankPayments();
-    await getVoucherNo();
-
-    setShowDrawer(false);
-  } catch (err) {
-    console.log(err);
-  }
-};
+  };
 
   const isAllPageSelected =
     currentItems.length > 0 &&
@@ -699,14 +697,13 @@ oppAccount:
                       {indexOfFirstItem + index + 1}
                     </td>
                     <td className="px-3 py-3 text-sm whitespace-nowrap text-gray-900 dark:text-gray-400">
-                     {new Date(item.date).toLocaleDateString("en-GB")}
+                      {new Date(item.date).toLocaleDateString("en-GB")}
                     </td>
                     <td className="px-3 py-3 text-sm font-medium whitespace-nowrap text-gray-900 dark:text-gray-400">
                       {item.voucherNo}
                     </td>
-                  <td className="py-3 whitespace-nowrap">
-                      <span
-                        className="inline-flex rounded-full px-2 py-0.5 text-xs font-semibold bg-primary-500">
+                    <td className="py-3 whitespace-nowrap">
+                      <span className="bg-primary-500 inline-flex rounded-full px-2 py-0.5 text-xs font-semibold">
                         {item.type}
                       </span>
                     </td>
@@ -797,7 +794,7 @@ oppAccount:
                                   onClick={() => handleDelete(item.id)}
                                   className={`${
                                     active
-                                      ? "bg-red-50 text-primary-500 dark:bg-red-950/40 dark:text-primary-500"
+                                      ? "text-primary-500 dark:text-primary-500 bg-red-50 dark:bg-red-950/40"
                                       : "dark:text-dark-200 text-gray-700"
                                   } flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium`}
                                 >
@@ -1016,15 +1013,15 @@ oppAccount:
                         if (errors.leadNo) setErrors({ ...errors, leadNo: "" });
                       }}
                     />
-                      <Radio
-                                          label="Purchase"
-                                          name="type"
-                                          checked={form.type === "Purchase"}
-                                          onChange={() => {
-                                            setForm({ ...form, type: "Purchase", leadNo: "" });
-                                            if (errors.leadNo) setErrors({ ...errors, leadNo: "" });
-                                          }}
-                                        />
+                    <Radio
+                      label="Purchase"
+                      name="type"
+                      checked={form.type === "Purchase"}
+                      onChange={() => {
+                        setForm({ ...form, type: "Purchase", leadNo: "" });
+                        if (errors.leadNo) setErrors({ ...errors, leadNo: "" });
+                      }}
+                    />
                     <Radio
                       label="Lead Cancel"
                       name="type"
@@ -1032,7 +1029,7 @@ oppAccount:
                       onChange={() => setForm({ ...form, type: "Lead Cancel" })}
                     />
                   </div>
- {form.type === "Purchase" && (
+                  {form.type === "Purchase" && (
                     <div className="w-full sm:max-w-md">
                       <Combobox
                         data={purchaseBillOptions}
@@ -1093,37 +1090,37 @@ oppAccount:
                     <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Bank Account <span className="text-red-500">*</span>
                     </label>
-                 <Combobox
-  data={bankAccounts}
-  value={form.bankAccount}
- onChange={(val: any) => {
-  setForm({ ...form, bankAccount: val });
+                    <Combobox
+                      data={bankAccounts}
+                      value={form.bankAccount}
+                      onChange={(val: any) => {
+                        setForm({ ...form, bankAccount: val });
 
-  if (errors.bankAccount) {
-    setErrors({ ...errors, bankAccount: "" });
-  }
-}}
-  displayField="label"
-  placeholder="Search Bank Account"
-  searchFields={["label", "mobile"]}
-  columns={[
-    {
-      header: "Account",
-      field: "label",
-      width: "2fr",
-    },
-    {
-      header: "Mobile",
-      field: "mobile",
-      width: "1.5fr",
-    },
-    {
-      header: "Opening",
-      field: "openingBalance",
-      width: "1fr",
-    },
-  ]}
-/>
+                        if (errors.bankAccount) {
+                          setErrors({ ...errors, bankAccount: "" });
+                        }
+                      }}
+                      displayField="label"
+                      placeholder="Search Bank Account"
+                      searchFields={["label", "mobile"]}
+                      columns={[
+                        {
+                          header: "Account",
+                          field: "label",
+                          width: "2fr",
+                        },
+                        {
+                          header: "Mobile",
+                          field: "mobile",
+                          width: "1.5fr",
+                        },
+                        {
+                          header: "Opening",
+                          field: "openingBalance",
+                          width: "1fr",
+                        },
+                      ]}
+                    />
                   </div>
                   <div>
                     <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -1146,14 +1143,13 @@ oppAccount:
                       placeholder="Select date..."
                       value={form.date}
                       onChange={(date) => setForm({ ...form, date })}
-                        options={{ disableMobile: true }}
+                      options={{ disableMobile: true }}
                     />
                   </div>
                 </div>
 
- {/* Dotted Separator */}
+                {/* Dotted Separator */}
                 <div className="border-t border-dashed border-blue-300 dark:border-blue-700" />
-
 
                 {/* Opp Account with Combobox - Shows Balance */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -1164,36 +1160,36 @@ oppAccount:
                       </label>
                     </div>
                     <Combobox
-  data={oppAccounts}
-  value={form.oppAccount}
- onChange={(val: any) => {
-  setForm({ ...form, oppAccount: val });
+                      data={oppAccounts}
+                      value={form.oppAccount}
+                      onChange={(val: any) => {
+                        setForm({ ...form, oppAccount: val });
 
-  if (errors.oppAccount) {
-    setErrors({ ...errors, oppAccount: "" });
-  }
-}}
-  displayField="label"
-  placeholder="Search Opp. Account"
-  searchFields={["label", "mobile"]}
-  columns={[
-    {
-      header: "Account",
-      field: "label",
-      width: "2fr",
-    },
-    {
-      header: "Mobile",
-      field: "mobile",
-      width: "1.5fr",
-    },
-    {
-      header: "Opening",
-      field: "openingBalance",
-      width: "1fr",
-    },
-  ]}
-/>
+                        if (errors.oppAccount) {
+                          setErrors({ ...errors, oppAccount: "" });
+                        }
+                      }}
+                      displayField="label"
+                      placeholder="Search Opp. Account"
+                      searchFields={["label", "mobile"]}
+                      columns={[
+                        {
+                          header: "Account",
+                          field: "label",
+                          width: "2fr",
+                        },
+                        {
+                          header: "Mobile",
+                          field: "mobile",
+                          width: "1.5fr",
+                        },
+                        {
+                          header: "Opening",
+                          field: "openingBalance",
+                          width: "1fr",
+                        },
+                      ]}
+                    />
                   </div>
                   <div>
                     <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -1265,7 +1261,7 @@ oppAccount:
                         placeholder="Enter cheque number"
                         className={`dark:border-dark-500 dark:bg-dark-600 w-full rounded-lg border ${
                           errors.chequeNo ? "border-red-500" : "border-blue-500"
-                        } bg-white px-4 py-2.5 text-sm `}
+                        } bg-white px-4 py-2.5 text-sm`}
                       />
                       {errors.chequeNo && (
                         <p className="mt-1 text-sm text-red-500">
@@ -1280,7 +1276,7 @@ oppAccount:
                       <DatePicker
                         placeholder="Select cheque date..."
                         value={form.chequeDate}
-                          options={{ disableMobile: true }}
+                        options={{ disableMobile: true }}
                         onChange={(date) => {
                           setForm({ ...form, chequeDate: date });
                           if (errors.chequeDate)
@@ -1301,7 +1297,7 @@ oppAccount:
                       <DatePicker
                         placeholder="Select cheque clear date..."
                         value={form.chequeClearDate}
-                          options={{ disableMobile: true }}
+                        options={{ disableMobile: true }}
                         onChange={(date) => {
                           setForm({ ...form, chequeClearDate: date });
                           if (errors.chequeClearDate)
