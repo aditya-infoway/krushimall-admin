@@ -57,7 +57,17 @@ const apiHelper = {
     const response = await api.get(url, { params });
     return response.data;
   },
+getBlob: async (
+  url: string,
+  params?: Record<string, any>
+) => {
+  const response = await api.get(url, {
+    params,
+    responseType: "blob",
+  });
 
+  return response.data;
+},
   // POST
   post: async (
     url: string,

@@ -97,28 +97,68 @@ const NewAccount = () => {
   const watchedCountryCode = watch("countryCode");
   const watchedStateCode = watch("stateCode");
   const groupOptions = [
-    { label: "Bank Accounts (Bank)", value: "Bank Accounts", effect: "Balance Sheet" },
-      { label: "Bank OCC A/C", value: "Bank OCC A/C", effect: "Balance Sheet" },
-       { label: "Capital Account", value: "Capital Account", effect: "Balance Sheet" },
-       { label: "Cash-in-Hand", value: "Cash-in-Hand", effect: "Balance Sheet" },
-          { label: "Currant Assets", value: "Currant Assets", effect: "Balance Sheet" },
-           { label: "Duites & Taxes", value: "Duites & Taxes", effect: "Balance Sheet" },
-             { label: "Expense Account", value: "Expense Account", effect: "Profit & Loss" },
-                { label: "Purchase Account", value: "Purchase Account", effect: "Trading" },
-                  { label: "Sales Account", value: "Sales Account", effect: "Trading" },
-                   { label: "Stock in Hand", value: "Stock in Hand", effect: "Balance Sheet" },
-                   { label: "Sundry Creditors", value: "Sundry Creditors", effect: "Balance Sheet" },
-    { label: "Sundry Debitors", value: "Sundry Debtors", effect: "Balance Sheet" },
-     { label: "Supplier", value: "Supplier", effect: "Balance Sheet" },
-       { label: "Customer", value: "Customer", effect: "Balance Sheet" },
-        { label: "Sundry Debitor (finance)", value: "Sundry Debitor (finance)", effect: "Balance Sheet" },
-        { label: "Sundry Credito (finance)", value: "Sundry Credito (finance)", effect: "Balance Sheet" },
-   
-       
-    
-    
-   
-
+    {
+      label: "Bank Accounts (Bank)",
+      value: "Bank Accounts",
+      effect: "Balance Sheet",
+    },
+    { label: "Bank OCC A/C", value: "Bank OCC A/C", effect: "Balance Sheet" },
+    {
+      label: "Capital Account",
+      value: "Capital Account",
+      effect: "Balance Sheet",
+    },
+    { label: "Cash-in-Hand", value: "Cash-in-Hand", effect: "Balance Sheet" },
+    {
+      label: "Currant Assets",
+      value: "Currant Assets",
+      effect: "Balance Sheet",
+    },
+    {
+      label: "Duites & Taxes",
+      value: "Duites & Taxes",
+      effect: "Balance Sheet",
+    },
+    {
+      label: "Expense Account",
+      value: "Expense Account",
+      effect: "Profit & Loss",
+    },
+    { label: "Purchase Account", value: "Purchase Account", effect: "Trading" },
+    { label: "Sales Account", value: "Sales Account", effect: "Trading" },
+    { label: "Stock in Hand", value: "Stock in Hand", effect: "Balance Sheet" },
+    {
+      label: "Sundry Creditors",
+      value: "Sundry Creditors",
+      effect: "Balance Sheet",
+    },
+    {
+      label: "Sundry Debitors",
+      value: "Sundry Debtors",
+      effect: "Balance Sheet",
+    },
+    { label: "Supplier", value: "Supplier", effect: "Balance Sheet" },
+    { label: "Customer", value: "Customer", effect: "Balance Sheet" },
+    {
+      label: "Sundry Debitor (finance)",
+      value: "Sundry Debitor (finance)",
+      effect: "Balance Sheet",
+    },
+    {
+      label: "Sundry Credito (finance)",
+      value: "Sundry Credito (finance)",
+      effect: "Balance Sheet",
+    },
+    {
+      label: "Sundry Debitor (invert)",
+      value: "Sundry Debitor (invert)",
+      effect: "Balance Sheet",
+    },
+    {
+      label: "Sundry Credito (invert)",
+      value: "Sundry Credito (invert)",
+      effect: "Balance Sheet",
+    },
   ];
   const drCrOptions = [
     { label: "Dr", value: "Dr" },
@@ -326,21 +366,17 @@ const NewAccount = () => {
                 control={control}
                 rules={{ required: "Group is required" }}
                 render={({ field }) => (
-                 <GroupCombobox
-    data={groupOptions}
-    displayField="label"
-    searchFields={["label", "effect"]}
-    
-    value={
-        groupOptions.find(
-            item => item.value === field.value
-        ) || null
-    }
-    onChange={(val: any) =>
-        field.onChange(val?.value || "")
-    }
-    placeholder="Search Group"
-/>
+                  <GroupCombobox
+                    data={groupOptions}
+                    displayField="label"
+                    searchFields={["label", "effect"]}
+                    value={
+                      groupOptions.find((item) => item.value === field.value) ||
+                      null
+                    }
+                    onChange={(val: any) => field.onChange(val?.value || "")}
+                    placeholder="Search Group"
+                  />
                 )}
               />
 
@@ -646,7 +682,7 @@ const NewAccount = () => {
               <DatePicker
                 label="Birthday On"
                 placeholder="Select Date"
-                 options={{ disableMobile: true }}
+                options={{ disableMobile: true }}
                 onChange={(val: Date[]) =>
                   setValue("birthday", val[0]?.toISOString() || "")
                 }
@@ -657,7 +693,7 @@ const NewAccount = () => {
               <DatePicker
                 label="Anniversary"
                 placeholder="Select Date"
-                 options={{ disableMobile: true }}
+                options={{ disableMobile: true }}
                 onChange={(val: Date[]) =>
                   setValue("anniversary", val[0]?.toISOString() || "")
                 }

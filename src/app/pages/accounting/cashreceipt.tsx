@@ -1,42 +1,42 @@
 import { useState, useEffect } from "react";
 import {
-  Tractor,
-  MapPin,
-  Heart,
-  Star,
-  Fuel,
-  Gauge,
-  Calendar,
+  // Tractor,
+  // MapPin,
+  // Heart,
+  // Star,
+  // Fuel,
+  // Gauge,
+  // Calendar,
   ChevronLeft,
   ChevronRight,
-  Sparkles,
-  ArrowRight,
-  BadgeCheck,
-  Shield,
-  Clock,
-  Phone,
-  Users,
-  ShoppingBag,
-  Package,
+  // Sparkles,
+  // ArrowRight,
+  // BadgeCheck,
+  // Shield,
+  // Clock,
+  // Phone,
+  // Users,
+  // ShoppingBag,
+  // Package,
   Search,
-  SlidersHorizontal,
+  // SlidersHorizontal,
   Check,
   Filter,
   ChevronDown,
-  User,
-  Mail,
-  MessageSquare,
-  Send,
-  HelpCircle,
-  MessageCircle,
+  // User,
+  // Mail,
+  // MessageSquare,
+  // Send,
+  // HelpCircle,
+  // MessageCircle,
   X,
   Plus,
   Download,
-  RefreshCw,
+  // RefreshCw,
   Trash2,
-  Eye,
+  // Eye,
   Edit,
-  ChevronUp,
+  // ChevronUp,
   ChevronsUpDown,
 } from "lucide-react";
 import {
@@ -51,11 +51,11 @@ import {
 } from "@headlessui/react";
 import { Fragment } from "react";
 import { DatePicker } from "@/components/shared/form/Datepicker";
-import { Combobox } from "@/components/shared/form/StyledCombobox";
+// import { Combobox } from "@/components/shared/form/StyledCombobox";
 import { Input, Radio, Textarea } from "@/components/ui";
-
+import apiHelper from "@/utils/apiHelper";
 type EntryType = "Manual" | "Lead" | "Job Card";
-
+import { Combobox } from "@/components/shared/form/Combobox";
 interface CashReceipt {
   id: number;
   date: string;
@@ -147,7 +147,8 @@ export default function CashReceipt() {
   const [form, setForm] = useState({ ...initialForm });
   const [showFilterBar, setShowFilterBar] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-
+  const [cashAccounts, setCashAccounts] = useState<any[]>([]);
+  const [oppAccounts, setOppAccounts] = useState<any[]>([]);
   // Filter states
   const [filterType, setFilterType] = useState("All");
   const [filterDateFrom, setFilterDateFrom] = useState<any>(null);
@@ -160,7 +161,8 @@ export default function CashReceipt() {
     const matchesType = filterType === "All" || r.type === filterType;
     return matchesSearch && matchesType;
   });
-
+const [companyId, setCompanyId] = useState<number | null>(null);
+const [financialYearId, setFinancialYearId] = useState<number | null>(null);
   const totalItems = filteredRows.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -189,13 +191,115 @@ export default function CashReceipt() {
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+  const getCompany = async () => {
+  try {
+    const res = await apiHelper.get("/company");
 
-  const handleAdd = () => {
-    setEditId(null);
-    setForm({ ...initialForm });
-    setErrors({});
-    setShowDrawer(true);
+    if (!res.data || res.data.length === 0) {
+      return;
+    }
+
+    const company = res.data[0];
+
+    setCompanyId(company.id);
+
+    if (company.financialYears?.length > 0) {
+      setFinancialYearId(company.financialYears[0].id);
+    }
+  } catch (err) {
+    console.log(err);
+  }
+};
+useEffect(() => {
+  getCompany();
+}, []);
+const getCashReceipts = async () => {
+  try {
+    const res = await apiHelper.get("/cash-receipt");
+
+    const data = res.map((item: any) => ({
+      ...item,
+      cashAccount: item.cashAccount?.accountName || "",
+      oppAccount: item.oppAccount?.accountName || "",
+    }));
+
+    setRows(data);
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+useEffect(() => {
+  getCashReceipts();
+}, []);
+const getVoucherNo = async () => {
+  try {
+    const res = await apiHelper.get("/cash-receipt/voucher");
+
+    console.log("Voucher API:", res);
+
+    const voucherNo = res?.data?.voucherNo ?? res?.voucherNo ?? "";
+
+    setForm((prev) => ({
+      ...prev,
+      voucherNo,
+    }));
+  } catch (err) {
+    console.log(err);
+  }
+};
+  const getAccounts = async () => {
+    try {
+      const res = await apiHelper.get("/accounts");
+
+      const accounts = res.data.data || res.data || [];
+
+      // Cash Accounts
+      const cash = accounts
+        .filter((a: any) => a.group === "Cash-in-Hand")
+        .map((a: any) => ({
+          value: a.id,
+          label: a.accountName,
+          mobile: a.mobile,
+          openingBalance: a.openingBalance,
+          balance: a.closingBalance,
+          balanceType: a.drCr,
+        }));
+
+      // Opposite Accounts
+      const opp = accounts
+        .filter(
+          (a: any) => a.group === "Customer" || a.group === "Sundry Debtors",
+        )
+        .map((a: any) => ({
+          value: a.id,
+          label: a.accountName,
+          mobile: a.mobile,
+          openingBalance: a.openingBalance,
+          balance: a.closingBalance,
+          balanceType: a.drCr,
+        }));
+
+      setCashAccounts(cash);
+      setOppAccounts(opp);
+    } catch (err) {
+      console.log(err);
+    }
   };
+  useEffect(() => {
+    getAccounts();
+  }, []);
+const handleAdd = async () => {
+  setEditId(null);
+  setErrors({});
+  setForm({
+    ...initialForm,
+    date: new Date(),
+  });
+
+  await getVoucherNo();
+  setShowDrawer(true);
+};
 
   const handleEdit = (item: CashReceipt) => {
     setEditId(item.id);
@@ -298,37 +402,38 @@ export default function CashReceipt() {
     };
   });
 
-  const handleSubmit = () => {
-    if (!validateForm()) return;
-    const newEntry: CashReceipt = {
-      id: editId !== null ? editId : rows.length + 1,
-      date:
-        form.date ||
-        new Date().toLocaleDateString("en-GB", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-        }),
+const handleSubmit = async () => {
+  if (!validateForm()) return;
+
+  try {
+    const payload = {
+      companyId,
+        financialYearId,
       voucherNo: form.voucherNo,
+      date: form.date,
       type: form.type,
-      cashAccount: form.cashAccount.value,
-      oppAccount: form.oppAccount.value,
-      amount: parseFloat(form.amount),
+      cashAccountId: form.cashAccount.value,
+      oppAccountId: form.oppAccount.value,
+      leadId:
+        form.type === "Lead"
+          ? Number(form.leadNo)
+          : null,
+      amount: Number(form.amount),
       narration: form.narration,
-      createdType: form.createdType || "Manual",
-      createdBy: "Admin",
-      leadNo: form.type === "Lead" ? form.leadNo : undefined,
-      jobCardNo: form.type === "Job Card" ? form.jobCardNo : undefined,
     };
 
-    if (editId !== null) {
-      setRows(rows.map((row) => (row.id === editId ? newEntry : row)));
+    if (editId) {
+      await apiHelper.put(`/cash-receipt/${editId}`, payload);
     } else {
-      setRows([...rows, newEntry]);
+      await apiHelper.post("/cash-receipt", payload);
     }
+
     setShowDrawer(false);
-    setErrors({});
-  };
+    getCashReceipts();
+  } catch (err) {
+    console.log(err);
+  }
+};
 
   const isAllPageSelected =
     currentItems.length > 0 &&
@@ -471,7 +576,7 @@ export default function CashReceipt() {
       {/* Main Table */}
       <div className="dark:bg-dark-800 dark:border-dark-700 rounded-xl border border-gray-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1000px] text-left [&_.table-th]:font-semibold">
+          <table className="w-full min-w-250 text-left [&_.table-th]:font-semibold">
             <thead className="dark:bg-dark-700/60 dark:border-dark-600 border-b border-gray-200 bg-gray-100">
               <tr>
                 <th className="w-10 py-3.5 text-center">
@@ -538,7 +643,7 @@ export default function CashReceipt() {
                       {indexOfFirstItem + index + 1}
                     </td>
                     <td className="py-3 text-sm whitespace-nowrap text-gray-900 dark:text-gray-400">
-                      {item.date}
+                        {new Date(item.date).toLocaleDateString("en-GB")}
                     </td>
                     <td className="py-3 text-sm font-medium whitespace-nowrap text-gray-900 dark:text-gray-400">
                       {item.voucherNo}
@@ -549,8 +654,8 @@ export default function CashReceipt() {
                           item.type === "Manual"
                             ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
                             : item.type === "Lead"
-                              ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                              : "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                              ? "bg-primary-500 text-white dark:bg-red-primary-500 dark:text-white"
+                              : "bg-primary-500 text-white dark:bg-primary-500 dark:text-white"
                         }`}
                       >
                         {item.type}
@@ -572,6 +677,9 @@ export default function CashReceipt() {
                       {item.narration}
                     </td>
                     <td className="py-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
+                      {item.createdType}
+                    </td>
+                      <td className="py-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
                       {item.createdBy}
                     </td>
                     <td className="py-3 text-center whitespace-nowrap">
@@ -593,7 +701,7 @@ export default function CashReceipt() {
                         >
                           <MenuItems
                             anchor="bottom end"
-                            className="dark:bg-dark-800 dark:ring-dark-500 dark:border-dark-500 z-[100] w-36 rounded-lg border border-gray-100 bg-white p-1 shadow-lg ring-1 ring-black/5 [--anchor-gap:4px] focus:outline-none"
+                            className="dark:bg-dark-800 dark:ring-dark-500 dark:border-dark-500 z-100 w-36 rounded-lg border border-gray-100 bg-white p-1 shadow-lg ring-1 ring-black/5 [--anchor-gap:4px] focus:outline-none"
                           >
                             <MenuItem>
                               {({ active }) => (
@@ -618,7 +726,7 @@ export default function CashReceipt() {
                                   onClick={() => handleDelete(item.id)}
                                   className={`${
                                     active
-                                      ? "bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-400"
+                                      ? "bg-primary-500 text-red-600 dark:bg-red-950/40 dark:text-red-400"
                                       : "dark:text-dark-200 text-gray-700"
                                   } flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium`}
                                 >
@@ -674,7 +782,7 @@ export default function CashReceipt() {
                   >
                     <MenuItems
                       anchor="top start"
-                      className="dark:bg-dark-700 dark:border-dark-600 z-[200] w-20 space-y-0.5 rounded-lg border border-gray-200 bg-white p-1 shadow-xl ring-1 ring-black/5 [--anchor-gap:6px] focus:outline-none"
+                      className="dark:bg-dark-700 dark:border-dark-600 z-200 w-20 space-y-0.5 rounded-lg border border-gray-200 bg-white p-1 shadow-xl ring-1 ring-black/5 [--anchor-gap:6px] focus:outline-none"
                     >
                       {entriesOptions.map((opt) => (
                         <MenuItem key={opt.id}>
@@ -687,7 +795,7 @@ export default function CashReceipt() {
                               }}
                               className={`flex w-full items-center justify-between rounded-md px-3 py-1.5 text-sm font-medium ${
                                 opt.id === itemsPerPage
-                                  ? "bg-red-600 text-white"
+                                  ? "bg-primary-500 text-white"
                                   : active
                                     ? "dark:bg-dark-600 bg-gray-100 text-gray-900 dark:text-white"
                                     : "text-gray-700 dark:text-gray-200"
@@ -729,7 +837,7 @@ export default function CashReceipt() {
                       onClick={() => setCurrentPage(page)}
                       className={`inline-flex size-8 items-center justify-center rounded-md text-sm font-medium transition-colors ${
                         page === currentPage
-                          ? "bg-red-600 text-white"
+                          ? "bg-primary-500 text-white"
                           : "dark:hover:bg-dark-700 text-gray-600 hover:bg-gray-100 dark:text-gray-300"
                       }`}
                     >
@@ -787,7 +895,7 @@ export default function CashReceipt() {
       <Transition appear show={showDrawer} as={Fragment}>
         <Dialog
           as="div"
-          className="relative z-[100]"
+          className="relative z-100"
           onClose={() => setShowDrawer(false)}
         >
           <TransitionChild
@@ -909,17 +1017,35 @@ export default function CashReceipt() {
                       Cash Account <span className="text-red-500">*</span>
                     </label>
                     <Combobox
-                      data={CASH_ACCOUNTS}
+                      data={cashAccounts}
                       displayField="label"
                       value={form.cashAccount}
-                      onChange={(value: any) => {
-                        setForm({ ...form, cashAccount: value });
-                        if (errors.cashAccount)
+                      onChange={(val: any) => {
+                        setForm({ ...form, cashAccount: val });
+
+                        if (errors.cashAccount) {
                           setErrors({ ...errors, cashAccount: "" });
+                        }
                       }}
-                      placeholder="Select Cash Account"
-                      searchFields={["label"]}
-                      error={errors.cashAccount}
+                      placeholder="Search Cash Account"
+                      searchFields={["label", "mobile"]}
+                      columns={[
+                        {
+                          header: "Account",
+                          field: "label",
+                          width: "2fr",
+                        },
+                        {
+                          header: "Mobile",
+                          field: "mobile",
+                          width: "1.5fr",
+                        },
+                        // {
+                        //   header: "Opening",
+                        //   field: "openingBalance",
+                        //   width: "1fr",
+                        // },
+                      ]}
                     />
                   </div>
                   <div>
@@ -943,7 +1069,7 @@ export default function CashReceipt() {
                       placeholder="Select date..."
                       value={form.date}
                       onChange={(date) => setForm({ ...form, date })}
-                        options={{ disableMobile: true }}
+                      options={{ disableMobile: true }}
                     />
                   </div>
                 </div>
@@ -960,17 +1086,35 @@ export default function CashReceipt() {
                       </label>
                     </div>
                     <Combobox
-                      data={OPP_ACCOUNTS_WITH_BALANCE}
+                      data={oppAccounts}
                       displayField="label"
                       value={form.oppAccount}
-                      onChange={(value: any) => {
-                        setForm({ ...form, oppAccount: value });
-                        if (errors.oppAccount)
+                      onChange={(val: any) => {
+                        setForm({ ...form, oppAccount: val });
+
+                        if (errors.oppAccount) {
                           setErrors({ ...errors, oppAccount: "" });
+                        }
                       }}
-                      placeholder="Select Opp. Account"
-                      searchFields={["label"]}
-                      error={errors.oppAccount}
+                      placeholder="Search Opp. Account"
+                      searchFields={["label", "mobile"]}
+                      columns={[
+                        {
+                          header: "Account",
+                          field: "label",
+                          width: "2fr",
+                        },
+                        {
+                          header: "Mobile",
+                          field: "mobile",
+                          width: "1.5fr",
+                        },
+                        {
+                          header: "Opening",
+                          field: "openingBalance",
+                          width: "1fr",
+                        },
+                      ]}
                     />
                   </div>
                   <div>

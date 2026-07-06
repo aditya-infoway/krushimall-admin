@@ -121,13 +121,13 @@ const initialForm = {
   type: "Manual" as EntryType,
   cashAccount: null as any,
   voucherNo: "CP/25-26/001",
-  date: null as any,
+  date: [new Date()],
   oppAccount: null as any,
   amount: "",
   narration: "",
   createdType: "",
   createdBy: "",
- leadNo: null as any,
+  leadNo: null as any,
 };
 
 const entriesOptions = [
@@ -172,33 +172,31 @@ export default function CashPayment() {
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredRows.slice(indexOfFirstItem, indexOfLastItem);
   const [companyId, setCompanyId] = useState<number | null>(null);
-const [financialYearId, setFinancialYearId] = useState<number | null>(null);
-const getCompany = async () => {
-  try {
-  const res = await apiHelper.get("/company");
+  const [financialYearId, setFinancialYearId] = useState<number | null>(null);
+  const getCompany = async () => {
+    try {
+      const res = await apiHelper.get("/company");
 
+      if (!res.data || res.data.length === 0) {
+        console.log("No companies found");
+        return;
+      }
 
+      const company = res.data[0];
 
-if (!res.data || res.data.length === 0) {
-  console.log("No companies found");
-  return;
-}
+      setCompanyId(company.id);
 
-const company = res.data[0];
+      if (company.financialYears?.length > 0) {
+        setFinancialYearId(company.financialYears[0].id);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
-setCompanyId(company.id);
-
-if (company.financialYears?.length > 0) {
-  setFinancialYearId(company.financialYears[0].id);
-}
-  } catch (err) {
-    console.error(err);
-  }
-};
-
-useEffect(() => {
-  getCompany();
-}, []);
+  useEffect(() => {
+    getCompany();
+  }, []);
   const getPurchaseBills = async () => {
     try {
       const res = await apiHelper.get("/purchases");
@@ -223,89 +221,87 @@ useEffect(() => {
 
       const accounts = res.data;
 
-   setCashAccounts(
-  accounts
-    .filter((a: any) => a.group === "Cash-in-Hand")
-    .map((a: any) => ({
-      value: a.id,
-      label: a.accountName,
-      mobile: a.mobile,
-      openingBalance: a.openingBalance,
-      balance: a.closingBalance,
-      balanceType: a.drCr,
-    }))
-);
+      setCashAccounts(
+        accounts
+          .filter((a: any) => a.group === "Cash-in-Hand")
+          .map((a: any) => ({
+            value: a.id,
+            label: a.accountName,
+            mobile: a.mobile,
+            openingBalance: a.openingBalance,
+            balance: a.closingBalance,
+            balanceType: a.drCr,
+          })),
+      );
 
-setOppAccounts(
-  accounts
-    .filter((a: any) => a.group !== "Cash-in-Hand")
-    .map((a: any) => ({
-      value: a.id,
-      label: a.accountName,
-      mobile: a.mobile,
-      openingBalance: a.openingBalance,
-      balance: a.closingBalance,
-      balanceType: a.drCr,
-    }))
-);
+      setOppAccounts(
+        accounts
+          .filter((a: any) => a.group !== "Cash-in-Hand")
+          .map((a: any) => ({
+            value: a.id,
+            label: a.accountName,
+            mobile: a.mobile,
+            openingBalance: a.openingBalance,
+            balance: a.closingBalance,
+            balanceType: a.drCr,
+          })),
+      );
     } catch (err) {
       console.log(err);
     }
   };
-const getVoucherNo = async () => {
-  try {
-    const res = await apiHelper.get("/cash-payment/generate-voucher");
+  const getVoucherNo = async () => {
+    try {
+      const res = await apiHelper.get("/cash-payment/generate-voucher");
 
-   
+      setForm((prev) => ({
+        ...prev,
+        voucherNo: res.voucherNo,
+      }));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+  const getCashPayments = async () => {
+    try {
+      const res = await apiHelper.get("/cash-payment");
 
-    setForm((prev) => ({
-      ...prev,
-      voucherNo: res.voucherNo,
-    }));
-  } catch (err) {
-    console.error(err);
-  }
-};
-const getCashPayments = async () => {
-  try {
-    const res = await apiHelper.get("/cash-payment");
-
-    setRows(
-      res.map((item: any) => ({
-        id: item.id,
-        date: item.date,
-        voucherNo: item.voucherNo,
-        type: item.type,
-        cashAccount: item.cashAccount?.accountName,
-        oppAccount: item.oppAccount?.accountName,
-        amount: item.amount,
-        narration: item.narration,
-        createdType: item.createdType,
-        createdBy: item.createdBy,
-        leadNo: item.lead?.leadNo,
-      }))
-    );
-  } catch (err) {
-    console.log(err);
-  }
-};
+      setRows(
+        res.map((item: any) => ({
+          id: item.id,
+          date: item.date,
+          voucherNo: item.voucherNo,
+          type: item.type,
+          cashAccount: item.cashAccount?.accountName,
+          oppAccount: item.oppAccount?.accountName,
+          amount: item.amount,
+          narration: item.narration,
+          createdType: item.createdType,
+          createdBy: item.createdBy,
+          leadNo: item.lead?.leadNo,
+        })),
+      );
+    } catch (err) {
+      console.log(err);
+    }
+  };
   useEffect(() => {
     getAccounts();
     getPurchaseBills();
-      getVoucherNo();
-        getCashPayments();
+    getVoucherNo();
+    getCashPayments();
   }, []);
   const purchaseBillOptions = purchaseBills;
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-   if (!form.cashAccount?.value) {
-  newErrors.cashAccount = "Cash Account is required";
-}
+    if (!form.cashAccount?.value) {
+      newErrors.cashAccount = "Cash Account is required";
+    }
 
-if (!form.oppAccount?.value) {
-  newErrors.oppAccount = "Opp. Account is required";
-}
+    if (!form.oppAccount?.value) {
+      newErrors.oppAccount = "Opp. Account is required";
+    }
     if (!form.amount || form.amount === "") {
       newErrors.amount = "Amount is required";
     }
@@ -317,18 +313,19 @@ if (!form.oppAccount?.value) {
     return Object.keys(newErrors).length === 0;
   };
 
- const handleAdd = async () => {
-  setEditId(null);
-  setErrors({});
+  const handleAdd = async () => {
+    setEditId(null);
+    setErrors({});
 
-  setForm({
-    ...initialForm,
-  });
+    setForm({
+      ...initialForm,
+       date: [new Date()],
+    });
 
-  await getVoucherNo();
+    await getVoucherNo();
 
-  setShowDrawer(true);
-};
+    setShowDrawer(true);
+  };
 
   // Transform OPP_ACCOUNTS to include balance in label
   // Calculate the longest account name for proper alignment
@@ -387,39 +384,34 @@ if (!form.oppAccount?.value) {
     setSelectedIds([]);
   };
 
-const handleSubmit = async () => {
-  if (!validateForm()) return;
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
 
-  try {
-    const payload = {
-       companyId,
-  financialYearId, // or from auth context
-      date: form.date || new Date(),
-      cashAccountId: form.cashAccount.value,
-      oppAccountId: form.oppAccount.value,
-      purchaseId:
-        form.type === "Purchase" && purchaseBill
-          ? purchaseBill.value
-          : null,
-      leadId:
-        form.type === "Lead Cancel" && form.leadNo
-          ? form.leadNo.id
-          : null,
-      amount: Number(form.amount),
-      narration: form.narration,
-    };
-console.log(payload);
-    await apiHelper.post("/cash-payment", payload);
+    try {
+      const payload = {
+        companyId,
+        financialYearId, // or from auth context
+        date: form.date || new Date(),
+        cashAccountId: form.cashAccount.value,
+        oppAccountId: form.oppAccount.value,
+        purchaseId:
+          form.type === "Purchase" && purchaseBill ? purchaseBill.value : null,
+        leadId:
+          form.type === "Lead Cancel" && form.leadNo ? form.leadNo.id : null,
+        amount: Number(form.amount),
+        narration: form.narration,
+      };
+      console.log(payload);
+      await apiHelper.post("/cash-payment", payload);
 
-    setShowDrawer(false);
+      setShowDrawer(false);
 
-    getCashPayments(); // refresh table
-    getVoucherNo();    // next voucher
-
-  } catch (err) {
-    console.log(err);
-  }
-};
+      getCashPayments(); // refresh table
+      getVoucherNo(); // next voucher
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   const isAllPageSelected =
     currentItems.length > 0 &&
@@ -634,8 +626,7 @@ console.log(payload);
                       {item.voucherNo}
                     </td>
                     <td className="py-3 whitespace-nowrap">
-                      <span
-                        className="inline-flex rounded-full px-2 py-0.5 text-xs font-semibold bg-primary-500">
+                      <span className="bg-primary-500 inline-flex rounded-full px-2 py-0.5 text-xs font-semibold">
                         {item.type}
                       </span>
                     </td>
@@ -860,7 +851,7 @@ console.log(payload);
             </div>
             <button
               onClick={handleBulkDelete}
-              className="flex items-center gap-1.5 rounded-lg bg-primary-500 px-3 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-primary-500"
+              className="bg-primary-500 hover:bg-primary-500 flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold text-white shadow-sm"
             >
               <Trash2 className="size-4" />
               <span className="text-xs font-semibold">Delete Selected</span>
@@ -1001,55 +992,55 @@ console.log(payload);
                     <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Cash Account <span className="text-red-500">*</span>
                     </label>
-                  <Combobox
-  data={cashAccounts}
-  displayField="label"
-  value={form.cashAccount}
-  onChange={(val: any) => {
-    setForm({ ...form, cashAccount: val });
+                    <Combobox
+                      data={cashAccounts}
+                      displayField="label"
+                      value={form.cashAccount}
+                      onChange={(val: any) => {
+                        setForm({ ...form, cashAccount: val });
 
-    if (errors.cashAccount) {
-      setErrors({ ...errors, cashAccount: "" });
-    }
-  }}
-  placeholder="Search Cash Account"
-  searchFields={["label", "mobile"]}
-  columns={[
-    {
-      header: "Account",
-      field: "label",
-      width: "2fr",
-    },
-    {
-      header: "Mobile",
-      field: "mobile",
-      width: "1.5fr",
-    },
-    {
-      header: "Opening",
-      field: "openingBalance",
-      width: "1fr",
-    },
-  ]}
-/>
-  {errors.cashAccount && (
-    <p className="mt-1 text-sm text-red-500">
-      {errors.cashAccount}
-    </p>
-  )}
+                        if (errors.cashAccount) {
+                          setErrors({ ...errors, cashAccount: "" });
+                        }
+                      }}
+                      placeholder="Search Cash Account"
+                      searchFields={["label", "mobile"]}
+                      columns={[
+                        {
+                          header: "Account",
+                          field: "label",
+                          width: "2fr",
+                        },
+                        {
+                          header: "Mobile",
+                          field: "mobile",
+                          width: "1.5fr",
+                        },
+                        {
+                          header: "Opening",
+                          field: "openingBalance",
+                          width: "1fr",
+                        },
+                      ]}
+                    />
+                    {errors.cashAccount && (
+                      <p className="mt-1 text-sm text-red-500">
+                        {errors.cashAccount}
+                      </p>
+                    )}
                   </div>
-                 <div>
-  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-    Voucher No.
-  </label>
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Voucher No.
+                    </label>
 
-  <input
-    type="text"
-    value={form.voucherNo || ""}
-    readOnly
-    className="dark:border-dark-500 dark:bg-dark-600 w-full cursor-not-allowed rounded-lg border border-gray-300 bg-gray-100 px-4 py-2.5 text-sm"
-  />
-</div>
+                    <input
+                      type="text"
+                      value={form.voucherNo || ""}
+                      readOnly
+                      className="dark:border-dark-500 dark:bg-dark-600 w-full cursor-not-allowed rounded-lg border border-gray-300 bg-gray-100 px-4 py-2.5 text-sm"
+                    />
+                  </div>
                   <div>
                     <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Date
@@ -1073,42 +1064,42 @@ console.log(payload);
                         Opp. Account <span className="text-red-500">*</span>
                       </label>
                     </div>
-                  <Combobox
-  data={oppAccounts}
-  displayField="label"
-  value={form.oppAccount}
-  onChange={(val: any) => {
-    setForm({ ...form, oppAccount: val });
+                    <Combobox
+                      data={oppAccounts}
+                      displayField="label"
+                      value={form.oppAccount}
+                      onChange={(val: any) => {
+                        setForm({ ...form, oppAccount: val });
 
-    if (errors.oppAccount) {
-      setErrors({ ...errors, oppAccount: "" });
-    }
-  }}
-  placeholder="Search Opp. Account"
-  searchFields={["label", "mobile"]}
-  columns={[
-    {
-      header: "Account",
-      field: "label",
-      width: "2fr",
-    },
-    {
-      header: "Mobile",
-      field: "mobile",
-      width: "1.5fr",
-    },
-    {
-      header: "Opening",
-      field: "openingBalance",
-      width: "1fr",
-    },
-  ]}
-/>
-  {errors.oppAccount && (
-    <p className="mt-1 text-sm text-red-500">
-      {errors.oppAccount}
-    </p>
-  )}
+                        if (errors.oppAccount) {
+                          setErrors({ ...errors, oppAccount: "" });
+                        }
+                      }}
+                      placeholder="Search Opp. Account"
+                      searchFields={["label", "mobile"]}
+                      columns={[
+                        {
+                          header: "Account",
+                          field: "label",
+                          width: "2fr",
+                        },
+                        {
+                          header: "Mobile",
+                          field: "mobile",
+                          width: "1.5fr",
+                        },
+                        {
+                          header: "Opening",
+                          field: "openingBalance",
+                          width: "1fr",
+                        },
+                      ]}
+                    />
+                    {errors.oppAccount && (
+                      <p className="mt-1 text-sm text-red-500">
+                        {errors.oppAccount}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
