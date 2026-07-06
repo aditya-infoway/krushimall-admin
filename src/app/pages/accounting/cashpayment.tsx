@@ -223,27 +223,31 @@ useEffect(() => {
 
       const accounts = res.data;
 
-      // Cash accounts only
-      setCashAccounts(
-        accounts
-          .filter((a: any) => a.group === "Cash-in-Hand")
-          .map((a: any) => ({
-            value: a.id,
-            label: `${a.accountName} `,
-          })),
-      );
+   setCashAccounts(
+  accounts
+    .filter((a: any) => a.group === "Cash-in-Hand")
+    .map((a: any) => ({
+      value: a.id,
+      label: a.accountName,
+      mobile: a.mobile,
+      openingBalance: a.openingBalance,
+      balance: a.closingBalance,
+      balanceType: a.drCr,
+    }))
+);
 
-      // All accounts
-      setOppAccounts(
-        accounts
-          .filter((a: any) => a.group !== "Cash-in-Hand") // Exclude Cash accounts
-          .map((a: any) => ({
-            value: a.id,
-            label: `${a.accountName} (${a.mobile})`,
-            balance: a.closingBalance,
-            balanceType: a.drCr,
-          })),
-      );
+setOppAccounts(
+  accounts
+    .filter((a: any) => a.group !== "Cash-in-Hand")
+    .map((a: any) => ({
+      value: a.id,
+      label: a.accountName,
+      mobile: a.mobile,
+      openingBalance: a.openingBalance,
+      balance: a.closingBalance,
+      balanceType: a.drCr,
+    }))
+);
     } catch (err) {
       console.log(err);
     }
@@ -295,12 +299,13 @@ const getCashPayments = async () => {
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!form.cashAccount) {
-      newErrors.cashAccount = "Cash Account is required";
-    }
-    if (!form.oppAccount) {
-      newErrors.oppAccount = "Opp. Account is required";
-    }
+   if (!form.cashAccount?.value) {
+  newErrors.cashAccount = "Cash Account is required";
+}
+
+if (!form.oppAccount?.value) {
+  newErrors.oppAccount = "Opp. Account is required";
+}
     if (!form.amount || form.amount === "") {
       newErrors.amount = "Amount is required";
     }
@@ -996,19 +1001,42 @@ console.log(payload);
                     <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Cash Account <span className="text-red-500">*</span>
                     </label>
-                    <Combobox
-                      data={cashAccounts}
-                      displayField="label"
-                      value={form.cashAccount}
-                      onChange={(value: any) => {
-                        setForm({ ...form, cashAccount: value });
-                        if (errors.cashAccount)
-                          setErrors({ ...errors, cashAccount: "" });
-                      }}
-                      placeholder="Select Cash Account"
-                      searchFields={["label"]}
-                      error={errors.cashAccount}
-                    />
+                  <Combobox
+  data={cashAccounts}
+  displayField="label"
+  value={form.cashAccount}
+  onChange={(val: any) => {
+    setForm({ ...form, cashAccount: val });
+
+    if (errors.cashAccount) {
+      setErrors({ ...errors, cashAccount: "" });
+    }
+  }}
+  placeholder="Search Cash Account"
+  searchFields={["label", "mobile"]}
+  columns={[
+    {
+      header: "Account",
+      field: "label",
+      width: "2fr",
+    },
+    {
+      header: "Mobile",
+      field: "mobile",
+      width: "1.5fr",
+    },
+    {
+      header: "Opening",
+      field: "openingBalance",
+      width: "1fr",
+    },
+  ]}
+/>
+  {errors.cashAccount && (
+    <p className="mt-1 text-sm text-red-500">
+      {errors.cashAccount}
+    </p>
+  )}
                   </div>
                  <div>
   <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -1045,19 +1073,42 @@ console.log(payload);
                         Opp. Account <span className="text-red-500">*</span>
                       </label>
                     </div>
-                    <Combobox
-                      data={oppAccounts}
-                      displayField="label"
-                      value={form.oppAccount}
-                      onChange={(value: any) => {
-                        setForm({ ...form, oppAccount: value });
-                        if (errors.oppAccount)
-                          setErrors({ ...errors, oppAccount: "" });
-                      }}
-                      placeholder="Select Opp. Account"
-                      searchFields={["label"]}
-                      error={errors.oppAccount}
-                    />
+                  <Combobox
+  data={oppAccounts}
+  displayField="label"
+  value={form.oppAccount}
+  onChange={(val: any) => {
+    setForm({ ...form, oppAccount: val });
+
+    if (errors.oppAccount) {
+      setErrors({ ...errors, oppAccount: "" });
+    }
+  }}
+  placeholder="Search Opp. Account"
+  searchFields={["label", "mobile"]}
+  columns={[
+    {
+      header: "Account",
+      field: "label",
+      width: "2fr",
+    },
+    {
+      header: "Mobile",
+      field: "mobile",
+      width: "1.5fr",
+    },
+    {
+      header: "Opening",
+      field: "openingBalance",
+      width: "1fr",
+    },
+  ]}
+/>
+  {errors.oppAccount && (
+    <p className="mt-1 text-sm text-red-500">
+      {errors.oppAccount}
+    </p>
+  )}
                   </div>
                   <div>
                     <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
