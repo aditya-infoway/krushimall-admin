@@ -27,5 +27,12 @@ export const usermaster: NavigationTree = {
    path: "/usermaster/createbroker",
 
   },
+    {
+   id: "branch",
+   type: "item",
+   title: "Create Branch",
+   path: "/usermaster/branch",
+ 
+  },
  ],
 };

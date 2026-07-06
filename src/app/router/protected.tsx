@@ -228,6 +228,13 @@ const protectedRoutes: RouteObject = {
                   .default,
               }),
             },
+              {
+              path: "branch",
+              lazy: async () => ({
+                Component: (await import("@/app/pages/usermaster/branch"))
+                  .default,
+              }),
+            },
           ],
         },
 
