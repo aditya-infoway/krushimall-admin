@@ -14,8 +14,12 @@ import {
   RiAlarmWarningLine,
   RiCheckboxCircleLine,
   RiCalendarEventLine,
+  RiChat3Line,
+  RiCalendarCheckLine,
+  RiCalendarLine,
 } from "react-icons/ri";
 import { FiChevronUp, FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import { Badge } from "@/components/ui";
 
 interface FollowUpData {
   id: number;
@@ -105,6 +109,11 @@ const TodayFollowUps: React.FC = () => {
   const handleViewClick = (id: number) => {
     navigate(`/followups/follow-up/${id}`);
   };
+
+ const handleHistoryClick = (id: number) => {
+  console.log("clicked", id);
+  navigate(`/followups/history/${id}`);
+};
 
   return (
     <div className="dark:bg-dark-800 min-h-screen bg-gray-50 p-4 md:p-6">
@@ -434,64 +443,127 @@ const TodayFollowUps: React.FC = () => {
                 1
               </span>
             </div>
-
             {/* Delay Card */}
-            <div className="dark:bg-dark-700 dark:border-dark-600 rounded-xl border border-gray-100 bg-white p-3 shadow-sm">
-              <div className="mb-2 flex items-start justify-between">
-                <span className="text-sm font-medium text-gray-900 dark:text-white">
-                  Denish patel
-                </span>
-                <span className="text-xs font-medium text-blue-600 dark:text-blue-400">
-                  25-06-2026
-                </span>
+         
+            <div className="dark:bg-dark-600 flex max-h-[500px] min-h-[400px] flex-col rounded-xl bg-gray-100 p-4">
+              
+
+              {/* Scrollable content area */}
+              <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
+                {/* Delay Card */}
+                <div className="dark:bg-dark-700 dark:border-dark-600 overflow-x-auto rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md">
+                  <div className="min-w-[260px]">
+                    {/* Header: Ref No + Name */}
+                    <div className="mb-4 flex items-center gap-3">
+                      <Badge
+                        variant="outlined"
+                        className="rounded-full whitespace-nowrap"
+                      >
+                        Q/25-26/001
+                      </Badge>
+                      <span className="text-sm font-bold whitespace-nowrap text-gray-900 dark:text-white">
+                        Denish patel
+                      </span>
+                    </div>
+
+                    {/* Info Pills */}
+                    <div className="space-y-2.5">
+                      <div className="dark:bg-dark-800 flex items-center justify-between gap-2 rounded-full bg-gray-50 py-2 pr-2 pl-4">
+                        <div className="flex items-center gap-2 whitespace-nowrap">
+                          <RiCalendarLine
+                            className="shrink-0 text-blue-500"
+                            size={15}
+                          />
+                          <span className="text-xs font-medium whitespace-nowrap text-gray-500 dark:text-gray-400">
+                            Ex. Date
+                          </span>
+                        </div>
+                        <Badge
+                          variant="outlined"
+                          color="primary"
+                          className="rounded-full whitespace-nowrap"
+                        >
+                          17-06-2026
+                        </Badge>
+                      </div>
+
+                      <div className="dark:bg-dark-800 flex items-center justify-between gap-2 rounded-full bg-gray-50 py-2 pr-2 pl-4">
+                        <div className="flex items-center gap-2 whitespace-nowrap">
+                          <RiCalendarCheckLine
+                            className="shrink-0 text-blue-500"
+                            size={15}
+                          />
+                          <span className="text-xs font-medium whitespace-nowrap text-gray-500 dark:text-gray-400">
+                            L-Follow-up Date
+                          </span>
+                        </div>
+                        <Badge
+                          variant="outlined"
+                          color="primary"
+                          className="rounded-full whitespace-nowrap"
+                        >
+                          18-06-2026
+                        </Badge>
+                      </div>
+
+                      <div className="dark:bg-dark-800 flex items-center justify-between gap-2 rounded-full bg-gray-50 py-2 pr-2 pl-4">
+                        <div className="flex items-center gap-2 whitespace-nowrap">
+                          <RiPhoneLine
+                            className="shrink-0 text-blue-500"
+                            size={15}
+                          />
+                          <span className="text-xs font-medium whitespace-nowrap text-gray-500 dark:text-gray-400">
+                            Call Response
+                          </span>
+                        </div>
+                        <Badge
+                          variant="outlined"
+                          color="success"
+                          className="rounded-full whitespace-nowrap"
+                        >
+                          Connected
+                        </Badge>
+                      </div>
+
+                      <div className="dark:bg-dark-800 flex items-center gap-2 rounded-full bg-gray-50 py-2.5 pr-4 pl-4">
+                        <RiChat3Line
+                          className="shrink-0 text-blue-500"
+                          size={15}
+                        />
+                        <span className="text-xs whitespace-nowrap text-gray-400 dark:text-gray-500">
+                          No remarks yet
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Dotted Separator */}
+                    <div className="dark:border-dark-600 my-4 border-t border-dashed border-gray-300" />
+
+                    {/* Footer Actions */}
+                    <div className="flex items-center justify-end gap-2">
+                      <span className="dark:bg-dark-800 flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-xs font-semibold text-gray-500 dark:text-gray-400">
+                        1
+                      </span>
+                      <button
+                        onClick={() => handleViewClick(gridData[0].id)}
+                        className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-blue-600 transition-all duration-200 hover:bg-blue-200 active:scale-95 dark:bg-blue-900/30 dark:text-blue-400"
+                        title="Add Follow-up"
+                      >
+                        <RiAddLine className="text-lg" />
+                      </button>
+                      <button
+                      onClick={() =>handleHistoryClick(gridData[0].id)}
+                        className="dark:bg-dark-800 flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-all duration-200 hover:bg-gray-200 active:scale-95 dark:text-gray-400"
+                        title="View"
+                      >
+                        <RiEyeLine className="text-lg" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                {/* more delay cards can go here, they'll stack + scroll together */}
               </div>
-              <div className="space-y-1.5 text-xs">
-                <div className="flex justify-between">
-                  <span className="text-gray-500 dark:text-gray-400">
-                    Ex. Date
-                  </span>
-                  <span className="text-gray-700 dark:text-gray-300">
-                    17-06-2026
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500 dark:text-gray-400">
-                    L Follow-up Date
-                  </span>
-                  <span className="text-gray-700 dark:text-gray-300">
-                    18-06-2026
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500 dark:text-gray-400">
-                    Call Response
-                  </span>
-                  <span className="font-medium text-green-600 dark:text-green-400">
-                    Connected
-                  </span>
-                </div>
-                <div className="flex items-center gap-1 text-gray-500 dark:text-gray-400">
-                  <RiPhoneLine className="text-xs" />
-                  <span className="text-xs">+91 9081540774</span>
-                </div>
-              </div>
-              <div className="dark:border-dark-600 mt-3 flex items-end justify-end border-t border-gray-100 pt-2">
-                <div className="flex gap-1">
-                  <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
-                    1
-                  </span>
-                  <button className="dark:border-dark-600 dark:hover:bg-dark-600 rounded-lg border border-gray-200 p-1 transition-all hover:bg-gray-50">
-                    <RiAddLine className="text-sm text-gray-500" />
-                  </button>
-                  <button
-                    onClick={() => handleViewClick(gridData[0].id)}
-                    className="dark:border-dark-600 dark:hover:bg-dark-600 cursor-pointer rounded-lg border border-gray-200 p-1 transition-all hover:bg-gray-50"
-                  >
-                    <RiEyeLine className="text-sm text-gray-500" />
-                  </button>
-                </div>
-              </div>
-            </div>
+            </div>{" "}
           </div>
 
           {/* Attend Column */}

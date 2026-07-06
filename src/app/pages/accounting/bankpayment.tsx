@@ -73,6 +73,8 @@ interface BankPayment {
   createdType: string;
   createdBy: string;
   leadNo?: string;
+    bankAccount: string; // Add this
+  oppAccount: string;
 }
 
 const BANK_ACCOUNTS = [
@@ -227,6 +229,8 @@ useEffect(() => {
         .map((a: any) => ({
           value: a.id,
           label: `${a.accountName} (${a.mobile ?? ""})`,
+             mobile: a.mobile,
+      openingBalance: a.openingBalance,
           balance: a.closingBalance,
           balanceType: a.drCr,
         }))
@@ -239,6 +243,8 @@ useEffect(() => {
         .map((a: any) => ({
           value: a.id,
           label: `${a.accountName} (${a.mobile ?? ""})`,
+             mobile: a.mobile,
+      openingBalance: a.openingBalance,
           balance: a.closingBalance,
           balanceType: a.drCr,
         }))
@@ -300,12 +306,13 @@ const getVoucherNo = async () => {
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!form.bankAccount) {
-      newErrors.bankAccount = "Bank Account is required";
-    }
-    if (!form.oppAccount) {
-      newErrors.oppAccount = "Opp. Account is required";
-    }
+   if (!form.bankAccount?.value) {
+  newErrors.bankAccount = "Bank Account is required";
+}
+
+if (!form.oppAccount?.value) {
+  newErrors.oppAccount = "Opp. Account is required";
+}
     if (!form.amount || form.amount === "") {
       newErrors.amount = "Amount is required";
     }
@@ -1086,19 +1093,37 @@ oppAccount:
                     <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Bank Account <span className="text-red-500">*</span>
                     </label>
-                    <Combobox
-                      data={bankAccounts}
-                      displayField="label"
-                      value={form.bankAccount}
-                      onChange={(value: any) => {
-                        setForm({ ...form, bankAccount: value });
-                        if (errors.bankAccount)
-                          setErrors({ ...errors, bankAccount: "" });
-                      }}
-                      placeholder="Select Bank Account"
-                      searchFields={["label"]}
-                      error={errors.bankAccount}
-                    />
+                 <Combobox
+  data={bankAccounts}
+  value={form.bankAccount}
+ onChange={(val: any) => {
+  setForm({ ...form, bankAccount: val });
+
+  if (errors.bankAccount) {
+    setErrors({ ...errors, bankAccount: "" });
+  }
+}}
+  displayField="label"
+  placeholder="Search Bank Account"
+  searchFields={["label", "mobile"]}
+  columns={[
+    {
+      header: "Account",
+      field: "label",
+      width: "2fr",
+    },
+    {
+      header: "Mobile",
+      field: "mobile",
+      width: "1.5fr",
+    },
+    {
+      header: "Opening",
+      field: "openingBalance",
+      width: "1fr",
+    },
+  ]}
+/>
                   </div>
                   <div>
                     <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -1139,18 +1164,36 @@ oppAccount:
                       </label>
                     </div>
                     <Combobox
-                      data={oppAccounts}
-                      displayField="label"
-                      value={form.oppAccount}
-                      onChange={(value: any) => {
-                        setForm({ ...form, oppAccount: value });
-                        if (errors.oppAccount)
-                          setErrors({ ...errors, oppAccount: "" });
-                      }}
-                      placeholder="Select Opp. Account"
-                      searchFields={["label"]}
-                      error={errors.oppAccount}
-                    />
+  data={oppAccounts}
+  value={form.oppAccount}
+ onChange={(val: any) => {
+  setForm({ ...form, oppAccount: val });
+
+  if (errors.oppAccount) {
+    setErrors({ ...errors, oppAccount: "" });
+  }
+}}
+  displayField="label"
+  placeholder="Search Opp. Account"
+  searchFields={["label", "mobile"]}
+  columns={[
+    {
+      header: "Account",
+      field: "label",
+      width: "2fr",
+    },
+    {
+      header: "Mobile",
+      field: "mobile",
+      width: "1.5fr",
+    },
+    {
+      header: "Opening",
+      field: "openingBalance",
+      width: "1fr",
+    },
+  ]}
+/>
                   </div>
                   <div>
                     <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">

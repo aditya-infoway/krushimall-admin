@@ -42,6 +42,7 @@ export default function General() {
   }));
   const prefixForOptions = [
   { value: "CUSTOMER", label: "CUSTOMER" },
+   { value: "CONTRA", label: "CONTRA" },
   { value: "ACCESSORIES_PURCHASE", label: "ACCESSORIES_PURCHASE" },
    { value: "BANK_PAYMENT", label: "BANK_PAYMENT" },
   { value: "CASH_PAYMENT", label: "CASH_PAYMENT" },

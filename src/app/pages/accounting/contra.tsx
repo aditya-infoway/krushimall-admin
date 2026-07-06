@@ -26,9 +26,10 @@ import {
 } from "@headlessui/react";
 import { Fragment } from "react";
 import { DatePicker } from "@/components/shared/form/Datepicker";
-import { Combobox } from "@/components/shared/form/StyledCombobox";
+// import { Combobox } from "@/components/shared/form/StyledCombobox";
+import { Combobox } from "@/components/shared/form/Combobox";
 import { Input, Radio, Textarea } from "@/components/ui";
-
+import apiHelper from "@/utils/apiHelper";
 // ── Types ──────────────────────────────────────────────────────────────────────
 type ContraType = "Cash Deposit" | "Cash Withdrawal" | "Bank Transfer";
 
@@ -46,20 +47,7 @@ interface ContraEntry {
 }
 
 // ── Static options ─────────────────────────────────────────────────────────────
-const ACCOUNT_OPTIONS = [
-  {
-    id: 1,
-    label: "Cash account (9081540777)",
-    value: "Cash account (9081540777)",
-  },
-  {
-    id: 2,
-    label: "Denish patel (9081540774)",
-    value: "Denish patel (9081540774)",
-  },
-  { id: 3, label: "HDFC Bank (9081540777)", value: "HDFC Bank (9081540777)" },
-  { id: 4, label: "ICICI Bank (9081540774)", value: "ICICI Bank (9081540774)" },
-];
+
 
 const CONTRA_TYPES: ContraType[] = [
   "Cash Deposit",
@@ -88,29 +76,152 @@ export default function Contra() {
   // form state
   const [type, setType] = useState<ContraType>("Bank Transfer");
   const [cashBankAccount, setCashBankAccount] = useState<any>(null);
-  const [voucherNo, setVoucherNo] = useState("25-26/001");
+ const [voucherNo, setVoucherNo] = useState("");
   const [date, setDate] = useState<any>(null);
   const [oppAccount, setOppAccount] = useState<any>(null);
   const [amount, setAmount] = useState("");
   const [narration, setNarration] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
- 
-const [showFilterBar, setShowFilterBar] = useState(false);
 
+  const [showFilterBar, setShowFilterBar] = useState(false);
+const [loading, setLoading] = useState(false);
   // Filter states
   const [filterType, setFilterType] = useState("All");
   const [filterDateFrom, setFilterDateFrom] = useState<any>(null);
   const [filterDateTo, setFilterDateTo] = useState<any>(null);
+  const [accounts, setAccounts] = useState<any[]>([]);
+  const [companyId, setCompanyId] = useState<number | null>(null);
+const [financialYearId, setFinancialYearId] = useState<number | null>(null);
 
+const getCompany = async () => {
+  try {
+    const res = await apiHelper.get("/company");
+
+    if (!res.data || res.data.length === 0) return;
+
+    const company = res.data[0];
+
+    setCompanyId(company.id);
+
+    if (company.financialYears?.length > 0) {
+      setFinancialYearId(company.financialYears[0].id);
+    }
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+useEffect(() => {
+  getCompany();
+}, []);
+  useEffect(() => {
+     fetchContras();
+    const fetchAccounts = async () => {
+      try {
+        const res = await apiHelper.get("/accounts");
+       
+        const accountData = (res.data || res.data).map((acc: any) => ({
+          id: acc.id,
+          label: acc.accountName,
+          value: acc.id,
+           mobile: acc.mobile,
+  openingBalance: acc.openingBalance,
+          group: acc.group, // "Cash-in-Hand" or "Bank Accounts"
+        }));
+       
+        setAccounts(accountData);
+      } catch (error) {
+        console.error("Failed to fetch accounts:", error);
+      }
+    };
+
+    fetchAccounts();
+  }, []);
+
+  const cashBankAccountOptions = accounts.filter((acc) => {
+  if (type === "Cash Deposit") {
+    return acc.group === "Cash-in-Hand";
+  }
+
+  if (type === "Cash Withdrawal") {
+    return acc.group === "Bank Accounts";
+  }
+
+  // Bank Transfer
+  return (
+    acc.group === "Bank Accounts" &&
+    acc.id !== oppAccount?.id
+  );
+});
+
+const oppAccountOptions = accounts.filter((acc) => {
+  if (type === "Cash Deposit") {
+    return acc.group === "Bank Accounts";
+  }
+
+  if (type === "Cash Withdrawal") {
+    return acc.group === "Cash-in-Hand";
+  }
+
+  // Bank Transfer
+  return (
+    acc.group === "Bank Accounts" &&
+    acc.id !== cashBankAccount?.id
+  );
+});
+const fetchContras = async () => {
+  try {
+    setLoading(true);
+
+    const res = await apiHelper.get("/contra");
+
+
+    const data = res.map((item: any) => ({
+      id: item.id,
+      date: item.date,
+      voucherNo: item.voucherNo,
+      type: item.type,
+      cashBankAccount: item.cashBankAccount?.accountName,
+      oppAccount: item.oppAccount?.accountName,
+      amount: item.amount,
+      narration: item.narration,
+      createdType: item.createdType,
+      createdBy: item.createdBy,
+    }));
+
+    setEntries(data);
+  } catch (err) {
+    console.log(err);
+  } finally {
+    setLoading(false);
+  }
+};
+const getVoucher = async () => {
+  try {
+    const res = await apiHelper.get("/contra/voucher");
+
+    setVoucherNo(res.voucherNo);
+
+    // OR if using form state
+    // setForm(prev => ({
+    //   ...prev,
+    //   voucherNo: res.voucherNo,
+    // }));
+
+  } catch (err) {
+    console.error(err);
+  }
+};
   const openModal = () => {
-    setType("Bank Transfer");
+    setType("Cash Deposit");
     setCashBankAccount(null);
-    setVoucherNo("25-26/001");
+     setVoucherNo("");
     setDate(null);
     setOppAccount(null);
     setAmount("");
     setNarration("");
     setErrors({});
+     getVoucher();
     setShowModal(true);
   };
 
@@ -132,30 +243,36 @@ const [showFilterBar, setShowFilterBar] = useState(false);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = () => {
-    if (!validateForm()) return;
-    const entry: ContraEntry = {
-      id: entries.length + 1,
-      date:
-        date ||
-        new Date().toLocaleDateString("en-GB", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-        }),
-      voucherNo,
+ const handleSubmit = async () => {
+  if (!validateForm()) return;
+
+  try {
+    await apiHelper.post("/contra", {
+        companyId,
+  financialYearId,
+      date,
       type,
-      cashBankAccount: cashBankAccount.value,
-      oppAccount: oppAccount.value,
-      amount: parseFloat(amount),
+    
+      cashBankAccountId: cashBankAccount.id,
+      oppAccountId: oppAccount.id,
+      amount: Number(amount),
       narration,
-      createdType: "Manual",
-      createdBy: "Admin",
-    };
-    setEntries([...entries, entry]);
+    });
+
+    fetchContras();
+
     setShowModal(false);
-    setErrors({});
-  };
+
+    setCashBankAccount(null);
+    setOppAccount(null);
+    setAmount("");
+    setNarration("");
+    setDate(null);
+
+  } catch (err) {
+    console.log(err);
+  }
+};
 
   const handleDelete = (id: number) => {
     setEntries(entries.filter((row) => row.id !== id));
@@ -218,19 +335,18 @@ const [showFilterBar, setShowFilterBar] = useState(false);
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-
-            <button
-  type="button"
-  onClick={() => setShowFilterBar(!showFilterBar)}
-  className={`inline-flex items-center gap-1.5 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
-    showFilterBar
-      ? "dark:bg-dark-600 dark:border-dark-500 border-red-200 bg-red-50 text-red-600 dark:text-white"
-      : "dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
-  }`}
->
-  <Filter className="size-4.5" />
-  Filter
-</button>
+          <button
+            type="button"
+            onClick={() => setShowFilterBar(!showFilterBar)}
+            className={`inline-flex items-center gap-1.5 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
+              showFilterBar
+                ? "dark:bg-dark-600 dark:border-dark-500 border-red-200 bg-red-50 text-red-600 dark:text-white"
+                : "dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+            }`}
+          >
+            <Filter className="size-4.5" />
+            Filter
+          </button>
           <button
             type="button"
             onClick={() => {}}
@@ -282,7 +398,7 @@ const [showFilterBar, setShowFilterBar] = useState(false);
               <select
                 value={filterType}
                 onChange={(e) => setFilterType(e.target.value)}
-                className="dark:border-dark-500 dark:bg-dark-600 w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm "
+                className="dark:border-dark-500 dark:bg-dark-600 w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm"
               >
                 <option value="All">All Types</option>
                 <option value="Cash Deposit">Cash Deposit</option>
@@ -317,7 +433,7 @@ const [showFilterBar, setShowFilterBar] = useState(false);
       {/* Main Table */}
       <div className="dark:bg-dark-800 dark:border-dark-700 rounded-xl border border-gray-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1100px] text-left [&_.table-th]:font-semibold">
+          <table className="w-full min-w-275 text-left [&_.table-th]:font-semibold">
             <thead className="dark:bg-dark-700/60 dark:border-dark-600 border-b border-gray-200 bg-gray-100">
               <tr>
                 <th className="w-10 px-2 py-3.5 text-center">
@@ -384,7 +500,7 @@ const [showFilterBar, setShowFilterBar] = useState(false);
                       {indexOfFirstItem + index + 1}
                     </td>
                     <td className="px-3 py-3 text-sm whitespace-nowrap text-gray-900 dark:text-gray-400">
-                      {item.date}
+                    {new Date(item.date).toLocaleDateString("en-GB")}
                     </td>
                     <td className="px-3 py-3 text-sm font-medium whitespace-nowrap text-gray-900 dark:text-gray-400">
                       {item.voucherNo}
@@ -535,7 +651,7 @@ const [showFilterBar, setShowFilterBar] = useState(false);
                               }}
                               className={`flex w-full items-center justify-between rounded-md px-3 py-1.5 text-sm font-medium ${
                                 opt.id === itemsPerPage
-                                  ? "bg-red-600 text-white"
+                                  ? "bg-primary-500 text-white"
                                   : active
                                     ? "dark:bg-dark-600 bg-gray-100 text-gray-900 dark:text-white"
                                     : "text-gray-700 dark:text-gray-200"
@@ -577,7 +693,7 @@ const [showFilterBar, setShowFilterBar] = useState(false);
                       onClick={() => setCurrentPage(page)}
                       className={`inline-flex size-8 items-center justify-center rounded-md text-sm font-medium transition-colors ${
                         page === currentPage
-                          ? "bg-red-600 text-white"
+                          ? "bg-primary-500 text-white"
                           : "dark:hover:bg-dark-700 text-gray-600 hover:bg-gray-100 dark:text-gray-300"
                       }`}
                     >
@@ -659,7 +775,7 @@ const [showFilterBar, setShowFilterBar] = useState(false);
             leaveFrom="translate-x-0"
             leaveTo="translate-x-full"
           >
-            <DialogPanel className="dark:bg-dark-700 fixed top-0 right-0 flex h-full w-full max-w-xl transform-gpu flex-col bg-white shadow-2xl transition-transform duration-200">
+            <DialogPanel className="dark:bg-dark-700 fixed top-0 right-0 flex h-full w-full max-w-3xl transform-gpu flex-col bg-white shadow-2xl transition-transform duration-200">
               <div className="dark:border-dark-500 flex items-center justify-between border-b border-gray-200 px-5 py-4">
                 <h2 className="dark:text-dark-50 text-lg font-semibold text-gray-800">
                   Add Contra Entry
@@ -687,7 +803,14 @@ const [showFilterBar, setShowFilterBar] = useState(false);
                         checked={type === t}
                         onChange={() => {
                           setType(t);
-                          if (errors.type) setErrors({ ...errors, type: "" });
+
+                          // Clear selected accounts
+                          setCashBankAccount(null);
+                          setOppAccount(null);
+
+                          if (errors.type) {
+                            setErrors({ ...errors, type: "" });
+                          }
                         }}
                       />
                     ))}
@@ -703,19 +826,31 @@ const [showFilterBar, setShowFilterBar] = useState(false);
                     <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Cash/Bank Account <span className="text-red-500">*</span>
                     </label>
-                    <Combobox
-                      data={ACCOUNT_OPTIONS}
-                      displayField="label"
-                      value={cashBankAccount}
-                      onChange={(value: any) => {
-                        setCashBankAccount(value);
-                        if (errors.cashBankAccount)
-                          setErrors({ ...errors, cashBankAccount: "" });
-                      }}
-                      placeholder="Select Cash/Bank Account"
-                      searchFields={["label"]}
-                      error={errors.cashBankAccount}
-                    />
+                  <Combobox
+  data={cashBankAccountOptions}
+  value={cashBankAccount}
+  onChange={(val: any) => setCashBankAccount(val)}
+  displayField="label"
+  placeholder="Search Account"
+  searchFields={["label", "mobile"]}
+  columns={[
+    {
+      header: "Account",
+      field: "label",
+      width: "2fr",
+    },
+    {
+      header: "Mobile",
+      field: "mobile",
+      width: "1.5fr",
+    },
+    {
+      header: "Opening",
+      field: "openingBalance",
+      width: "1fr",
+    },
+  ]}
+/>
                   </div>
 
                   <div>
@@ -725,8 +860,7 @@ const [showFilterBar, setShowFilterBar] = useState(false);
                     <Input
                       type="text"
                       value={voucherNo}
-                      onChange={(e) => setVoucherNo(e.target.value)}
-                      placeholder="Voucher No."
+                       readOnly
                     />
                   </div>
 
@@ -741,7 +875,7 @@ const [showFilterBar, setShowFilterBar] = useState(false);
                         setDate(value);
                         if (errors.date) setErrors({ ...errors, date: "" });
                       }}
-                          options={{ disableMobile: true }}
+                      options={{ disableMobile: true }}
                     />
                     {errors.date && (
                       <p className="mt-1 text-sm text-red-500">{errors.date}</p>
@@ -755,19 +889,31 @@ const [showFilterBar, setShowFilterBar] = useState(false);
                     <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Opp. Account <span className="text-red-500">*</span>
                     </label>
-                    <Combobox
-                      data={ACCOUNT_OPTIONS}
-                      displayField="label"
-                      value={oppAccount}
-                      onChange={(value: any) => {
-                        setOppAccount(value);
-                        if (errors.oppAccount)
-                          setErrors({ ...errors, oppAccount: "" });
-                      }}
-                      placeholder="Select Opp. Account"
-                      searchFields={["label"]}
-                      error={errors.oppAccount}
-                    />
+                  <Combobox
+  data={oppAccountOptions}
+  value={oppAccount}
+  onChange={(val: any) => setOppAccount(val)}
+  displayField="label"
+  placeholder="Search Account"
+  searchFields={["label", "mobile"]}
+  columns={[
+    {
+      header: "Account",
+      field: "label",
+      width: "2fr",
+    },
+    {
+      header: "Mobile",
+      field: "mobile",
+      width: "1.5fr",
+    },
+    {
+      header: "Opening",
+      field: "openingBalance",
+      width: "1fr",
+    },
+  ]}
+/>
                   </div>
 
                   <div>
@@ -783,7 +929,6 @@ const [showFilterBar, setShowFilterBar] = useState(false);
                       }}
                       placeholder="Enter amount"
                       error={errors.amount}
-                     
                     />
                   </div>
                 </div>

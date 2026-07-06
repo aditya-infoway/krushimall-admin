@@ -127,54 +127,6 @@ const paymentModeOptions: { label: string; value: PaymentMode }[] = [
   { label: "CARD", value: "CARD" },
 ];
 
-// ---------- Mock data ----------
-// const VEHICLE_OPTIONS: VehicleOption[] = [
-//   {
-//     id: "v1",
-//     itemName: "C12",
-//     model: "C12",
-//     itemCode: "001",
-//     variant: "EX",
-//     colour: "RED",
-//   },
-//   {
-//     id: "v2",
-//     itemName: "C14",
-//     model: "C14",
-//     itemCode: "002",
-//     variant: "DX",
-//     colour: "BLUE",
-//   },
-//   {
-//     id: "v3",
-//     itemName: "T20",
-//     model: "T20",
-//     itemCode: "003",
-//     variant: "EX",
-//     colour: "GREEN",
-//   },
-//   {
-//     id: "v4",
-//     itemName: "T20",
-//     model: "T20",
-//     itemCode: "004",
-//     variant: "Base",
-//     colour: "WHITE",
-//   },
-// ];
-
-// const PARTY_OPTIONS: PartyOption[] = [
-//   { id: "p1", name: "Sharma Traders" },
-//   { id: "p2", name: "Bharat Motors" },
-//   { id: "p3", name: "Kisan Agro Supplies" },
-// ];
-
-// const CASH_ACCOUNTS = ["Cash in Hand", "Petty Cash"];
-// const BANK_ACCOUNTS = [
-//   "HDFC Bank - 4521",
-//   "SBI Current - 7788",
-//   "ICICI Bank - 1190",
-// ];
 
 const termsOptions = [
   { label: "Credit", value: "Credit" },
@@ -813,103 +765,96 @@ const getCompany = async () => {
     }));
   };
 
-  const handleCreateAccount = async () => {
-    try {
-      const required: (keyof NewAccountData)[] = [
-        "accountName",
-        "mobile",
-        "countryCode",
-        "stateCode",
-        "district",
-        "city",
-        "address",
-        "panCard",
-        "aadharCard",
-        "group",
-      ];
+ const handleCreateAccount = async () => {
+  try {
+    const required: (keyof NewAccountData)[] = [
+      "accountName",
+      "mobile",
+      "countryCode",
+      "stateCode",
+      "district",
+      "city",
+      "address",
+      "panCard",
+      "aadharCard",
+      "group",
+    ];
 
-      const missing = required.filter((k) => !String(accountForm[k]).trim());
+    const missing = required.filter((k) => !String(accountForm[k]).trim());
 
-      // Supplier & Sundry Creditor require Opening Balance
-      if (accountForm.group === "Sundry Creditor") {
-        if (!accountForm.openingBalance.trim()) {
-          missing.push("openingBalance");
-        }
+    // Supplier & Sundry Creditor require Opening Balance
+    if (accountForm.group === "Sundry Creditor") {
+      if (!accountForm.openingBalance.trim()) {
+        missing.push("openingBalance");
       }
-
-      // Only Sundry Creditor requires Dr/Cr selection
-      if (accountForm.group === "Sundry Creditor") {
-        if (!accountForm.drCr.trim()) {
-          missing.push("drCr");
-        }
-      }
-
-      setAccountTouched(true);
-
-      if (missing.length > 0) return;
-
-      const res = await apiHelper.post("/accounts", {
-        accountName: accountForm.accountName,
-        printName: accountForm.accountName,
-
-        mobile: accountForm.mobile,
-
-        country: accountForm.country,
-        countryCode: accountForm.countryCode,
-
-        state: accountForm.state,
-        stateCode: accountForm.stateCode,
-
-        district: accountForm.district,
-        city: accountForm.city,
-
-        address1: accountForm.address,
-
-        panCard: accountForm.panCard,
-        aadharNo: accountForm.aadharCard,
-
-        group: accountForm.group,
-
-        openingBalance:
-          accountForm.group === "Sundry Creditor"
-            ? Number(accountForm.openingBalance)
-            : 0,
-
-        // Supplier -> Always Cr
-        drCr:
-          accountForm.group === "Supplier"
-            ? "Cr"
-            : accountForm.group === "Sundry Creditor"
-              ? accountForm.drCr
-              : null,
-      });
-
-      const account = res.data;
-
-      console.log("API Response:", account);
-
-      if (!account?.id) {
-        console.log("Invalid Response:", account);
-        return;
-      }
-
-      const newParty = {
-        id: account.id,
-        name: account.accountName,
-        mobile: Number(accountForm.mobile),
-        stateCode: accountForm.stateCode,
-      };
-
-      setParties((prev) => [...prev, newParty]);
-      setPartyId(account.id);
-
-      setAccountModalOpen(false);
-      setAccountForm(emptyAccount);
-      setAccountTouched(false);
-    } catch (error) {
-      console.error(error);
     }
-  };
+
+    // Only Sundry Creditor requires Dr/Cr selection
+    if (accountForm.group === "Sundry Creditor") {
+      if (!accountForm.drCr.trim()) {
+        missing.push("drCr");
+      }
+    }
+
+    setAccountTouched(true);
+
+    if (missing.length > 0) return;
+
+    const res = await apiHelper.post("/accounts", {
+      accountName: accountForm.accountName,
+      printName: accountForm.accountName,
+      mobile: accountForm.mobile,
+      country: accountForm.country,
+      countryCode: accountForm.countryCode,
+      state: accountForm.state,
+      stateCode: accountForm.stateCode,
+      district: accountForm.district,
+      city: accountForm.city,
+      address1: accountForm.address,
+      panCard: accountForm.panCard,
+      aadharNo: accountForm.aadharCard,
+      group: accountForm.group,
+      openingBalance:
+        accountForm.group === "Sundry Creditor"
+          ? Number(accountForm.openingBalance)
+          : 0,
+      drCr:
+        accountForm.group === "Supplier"
+          ? "Cr"
+          : accountForm.group === "Sundry Creditor"
+          ? accountForm.drCr
+          : null,
+    });
+
+    const account = res.data;
+
+    console.log("API Response:", account);
+
+    if (!account?.id) {
+      console.log("Invalid Response:", account);
+      return;
+    }
+
+    const newParty = {
+      id: account.id,
+      name: account.accountName,
+      mobile: Number(accountForm.mobile),
+      stateCode: accountForm.stateCode,
+      openingBalance: accountForm.group === "Sundry Creditor" 
+        ? Number(accountForm.openingBalance) 
+        : 0, // ✅ Added required property
+    };
+
+    setParties((prev) => [...prev, newParty]);
+    setPartyId(account.id);
+
+    setAccountModalOpen(false);
+    setAccountForm(emptyAccount);
+    setAccountTouched(false);
+  } catch (error) {
+    console.error(error);
+  }
+};
   const getParties = async () => {
     const res = await apiHelper.get("/accounts");
 
