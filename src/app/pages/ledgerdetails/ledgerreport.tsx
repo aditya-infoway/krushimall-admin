@@ -76,7 +76,7 @@ const [filterData, setFilterData] = useState<FilterData>({
         id: item.id,
         accountName: item.accountName,
         group: item.group,
-        address: item.addressLine1 || "",
+        address: item.address1 || "",
         city: item.city || "",
         state: item.state || "",
         closingBalance: Number(item.closingBalance || 0),
@@ -101,7 +101,7 @@ const handleViewClick = (account: any) => {
 
   const handleDrawerOk = () => {
     setIsDrawerOpen(false);
-   navigate("/accounting/ledgerreport/ledgerdetails", {
+   navigate("/ledgerdetails/ledgerdetails", {
   state: {
     accountId: selectedAccount.id,
     accountName: selectedAccount.accountName,
@@ -138,7 +138,20 @@ const handleViewClick = (account: any) => {
     }
     return pages;
   };
+const downloadExcel = async () => {
+  const blob = await apiHelper.getBlob("/ledger/export");
 
+  const url = window.URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "LedgerReport.xlsx";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+
+  window.URL.revokeObjectURL(url);
+};
   return (
     <div className="dark:bg-dark-800 min-h-screen bg-gray-50 p-4 md:p-6">
       {/* Header */}
@@ -188,7 +201,7 @@ const handleViewClick = (account: any) => {
             <button className="dark:border-dark-600 dark:bg-dark-700 dark:hover:bg-dark-600 flex h-9.5 w-9.5 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 dark:text-gray-300">
               <RiFilePdfFill className="text-lg text-red-500" />
             </button>
-            <button className="dark:border-dark-600 dark:bg-dark-700 dark:hover:bg-dark-600 flex h-9.5 w-9.5 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 dark:text-gray-300">
+            <button onClick={downloadExcel} className="dark:border-dark-600 dark:bg-dark-700 dark:hover:bg-dark-600 flex h-9.5 w-9.5 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 dark:text-gray-300 cursor-pointer">
               <RiFileExcel2Fill className="text-lg text-green-500" />
             </button>
             <button className="dark:border-dark-600 dark:bg-dark-700 dark:hover:bg-dark-600 flex h-9.5 w-9.5 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 dark:text-gray-300">
@@ -216,7 +229,7 @@ const handleViewClick = (account: any) => {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="dark:bg-dark-600 bg-gray-50">
-              <tr>
+              <tr className=" whitespace-nowrap">
                 <th className="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Sr No.
                 </th>
@@ -247,7 +260,7 @@ const handleViewClick = (account: any) => {
              {currentData.map((item, index) => (
                 <tr
                    key={index}
-                  className="dark:hover:bg-dark-600 transition-colors hover:bg-gray-50"
+                  className="dark:hover:bg-dark-600 transition-colors hover:bg-gray-50 whitespace-nowrap"
                 >
                   <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
                    {startIndex + index + 1}

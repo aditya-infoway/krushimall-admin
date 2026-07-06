@@ -1,16 +1,19 @@
 import React, { useState } from "react";
 import {
-  DocumentArrowDownIcon,
+  // DocumentArrowDownIcon,
   ArrowPathIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
+import { RiFileExcel2Fill, RiFilePdfFill } from "react-icons/ri";
 import { DatePicker } from "@/components/shared/form/Datepicker";
 import { Combobox } from "@/components/shared/form/Combobox";
 import { Listbox } from "@/components/shared/form/StyledListbox";
 import { useEffect } from "react";
 import apiHelper from "@/utils/apiHelper";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 interface BankBookRow {
   sr: number;
   date: string;
@@ -31,7 +34,7 @@ interface BankBookRow {
 
 const BankBook: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [bankAccount, setBankAccount] = useState<string>("");
+  const [bankAccount, setBankAccount] = useState<string>("all");
   const [transactionType, setTransactionType] = useState<string>("");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
@@ -39,7 +42,7 @@ const BankBook: React.FC = () => {
   const [rowsPerPage] = useState(10);
 
   // Sample bank account options
-const [bankAccountOptions, setBankAccountOptions] = useState<any[]>([]);
+  const [bankAccountOptions, setBankAccountOptions] = useState<any[]>([]);
 
   // Transaction type options
   const transactionTypeOptions = [
@@ -47,279 +50,347 @@ const [bankAccountOptions, setBankAccountOptions] = useState<any[]>([]);
     { id: "receipt", name: "Receipt" },
     { id: "payment", name: "Payment" },
   ];
-const getBankAccounts = async () => {
-  try {
-    const res = await apiHelper.get("/accounts");
+  const getBankAccounts = async () => {
+    try {
+      const res = await apiHelper.get("/accounts");
 
-    console.log("Account API Response:", res);
+      console.log("Account API Response:", res);
 
-    const accounts = res.data || [];
+      const accounts = res.data || [];
 
-    const banks = accounts.filter(
-      (item: any) => item.group === "Bank Accounts"
-    );
+      const banks = accounts.filter(
+        (item: any) => item.group === "Bank Accounts",
+      );
 
-    console.log("Filtered Bank Accounts:", banks);
+      console.log("Filtered Bank Accounts:", banks);
 
-   setBankAccountOptions(
-  banks.map((item: any) => ({
-    id: item.id,
-    name: item.accountName,
-    mobile: item.mobile,
-    openingBalance: Number(item.openingBalance || 0),
-    closingBalance: Number(item.closingBalance || 0),
-    drCr: item.drCr,
-  }))
-);
-  } catch (err) {
-    console.log("Bank Account Error:", err);
-  }
-};;
+      setBankAccountOptions([
+        {
+          id: "all",
+          name: "All Bank Accounts",
+          mobile: "",
+          openingBalance: 0,
+          closingBalance: 0,
+          drCr: "",
+        },
+        ...banks.map((item: any) => ({
+          id: item.id,
+          name: item.accountName,
+          mobile: item.mobile,
+          openingBalance: Number(item.openingBalance || 0),
+          closingBalance: Number(item.closingBalance || 0),
+          drCr: item.drCr,
+        })),
+      ]);
+    } catch (err) {
+      console.log("Bank Account Error:", err);
+    }
+  };
   // Sample table data (empty for now)
-const [tableData, setTableData] = useState<BankBookRow[]>([]);
+  const [tableData, setTableData] = useState<BankBookRow[]>([]);
 
   // Summary data
- const [summaryData, setSummaryData] = useState({
-  openingBalance: {
-    value: "₹0.00",
-    subtext: "Selected Bank",
-  },
-  totalReceipts: {
-    value: "₹0.00",
-    subtext: "0 transactions",
-  },
-  totalPayments: {
-    value: "₹0.00",
-    subtext: "0 transactions",
-  },
-  closingBalance: {
-    value: "₹0.00",
-    subtext: "0 transactions",
-  },
-});;
+  const [summaryData, setSummaryData] = useState({
+    openingBalance: {
+      value: "₹0.00",
+      subtext: "Selected Bank",
+    },
+    totalReceipts: {
+      value: "₹0.00",
+      subtext: "0 transactions",
+    },
+    totalPayments: {
+      value: "₹0.00",
+      subtext: "0 transactions",
+    },
+    closingBalance: {
+      value: "₹0.00",
+      subtext: "0 transactions",
+    },
+  });
 
   // Pagination
 
   const indexOfLastItem = currentPage * rowsPerPage;
   const indexOfFirstItem = indexOfLastItem - rowsPerPage;
-const filteredTableData = tableData.filter((item) => {
-  // Search
-  const matchesSearch =
-    !searchTerm ||
-    item.voucherNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.accountName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.partyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.narration.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredTableData = tableData.filter((item) => {
+    // Search
+    const matchesSearch =
+      !searchTerm ||
+      item.voucherNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.accountName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.partyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.narration.toLowerCase().includes(searchTerm.toLowerCase());
 
-  // Bank Account
-  const selectedBank = bankAccountOptions.find(
-    (x) => String(x.id) === String(bankAccount)
+    // Bank Account
+    const selectedBank = bankAccountOptions.find(
+      (x) => String(x.id) === String(bankAccount),
+    );
+
+    const matchesBank =
+      bankAccount === "all" || item.accountName === selectedBank?.name;
+
+    // Transaction Type
+    const matchesType =
+      !transactionType ||
+      transactionType === "all" ||
+      (transactionType === "payment" && Number(item.payment) > 0) ||
+      (transactionType === "receipt" && Number(item.receipt) > 0);
+
+    // From Date
+    const matchesFrom = !fromDate || new Date(item.date) >= new Date(fromDate);
+
+    // To Date
+    const matchesTo =
+      !toDate || new Date(item.date) <= new Date(toDate + "T23:59:59");
+
+    return (
+      matchesSearch && matchesBank && matchesType && matchesFrom && matchesTo
+    );
+  });
+
+  const totalItems = filteredTableData.length;
+
+  const totalPages = Math.ceil(totalItems / rowsPerPage);
+
+  const currentItems = filteredTableData.slice(
+    indexOfFirstItem,
+    indexOfLastItem,
   );
 
-  const matchesBank =
-    !bankAccount || item.accountName === selectedBank?.name;
-
-  // Transaction Type
-  const matchesType =
-    !transactionType ||
-    transactionType === "all" ||
-    (transactionType === "payment" && Number(item.payment) > 0) ||
-    (transactionType === "receipt" && Number(item.receipt) > 0);
-
-  // From Date
-  const matchesFrom =
-    !fromDate ||
-    new Date(item.date) >= new Date(fromDate);
-
-  // To Date
-  const matchesTo =
-    !toDate ||
-    new Date(item.date) <= new Date(toDate + "T23:59:59");
-
-  return (
-    matchesSearch &&
-    matchesBank &&
-    matchesType &&
-    matchesFrom &&
-    matchesTo
+  const totalReceipt = filteredTableData.reduce(
+    (sum, item) => sum + Number(item.receipt || 0),
+    0,
   );
-});
 
-const totalItems = filteredTableData.length;
+  const totalPayment = filteredTableData.reduce(
+    (sum, item) => sum + Number(item.payment || 0),
+    0,
+  );
 
-const totalPages = Math.ceil(totalItems / rowsPerPage);
+  const balance = totalReceipt - totalPayment;
 
-const currentItems = filteredTableData.slice(
-  indexOfFirstItem,
-  indexOfLastItem
-);
+  const getBankBook = async () => {
+    try {
+      const [bankPayments] = await Promise.all([
+        apiHelper.get("/bank-payment"),
+        // apiHelper.get("/bank-receipt"),
+      ]);
 
-const totalReceipt = filteredTableData.reduce(
-  (sum, item) => sum + Number(item.receipt || 0),
-  0
-);
+      const paymentData = (bankPayments || []).map(
+        (item: any, index: number) => ({
+          sr: index + 1,
+          date: item.date,
+          voucherNo: item.voucherNo,
+          type: item.type || "BP",
+          accountName: item.bankAccount?.accountName || "-",
+          partyName: item.oppAccount?.accountName || "-",
+          receipt: 0,
+          payment: Number(item.amount),
+          mode: item.paymentMode || "-",
+          chequeNo: item.chequeNo || "-",
+          chequeDate: item.chequeDate
+            ? new Date(item.chequeDate).toLocaleDateString("en-GB")
+            : "-",
+          clearDate: item.clearDate
+            ? new Date(item.clearDate).toLocaleDateString("en-GB")
+            : "-",
+          narration: item.narration || "",
+          createdType: item.createdType,
+          createdBy: item.createdBy,
+        }),
+      );
 
-const totalPayment = filteredTableData.reduce(
-  (sum, item) => sum + Number(item.payment || 0),
-  0
-);
+      // const receiptData = (bankReceipts || []).map(
+      //   (item: any, index: number) => ({
+      //     sr: paymentData.length + index + 1,
+      //     date: item.date,
+      //     voucherNo: item.voucherNo,
+      //     type: item.type || "BR",
+      //     accountName: item.bankAccount?.accountName || "-",
+      //     partyName: item.oppAccount?.accountName || "-",
+      //     receipt: Number(item.amount),
+      //     payment: 0,
+      //     mode: item.paymentMode || "-",
+      //     chequeNo: item.chequeNo || "-",
+      //     chequeDate: item.chequeDate
+      //       ? new Date(item.chequeDate).toLocaleDateString("en-GB")
+      //       : "-",
+      //     clearDate: item.clearDate
+      //       ? new Date(item.clearDate).toLocaleDateString("en-GB")
+      //       : "-",
+      //     narration: item.narration || "",
+      //     createdType: item.createdType,
+      //     createdBy: item.createdBy,
+      //   })
+      // );
 
-const balance = totalReceipt - totalPayment;
-useEffect(() => {
-  getBankBook();
+      const finalData = [...paymentData].sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+      );
+
+      setTableData(finalData);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+  useEffect(() => {
+    getBankBook();
     getBankAccounts();
-}, []);
-const getBankBook = async () => {
-  try {
-    const [bankPayments] = await Promise.all([
-      apiHelper.get("/bank-payment"),
-      // apiHelper.get("/bank-receipt"),
-    ]);
+  }, []);
+  useEffect(() => {
+    if (!tableData.length) return;
 
-    const paymentData = (bankPayments || []).map(
-      (item: any, index: number) => ({
-        sr: index + 1,
-        date: item.date,
-        voucherNo: item.voucherNo,
-        type: item.type || "BP",
-        accountName: item.bankAccount?.accountName || "-",
-        partyName: item.oppAccount?.accountName || "-",
-        receipt: 0,
-        payment: Number(item.amount),
-        mode: item.paymentMode || "-",
-        chequeNo: item.chequeNo || "-",
-        chequeDate: item.chequeDate
-          ? new Date(item.chequeDate).toLocaleDateString("en-GB")
-          : "-",
-        clearDate: item.clearDate
-          ? new Date(item.clearDate).toLocaleDateString("en-GB")
-          : "-",
-        narration: item.narration || "",
-        createdType: item.createdType,
-        createdBy: item.createdBy,
-      })
-    );
+    let filtered = tableData;
 
-    // const receiptData = (bankReceipts || []).map(
-    //   (item: any, index: number) => ({
-    //     sr: paymentData.length + index + 1,
-    //     date: item.date,
-    //     voucherNo: item.voucherNo,
-    //     type: item.type || "BR",
-    //     accountName: item.bankAccount?.accountName || "-",
-    //     partyName: item.oppAccount?.accountName || "-",
-    //     receipt: Number(item.amount),
-    //     payment: 0,
-    //     mode: item.paymentMode || "-",
-    //     chequeNo: item.chequeNo || "-",
-    //     chequeDate: item.chequeDate
-    //       ? new Date(item.chequeDate).toLocaleDateString("en-GB")
-    //       : "-",
-    //     clearDate: item.clearDate
-    //       ? new Date(item.clearDate).toLocaleDateString("en-GB")
-    //       : "-",
-    //     narration: item.narration || "",
-    //     createdType: item.createdType,
-    //     createdBy: item.createdBy,
-    //   })
-    // );
+    if (bankAccount) {
+      const selected = bankAccountOptions.find(
+        (x) => String(x.id) === String(bankAccount),
+      );
 
-    const finalData = [...paymentData, ].sort(
-      (a, b) =>
-        new Date(b.date).getTime() -
-        new Date(a.date).getTime()
-    );
+      filtered = tableData.filter((x) => x.accountName === selected?.name);
 
- 
+      const opening = Number(selected?.openingBalance || 0);
 
-    setTableData(finalData);
-  } catch (err) {
-    console.log(err);
-  }
-};
-useEffect(() => {
-  if (!tableData.length) return;
+      const receipt = filtered.reduce(
+        (sum, item) => sum + Number(item.receipt || 0),
+        0,
+      );
 
-  let filtered = tableData;
+      const payment = filtered.reduce(
+        (sum, item) => sum + Number(item.payment || 0),
+        0,
+      );
 
-  if (bankAccount) {
-    const selected = bankAccountOptions.find(
-      (x) => String(x.id) === String(bankAccount)
-    );
+      // Use database closing balance directly
+      const closing = Number(selected?.closingBalance || 0);
 
-    filtered = tableData.filter(
-      (x) => x.accountName === selected?.name
-    );
+      setSummaryData({
+        openingBalance: {
+          value: `₹${opening.toFixed(2)}`,
+          subtext: selected?.name || "",
+        },
+        totalReceipts: {
+          value: `₹${receipt.toFixed(2)}`,
+          subtext: `${filtered.filter((x) => Number(x.receipt) > 0).length} transactions`,
+        },
+        totalPayments: {
+          value: `₹${payment.toFixed(2)}`,
+          subtext: `${filtered.filter((x) => Number(x.payment) > 0).length} transactions`,
+        },
+        closingBalance: {
+          value: `₹${closing.toFixed(2)}`,
+          subtext: `${filtered.length} transactions`,
+        },
+      });
 
-    const opening = Number(selected?.openingBalance || 0);
+      setCurrentPage(1);
+    } else {
+      const receipt = tableData.reduce(
+        (sum, item) => sum + Number(item.receipt || 0),
+        0,
+      );
 
-const receipt = filtered.reduce(
-  (sum, item) => sum + Number(item.receipt || 0),
-  0
-);
+      const payment = tableData.reduce(
+        (sum, item) => sum + Number(item.payment || 0),
+        0,
+      );
 
-const payment = filtered.reduce(
-  (sum, item) => sum + Number(item.payment || 0),
-  0
-);
+      setSummaryData({
+        openingBalance: {
+          value: "₹0.00",
+          subtext: "All Bank Accounts",
+        },
+        totalReceipts: {
+          value: `₹${receipt.toFixed(2)}`,
+          subtext: `${tableData.filter((x) => Number(x.receipt) > 0).length} transactions`,
+        },
+        totalPayments: {
+          value: `₹${payment.toFixed(2)}`,
+          subtext: `${tableData.filter((x) => Number(x.payment) > 0).length} transactions`,
+        },
+        closingBalance: {
+          value: `₹${(receipt - payment).toFixed(2)}`,
+          subtext: `${tableData.length} transactions`,
+        },
+      });
+    }
+  }, [bankAccount, tableData, bankAccountOptions]);
+  const downloadExcel = () => {
+    const excelData: any[] = filteredTableData.map((item, index) => ({
+      "Sr No": index + 1,
+      Date: new Date(item.date).toLocaleDateString("en-GB"),
+      "Voucher No": item.voucherNo,
+      Type: item.type,
+      "Account Name": item.accountName,
+      "Party Name": item.partyName,
+      Receipt: Number(item.receipt || 0),
+      Payment: Number(item.payment || 0),
+      Mode: item.mode,
+      "Cheque No": item.chequeNo,
+      "Cheque Date": item.chequeDate,
+      "Clear Date": item.clearDate,
+      Narration: item.narration,
+      "Created Type": item.createdType,
+      "Created By": item.createdBy,
+    }));
 
-// Use database closing balance directly
-const closing = Number(selected?.closingBalance || 0);
-
-    setSummaryData({
-      openingBalance: {
-        value: `₹${opening.toFixed(2)}`,
-        subtext: selected?.name || "",
-      },
-      totalReceipts: {
-        value: `₹${receipt.toFixed(2)}`,
-        subtext: `${filtered.filter(x => Number(x.receipt) > 0).length} transactions`,
-      },
-      totalPayments: {
-        value: `₹${payment.toFixed(2)}`,
-        subtext: `${filtered.filter(x => Number(x.payment) > 0).length} transactions`,
-      },
-      closingBalance: {
-        value: `₹${closing.toFixed(2)}`,
-        subtext: `${filtered.length} transactions`,
-      },
+    excelData.push({
+      "Sr No": "",
+      Date: "",
+      "Voucher No": "",
+      Type: "",
+      "Account Name": "",
+      "Party Name": "TOTAL",
+      Receipt: totalReceipt,
+      Payment: totalPayment,
+      Mode: "",
+      "Cheque No": "",
+      "Cheque Date": "",
+      "Clear Date": "",
+      Narration: "",
+      "Created Type": "",
+      "Created By": "",
     });
 
-    setCurrentPage(1);
-  } else {
-    const receipt = tableData.reduce(
-      (sum, item) => sum + Number(item.receipt || 0),
-      0
-    );
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
 
-    const payment = tableData.reduce(
-      (sum, item) => sum + Number(item.payment || 0),
-      0
-    );
+    worksheet["!cols"] = [
+      { wch: 8 },
+      { wch: 15 },
+      { wch: 20 },
+      { wch: 12 },
+      { wch: 25 },
+      { wch: 25 },
+      { wch: 15 },
+      { wch: 15 },
+      { wch: 15 },
+      { wch: 15 },
+      { wch: 15 },
+      { wch: 15 },
+      { wch: 30 },
+      { wch: 18 },
+      { wch: 18 },
+    ];
 
-    setSummaryData({
-      openingBalance: {
-        value: "₹0.00",
-        subtext: "All Bank Accounts",
-      },
-      totalReceipts: {
-        value: `₹${receipt.toFixed(2)}`,
-        subtext: `${tableData.filter(x => Number(x.receipt) > 0).length} transactions`,
-      },
-      totalPayments: {
-        value: `₹${payment.toFixed(2)}`,
-        subtext: `${tableData.filter(x => Number(x.payment) > 0).length} transactions`,
-      },
-      closingBalance: {
-        value: `₹${(receipt - payment).toFixed(2)}`,
-        subtext: `${tableData.length} transactions`,
-      },
+    const workbook = XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Bank Book");
+
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
     });
-  }
-}, [bankAccount, tableData, bankAccountOptions]);
+
+    const blob = new Blob([excelBuffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    saveAs(blob, "BankBook.xlsx");
+  };
   return (
     <div className="dark:bg-dark-800 min-h-screen bg-gray-50 p-3 sm:p-4 lg:p-5 xl:p-6">
-      <div className="mx-auto w-full max-w-[1920px]">
+      <div className="mx-auto w-full max-w-480">
         {/* Header */}
         <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between lg:mb-6">
           <div>
@@ -333,13 +404,14 @@ const closing = Number(selected?.closingBalance || 0);
           <div className="mt-3 flex flex-wrap items-center gap-2 sm:mt-0">
             {/* Action Buttons Group */}
             <div className="flex items-center gap-1.5">
-              <button className="dark:border-dark-600 dark:bg-dark-700 dark:hover:bg-dark-600 flex h-9.5 cursor-pointer items-center justify-center gap-1 rounded-lg border border-gray-300 bg-white px-2 text-sm font-medium text-gray-600 hover:bg-gray-50 sm:px-3 dark:text-gray-300">
-                <DocumentArrowDownIcon className="h-4 w-4" />
-                <span className="hidden sm:inline">Excel</span>
+              <button className="dark:border-dark-600 dark:bg-dark-700 dark:hover:bg-dark-600 flex h-9.5 w-9.5 cursor-pointer items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 dark:text-gray-300">
+                <RiFileExcel2Fill
+                  onClick={downloadExcel}
+                  className="text-lg text-green-500"
+                />
               </button>
-              <button className="dark:border-dark-600 dark:bg-dark-700 dark:hover:bg-dark-600 flex h-9.5 cursor-pointer items-center justify-center gap-1 rounded-lg border border-gray-300 bg-white px-2 text-sm font-medium text-gray-600 hover:bg-gray-50 sm:px-3 dark:text-gray-300">
-                <DocumentArrowDownIcon className="h-4 w-4" />
-                <span className="hidden sm:inline">PDF</span>
+              <button className="dark:border-dark-600 dark:bg-dark-700 dark:hover:bg-dark-600 flex h-9.5 w-9.5 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 dark:text-gray-300">
+                <RiFilePdfFill className="text-lg text-red-500" />
               </button>
               <button className="dark:border-dark-600 dark:bg-dark-700 dark:hover:bg-dark-600 flex h-9.5 w-9.5 cursor-pointer items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 dark:text-gray-300">
                 <ArrowPathIcon className="h-4 w-4" />
@@ -348,11 +420,11 @@ const closing = Number(selected?.closingBalance || 0);
           </div>
         </div>
 
-       
         {/* Summary Cards */}
         <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {/* Opening Balance - Blue */}
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 p-5 shadow-lg">
+
+          <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-blue-500 to-blue-600 p-5 shadow-lg">
             <div className="absolute -top-4 -right-4 h-24 w-24 rounded-full bg-white/10" />
             <div className="absolute -top-8 -right-8 h-32 w-32 rounded-full bg-white/5" />
             <div className="relative">
@@ -369,7 +441,7 @@ const closing = Number(selected?.closingBalance || 0);
           </div>
 
           {/* Total Receipts - Green */}
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 p-5 shadow-lg">
+          <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-emerald-500 to-emerald-600 p-5 shadow-lg">
             <div className="absolute -top-4 -right-4 h-24 w-24 rounded-full bg-white/10" />
             <div className="absolute -top-8 -right-8 h-32 w-32 rounded-full bg-white/5" />
             <div className="relative">
@@ -386,7 +458,7 @@ const closing = Number(selected?.closingBalance || 0);
           </div>
 
           {/* Total Payments - Red/Rose */}
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-rose-500 to-rose-600 p-5 shadow-lg">
+          <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-rose-500 to-rose-600 p-5 shadow-lg">
             <div className="absolute -top-4 -right-4 h-24 w-24 rounded-full bg-white/10" />
             <div className="absolute -top-8 -right-8 h-32 w-32 rounded-full bg-white/5" />
             <div className="relative">
@@ -403,7 +475,7 @@ const closing = Number(selected?.closingBalance || 0);
           </div>
 
           {/* Closing Balance - Purple */}
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-500 to-violet-600 p-5 shadow-lg">
+          <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-violet-500 to-violet-600 p-5 shadow-lg">
             <div className="absolute -top-4 -right-4 h-24 w-24 rounded-full bg-white/10" />
             <div className="absolute -top-8 -right-8 h-32 w-32 rounded-full bg-white/5" />
             <div className="relative">
@@ -595,21 +667,21 @@ const closing = Number(selected?.closingBalance || 0);
                       className="dark:hover:bg-dark-600 transition-colors hover:bg-gray-50"
                     >
                       <td className="px-3 py-2.5 text-gray-500 dark:text-gray-400">
-                        {row.sr}
+                        {(currentPage - 1) * rowsPerPage + index + 1}
                       </td>
                       <td className="px-3 py-2.5 text-gray-900 dark:text-white">
                         {new Date(row.date).toLocaleDateString("en-GB")}
                       </td>
-                      <td className="px-3 py-2.5 text-gray-900 dark:text-white whitespace-nowrap">
+                      <td className="px-3 py-2.5 whitespace-nowrap text-gray-900 dark:text-white">
                         {row.voucherNo}
                       </td>
                       <td className="px-3 py-2.5 text-gray-900 dark:text-white">
                         {row.type}
                       </td>
-                      <td className="px-3 py-2.5 text-gray-900 dark:text-white whitespace-nowrap">
+                      <td className="px-3 py-2.5 whitespace-nowrap text-gray-900 dark:text-white">
                         {row.accountName}
                       </td>
-                      <td className="px-3 py-2.5 text-gray-900 dark:text-white whitespace-nowrap">
+                      <td className="px-3 py-2.5 whitespace-nowrap text-gray-900 dark:text-white">
                         {row.partyName}
                       </td>
                       <td className="px-3 py-2.5 text-right text-green-600 dark:text-green-400">
@@ -665,7 +737,7 @@ const closing = Number(selected?.closingBalance || 0);
                     colSpan={7}
                     className="px-3 py-2.5 text-right text-sm font-bold text-gray-900 dark:text-white"
                   >
-                    Bal: ₹{balance.toFixed(2)}
+                    Closing Bal: {summaryData.closingBalance.value}
                   </td>
                 </tr>
               </tfoot>

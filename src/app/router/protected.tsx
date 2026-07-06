@@ -443,62 +443,59 @@ const protectedRoutes: RouteObject = {
               }),
             },
 
-            {
-              path: "cash-bank",
-              children: [
-                {
-                  index: true,
-                  element: <Navigate to="cashbook" replace />, // Redirect to cashbook by default
-                },
-                {
-                  path: "bankbook",
-                  lazy: async () => ({
-                    Component: (
-                      await import("@/app/pages/accounting/cash-bank/bankbook")
-                    ).default,
-                  }),
-                },
-                {
-                  path: "cashbook",
-                  lazy: async () => ({
-                    Component: (
-                      await import("@/app/pages/accounting/cash-bank/cashbook")
-                    ).default,
-                  }),
-                },
-              ],
-            },
+          
 
+         
+
+           
+          ],
+        },
+          {
+          path: "bookregister",
+          children: [
+            {
+              path: "cashbook",
+              lazy: async () => ({
+                Component: (await import("@/app/pages/cash-bank/cashbook")).default,
+              }),
+            },
+            {
+              path: "bankbook",
+              lazy: async () => ({
+                Component: (await import("@/app/pages/cash-bank/bankbook"))
+                  .default,
+              }),
+            },
+          ],
+        },
+          {
+          path: "ledgerdetails",
+          children: [
             {
               path: "ledgerreport",
-              children: [
-                {
-                  index: true,
-                  lazy: async () => ({
-                    Component: (
-                      await import("@/app/pages/accounting/ledgerreport")
-                    ).default,
-                  }),
-                },
-                {
-                  path: "ledgerdetails",
-                  lazy: async () => ({
-                    Component: (
-                      await import("@/app/pages/accounting/ledgerdetails")
-                    ).default,
-                  }),
-                },
-              ],
+              lazy: async () => ({
+                Component: (await import("@/app/pages/ledgerdetails/ledgerreport")).default,
+              }),
             },
-
+            {
+              path: "ledgerdetails",
+              lazy: async () => ({
+                Component: (await import("@/app/pages/ledgerdetails/ledgerdetails"))
+                  .default,
+              }),
+            },
+          ],
+        },
+          {
+          path: "bookingbalance",
+          children: [
             {
               path: "bookingbalance",
               lazy: async () => ({
-                Component: (
-                  await import("@/app/pages/accounting/bookingbalance")
-                ).default,
+                Component: (await import("@/app/pages/bookingbalance/bookingbalance")).default,
               }),
             },
+           
           ],
         },
         {

@@ -1,14 +1,18 @@
-import React, { useState,useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
-  DocumentArrowDownIcon,
+  // DocumentArrowDownIcon,
   ArrowPathIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
+import { RiFileExcel2Fill, RiFilePdfFill } from "react-icons/ri";
 import { DatePicker } from "@/components/shared/form/Datepicker";
 import { Listbox } from "@/components/shared/form/StyledListbox";
 import apiHelper from "@/utils/apiHelper";
+import { Combobox } from "@/components/shared/form/Combobox";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 interface CashBookRow {
   sr: number;
   date: string;
@@ -39,169 +43,287 @@ const CashBook: React.FC = () => {
   ];
 
   // Sample table data (empty for now)
-const [tableData, setTableData] = useState<CashBookRow[]>([]);
-
+  const [tableData, setTableData] = useState<CashBookRow[]>([]);
+  const [cashAccount, setCashAccount] = useState<string>("all");
+  const [cashAccountOptions, setCashAccountOptions] = useState<any[]>([]);
   // Summary data
-const [summaryData, setSummaryData] = useState({
-  totalReceipts: {
-    value: "₹0.00",
-    subtext: "0 transactions",
-  },
-  totalPayments: {
-    value: "₹0.00",
-    subtext: "0 transactions",
-  },
-  closingBalance: {
-    value: "₹0.00",
-    subtext: "0 transactions",
-  },
-});
-const filteredTableData = tableData.filter((item) => {
-  const matchesSearch =
-    searchTerm === "" ||
-    item.voucherNo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.accountName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.partyName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.narration?.toLowerCase().includes(searchTerm.toLowerCase());
+  const [summaryData, setSummaryData] = useState({
+    openingBalance: {
+      value: "₹0.00",
+      subtext: "",
+    },
+    totalReceipts: {
+      value: "₹0.00",
+      subtext: "0 transactions",
+    },
+    totalPayments: {
+      value: "₹0.00",
+      subtext: "0 transactions",
+    },
+    closingBalance: {
+      value: "₹0.00",
+      subtext: "0 transactions",
+    },
+  });
+  const filteredTableData = tableData.filter((item) => {
+    const matchesSearch =
+      searchTerm === "" ||
+      item.voucherNo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.accountName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.partyName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.narration?.toLowerCase().includes(searchTerm.toLowerCase());
 
-  const matchesType =
-    !transactionType ||
-    transactionType === "all" ||
-    (transactionType === "payment" && Number(item.payment) > 0) ||
-    (transactionType === "receipt" && Number(item.receipt) > 0);
+    // Cash Account Filter
+    const selectedCash = cashAccountOptions.find(
+      (x) => String(x.id) === String(cashAccount),
+    );
 
-  const itemDate = new Date(item.date);
+    const matchesCash =
+      cashAccount === "all" || item.accountName === selectedCash?.name;
 
-  const matchesFrom =
-    !fromDate || itemDate >= new Date(fromDate);
+    const matchesType =
+      !transactionType ||
+      transactionType === "all" ||
+      (transactionType === "payment" && Number(item.payment) > 0) ||
+      (transactionType === "receipt" && Number(item.receipt) > 0);
 
-  const matchesTo =
-    !toDate || itemDate <= new Date(toDate + "T23:59:59");
+    const itemDate = new Date(item.date);
 
-  return (
-    matchesSearch &&
-    matchesType &&
-    matchesFrom &&
-    matchesTo
-  );
-});
+    const matchesFrom = !fromDate || itemDate >= new Date(fromDate);
+
+    const matchesTo = !toDate || itemDate <= new Date(toDate + "T23:59:59");
+
+    return (
+      matchesSearch && matchesCash && matchesType && matchesFrom && matchesTo
+    );
+  });
   // Pagination
-const totalItems = filteredTableData.length;
+  const totalItems = filteredTableData.length;
   const totalPages = Math.ceil(totalItems / rowsPerPage);
   const indexOfLastItem = currentPage * rowsPerPage;
   const indexOfFirstItem = indexOfLastItem - rowsPerPage;
- const currentItems = filteredTableData.slice(
-  indexOfFirstItem,
-  indexOfLastItem
-);
-
-
-useEffect(() => {
-  getCashBook();
-}, []);
-
-const getCashBook = async () => {
-  try {
-    const [cashPayments, ] = await Promise.all([
-      apiHelper.get("/cash-payment"),
-      // apiHelper.get("/cash-receipt"),
-    ]);
-// console.log("Cash Payments:", cashPayments);
-   const paymentData = (cashPayments || []).map((p: any) => ({
-  date: p.date,
-  voucherNo: p.voucherNo,
-  type: "CP",
-  accountName: p.cashAccount?.accountName,
-  partyName: p.oppAccount?.accountName,
-  receipt: 0,
-  payment: Number(p.amount),
-  narration: p.narration,
-  createdType: p.createdType,
-  createdBy: p.createdBy,
-}));
-
-    // const receiptData = cashReceipts.data.map(
-    //   (item: any, index: number) => ({
-    //     sr: paymentData.length + index + 1,
-    //     date: item.date,
-    //     voucherNo: item.voucherNo,
-    //     type: item.type,
-    //     accountName: item.cashAccount?.accountName || "-",
-    //     partyName: item.oppAccount?.accountName || "-",
-    //     receipt: Number(item.amount),
-    //     payment: 0,
-    //     narration: item.narration || "",
-    //     createdType: item.createdType,
-    //     createdBy: item.createdBy,
-    //   })
-    // );
-
-const finalData = [...paymentData].sort(
-  (a, b) =>
-    new Date(b.date).getTime() -
-    new Date(a.date).getTime()
-);
-const totalReceipt = filteredTableData.reduce(
-  (sum, item) => sum + Number(item.receipt || 0),
-  0
-);
-
-const totalPayment = filteredTableData.reduce(
-  (sum, item) => sum + Number(item.payment || 0),
-  0
-);
-
-const balance = totalReceipt - totalPayment;
-
-setSummaryData({
-  totalPayments: {
-    value: `₹${totalPayment.toFixed(2)}`,
-    subtext: `${filteredTableData.filter(x => Number(x.payment) > 0).length} transactions`,
-  },
-  totalReceipts: {
-    value: `₹${totalReceipt.toFixed(2)}`,
-    subtext: `${filteredTableData.filter(x => Number(x.receipt) > 0).length} transactions`,
-  },
-  closingBalance: {
-    value: `₹${balance.toFixed(2)}`,
-    subtext: `${filteredTableData.length} transactions`,
-  },
-});
-
-
-setTableData(finalData);
-  } catch (err) {
-    console.log(err);
-  }
-};
-useEffect(() => {
-  const receipt = filteredTableData.reduce(
-    (sum, item) => sum + Number(item.receipt || 0),
-    0
+  const currentItems = filteredTableData.slice(
+    indexOfFirstItem,
+    indexOfLastItem,
   );
 
-  const payment = filteredTableData.reduce(
-    (sum, item) => sum + Number(item.payment || 0),
-    0
-  );
+  useEffect(() => {
+    getCashBook();
+    getCashAccounts();
+  }, []);
 
-  setSummaryData({
-    totalReceipts: {
-      value: `₹${receipt.toFixed(2)}`,
-      subtext: `${filteredTableData.filter(x => Number(x.receipt) > 0).length} transactions`,
-    },
-    totalPayments: {
-      value: `₹${payment.toFixed(2)}`,
-      subtext: `${filteredTableData.filter(x => Number(x.payment) > 0).length} transactions`,
-    },
-    closingBalance: {
-      value: `₹${(receipt - payment).toFixed(2)}`,
-      subtext: `${filteredTableData.length} transactions`,
-    },
-  });
+  const getCashAccounts = async () => {
+    try {
+      const res = await apiHelper.get("/accounts");
 
-  setCurrentPage(1);
-}, [searchTerm, transactionType, fromDate, toDate, tableData]);
+      const accounts = res.data || [];
+
+      const cashAccounts = accounts.filter(
+        (item: any) => item.group === "Cash-in-Hand",
+      );
+
+      setCashAccountOptions([
+        {
+          id: "all",
+          name: "All Accounts",
+          mobile: "",
+          openingBalance: 0,
+          closingBalance: 0,
+        },
+        ...cashAccounts.map((item: any) => ({
+          id: String(item.id),
+          name: item.accountName,
+          mobile: item.mobile,
+          openingBalance: Number(item.openingBalance || 0),
+          closingBalance: Number(item.closingBalance || 0),
+        })),
+      ]);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+  // const selectedCash = cashAccountOptions.find(
+  //   (x) => String(x.id) === String(cashAccount)
+  // );
+
+  // const matchesCash =
+  //   cashAccount === "all" ||
+  //   item.accountName === selectedCash?.name;
+  const getCashBook = async () => {
+    try {
+      const [cashPayments] = await Promise.all([
+        apiHelper.get("/cash-payment"),
+        // apiHelper.get("/cash-receipt"),
+      ]);
+      // console.log("Cash Payments:", cashPayments);
+      const paymentData = (cashPayments || []).map((p: any) => ({
+        date: p.date,
+        voucherNo: p.voucherNo,
+        type: "CP",
+        accountName: p.cashAccount?.accountName,
+        partyName: p.oppAccount?.accountName,
+        receipt: 0,
+        payment: Number(p.amount),
+        narration: p.narration,
+        createdType: p.createdType,
+        createdBy: p.createdBy,
+      }));
+
+      // const receiptData = cashReceipts.data.map(
+      //   (item: any, index: number) => ({
+      //     sr: paymentData.length + index + 1,
+      //     date: item.date,
+      //     voucherNo: item.voucherNo,
+      //     type: item.type,
+      //     accountName: item.cashAccount?.accountName || "-",
+      //     partyName: item.oppAccount?.accountName || "-",
+      //     receipt: Number(item.amount),
+      //     payment: 0,
+      //     narration: item.narration || "",
+      //     createdType: item.createdType,
+      //     createdBy: item.createdBy,
+      //   })
+      // );
+
+      const finalData = [...paymentData].sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+      );
+      const totalReceipt = filteredTableData.reduce(
+        (sum, item) => sum + Number(item.receipt || 0),
+        0,
+      );
+
+      const totalPayment = filteredTableData.reduce(
+        (sum, item) => sum + Number(item.payment || 0),
+        0,
+      );
+
+      const balance = totalReceipt - totalPayment;
+      setSummaryData({
+        openingBalance: {
+          value: "₹0.00",
+          subtext: "",
+        },
+        totalReceipts: {
+          value: `₹${totalReceipt.toFixed(2)}`,
+          subtext: `${filteredTableData.filter((x) => Number(x.receipt) > 0).length} transactions`,
+        },
+        totalPayments: {
+          value: `₹${totalPayment.toFixed(2)}`,
+          subtext: `${filteredTableData.filter((x) => Number(x.payment) > 0).length} transactions`,
+        },
+        closingBalance: {
+          value: `₹${balance.toFixed(2)}`,
+          subtext: `${filteredTableData.length} transactions`,
+        },
+      });
+
+      setTableData(finalData);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+  useEffect(() => {
+    const receipt = filteredTableData.reduce(
+      (sum, item) => sum + Number(item.receipt || 0),
+      0,
+    );
+
+    const payment = filteredTableData.reduce(
+      (sum, item) => sum + Number(item.payment || 0),
+      0,
+    );
+
+    const selectedCash = cashAccountOptions.find(
+      (x) => String(x.id) === String(cashAccount),
+    );
+
+    const openingBalance =
+      cashAccount === "all" ? 0 : Number(selectedCash?.openingBalance || 0);
+
+    setSummaryData({
+      openingBalance: {
+        value: `₹${openingBalance.toFixed(2)}`,
+        subtext:
+          cashAccount === "all" ? "All Accounts" : selectedCash?.name || "",
+      },
+      totalReceipts: {
+        value: `₹${receipt.toFixed(2)}`,
+        subtext: `${filteredTableData.filter((x) => Number(x.receipt) > 0).length} transactions`,
+      },
+      totalPayments: {
+        value: `₹${payment.toFixed(2)}`,
+        subtext: `${filteredTableData.filter((x) => Number(x.payment) > 0).length} transactions`,
+      },
+      closingBalance: {
+        value: `₹${(openingBalance + receipt - payment).toFixed(2)}`,
+        subtext: `${filteredTableData.length} transactions`,
+      },
+    });
+
+    setCurrentPage(1);
+ }, [
+  searchTerm,
+  transactionType,
+  fromDate,
+  toDate,
+  tableData,
+  cashAccount,
+  cashAccountOptions,
+]);
+  const downloadExcel = () => {
+    const excelData = filteredTableData.map((item, index) => ({
+      "Sr No": index + 1,
+      Date: new Date(item.date).toLocaleDateString("en-GB"),
+      "Voucher No": item.voucherNo,
+      Type: item.type,
+      "Account Name": item.accountName,
+      "Party Name": item.partyName,
+      Receipt: Number(item.receipt || 0),
+      Payment: Number(item.payment || 0),
+      Narration: item.narration,
+      "Created Type": item.createdType,
+      "Created By": item.createdBy,
+    }));
+
+    // Total Row
+    excelData.push({
+      "Sr No": 0,
+      Date: "",
+      "Voucher No": "",
+      Type: "",
+      "Account Name": "",
+      "Party Name": "TOTAL",
+      Receipt: filteredTableData.reduce(
+        (sum, item) => sum + Number(item.receipt || 0),
+        0,
+      ),
+      Payment: filteredTableData.reduce(
+        (sum, item) => sum + Number(item.payment || 0),
+        0,
+      ),
+      Narration: "",
+      "Created Type": "",
+      "Created By": "",
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+
+    const workbook = XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Cash Book");
+
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+
+    const blob = new Blob([excelBuffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    saveAs(blob, "CashBook.xlsx");
+  };
   return (
     <div className="dark:bg-dark-800 min-h-screen bg-gray-50 p-3 sm:p-4 lg:p-5 xl:p-6">
       <div className="mx-auto w-full max-w-480">
@@ -218,13 +340,14 @@ useEffect(() => {
           <div className="mt-3 flex flex-wrap items-center gap-2 sm:mt-0">
             {/* Action Buttons Group */}
             <div className="flex items-center gap-1.5">
-              <button className="dark:border-dark-600 dark:bg-dark-700 dark:hover:bg-dark-600 flex h-9.5 cursor-pointer items-center justify-center gap-1 rounded-lg border border-gray-300 bg-white px-2 text-sm font-medium text-gray-600 hover:bg-gray-50 sm:px-3 dark:text-gray-300">
-                <DocumentArrowDownIcon className="h-4 w-4" />
-                <span className="hidden sm:inline">Excel</span>
+              <button
+                onClick={downloadExcel}
+                className="dark:border-dark-600 dark:bg-dark-700 dark:hover:bg-dark-600 flex h-9.5 w-9.5 cursor-pointer items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 dark:text-gray-300"
+              >
+                <RiFileExcel2Fill className="text-lg text-green-500" />
               </button>
-              <button className="dark:border-dark-600 dark:bg-dark-700 dark:hover:bg-dark-600 flex h-9.5 cursor-pointer items-center justify-center gap-1 rounded-lg border border-gray-300 bg-white px-2 text-sm font-medium text-gray-600 hover:bg-gray-50 sm:px-3 dark:text-gray-300">
-                <DocumentArrowDownIcon className="h-4 w-4" />
-                <span className="hidden sm:inline">PDF</span>
+              <button className="dark:border-dark-600 dark:bg-dark-700 dark:hover:bg-dark-600 flex h-9.5 w-9.5 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 dark:text-gray-300">
+                <RiFilePdfFill className="text-lg text-red-500" />
               </button>
               <button className="dark:border-dark-600 dark:bg-dark-700 dark:hover:bg-dark-600 flex h-9.5 w-9.5 cursor-pointer items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 dark:text-gray-300">
                 <ArrowPathIcon className="h-4 w-4" />
@@ -234,7 +357,22 @@ useEffect(() => {
         </div>
 
         {/* Summary Cards */}
-        <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-4">
+          <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-blue-500 to-blue-600 p-5 shadow-lg">
+            <div className="absolute -top-4 -right-4 h-24 w-24 rounded-full bg-white/10" />
+            <div className="absolute -top-8 -right-8 h-32 w-32 rounded-full bg-white/5" />
+            <div className="relative">
+              <div className="text-xs font-semibold tracking-wider text-blue-100 uppercase">
+                Opening Balance
+              </div>
+              <div className="my-2 text-[28px] font-bold text-white">
+                {summaryData.openingBalance.value}
+              </div>
+              <div className="text-[13px] text-blue-100/80">
+                {summaryData.openingBalance.subtext}
+              </div>
+            </div>
+          </div>
           {/* Total Receipts - Green */}
           <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-emerald-500 to-emerald-600 p-5 shadow-lg">
             <div className="absolute -top-4 -right-4 h-24 w-24 rounded-full bg-white/10" />
@@ -288,7 +426,7 @@ useEffect(() => {
         </div>
 
         {/* Filter Section */}
-        <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
           {/* Search */}
           <div className="relative">
             <MagnifyingGlassIcon className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -300,7 +438,38 @@ useEffect(() => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-
+          <div>
+            <Combobox
+              data={cashAccountOptions.map((acc) => ({
+                label: acc.name,
+                value: acc.id,
+                mobile: acc.mobile,
+                openingBalance: acc.openingBalance,
+              }))}
+              value={
+                cashAccountOptions.find(
+                  (acc) => String(acc.id) === String(cashAccount),
+                )
+                  ? {
+                      label:
+                        cashAccountOptions.find(
+                          (acc) => String(acc.id) === String(cashAccount),
+                        )?.name || "",
+                      value: cashAccount,
+                    }
+                  : null
+              }
+              onChange={(val: any) => setCashAccount(val.value)}
+              displayField="label"
+              placeholder="Select Bank Account"
+              searchFields={["label", "mobile"]}
+              columns={[
+                { header: "Account", field: "label", width: "2fr" },
+                { header: "Mobile", field: "mobile", width: "1fr" },
+                { header: "Opening", field: "openingBalance", width: "1fr" },
+              ]}
+            />
+          </div>
           {/* Transaction Type - Listbox */}
           <div>
             <Listbox
@@ -414,21 +583,21 @@ useEffect(() => {
                       className="dark:hover:bg-dark-600 transition-colors hover:bg-gray-50"
                     >
                       <td className="px-3 py-2.5 text-gray-500 dark:text-gray-400">
-                        {row.sr}
+                        {(currentPage - 1) * rowsPerPage + index + 1}
                       </td>
                       <td className="px-3 py-2.5 text-gray-900 dark:text-white">
-                     {new Date(row.date).toLocaleDateString("en-GB")}
+                        {new Date(row.date).toLocaleDateString("en-GB")}
                       </td>
-                      <td className="px-3 py-2.5 text-gray-900 dark:text-white whitespace-nowrap">
+                      <td className="px-3 py-2.5 whitespace-nowrap text-gray-900 dark:text-white">
                         {row.voucherNo}
                       </td>
                       <td className="px-3 py-2.5 text-gray-900 dark:text-white">
                         {row.type}
                       </td>
-                      <td className="px-3 py-2.5 text-gray-900 dark:text-white whitespace-nowrap">
+                      <td className="px-3 py-2.5 whitespace-nowrap text-gray-900 dark:text-white">
                         {row.accountName}
                       </td>
-                      <td className="px-3 py-2.5 text-gray-900 dark:text-white whitespace-nowrap">
+                      <td className="px-3 py-2.5 whitespace-nowrap text-gray-900 dark:text-white">
                         {row.partyName}
                       </td>
                       <td className="px-3 py-2.5 text-right text-green-600 dark:text-green-400">
@@ -443,7 +612,7 @@ useEffect(() => {
                       <td className="px-3 py-2.5 text-gray-900 dark:text-white">
                         {row.createdType}
                       </td>
-                      <td className="px-3 py-2.5 text-gray-900 dark:text-white whitespace-nowrap">
+                      <td className="px-3 py-2.5 whitespace-nowrap text-gray-900 dark:text-white">
                         {row.createdBy}
                       </td>
                     </tr>
@@ -462,17 +631,17 @@ useEffect(() => {
                     TOTAL —
                   </td>
                   <td className="px-3 py-2.5 text-right text-sm font-bold text-green-600 dark:text-green-400">
-                 ₹{summaryData.totalReceipts.value.replace("₹", "")}
+                    ₹{summaryData.totalReceipts.value.replace("₹", "")}
                   </td>
                   <td className="px-3 py-2.5 text-right text-sm font-bold text-red-600 dark:text-red-400">
-                 ₹{summaryData.totalPayments.value.replace("₹", "")}
+                    ₹{summaryData.totalPayments.value.replace("₹", "")}
                   </td>
                   {/* Spans Narration, Created Type, Created By */}
                   <td
                     colSpan={3}
                     className="px-3 py-2.5 text-right text-sm font-bold text-gray-900 dark:text-white"
                   >
-                  Bal: {summaryData.closingBalance.value}
+                    Bal: {summaryData.closingBalance.value}
                   </td>
                 </tr>
               </tfoot>

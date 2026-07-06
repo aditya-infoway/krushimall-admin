@@ -1760,7 +1760,28 @@ export function LeadDetailsModal({
   const [customers, setCustomers] = useState<OptionType[]>([]);
 
   const [executives, setExecutives] = useState<OptionType[]>([]);
+const [companyId, setCompanyId] = useState<number | null>(null);
+  const [company, setCompany] = useState<any>(null);
+const [financialYearId, setFinancialYearId] = useState<number | null>(null);
+const getCompany = async () => {
+  try {
+    const res = await apiHelper.get("/company");
 
+    const company = Array.isArray(res.data)
+      ? res.data[0]
+      : res.data;
+
+    setCompany(company);
+
+    setCompanyId(company.id);
+
+    if (company.financialYears?.length > 0) {
+      setFinancialYearId(company.financialYears[0].id);
+    }
+  } catch (err) {
+    console.log(err);
+  }
+};
   const fetchExecutives = async () => {
     try {
       const res = await apiHelper.get("/employees");
@@ -1787,6 +1808,7 @@ export function LeadDetailsModal({
 
   useEffect(() => {
     fetchExecutives();
+      getCompany();
   }, []);
   const [financeData, setFinanceData] = useState<FinanceType>({
     wantsFinance: false,
@@ -1883,6 +1905,8 @@ export function LeadDetailsModal({
 
     try {
       const payload = {
+        companyId,
+  financialYearId,
         modelId: selectedModel?.id,
         showroomVariantId: selectedShowroomVariant?.id,
         colourId: selectedColor?.id,

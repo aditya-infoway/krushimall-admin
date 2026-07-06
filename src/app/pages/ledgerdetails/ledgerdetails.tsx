@@ -3,23 +3,24 @@ import { useNavigate, useLocation } from "react-router-dom";
 import {
   FiArrowLeft,
   FiRefreshCw,
-  FiCalendar,
+  // FiCalendar,
   FiChevronLeft,
   FiChevronRight,
 } from "react-icons/fi";
 import { RiFileExcel2Fill } from "react-icons/ri";
 import { DatePicker } from "@/components/shared/form/Datepicker";
 import apiHelper from "@/utils/apiHelper";
-interface Transaction {
-  id: number;
-  date: string;
-  voucher: string;
-  type: string;
-  particulars: string;
-  debit: number;
-  credit: number;
-  balance: number;
-}
+import { Group } from "@/app/layouts/Sideblock/Sidebar/Menu/Group";
+// interface Transaction {
+//   id: number;
+//   date: string;
+//   voucher: string;
+//   type: string;
+//   particulars: string;
+//   debit: number;
+//   credit: number;
+//   balance: number;
+// }
 
 const LedgerDetails: React.FC = () => {
   const navigate = useNavigate();
@@ -47,47 +48,81 @@ const LedgerDetails: React.FC = () => {
   const totalBalance =
     transactions.length > 0 ? transactions[transactions.length - 1].balance : 0;
 
+  const [appliedFromDate, setAppliedFromDate] = useState<any>(null);
+  const [appliedToDate, setAppliedToDate] = useState<any>(null);
   // Pagination
   const totalItems = transactions.length;
   const totalPages = Math.ceil(totalItems / rowsPerPage);
   const startIndex = (currentPage - 1) * rowsPerPage;
   const endIndex = startIndex + rowsPerPage;
   const currentData = transactions.slice(startIndex, endIndex);
- const convertDate = (date: any) => {
-  if (!date) return "";
+  const [accountInfo, setAccountInfo] = useState({
+    accountName: "",
+    group: "",
+    openingBalance: 0,
+    drCr: "",
+  });
+  const convertDate = (date: any) => {
+    if (!date) return "";
 
-  // Already yyyy-mm-dd
-  if (typeof date === "string" && date.includes("-")) {
-    const parts = date.split("-");
+    // Already yyyy-mm-dd
+    if (typeof date === "string" && date.includes("-")) {
+      const parts = date.split("-");
 
-    if (parts[0].length === 4) {
-      return date;
+      if (parts[0].length === 4) {
+        return date;
+      }
+
+      return `${parts[2]}-${parts[1]}-${parts[0]}`;
     }
 
-    return `${parts[2]}-${parts[1]}-${parts[0]}`;
-  }
+    // Date object
+    const d = new Date(date);
 
-  // Date object
-  const d = new Date(date);
+    return d.toISOString().split("T")[0];
+  };
+  // useEffect(() => {
+  //   if (filterData) {
+  //     setFromDate(filterData.fromDate);
+  //     setToDate(filterData.toDate);
+  //   }
+  // }, [filterData]);
+  useEffect(() => {
+    if (filterData) {
+      setFromDate(filterData.fromDate);
+      setToDate(filterData.toDate);
 
-  return d.toISOString().split("T")[0];
-};
-useEffect(() => {
-  if (filterData) {
-    setFromDate(filterData.fromDate);
-    setToDate(filterData.toDate);
-  }
-}, [filterData]);
+      setAppliedFromDate(filterData.fromDate);
+      setAppliedToDate(filterData.toDate);
+    }
+  }, [filterData]);
+  useEffect(() => {
+    if (accountId && appliedFromDate && appliedToDate) {
+      getLedger();
+    }
+  }, [accountId, appliedFromDate, appliedToDate]);
   const getLedger = async () => {
     try {
       setLoading(true);
 
       const res = await apiHelper.get(`/ledger/details/${accountId}`, {
-      fromDate: convertDate(fromDate),
-  toDate: convertDate(toDate),
+        fromDate: convertDate(appliedFromDate),
+        toDate: convertDate(appliedToDate),
       });
 
       const data = res.transactions || res.data.transactions;
+      const account = res.account || res.data.account;
+
+      setTransactions(data);
+
+      if (account) {
+        setAccountInfo({
+          accountName: account.accountName,
+          group: account.group,
+          openingBalance: Number(account.openingBalance || 0),
+          drCr: account.drCr,
+        });
+      }
 
       setTransactions(data);
 
@@ -112,16 +147,16 @@ useEffect(() => {
     }
   };
 
-// useEffect(() => {
-//   if (accountId && fromDate && toDate) {
-//     getLedger();
-//   }
-// }, [accountId, fromDate, toDate]);
-useEffect(() => {
-  if (accountId) {
-    getLedger();
-  }
-}, [accountId]);
+  useEffect(() => {
+    if (accountId && fromDate && toDate) {
+      getLedger();
+    }
+  }, [accountId, fromDate, toDate]);
+  // useEffect(() => {
+  //   if (accountId) {
+  //     getLedger();
+  //   }
+  // }, [accountId]);
   const getPageNumbers = () => {
     const pages = [];
     const maxVisible = 5;
@@ -151,16 +186,36 @@ useEffect(() => {
   };
 
   const handleBack = () => {
-    navigate("/accounting/ledgerreport");
+    navigate("/ledgerdetails/ledgerreport");
   };
-const clearFilter = () => {
-  setFromDate(filterData.fromDate);
-  setToDate(filterData.toDate);
+  const clearFilter = () => {
+    setFromDate(filterData.fromDate);
+    setToDate(filterData.toDate);
 
-  setTimeout(() => {
-    getLedger();
-  }, 0);
-};
+    setTimeout(() => {
+      getLedger();
+    }, 0);
+  };
+  const downloadExcel = async () => {
+    const blob = await apiHelper.getBlob(
+      `/ledger/details/${accountId}/export`,
+      {
+        fromDate: convertDate(fromDate),
+        toDate: convertDate(toDate),
+      },
+    );
+
+    const url = window.URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${accountName}_Ledger.xlsx`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    window.URL.revokeObjectURL(url);
+  };
   return (
     <div className="dark:bg-dark-800 min-h-screen bg-gray-50 p-4 md:p-6">
       {/* Header */}
@@ -170,7 +225,12 @@ const clearFilter = () => {
             {accountName.toUpperCase()}
           </h1>
           <p className="dark:text-dark-300 mt-1 text-sm text-gray-500">
-            Cash in Hand · Opening: 1,00,000.00 Dr
+            {accountInfo.group} · Opening: ₹
+            {accountInfo.openingBalance.toLocaleString("en-IN", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}{" "}
+            {accountInfo.drCr}
           </p>
         </div>
         <button
@@ -209,15 +269,27 @@ const clearFilter = () => {
               />
             </div>
           </div>
-          <button   onClick={getLedger} className="cursor-pointer rounded-lg bg-red-500 px-4 py-1.5 text-sm font-medium text-white transition-all hover:bg-red-600">
+          <button
+            onClick={() => {
+              setAppliedFromDate(fromDate);
+              setAppliedToDate(toDate);
+            }}
+            className="cursor-pointer rounded-lg bg-red-500 px-4 py-1.5 text-sm font-medium text-white transition-all hover:bg-red-600"
+          >
             Apply
           </button>
-          <button onClick={clearFilter} className="bg-primary-500 hover:bg-primary-600 cursor-pointer rounded-lg px-4 py-1.5 text-sm font-medium text-white transition-all">
+          <button
+            onClick={clearFilter}
+            className="bg-primary-500 hover:bg-primary-600 cursor-pointer rounded-lg px-4 py-1.5 text-sm font-medium text-white transition-all"
+          >
             Clear
           </button>
         </div>
         <div className="flex gap-2">
-          <button className="dark:border-dark-600 dark:bg-dark-700 dark:hover:bg-dark-600 flex h-9.5 w-9.5 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 dark:text-gray-300">
+          <button
+            onClick={downloadExcel}
+            className="dark:border-dark-600 dark:bg-dark-700 dark:hover:bg-dark-600 flex h-9.5 w-9.5 cursor-pointer items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 dark:text-gray-300"
+          >
             <RiFileExcel2Fill className="text-lg text-green-500" />
           </button>
           <button className="dark:border-dark-600 dark:bg-dark-700 dark:hover:bg-dark-600 flex h-9.5 w-9.5 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 dark:text-gray-300">
@@ -262,14 +334,14 @@ const clearFilter = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="dark:bg-dark-600 bg-gray-50">
-              <tr className=" whitespace-nowrap">
+              <tr className="whitespace-nowrap">
                 <th className="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   #
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Date
                 </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                <th className="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Bill No
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
@@ -293,18 +365,18 @@ const clearFilter = () => {
               </tr>
             </thead>
             <tbody className="dark:divide-dark-600 divide-y divide-gray-100">
-              {currentData.map((item,index) => (
+              {currentData.map((item, index) => (
                 <tr
                   key={item.id}
-                  className="dark:hover:bg-dark-600 transition-colors hover:bg-gray-50 whitespace-nowrap"
+                  className="dark:hover:bg-dark-600 whitespace-nowrap transition-colors hover:bg-gray-50"
                 >
                   <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
                     {startIndex + index + 1}
                   </td>
                   <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
-                   {item.date
-    ? new Date(item.date).toLocaleDateString("en-GB")
-    : "-"}
+                    {item.date
+                      ? new Date(item.date).toLocaleDateString("en-GB")
+                      : "-"}
                   </td>
                   <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
                     {item.billNo}
