@@ -24,6 +24,9 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
 } from "@heroicons/react/24/outline";
+import { toast } from "sonner";
+import { ConfirmModal } from "@/components/shared/ConfirmModal";
+import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 
 // Local UI Imports
 import { Button, Checkbox, Input } from "@/components/ui";
@@ -69,6 +72,12 @@ const [loading, setLoading] = useState(false);
   const [selectedModelFilter, setSelectedModelFilter] = useState("All");
   // const [selectedYearFilter, setSelectedYearFilter] = useState("All");
   const [selectedStatusFilter, setSelectedStatusFilter] = useState("All");
+
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+const [confirmState, setConfirmState] = useState<"pending" | "success" | "error">("pending");
+const [confirmLoading, setConfirmLoading] = useState(false);
+const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+const [isBulkDelete, setIsBulkDelete] = useState(false);
 
   // Selection states
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
@@ -166,46 +175,48 @@ const filteredData = variants.filter((item) => {
   navigate(`/master/variant/website/create?id=${item.id}`);
 };
 
-  const handleDelete = async (id: number) => {
-  try {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this website variant?"
-    );
-
-    if (!confirmDelete) return;
-
-    await apiHelper.delete(`/website-variants/${id}`);
-
-    await fetchVariants();
-
-    setSelectedIds((prev) =>
-      prev.filter((itemId) => itemId !== id)
-    );
-  } catch (error) {
-    console.error("Delete failed:", error);
-  }
+ const handleDelete = (id: number) => {
+  setDeleteTargetId(id);
+  setIsBulkDelete(false);
+  setConfirmState("pending");
+  setShowConfirmModal(true);
 };
 
- const handleBulkDelete = async () => {
+ const handleBulkDelete = () => {
+  setIsBulkDelete(true);
+  setConfirmState("pending");
+  setShowConfirmModal(true);
+};
+
+
+const performDelete = async () => {
+  setConfirmLoading(true);
   try {
-    const confirmDelete = window.confirm(
-      `Delete ${selectedIds.length} selected records?`
-    );
-
-    if (!confirmDelete) return;
-
-    await apiHelper.post(
-      "/website-variants/bulk-delete",
-      {
+    if (isBulkDelete) {
+      await apiHelper.post("/website-variants/bulk-delete", {
         ids: selectedIds,
-      }
-    );
-
-    await fetchVariants();
-
-    setSelectedIds([]);
-  } catch (error) {
-    console.error("Bulk delete failed:", error);
+      });
+      toast.success(`${selectedIds.length} website variants deleted successfully!`);
+      await fetchVariants();
+      setSelectedIds([]);
+      setCurrentPage(1);
+      setConfirmState("success");
+    } else {
+      if (deleteTargetId === null) return;
+      await apiHelper.delete(`/website-variants/${deleteTargetId}`);
+      toast.success("Website variant deleted successfully!");
+      await fetchVariants();
+      setSelectedIds((prev) => prev.filter((id) => id !== deleteTargetId));
+      setDeleteTargetId(null);
+      setConfirmState("success");
+    }
+    setTimeout(() => setShowConfirmModal(false), 1500);
+  } catch (error: any) {
+    console.error("Delete failed:", error);
+    setConfirmState("error");
+    toast.error(error.response?.data?.message || "Failed to delete. Please try again.");
+  } finally {
+    setConfirmLoading(false);
   }
 };
 
@@ -769,7 +780,40 @@ const filteredData = variants.filter((item) => {
           </div>
         </div>
       )}
-
+{/* Confirmation Modal */}
+<ConfirmModal
+  show={showConfirmModal}
+  onClose={() => {
+    setShowConfirmModal(false);
+    setDeleteTargetId(null);
+    setConfirmState("pending");
+  }}
+  onOk={performDelete}
+  confirmLoading={confirmLoading}
+  state={confirmState}
+  messages={{
+    pending: {
+      Icon: ExclamationTriangleIcon,
+      title: isBulkDelete ? "Delete Selected Website Variants?" : "Are you sure?",
+      description: isBulkDelete 
+        ? `Are you sure you want to delete ${selectedIds.length} selected website variants? This action cannot be undone.`
+        : "Are you sure you want to delete this website variant? Once deleted, it cannot be restored.",
+      actionText: isBulkDelete ? "Delete All" : "Delete",
+    },
+    success: {
+      title: "Deleted Successfully",
+      description: isBulkDelete 
+        ? `${selectedIds.length} website variants have been deleted.`
+        : "The website variant has been deleted.",
+      actionText: "Done",
+    },
+    error: {
+      title: "Delete Failed",
+      description: "Failed to delete. Please try again.",
+      actionText: "Try Again",
+    },
+  }}
+/>
   
     </div>
   );

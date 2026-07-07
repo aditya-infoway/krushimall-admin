@@ -33,6 +33,9 @@ import { Combobox } from "@/components/shared/form/StyledCombobox";
 import { Listbox } from "@/components/shared/form/StyledListbox";
 import { Country, State, City } from "country-state-city";
 import Select from "react-select";
+import { toast } from "sonner";
+import { ConfirmModal } from "@/components/shared/ConfirmModal";
+import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 
 type Branch = {
   id: number;
@@ -176,6 +179,12 @@ const CreateBranch = () => {
   const [selectedCountryFilter, setSelectedCountryFilter] = useState("All");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+const [confirmState, setConfirmState] = useState<"pending" | "success" | "error">("pending");
+const [confirmLoading, setConfirmLoading] = useState(false);
+const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+const [isBulkDelete, setIsBulkDelete] = useState(false);
 
   const {
     register,
@@ -385,91 +394,109 @@ const CreateBranch = () => {
     }
   };
 
-  const handleDelete = async (id: number) => {
-    try {
-      if (window.confirm("Are you sure you want to delete this branch?")) {
-        await apiHelper.delete(`/branches/${id}`);
-        getBranches();
-      }
-    } catch (error) {
-      console.log(error);
+const handleDelete = (id: number) => {
+  setDeleteTargetId(id);
+  setIsBulkDelete(false);
+  setConfirmState("pending");
+  setShowConfirmModal(true);
+};
+
+  const handleBulkDelete = () => {
+  setIsBulkDelete(true);
+  setConfirmState("pending");
+  setShowConfirmModal(true);
+};
+
+
+const performDelete = async () => {
+  setConfirmLoading(true);
+  try {
+    if (isBulkDelete) {
+      await Promise.all(selectedIds.map((id) => apiHelper.delete(`/branches/${id}`)));
+      toast.success(`${selectedIds.length} branches deleted successfully!`);
+      setSelectedIds([]);
+      await getBranches();
+      setCurrentPage(1);
+      setConfirmState("success");
+    } else {
+      if (deleteTargetId === null) return;
+      await apiHelper.delete(`/branches/${deleteTargetId}`);
+      toast.success("Branch deleted successfully!");
+      await getBranches();
+      setDeleteTargetId(null);
+      setConfirmState("success");
     }
-  };
+    setTimeout(() => setShowConfirmModal(false), 1500);
+  } catch (error: any) {
+    console.error("Delete failed:", error);
+    setConfirmState("error");
+    toast.error(error.response?.data?.message || "Failed to delete. Please try again.");
+  } finally {
+    setConfirmLoading(false);
+  }
+};
 
-  const handleBulkDelete = async () => {
-    try {
-      if (
-        window.confirm("Are you sure you want to delete selected branches?")
-      ) {
-        await Promise.all(
-          selectedIds.map((id) => apiHelper.delete(`/branches/${id}`)),
-        );
-        setSelectedIds([]);
-        getBranches();
-      }
-    } catch (error) {
-      console.log(error);
+ const onFormSubmit = async (data: FormValues) => {
+  try {
+    const payload = {
+      branchCode: data.branchCode,
+      branchName: data.branchName,
+      branchType: data.branchType,
+      managerName: data.managerName,
+      mobileNo: data.mobileNo,
+      gmailId: data.gmailId,
+      password: data.password,
+      gstNo: data.gstNo,
+      panCardNo: data.panCardNo,
+      address1: data.address1,
+      address2: data.address2,
+      country: data.country,
+      countryCode: data.countryCode,
+      state: data.state,
+      stateCode: data.stateCode,
+      district: data.district,
+      city: data.city,
+      pinCode: data.pinCode,
+    };
+
+    if (editId) {
+      await apiHelper.put(`/branches/${editId}`, payload);
+      toast.success("Branch updated successfully!");
+    } else {
+      await apiHelper.post("/branches", payload);
+      toast.success("Branch created successfully!");
     }
-  };
 
-  const onFormSubmit = async (data: FormValues) => {
-    try {
-      const payload = {
-        branchCode: data.branchCode,
-        branchName: data.branchName,
-        branchType: data.branchType,
-        managerName: data.managerName,
-        mobileNo: data.mobileNo,
-        gmailId: data.gmailId,
-        password: data.password,
-        gstNo: data.gstNo,
-        panCardNo: data.panCardNo,
-        address1: data.address1,
-        address2: data.address2,
-        country: data.country,
-        countryCode: data.countryCode,
-        state: data.state,
-        stateCode: data.stateCode,
-        district: data.district,
-        city: data.city,
-        pinCode: data.pinCode,
-      };
+    await getBranches();
+    setShowDrawer(false);
+    setEditId(null);
+    reset({
+      branchCode: "",
+      branchName: "",
+      branchType: "",
+      managerName: "",
+      mobileNo: "",
+      gmailId: "",
+      password: "",
+      confirmPassword: "",
+      gstNo: "",
+      panCardNo: "",
+      address1: "",
+      address2: "",
+      country: "",
+      countryCode: "",
+      state: "",
+      stateCode: "",
+      district: "",
+      city: "",
+      pinCode: "",
+    });
+  } catch (error: any) {
+    console.log(error);
+    toast.error(error?.response?.data?.message || "Failed to save branch. Please try again.");
+  }
+};
 
-      if (editId) {
-        await apiHelper.put(`/branches/${editId}`, payload);
-      } else {
-        await apiHelper.post("/branches", payload);
-      }
-
-      getBranches();
-      setShowDrawer(false);
-      setEditId(null);
-      reset({
-        branchCode: "",
-        branchName: "",
-        branchType: "",
-        managerName: "",
-        mobileNo: "",
-        gmailId: "",
-        password: "",
-        confirmPassword: "",
-        gstNo: "",
-        panCardNo: "",
-        address1: "",
-        address2: "",
-        country: "",
-        countryCode: "",
-        state: "",
-        stateCode: "",
-        district: "",
-        city: "",
-        pinCode: "",
-      });
-    } catch (error: any) {
-      console.log(error);
-      alert(error?.response?.data?.message || "Something went wrong");
-    }
-  };
 
   const filteredData = branches.filter((item) => {
     const matchesSearch =
@@ -1379,6 +1406,40 @@ const CreateBranch = () => {
           </TransitionChild>
         </Dialog>
       </Transition>
+      {/* Confirmation Modal */}
+<ConfirmModal
+  show={showConfirmModal}
+  onClose={() => {
+    setShowConfirmModal(false);
+    setDeleteTargetId(null);
+    setConfirmState("pending");
+  }}
+  onOk={performDelete}
+  confirmLoading={confirmLoading}
+  state={confirmState}
+  messages={{
+    pending: {
+      Icon: ExclamationTriangleIcon,
+      title: isBulkDelete ? "Delete Selected Branches?" : "Are you sure?",
+      description: isBulkDelete 
+        ? `Are you sure you want to delete ${selectedIds.length} selected branches? This action cannot be undone.`
+        : "Are you sure you want to delete this branch? Once deleted, it cannot be restored.",
+      actionText: isBulkDelete ? "Delete All" : "Delete",
+    },
+    success: {
+      title: "Deleted Successfully",
+      description: isBulkDelete 
+        ? `${selectedIds.length} branches have been deleted.`
+        : "The branch has been deleted.",
+      actionText: "Done",
+    },
+    error: {
+      title: "Delete Failed",
+      description: "Failed to delete. Please try again.",
+      actionText: "Try Again",
+    },
+  }}
+/>
     </div>
   );
 };

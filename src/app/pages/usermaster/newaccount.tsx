@@ -10,6 +10,11 @@ import Select from "react-select";
 import apiHelper from "@/utils/apiHelper";
 import { Listbox } from "@/components/shared/form/StyledListbox";
 import { GroupCombobox } from "@/components/shared/form/GroupCombobox";
+import { toast } from "sonner";
+
+
+
+
 type FormValues = {
   accountName: string;
   printName: string;
@@ -203,26 +208,28 @@ const NewAccount = () => {
   };
 
   const onFormSubmit = async (data: FormValues) => {
-    try {
-      const finalPayload = {
-        ...data,
+  try {
+    const finalPayload = {
+      ...data,
+      birthday: data.birthday || null,
+      anniversary: data.anniversary || null,
+      openingBalance: Number(data.openingBalance) || 0,
+    };
 
-        birthday: data.birthday || null,
-        anniversary: data.anniversary || null,
-        openingBalance: Number(data.openingBalance) || 0,
-      };
-
-      if (isEditMode) {
-        await apiHelper.put(`/accounts/${editData.id}`, finalPayload);
-      } else {
-        await apiHelper.post("/accounts", finalPayload);
-      }
-
-      navigate("/usermaster/account");
-    } catch (error) {
-      console.log(error);
+    if (isEditMode) {
+      await apiHelper.put(`/accounts/${editData.id}`, finalPayload);
+      toast.success("Account updated successfully!");
+    } else {
+      await apiHelper.post("/accounts", finalPayload);
+      toast.success("Account created successfully!");
     }
-  };
+
+    navigate("/usermaster/account");
+  } catch (error: any) {
+    console.log(error);
+    toast.error(error.response?.data?.message || "Failed to save account. Please try again.");
+  }
+};
 
   // ─── Dynamic Location Data ──────────────────────────────────────────────────
   const countryOptions = useMemo(() => {

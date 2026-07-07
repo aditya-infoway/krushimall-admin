@@ -23,6 +23,9 @@ import {
   ChevronRightIcon,
 } from "@heroicons/react/24/outline";
 import apiHelper from "@/utils/apiHelper";
+import { toast } from "sonner";
+import { ConfirmModal } from "@/components/shared/ConfirmModal";
+import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 
 // Local UI Imports
 import { Button, Checkbox, Input } from "@/components/ui";
@@ -82,6 +85,12 @@ export default function ModelYear() {
   const [brands, setBrands] = useState<{ id: number; name: string }[]>([]);
   const [models, setModels] = useState<{ id: number; name: string }[]>([]);
   const [loading, setLoading] = useState(false);
+
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+const [confirmState, setConfirmState] = useState<"pending" | "success" | "error">("pending");
+const [confirmLoading, setConfirmLoading] = useState(false);
+const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+const [isBulkDelete, setIsBulkDelete] = useState(false);
 
   const categoryOptions = categories.map((cat) => ({
     id: String(cat.id),
@@ -302,27 +311,46 @@ export default function ModelYear() {
     setShowDrawer(true);
   };
 
-  const handleDelete = async (id: number) => {
-    try {
-      await apiHelper.delete(`/model-year/${id}`);
-      getYears();
-    } catch (error) {
-      console.error(error);
-    }
-  };
+  const handleDelete = (id: number) => {
+  setDeleteTargetId(id);
+  setIsBulkDelete(false);
+  setConfirmState("pending");
+  setShowConfirmModal(true);
+};
 
-  const handleBulkDelete = async () => {
-    try {
-      await Promise.all(
-        selectedIds.map((id) => apiHelper.delete(`/model-year/${id}`)),
-      );
+ const handleBulkDelete = () => {
+  setIsBulkDelete(true);
+  setConfirmState("pending");
+  setShowConfirmModal(true);
+};
+
+const performDelete = async () => {
+  setConfirmLoading(true);
+  try {
+    if (isBulkDelete) {
+      await Promise.all(selectedIds.map((id) => apiHelper.delete(`/model-year/${id}`)));
+      toast.success(`${selectedIds.length} years deleted successfully!`);
       await getYears();
       setSelectedIds([]);
       setCurrentPage(1);
-    } catch (error) {
-      console.error(error);
+      setConfirmState("success");
+    } else {
+      if (deleteTargetId === null) return;
+      await apiHelper.delete(`/model-year/${deleteTargetId}`);
+      toast.success("Year deleted successfully!");
+      await getYears();
+      setDeleteTargetId(null);
+      setConfirmState("success");
     }
-  };
+    setTimeout(() => setShowConfirmModal(false), 1500);
+  } catch (error: any) {
+    console.error("Delete failed:", error);
+    setConfirmState("error");
+    toast.error(error.response?.data?.message || "Failed to delete. Please try again.");
+  } finally {
+    setConfirmLoading(false);
+  }
+};
 
   const handleToggleTableStatus = async (id: number) => {
     const item = years.find((y) => y.id === id);
@@ -346,25 +374,30 @@ export default function ModelYear() {
   };
 
   const onFormSubmit = async (data: FormValues) => {
-    try {
-      const payload = {
-        categoryId: Number(data.categoryId),
-        brandId: Number(data.brandId),
-        modelId: Number(data.modelId),
-        modelYear: String(data.year), // ✅ Send as String
-        status: data.status,
-      };
+  try {
+    const payload = {
+      categoryId: Number(data.categoryId),
+      brandId: Number(data.brandId),
+      modelId: Number(data.modelId),
+      modelYear: String(data.year),
+      status: data.status,
+    };
 
-      if (editId !== null)
-        await apiHelper.put(`/model-year/${editId}`, payload);
-      else await apiHelper.post("/model-year", payload);
-      await getYears();
-      setShowDrawer(false);
-      reset();
-    } catch (error: any) {
-      console.error(error);
+    if (editId !== null) {
+      await apiHelper.put(`/model-year/${editId}`, payload);
+      toast.success("Year updated successfully!");
+    } else {
+      await apiHelper.post("/model-year", payload);
+      toast.success("Year created successfully!");
     }
-  };
+    await getYears();
+    setShowDrawer(false);
+    reset();
+  } catch (error: any) {
+    console.error(error);
+    toast.error(error.response?.data?.message || "Failed to save year. Please try again.");
+  }
+};
 
   // Filter logic - Added year filter matching
   const filteredData = years.filter((item) => {
@@ -1088,6 +1121,41 @@ export default function ModelYear() {
           </TransitionChild>
         </Dialog>
       </Transition>
+
+      {/* Confirmation Modal */}
+<ConfirmModal
+  show={showConfirmModal}
+  onClose={() => {
+    setShowConfirmModal(false);
+    setDeleteTargetId(null);
+    setConfirmState("pending");
+  }}
+  onOk={performDelete}
+  confirmLoading={confirmLoading}
+  state={confirmState}
+  messages={{
+    pending: {
+      Icon: ExclamationTriangleIcon,
+      title: isBulkDelete ? "Delete Selected Years?" : "Are you sure?",
+      description: isBulkDelete 
+        ? `Are you sure you want to delete ${selectedIds.length} selected years? This action cannot be undone.`
+        : "Are you sure you want to delete this year? Once deleted, it cannot be restored.",
+      actionText: isBulkDelete ? "Delete All" : "Delete",
+    },
+    success: {
+      title: "Deleted Successfully",
+      description: isBulkDelete 
+        ? `${selectedIds.length} years have been deleted.`
+        : "The year has been deleted.",
+      actionText: "Done",
+    },
+    error: {
+      title: "Delete Failed",
+      description: "Failed to delete. Please try again.",
+      actionText: "Try Again",
+    },
+  }}
+/>
     </div>
   );
 }
