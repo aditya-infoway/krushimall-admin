@@ -353,7 +353,8 @@ const AddVehicleStock = () => {
           grnNumber: "GRN-004",
           grnDate: "2024-04-01",
           grnRecordDate: "2024-04-01",
-        },
+        }, 
+        
         "CH-2024-005": {
           id: 5,
           chassisNo: "CH-2024-005",
