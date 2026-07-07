@@ -157,11 +157,9 @@ export default function LeadBuilder() {
     setShowTestDriveModal(true);
   };
 
-const handleCreateOrder = (id: number) => {
-  navigate(`/leadmaster/order/${id}`);
-};
-
-
+  const handleCreateOrder = (id: number) => {
+    navigate(`/leadmaster/order/${id}`);
+  };
 
   const handleCreateBooking = (id: number) => {
     console.log(`Create booking for lead ${id}...`);

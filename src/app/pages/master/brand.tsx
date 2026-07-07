@@ -23,6 +23,9 @@ import {
   ChevronRightIcon,
 } from "@heroicons/react/24/outline";
 import apiHelper from "@/utils/apiHelper";
+import { toast } from "sonner";
+import { ConfirmModal } from "@/components/shared/ConfirmModal";
+import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 
 // Local UI Imports
 import { Button, Checkbox, Input } from "@/components/ui";
@@ -74,6 +77,14 @@ export default function Brand() {
 
   const [search, setSearch] = useState("");
   const [showFilterBar, setShowFilterBar] = useState(false);
+
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [confirmState, setConfirmState] = useState<
+    "pending" | "success" | "error"
+  >("pending");
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+  const [isBulkDelete, setIsBulkDelete] = useState(false);
 
   // Three distinct filter dropdown states
   const [selectedNameFilter, setSelectedNameFilter] = useState("All");
@@ -235,16 +246,11 @@ export default function Brand() {
     setShowDrawer(true);
   };
 
-  const handleDelete = async (id: number) => {
-    try {
-      console.log("🗑️ Deleting brand ID:", id);
-      await apiHelper.delete(`/brand/${id}`);
-      console.log("✅ Brand deleted successfully");
-      getBrands();
-    } catch (error: any) {
-      console.error("❌ Delete error:", error);
-      console.error("Backend response:", error.response?.data);
-    }
+  const handleDelete = (id: number) => {
+    setDeleteTargetId(id);
+    setIsBulkDelete(false);
+    setConfirmState("pending");
+    setShowConfirmModal(true);
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -258,16 +264,41 @@ export default function Brand() {
     }
   };
 
-  const handleBulkDelete = async () => {
+  const handleBulkDelete = () => {
+    setIsBulkDelete(true);
+    setConfirmState("pending");
+    setShowConfirmModal(true);
+  };
+
+  const performDelete = async () => {
+    setConfirmLoading(true);
     try {
-      await Promise.all(
-        selectedIds.map((id) => apiHelper.delete(`/brand/${id}`)),
+      if (isBulkDelete) {
+        await Promise.all(
+          selectedIds.map((id) => apiHelper.delete(`/brand/${id}`)),
+        );
+        toast.success(`${selectedIds.length} brands deleted successfully!`);
+        await getBrands();
+        setSelectedIds([]);
+        setCurrentPage(1);
+        setConfirmState("success");
+      } else {
+        if (deleteTargetId === null) return;
+        await apiHelper.delete(`/brand/${deleteTargetId}`);
+        toast.success("Brand deleted successfully!");
+        await getBrands();
+        setDeleteTargetId(null);
+        setConfirmState("success");
+      }
+      setTimeout(() => setShowConfirmModal(false), 1500);
+    } catch (error: any) {
+      console.error("Delete failed:", error);
+      setConfirmState("error");
+      toast.error(
+        error.response?.data?.message || "Failed to delete. Please try again.",
       );
-      await getBrands();
-      setSelectedIds([]);
-      setCurrentPage(1);
-    } catch (error) {
-      console.error("Bulk delete failed:", error);
+    } finally {
+      setConfirmLoading(false);
     }
   };
 
@@ -325,8 +356,10 @@ export default function Brand() {
         let result;
         if (editId !== null) {
           result = await apiHelper.put(`/brand/${editId}`, formData);
+          toast.success("Brand updated successfully!");
         } else {
           result = await apiHelper.post("/brand", formData);
+          toast.success("Brand created successfully!");
         }
         console.log("✅ Upload response:", result);
       } else {
@@ -346,8 +379,10 @@ export default function Brand() {
 
         if (editId !== null) {
           await apiHelper.put(`/brand/${editId}`, payload);
+          toast.success("Brand updated successfully!");
         } else {
           await apiHelper.post("/brand", payload);
+          toast.success("Brand created successfully!");
         }
       }
 
@@ -356,7 +391,10 @@ export default function Brand() {
       reset();
     } catch (error: any) {
       console.error("❌ Failed to save brand:", error);
-      console.error("Backend error:", error.response?.data);
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to save brand. Please try again.",
+      );
     }
   };
 
@@ -1052,6 +1090,41 @@ export default function Brand() {
           </TransitionChild>
         </Dialog>
       </Transition>
+
+      {/* Confirmation Modal */}
+      <ConfirmModal
+        show={showConfirmModal}
+        onClose={() => {
+          setShowConfirmModal(false);
+          setDeleteTargetId(null);
+          setConfirmState("pending");
+        }}
+        onOk={performDelete}
+        confirmLoading={confirmLoading}
+        state={confirmState}
+        messages={{
+          pending: {
+            Icon: ExclamationTriangleIcon,
+            title: isBulkDelete ? "Delete Selected Brands?" : "Are you sure?",
+            description: isBulkDelete
+              ? `Are you sure you want to delete ${selectedIds.length} selected brands? This action cannot be undone.`
+              : "Are you sure you want to delete this brand? Once deleted, it cannot be restored.",
+            actionText: isBulkDelete ? "Delete All" : "Delete",
+          },
+          success: {
+            title: "Deleted Successfully",
+            description: isBulkDelete
+              ? `${selectedIds.length} brands have been deleted.`
+              : "The brand has been deleted.",
+            actionText: "Done",
+          },
+          error: {
+            title: "Delete Failed",
+            description: "Failed to delete. Please try again.",
+            actionText: "Try Again",
+          },
+        }}
+      />
     </div>
   );
 }

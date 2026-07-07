@@ -4,7 +4,7 @@ export const ledgerreport: NavigationTree = {
   id: "ledgerreport",
   type: "root",
   title: "Ledger Report",
-  icon: "item",
+  icon: "ledgerreport",
   childs: [
    
     {
