@@ -228,7 +228,7 @@ const protectedRoutes: RouteObject = {
                   .default,
               }),
             },
-              {
+            {
               path: "branch",
               lazy: async () => ({
                 Component: (await import("@/app/pages/usermaster/branch"))
@@ -383,6 +383,41 @@ const protectedRoutes: RouteObject = {
         },
 
         {
+          path: "stocktransfer",
+          children: [
+            {
+              path: "vehiclestock",
+              children: [
+                {
+                  index: true,
+                  lazy: async () => ({
+                    Component: (
+                      await import("@/app/pages/stocktransfer/vehiclestock")
+                    ).default,
+                  }),
+                },
+                {
+                  path: "add",
+                  lazy: async () => ({
+                    Component: (
+                      await import("@/app/pages/stocktransfer/addvehiclestock")
+                    ).default,
+                  }),
+                },
+                {
+                  path: "edit/:id",
+                  lazy: async () => ({
+                    Component: (
+                      await import("@/app/pages/stocktransfer/addvehiclestock")
+                    ).default,
+                  }),
+                },
+              ],
+            },
+          ],
+        },
+
+        {
           path: "accounting",
           children: [
             {
@@ -442,21 +477,16 @@ const protectedRoutes: RouteObject = {
                   .default,
               }),
             },
-
-          
-
-         
-
-           
           ],
         },
-          {
+        {
           path: "bookregister",
           children: [
             {
               path: "cashbook",
               lazy: async () => ({
-                Component: (await import("@/app/pages/cash-bank/cashbook")).default,
+                Component: (await import("@/app/pages/cash-bank/cashbook"))
+                  .default,
               }),
             },
             {
@@ -468,34 +498,38 @@ const protectedRoutes: RouteObject = {
             },
           ],
         },
-          {
+        {
           path: "ledgerdetails",
           children: [
             {
               path: "ledgerreport",
               lazy: async () => ({
-                Component: (await import("@/app/pages/ledgerdetails/ledgerreport")).default,
+                Component: (
+                  await import("@/app/pages/ledgerdetails/ledgerreport")
+                ).default,
               }),
             },
             {
               path: "ledgerdetails",
               lazy: async () => ({
-                Component: (await import("@/app/pages/ledgerdetails/ledgerdetails"))
-                  .default,
+                Component: (
+                  await import("@/app/pages/ledgerdetails/ledgerdetails")
+                ).default,
               }),
             },
           ],
         },
-          {
+        {
           path: "bookingbalance",
           children: [
             {
               path: "bookingbalance",
               lazy: async () => ({
-                Component: (await import("@/app/pages/bookingbalance/bookingbalance")).default,
+                Component: (
+                  await import("@/app/pages/bookingbalance/bookingbalance")
+                ).default,
               }),
             },
-           
           ],
         },
         {
@@ -564,8 +598,9 @@ const protectedRoutes: RouteObject = {
             {
               path: "history/:id",
               lazy: async () => ({
-                Component: (await import("@/app/pages/followup/followuphistory"))
-                  .default,
+                Component: (
+                  await import("@/app/pages/followup/followuphistory")
+                ).default,
               }),
             },
           ],

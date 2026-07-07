@@ -29,6 +29,10 @@ import { Combobox } from "@/components/shared/form/StyledCombobox";
 import { Listbox } from "@/components/shared/form/StyledListbox";
 import apiHelper from "@/utils/apiHelper";
 import Select, { components } from "react-select";
+import { toast } from "sonner";
+import { ConfirmModal } from "@/components/shared/ConfirmModal";
+import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
+
 const CheckboxOption = (props: any) => {
   return (
     <components.Option {...props}>
@@ -51,7 +55,7 @@ interface AccessoryItem {
   codeNo: string;
   shortName: string;
   hsnCode: string;
-   unit: string;
+  unit: string;
   taxSlab: string;
   group: string;
   purchasePrice: string;
@@ -69,7 +73,7 @@ interface FormValues {
   codeNo: string;
   shortName: string;
   hsnCode: string;
-   unit: string;
+  unit: string;
   taxSlab: string;
   group: string;
   purchasePrice: string;
@@ -113,7 +117,7 @@ const unitOptions = [
   // { label: "KIT", value: "KIT" },
   // { label: "LTR", value: "LTR" },
   { label: "KG", value: "KG" },
-   { label: "GM", value: "GM" },
+  { label: "GM", value: "GM" },
   // { label: "MTR", value: "MTR" },
 ];
 const statusOptions = [
@@ -128,7 +132,7 @@ const statusFilterOptions = [
 ];
 
 const taxSlabOptions = [
-    { label: "GST 0%", value: "0" },
+  { label: "GST 0%", value: "0" },
   { label: "GST 5%", value: "5" },
   { label: "GST 12%", value: "12" },
   { label: "GST 18%", value: "18" },
@@ -163,6 +167,14 @@ const Accessories = () => {
   const [selectedVariants, setSelectedVariants] = useState<any[]>([]);
   const [variantOptions, setVariantOptions] = useState([]);
 
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [confirmState, setConfirmState] = useState<
+    "pending" | "success" | "error"
+  >("pending");
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+  const [isBulkDelete, setIsBulkDelete] = useState(false);
+
   const fetchShowroomVariants = async () => {
     try {
       const res = await apiHelper.get("/showroom-variant");
@@ -193,7 +205,7 @@ const Accessories = () => {
     codeNo: "",
     shortName: "",
     hsnCode: "",
-      unit: "",
+    unit: "",
     taxSlab: "",
     group: "",
     purchasePrice: "",
@@ -257,7 +269,7 @@ const Accessories = () => {
       codeNo: "",
       shortName: "",
       hsnCode: "",
-        unit: "",
+      unit: "",
       taxSlab: "",
       group: "",
       purchasePrice: "",
@@ -305,34 +317,48 @@ const Accessories = () => {
     setShowDrawer(true);
   };
 
-  const handleDelete = async (id: number) => {
-    try {
-      if (!window.confirm("Are you sure you want to delete this item?")) return;
-      await apiHelper.delete(`/accessories/${id}`);
-      await getAccessories();
-    } catch (error) {
-      console.error("Failed to delete:", error);
-    }
+  const handleDelete = (id: number) => {
+    setDeleteTargetId(id);
+    setIsBulkDelete(false);
+    setConfirmState("pending");
+    setShowConfirmModal(true);
   };
 
-  const handleBulkDelete = async () => {
-    if (
-      !window.confirm(
-        `Are you sure you want to delete ${selectedIds.length} selected items?`,
-      )
-    )
-      return;
+  const handleBulkDelete = () => {
+    setIsBulkDelete(true);
+    setConfirmState("pending");
+    setShowConfirmModal(true);
+  };
+
+  const performDelete = async () => {
+    setConfirmLoading(true);
     try {
-      setLoading(true);
-      await Promise.all(
-        selectedIds.map((id) => apiHelper.delete(`/accessories/${id}`)),
+      if (isBulkDelete) {
+        await Promise.all(
+          selectedIds.map((id) => apiHelper.delete(`/accessories/${id}`)),
+        );
+        toast.success(`${selectedIds.length} items deleted successfully!`);
+        setSelectedIds([]);
+        await getAccessories();
+        setCurrentPage(1);
+        setConfirmState("success");
+      } else {
+        if (deleteTargetId === null) return;
+        await apiHelper.delete(`/accessories/${deleteTargetId}`);
+        toast.success("Item deleted successfully!");
+        await getAccessories();
+        setDeleteTargetId(null);
+        setConfirmState("success");
+      }
+      setTimeout(() => setShowConfirmModal(false), 1500);
+    } catch (error: any) {
+      console.error("Delete failed:", error);
+      setConfirmState("error");
+      toast.error(
+        error.response?.data?.message || "Failed to delete. Please try again.",
       );
-      setSelectedIds([]);
-      await getAccessories();
-    } catch (error) {
-      console.error("Failed to delete:", error);
     } finally {
-      setLoading(false);
+      setConfirmLoading(false);
     }
   };
 
@@ -382,33 +408,37 @@ const Accessories = () => {
         codeNo: formData.codeNo,
         shortName: formData.shortName,
         hsnCode: formData.hsnCode,
-         unit: formData.unit,
+        unit: formData.unit,
         taxSlab: formData.taxSlab,
         group: formData.group,
         purchasePrice: formData.purchasePrice,
         salesPrice: formData.salesPrice,
         mrp: formData.mrp,
         opStock: formData.opStock,
-
         showroomVariants: selectedVariants.map((v: any) => ({
           id: v.value,
           variantName: v.variantName,
           model: v.model,
         })),
-
         status: formData.status,
       };
 
       if (editId) {
         await apiHelper.put(`/accessories/${editId}`, payload);
+        toast.success("Item updated successfully!");
       } else {
         await apiHelper.post("/accessories", payload);
+        toast.success("Item created successfully!");
       }
 
       await getAccessories();
       setShowDrawer(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Save failed:", error);
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to save item. Please try again.",
+      );
     }
   };
 
@@ -679,7 +709,7 @@ const Accessories = () => {
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   HSN Code
                 </Th>
-                  <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Unit
                 </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
@@ -1168,24 +1198,23 @@ const Accessories = () => {
                         }
                       />
                     </div>
-                     <div>
+                    <div>
                       <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
                         Unit
                       </label>
-                    <Combobox
-  data={unitOptions}
-  displayField="label"
-  value={
-    unitOptions.find(
-      (u) => u.value === formData.unit
-    ) || null
-  }
-  onChange={(val: any) =>
-    handleInputChange("unit", val?.value || "")
-  }
-  placeholder="Select Unit"
-  searchFields={["label"]}
-/>
+                      <Combobox
+                        data={unitOptions}
+                        displayField="label"
+                        value={
+                          unitOptions.find((u) => u.value === formData.unit) ||
+                          null
+                        }
+                        onChange={(val: any) =>
+                          handleInputChange("unit", val?.value || "")
+                        }
+                        placeholder="Select Unit"
+                        searchFields={["label"]}
+                      />
                     </div>
 
                     <div>
@@ -1385,6 +1414,40 @@ const Accessories = () => {
           </TransitionChild>
         </Dialog>
       </Transition>
+      {/* Confirmation Modal */}
+      <ConfirmModal
+        show={showConfirmModal}
+        onClose={() => {
+          setShowConfirmModal(false);
+          setDeleteTargetId(null);
+          setConfirmState("pending");
+        }}
+        onOk={performDelete}
+        confirmLoading={confirmLoading}
+        state={confirmState}
+        messages={{
+          pending: {
+            Icon: ExclamationTriangleIcon,
+            title: isBulkDelete ? "Delete Selected Items?" : "Are you sure?",
+            description: isBulkDelete
+              ? `Are you sure you want to delete ${selectedIds.length} selected items? This action cannot be undone.`
+              : "Are you sure you want to delete this item? Once deleted, it cannot be restored.",
+            actionText: isBulkDelete ? "Delete All" : "Delete",
+          },
+          success: {
+            title: "Deleted Successfully",
+            description: isBulkDelete
+              ? `${selectedIds.length} items have been deleted.`
+              : "The item has been deleted.",
+            actionText: "Done",
+          },
+          error: {
+            title: "Delete Failed",
+            description: "Failed to delete. Please try again.",
+            actionText: "Try Again",
+          },
+        }}
+      />
     </div>
   );
 };

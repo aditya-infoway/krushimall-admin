@@ -12,8 +12,7 @@ import { followups } from "./segments/followups";
 import { bookregister } from "./segments/bookregister";
 import { ledgerreport } from "./segments/ledgerreport";
 import { bookingbalance } from "./segments/bookingbalance";
-
-
+import { stocktransfer } from "./segments/stocktransfer";
 
 
 export const navigation = [
@@ -24,6 +23,7 @@ export const navigation = [
   enquirysettings,
   item,
   purchase,
+  stocktransfer,
   accounting,
   bookregister,
   ledgerreport,

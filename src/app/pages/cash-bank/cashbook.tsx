@@ -151,15 +151,17 @@ const CashBook: React.FC = () => {
   //   item.accountName === selectedCash?.name;
   const getCashBook = async () => {
     try {
-      const [cashPayments] = await Promise.all([
+      const [cashPayments, cashReceipts] = await Promise.all([
         apiHelper.get("/cash-payment"),
-        // apiHelper.get("/cash-receipt"),
+        apiHelper.get("/cash-receipt"),
       ]);
       // console.log("Cash Payments:", cashPayments);
+      //       console.log("Cash Payments", cashPayments);
+      // console.log("Cash Receipts", cashReceipts);
       const paymentData = (cashPayments || []).map((p: any) => ({
         date: p.date,
         voucherNo: p.voucherNo,
-        type: "CP",
+        type: p.type, // <-- અહીં "CP" ના બદલે database નું type લો
         accountName: p.cashAccount?.accountName,
         partyName: p.oppAccount?.accountName,
         receipt: 0,
@@ -169,23 +171,21 @@ const CashBook: React.FC = () => {
         createdBy: p.createdBy,
       }));
 
-      // const receiptData = cashReceipts.data.map(
-      //   (item: any, index: number) => ({
-      //     sr: paymentData.length + index + 1,
-      //     date: item.date,
-      //     voucherNo: item.voucherNo,
-      //     type: item.type,
-      //     accountName: item.cashAccount?.accountName || "-",
-      //     partyName: item.oppAccount?.accountName || "-",
-      //     receipt: Number(item.amount),
-      //     payment: 0,
-      //     narration: item.narration || "",
-      //     createdType: item.createdType,
-      //     createdBy: item.createdBy,
-      //   })
-      // );
+      const receiptData = cashReceipts.map((item: any, index: number) => ({
+        sr: paymentData.length + index + 1,
+        date: item.date,
+        voucherNo: item.voucherNo,
+        type: item.type,
+        accountName: item.cashAccount?.accountName || "-",
+        partyName: item.oppAccount?.accountName || "-",
+        receipt: Number(item.amount),
+        payment: 0,
+        narration: item.narration || "",
+        createdType: item.createdType,
+        createdBy: item.createdBy,
+      }));
 
-      const finalData = [...paymentData].sort(
+      const finalData = [...paymentData, ...receiptData].sort(
         (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
       );
       const totalReceipt = filteredTableData.reduce(
@@ -262,15 +262,15 @@ const CashBook: React.FC = () => {
     });
 
     setCurrentPage(1);
- }, [
-  searchTerm,
-  transactionType,
-  fromDate,
-  toDate,
-  tableData,
-  cashAccount,
-  cashAccountOptions,
-]);
+  }, [
+    searchTerm,
+    transactionType,
+    fromDate,
+    toDate,
+    tableData,
+    cashAccount,
+    cashAccountOptions,
+  ]);
   const downloadExcel = () => {
     const excelData = filteredTableData.map((item, index) => ({
       "Sr No": index + 1,

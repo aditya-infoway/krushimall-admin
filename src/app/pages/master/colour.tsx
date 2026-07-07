@@ -28,6 +28,9 @@ import { Button, Checkbox, Input } from "@/components/ui";
 import { Combobox } from "@/components/shared/form/StyledCombobox";
 import { Listbox } from "@/components/shared/form/StyledListbox";
 import apiHelper from "@/utils/apiHelper";
+import { toast } from "sonner";
+import { ConfirmModal } from "@/components/shared/ConfirmModal";
+import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 interface Colour {
@@ -133,6 +136,12 @@ const Colour = () => {
   const [filteredShowroomVariants, setFilteredShowroomVariants] = useState<
     OptionType[]
   >([]);
+
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+const [confirmState, setConfirmState] = useState<"pending" | "success" | "error">("pending");
+const [confirmLoading, setConfirmLoading] = useState(false);
+const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+const [isBulkDelete, setIsBulkDelete] = useState(false);
   // ─── Form State ─────────────────────────────────────────────────────────
   const [formData, setFormData] = useState<FormValues>({
     model: "",
@@ -337,43 +346,46 @@ const Colour = () => {
     setShowDrawer(true);
   };
 
-  const handleDelete = async (id: number) => {
-    try {
-      if (!window.confirm("Are you sure you want to delete this colour?"))
-        return;
+const handleDelete = (id: number) => {
+  setDeleteTargetId(id);
+  setIsBulkDelete(false);
+  setConfirmState("pending");
+  setShowConfirmModal(true);
+};
 
-      await apiHelper.delete(`/colours/${id}`);
+ const handleBulkDelete = () => {
+  setIsBulkDelete(true);
+  setConfirmState("pending");
+  setShowConfirmModal(true);
+};
 
-      // Refresh the list
+const performDelete = async () => {
+  setConfirmLoading(true);
+  try {
+    if (isBulkDelete) {
+      await Promise.all(selectedIds.map((id) => apiHelper.delete(`/colours/${id}`)));
+      toast.success(`${selectedIds.length} colours deleted successfully!`);
       await getColours();
-    } catch (error) {
-      console.error("Failed to delete:", error);
-    }
-  };
-
-  const handleBulkDelete = async () => {
-    if (
-      !window.confirm(
-        `Are you sure you want to delete ${selectedIds.length} selected colours?`,
-      )
-    )
-      return;
-
-    try {
-      setLoading(true);
-      // Delete each selected colour
-      await Promise.all(
-        selectedIds.map((id) => apiHelper.delete(`/colours/${id}`)),
-      );
-
       setSelectedIds([]);
+      setCurrentPage(1);
+      setConfirmState("success");
+    } else {
+      if (deleteTargetId === null) return;
+      await apiHelper.delete(`/colours/${deleteTargetId}`);
+      toast.success("Colour deleted successfully!");
       await getColours();
-    } catch (error) {
-      console.error("Failed to delete colours:", error);
-    } finally {
-      setLoading(false);
+      setDeleteTargetId(null);
+      setConfirmState("success");
     }
-  };
+    setTimeout(() => setShowConfirmModal(false), 1500);
+  } catch (error: any) {
+    console.error("Delete failed:", error);
+    setConfirmState("error");
+    toast.error(error.response?.data?.message || "Failed to delete. Please try again.");
+  } finally {
+    setConfirmLoading(false);
+  }
+};
 
   const handleToggleStatus = async (id: number) => {
     const colour = colours.find((item) => item.id === id);
@@ -475,31 +487,33 @@ const Colour = () => {
     return Object.keys(newErrors).length === 0;
   };
   const handleSave = async () => {
-    if (!validate()) return;
+  if (!validate()) return;
 
-    try {
-      const payload = {
-        modelId: Number(formData.modelId),
-        variantId: Number(formData.variantId),
-        showroomVariantId: Number(formData.showroomVariantId),
-        colourName: formData.colourName,
-        colourCode: formData.colourCode,
-        status: formData.status,
-      };
+  try {
+    const payload = {
+      modelId: Number(formData.modelId),
+      variantId: Number(formData.variantId),
+      showroomVariantId: Number(formData.showroomVariantId),
+      colourName: formData.colourName,
+      colourCode: formData.colourCode,
+      status: formData.status,
+    };
 
-      if (editId) {
-        await apiHelper.put(`/colours/${editId}`, payload);
-      } else {
-        await apiHelper.post("/colours", payload);
-      }
-
-      await getColours();
-
-      setShowDrawer(false);
-    } catch (error) {
-      console.error("Save failed:", error);
+    if (editId) {
+      await apiHelper.put(`/colours/${editId}`, payload);
+      toast.success("Colour updated successfully!");
+    } else {
+      await apiHelper.post("/colours", payload);
+      toast.success("Colour created successfully!");
     }
-  };
+
+    await getColours();
+    setShowDrawer(false);
+  } catch (error: any) {
+    console.error("Save failed:", error);
+    toast.error(error.response?.data?.message || "Failed to save colour. Please try again.");
+  }
+};
 
   // ─── Filter Data ────────────────────────────────────────────────────────
   const filteredData = colours.filter((item) => {
@@ -1264,6 +1278,42 @@ const Colour = () => {
           </TransitionChild>
         </Dialog>
       </Transition>
+
+
+      {/* Confirmation Modal */}
+<ConfirmModal
+  show={showConfirmModal}
+  onClose={() => {
+    setShowConfirmModal(false);
+    setDeleteTargetId(null);
+    setConfirmState("pending");
+  }}
+  onOk={performDelete}
+  confirmLoading={confirmLoading}
+  state={confirmState}
+  messages={{
+    pending: {
+      Icon: ExclamationTriangleIcon,
+      title: isBulkDelete ? "Delete Selected Colours?" : "Are you sure?",
+      description: isBulkDelete 
+        ? `Are you sure you want to delete ${selectedIds.length} selected colours? This action cannot be undone.`
+        : "Are you sure you want to delete this colour? Once deleted, it cannot be restored.",
+      actionText: isBulkDelete ? "Delete All" : "Delete",
+    },
+    success: {
+      title: "Deleted Successfully",
+      description: isBulkDelete 
+        ? `${selectedIds.length} colours have been deleted.`
+        : "The colour has been deleted.",
+      actionText: "Done",
+    },
+    error: {
+      title: "Delete Failed",
+      description: "Failed to delete. Please try again.",
+      actionText: "Try Again",
+    },
+  }}
+/>
     </div>
   );
 };

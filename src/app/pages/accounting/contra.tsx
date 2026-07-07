@@ -30,6 +30,7 @@ import { DatePicker } from "@/components/shared/form/Datepicker";
 import { Combobox } from "@/components/shared/form/Combobox";
 import { Input, Radio, Textarea } from "@/components/ui";
 import apiHelper from "@/utils/apiHelper";
+import { RiFileExcel2Fill, RiFilePdfFill } from "react-icons/ri";
 // ── Types ──────────────────────────────────────────────────────────────────────
 type ContraType = "Cash Deposit" | "Cash Withdrawal" | "Bank Transfer";
 
@@ -320,7 +321,27 @@ const getVoucher = async () => {
   useEffect(() => {
     setCurrentPage(1);
   }, [search, filterType, filterDateFrom, filterDateTo]);
+const downloadExcel = async () => {
+  try {
+    const blob = await apiHelper.getBlob(
+      "/contra/export/excel"
+    );
 
+    const url = window.URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "ContraRegister.xlsx";
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    window.URL.revokeObjectURL(url);
+  } catch (err) {
+    console.log(err);
+  }
+};
   return (
     <div className="relative min-h-screen space-y-6 p-4 pb-28 text-gray-900 md:p-6 dark:text-gray-100">
       {/* Upper Actions Control Toolbar Layout */}
@@ -348,20 +369,17 @@ const getVoucher = async () => {
             Filter
           </button>
           <button
-            type="button"
-            onClick={() => {}}
-            className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            type="button"   onClick={downloadExcel}
+            className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 cursor-pointer"
           >
-            <Download className="size-4.5" />
-            Excel
+         <RiFileExcel2Fill className="text-lg text-green-500" />
           </button>
 
           <button
             type="button"
-            className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 cursor-pointer"
           >
-            <Download className="size-4.5" />
-            PDF
+           <RiFilePdfFill className="text-lg text-red-500" />
           </button>
 
           <button

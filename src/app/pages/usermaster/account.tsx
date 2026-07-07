@@ -23,9 +23,14 @@ import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/Table";
 import { Button, Checkbox } from "@/components/ui";
 import { Listbox } from "@/components/shared/form/StyledListbox";
 import apiHelper from "@/utils/apiHelper";
+import { toast } from "sonner";
+import { ConfirmModal } from "@/components/shared/ConfirmModal";
+import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
+
+
+
+
 // Sample data
-
-
 const entriesOptions = [
   { id: 10, name: "10" },
   { id: 20, name: "20" },
@@ -44,23 +49,17 @@ const [data, setData] = useState<any[]>([]);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [showFilterBar, setShowFilterBar] = useState(false);
 
-const handleDelete = async (id: number) => {
-  const confirmDelete = window.confirm(
-    "Are you sure you want to delete this account?"
-  );
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+const [confirmState, setConfirmState] = useState<"pending" | "success" | "error">("pending");
+const [confirmLoading, setConfirmLoading] = useState(false);
+const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+const [isBulkDelete, setIsBulkDelete] = useState(false);
 
-  if (!confirmDelete) return;
-
-  try {
-    await apiHelper.delete(`/accounts/${id}`);
-
-    setData((prev) => prev.filter((item) => item.id !== id));
-
-    alert("Account deleted successfully");
-  } catch (error) {
-    console.error(error);
-    alert("Failed to delete account");
-  }
+const handleDelete = (id: number) => {
+  setDeleteTargetId(id);
+  setIsBulkDelete(false);
+  setConfirmState("pending");
+  setShowConfirmModal(true);
 };
 
   const handleAdd = () => {
@@ -71,30 +70,37 @@ const handleDelete = async (id: number) => {
     navigate(`/usermaster/newaccount/${item.id}`, { state: { item } });
   };
 
- const handleBulkDelete = async () => {
-  const confirmDelete = window.confirm(
-    "Are you sure you want to delete selected accounts?"
-  );
+ const handleBulkDelete = () => {
+  setIsBulkDelete(true);
+  setConfirmState("pending");
+  setShowConfirmModal(true);
+};
 
-  if (!confirmDelete) return;
-
+const performDelete = async () => {
+  setConfirmLoading(true);
   try {
-    await Promise.all(
-      selectedIds.map((id) =>
-        apiHelper.delete(`/accounts/${id}`)
-      )
-    );
-
-    setData((prev) =>
-      prev.filter((item) => !selectedIds.includes(item.id))
-    );
-
-    setSelectedIds([]);
-
-    alert("Selected accounts deleted successfully");
-  } catch (error) {
-    console.error(error);
-    alert("Failed to delete accounts");
+    if (isBulkDelete) {
+      await Promise.all(selectedIds.map((id) => apiHelper.delete(`/accounts/${id}`)));
+      toast.success(`${selectedIds.length} accounts deleted successfully!`);
+      setData((prev) => prev.filter((item) => !selectedIds.includes(item.id)));
+      setSelectedIds([]);
+      setCurrentPage(1);
+      setConfirmState("success");
+    } else {
+      if (deleteTargetId === null) return;
+      await apiHelper.delete(`/accounts/${deleteTargetId}`);
+      toast.success("Account deleted successfully!");
+      setData((prev) => prev.filter((item) => item.id !== deleteTargetId));
+      setDeleteTargetId(null);
+      setConfirmState("success");
+    }
+    setTimeout(() => setShowConfirmModal(false), 1500);
+  } catch (error: any) {
+    console.error("Delete failed:", error);
+    setConfirmState("error");
+    toast.error(error.response?.data?.message || "Failed to delete. Please try again.");
+  } finally {
+    setConfirmLoading(false);
   }
 };
 
@@ -279,6 +285,9 @@ useEffect(() => {
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Print Name
                 </Th>
+                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                Group
+                </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Balance
                 </Th>
@@ -329,6 +338,9 @@ useEffect(() => {
                     </Td>
                     <Td className="dark:text-dark-200 py-4 text-gray-600">
                       {item.printName}
+                    </Td>
+                    <Td className="dark:text-dark-200 py-4 text-gray-600">
+                      {item.group}
                     </Td>
                     <Td className="dark:text-dark-200 py-4 text-gray-600">
                        {item.openingBalance} {item.drCr}
@@ -580,6 +592,41 @@ useEffect(() => {
           </div>
         </div>
       )}
+
+      {/* Confirmation Modal */}
+<ConfirmModal
+  show={showConfirmModal}
+  onClose={() => {
+    setShowConfirmModal(false);
+    setDeleteTargetId(null);
+    setConfirmState("pending");
+  }}
+  onOk={performDelete}
+  confirmLoading={confirmLoading}
+  state={confirmState}
+  messages={{
+    pending: {
+      Icon: ExclamationTriangleIcon,
+      title: isBulkDelete ? "Delete Selected Accounts?" : "Are you sure?",
+      description: isBulkDelete 
+        ? `Are you sure you want to delete ${selectedIds.length} selected accounts? This action cannot be undone.`
+        : "Are you sure you want to delete this account? Once deleted, it cannot be restored.",
+      actionText: isBulkDelete ? "Delete All" : "Delete",
+    },
+    success: {
+      title: "Deleted Successfully",
+      description: isBulkDelete 
+        ? `${selectedIds.length} accounts have been deleted.`
+        : "The account has been deleted.",
+      actionText: "Done",
+    },
+    error: {
+      title: "Delete Failed",
+      description: "Failed to delete. Please try again.",
+      actionText: "Try Again",
+    },
+  }}
+/>
     </div>
   );
 };

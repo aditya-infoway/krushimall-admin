@@ -172,62 +172,57 @@ const BankBook: React.FC = () => {
 
   const getBankBook = async () => {
     try {
-      const [bankPayments] = await Promise.all([
+      const [bankPayments,bankReceipts] = await Promise.all([
         apiHelper.get("/bank-payment"),
-        // apiHelper.get("/bank-receipt"),
+        apiHelper.get("/bank-receipt"),
       ]);
 
-      const paymentData = (bankPayments || []).map(
-        (item: any, index: number) => ({
-          sr: index + 1,
-          date: item.date,
-          voucherNo: item.voucherNo,
-          type: item.type || "BP",
-          accountName: item.bankAccount?.accountName || "-",
-          partyName: item.oppAccount?.accountName || "-",
-          receipt: 0,
-          payment: Number(item.amount),
-          mode: item.paymentMode || "-",
-          chequeNo: item.chequeNo || "-",
-          chequeDate: item.chequeDate
-            ? new Date(item.chequeDate).toLocaleDateString("en-GB")
-            : "-",
-          clearDate: item.clearDate
-            ? new Date(item.clearDate).toLocaleDateString("en-GB")
-            : "-",
-          narration: item.narration || "",
-          createdType: item.createdType,
-          createdBy: item.createdBy,
-        }),
-      );
+    const paymentData = (bankPayments || []).map((item: any) => ({
+  date: item.date,
+  voucherNo: item.voucherNo,
+  type: item.type,
+  accountName: item.bankAccount?.accountName || "-",
+  partyName: item.oppAccount?.accountName || "-",
+  receipt: 0,
+  payment: Number(item.amount),
+  mode: item.paymentType || "-",
+  chequeNo: item.chequeNo || "-",
+  chequeDate: item.chequeDate
+    ? new Date(item.chequeDate).toLocaleDateString("en-GB")
+    : "-",
+  clearDate: item.chequeClearDate
+    ? new Date(item.chequeClearDate).toLocaleDateString("en-GB")
+    : "-",
+  narration: item.narration || "",
+  createdType: item.createdType,
+  createdBy: item.createdBy,
+}));
 
-      // const receiptData = (bankReceipts || []).map(
-      //   (item: any, index: number) => ({
-      //     sr: paymentData.length + index + 1,
-      //     date: item.date,
-      //     voucherNo: item.voucherNo,
-      //     type: item.type || "BR",
-      //     accountName: item.bankAccount?.accountName || "-",
-      //     partyName: item.oppAccount?.accountName || "-",
-      //     receipt: Number(item.amount),
-      //     payment: 0,
-      //     mode: item.paymentMode || "-",
-      //     chequeNo: item.chequeNo || "-",
-      //     chequeDate: item.chequeDate
-      //       ? new Date(item.chequeDate).toLocaleDateString("en-GB")
-      //       : "-",
-      //     clearDate: item.clearDate
-      //       ? new Date(item.clearDate).toLocaleDateString("en-GB")
-      //       : "-",
-      //     narration: item.narration || "",
-      //     createdType: item.createdType,
-      //     createdBy: item.createdBy,
-      //   })
-      // );
+   const receiptData = (bankReceipts || []).map((item: any, index: number) => ({
+  sr: paymentData.length + index + 1,
+  date: item.date,
+  voucherNo: item.voucherNo,
+  type: item.type,
+  accountName: item.bankAccount?.accountName || "-",
+  partyName: item.oppAccount?.accountName || "-",
+  receipt: Number(item.amount),
+  payment: 0,
+  mode: item.paymentType || "-",
+  chequeNo: item.chequeNo || "-",
+  chequeDate: item.chequeDate
+    ? new Date(item.chequeDate).toLocaleDateString("en-GB")
+    : "-",
+  clearDate: item.chequeClearDate
+    ? new Date(item.chequeClearDate).toLocaleDateString("en-GB")
+    : "-",
+  narration: item.narration || "",
+  createdType: item.createdType,
+  createdBy: item.createdBy,
+}));
 
-      const finalData = [...paymentData].sort(
-        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
-      );
+   const finalData = [...paymentData, ...receiptData].sort(
+  (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+);
 
       setTableData(finalData);
     } catch (err) {

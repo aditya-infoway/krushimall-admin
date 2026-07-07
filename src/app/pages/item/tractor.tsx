@@ -29,6 +29,9 @@ import { Button, Checkbox, Input } from "@/components/ui";
 import { Combobox } from "@/components/shared/form/StyledCombobox";
 import { Listbox } from "@/components/shared/form/StyledListbox";
 import apiHelper from "@/utils/apiHelper";
+import { toast } from "sonner";
+import { ConfirmModal } from "@/components/shared/ConfirmModal";
+import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 interface Tractor {
@@ -137,6 +140,12 @@ const [showroomVariants, setShowroomVariants] = useState<OptionType[]>([]);
 const [filteredShowroomVariants, setFilteredShowroomVariants] =
   useState<OptionType[]>([]);
   const [colours, setColours] = useState<OptionType[]>([]);
+
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+const [confirmState, setConfirmState] = useState<"pending" | "success" | "error">("pending");
+const [confirmLoading, setConfirmLoading] = useState(false);
+const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+const [isBulkDelete, setIsBulkDelete] = useState(false);
 
 
   // ─── Form State ─────────────────────────────────────────────────────────
@@ -340,37 +349,45 @@ const getVariantDetails = async (id: number) => {
     setShowDrawer(true);
   };
 
-  const handleDelete = async (id: number) => {
-    try {
-      if (!window.confirm("Are you sure you want to delete this tractor?"))
-        return;
-      await apiHelper.delete(`/tractors/${id}`);
-      await getTractors();
-    } catch (error) {
-      console.error("Failed to delete:", error);
-    }
-  };
+const handleDelete = (id: number) => {
+  setDeleteTargetId(id);
+  setIsBulkDelete(false);
+  setConfirmState("pending");
+  setShowConfirmModal(true);
+};
+const handleBulkDelete = () => {
+  setIsBulkDelete(true);
+  setConfirmState("pending");
+  setShowConfirmModal(true);
+};
 
-  const handleBulkDelete = async () => {
-    if (
-      !window.confirm(
-        `Are you sure you want to delete ${selectedIds.length} selected tractors?`,
-      )
-    )
-      return;
-    try {
-      setLoading(true);
-      await Promise.all(
-        selectedIds.map((id) => apiHelper.delete(`/tractors/${id}`)),
-      );
+const performDelete = async () => {
+  setConfirmLoading(true);
+  try {
+    if (isBulkDelete) {
+      await Promise.all(selectedIds.map((id) => apiHelper.delete(`/tractors/${id}`)));
+      toast.success(`${selectedIds.length} tractors deleted successfully!`);
       setSelectedIds([]);
       await getTractors();
-    } catch (error) {
-      console.error("Failed to delete:", error);
-    } finally {
-      setLoading(false);
+      setCurrentPage(1);
+      setConfirmState("success");
+    } else {
+      if (deleteTargetId === null) return;
+      await apiHelper.delete(`/tractors/${deleteTargetId}`);
+      toast.success("Tractor deleted successfully!");
+      await getTractors();
+      setDeleteTargetId(null);
+      setConfirmState("success");
     }
-  };
+    setTimeout(() => setShowConfirmModal(false), 1500);
+  } catch (error: any) {
+    console.error("Delete failed:", error);
+    setConfirmState("error");
+    toast.error(error.response?.data?.message || "Failed to delete. Please try again.");
+  } finally {
+    setConfirmLoading(false);
+  }
+};
 
 const handleToggleStatus = async (id: number) => {
   try {
@@ -408,38 +425,41 @@ const handleToggleStatus = async (id: number) => {
   };
 
   const handleSave = async () => {
-    if (!validate()) return;
+  if (!validate()) return;
 
-    try {
-      const payload = {
-        modelId: Number(formData.modelId),
-        showroomVariantId: Number(formData.showroomVariantId),
-        colourId: Number(formData.colourId),
-        itemName: formData.itemName,
-        codeNo: formData.codeNo,
-        shortName: formData.shortName,
-        hsnCode: formData.hsnCode,
-        taxSlab: formData.taxSlab,
-        listOfGroup: formData.listOfGroup,
-        typeOfFuel: formData.typeOfFuel,
-        fuelCapacity: formData.fuelCapacity,
-        purchasePriceNoGST: Number(formData.purchasePriceNoGST),
-        purchasePriceTaxable: Number(formData.purchasePriceTaxable),
-        status: formData.status,
-      };
+  try {
+    const payload = {
+      modelId: Number(formData.modelId),
+      showroomVariantId: Number(formData.showroomVariantId),
+      colourId: Number(formData.colourId),
+      itemName: formData.itemName,
+      codeNo: formData.codeNo,
+      shortName: formData.shortName,
+      hsnCode: formData.hsnCode,
+      taxSlab: formData.taxSlab,
+      listOfGroup: formData.listOfGroup,
+      typeOfFuel: formData.typeOfFuel,
+      fuelCapacity: formData.fuelCapacity,
+      purchasePriceNoGST: Number(formData.purchasePriceNoGST),
+      purchasePriceTaxable: Number(formData.purchasePriceTaxable),
+      status: formData.status,
+    };
 
-      if (editId) {
-        await apiHelper.put(`/tractors/${editId}`, payload);
-      } else {
-        await apiHelper.post("/tractors", payload);
-      }
-
-      await getTractors();
-      setShowDrawer(false);
-    } catch (error) {
-      console.error("Save failed:", error);
+    if (editId) {
+      await apiHelper.put(`/tractors/${editId}`, payload);
+      toast.success("Tractor updated successfully!");
+    } else {
+      await apiHelper.post("/tractors", payload);
+      toast.success("Tractor created successfully!");
     }
-  };
+
+    await getTractors();
+    setShowDrawer(false);
+  } catch (error: any) {
+    console.error("Save failed:", error);
+    toast.error(error.response?.data?.message || "Failed to save tractor. Please try again.");
+  }
+};
 
   // ─── Filter Data ────────────────────────────────────────────────────────
   const filteredData = tractors.filter((item) => {
@@ -1278,6 +1298,41 @@ const handleToggleStatus = async (id: number) => {
           </TransitionChild>
         </Dialog>
       </Transition>
+
+      {/* Confirmation Modal */}
+<ConfirmModal
+  show={showConfirmModal}
+  onClose={() => {
+    setShowConfirmModal(false);
+    setDeleteTargetId(null);
+    setConfirmState("pending");
+  }}
+  onOk={performDelete}
+  confirmLoading={confirmLoading}
+  state={confirmState}
+  messages={{
+    pending: {
+      Icon: ExclamationTriangleIcon,
+      title: isBulkDelete ? "Delete Selected Tractors?" : "Are you sure?",
+      description: isBulkDelete 
+        ? `Are you sure you want to delete ${selectedIds.length} selected tractors? This action cannot be undone.`
+        : "Are you sure you want to delete this tractor? Once deleted, it cannot be restored.",
+      actionText: isBulkDelete ? "Delete All" : "Delete",
+    },
+    success: {
+      title: "Deleted Successfully",
+      description: isBulkDelete 
+        ? `${selectedIds.length} tractors have been deleted.`
+        : "The tractor has been deleted.",
+      actionText: "Done",
+    },
+    error: {
+      title: "Delete Failed",
+      description: "Failed to delete. Please try again.",
+      actionText: "Try Again",
+    },
+  }}
+/>
     </div>
   );
 };

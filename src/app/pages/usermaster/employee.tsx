@@ -31,6 +31,11 @@ import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/Table";
 import { Button, Checkbox, Input } from "@/components/ui";
 import { Combobox } from "@/components/shared/form/StyledCombobox";
 import { Listbox } from "@/components/shared/form/StyledListbox";
+import { toast } from "sonner";
+import { ConfirmModal } from "@/components/shared/ConfirmModal";
+import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
+
+
 
 type Employee = {
   id: number;
@@ -117,6 +122,14 @@ const Employee = () => {
   const [selectedStatusFilter, setSelectedStatusFilter] = useState("All");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+const [showConfirmModal, setShowConfirmModal] = useState(false);
+const [confirmState, setConfirmState] = useState<"pending" | "success" | "error">("pending");
+const [confirmLoading, setConfirmLoading] = useState(false);
+const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+const [isBulkDelete, setIsBulkDelete] = useState(false);
+
+
   // Add this after your useForm declaration
   const {
     register,
@@ -259,34 +272,45 @@ const Employee = () => {
       console.log(error);
     }
   };
-  const handleDelete = async (id: number) => {
-    try {
-      if (window.confirm("Are you sure you want to delete this employee?")) {
-        await apiHelper.delete(`/employees/${id}`);
+const handleDelete = (id: number) => {
+  setDeleteTargetId(id);
+  setIsBulkDelete(false);
+  setConfirmState("pending");
+  setShowConfirmModal(true);
+};
+  const handleBulkDelete = () => {
+  setIsBulkDelete(true);
+  setConfirmState("pending");
+  setShowConfirmModal(true);
+};
 
-        getEmployees();
-      }
-    } catch (error) {
-      console.log(error);
+const performDelete = async () => {
+  setConfirmLoading(true);
+  try {
+    if (isBulkDelete) {
+      await Promise.all(selectedIds.map((id) => apiHelper.delete(`/employees/${id}`)));
+      toast.success(`${selectedIds.length} employees deleted successfully!`);
+      setSelectedIds([]);
+      await getEmployees();
+      setCurrentPage(1);
+      setConfirmState("success");
+    } else {
+      if (deleteTargetId === null) return;
+      await apiHelper.delete(`/employees/${deleteTargetId}`);
+      toast.success("Employee deleted successfully!");
+      await getEmployees();
+      setDeleteTargetId(null);
+      setConfirmState("success");
     }
-  };
-
-  const handleBulkDelete = async () => {
-    try {
-      if (
-        window.confirm("Are you sure you want to delete selected employees?")
-      ) {
-        await Promise.all(
-          selectedIds.map((id) => apiHelper.delete(`/employees/${id}`)),
-        );
-
-        setSelectedIds([]);
-        getEmployees();
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  };
+    setTimeout(() => setShowConfirmModal(false), 1500);
+  } catch (error: any) {
+    console.error("Delete failed:", error);
+    setConfirmState("error");
+    toast.error(error.response?.data?.message || "Failed to delete. Please try again.");
+  } finally {
+    setConfirmLoading(false);
+  }
+};
 
   const handleToggleStatus = async (id: number) => {
     try {
@@ -298,48 +322,47 @@ const Employee = () => {
     }
   };
   const onFormSubmit = async (data: FormValues) => {
-    try {
-      const payload = {
-        department: data.department,
-        branch: data.branch,
-        role: data.role,
-        employeeName: data.employeeName,
-        mobileNumber: data.mobileNumber,
-        alternateNumber: data.alternateNumber,
-        email: data.email,
-        password: data.password,
-        status: data.status,
-      };
+  try {
+    const payload = {
+      department: data.department,
+      branch: data.branch,
+      role: data.role,
+      employeeName: data.employeeName,
+      mobileNumber: data.mobileNumber,
+      alternateNumber: data.alternateNumber,
+      email: data.email,
+      password: data.password,
+      status: data.status,
+    };
 
-      if (editId) {
-        await apiHelper.put(`/employees/${editId}`, payload);
-      } else {
-        await apiHelper.post("/employees", payload);
-      }
-
-      getEmployees();
-
-      setShowDrawer(false);
-      setEditId(null);
-
-      reset({
-        department: "",
-        branch: "",
-        role: "",
-        employeeName: "",
-        mobileNumber: "",
-        alternateNumber: "",
-        email: "",
-        password: "",
-        confirmPassword: "",
-        status: "ACTIVE",
-      });
-    } catch (error: any) {
-      console.log(error);
-
-      alert(error?.response?.data?.message || "Something went wrong");
+    if (editId) {
+      await apiHelper.put(`/employees/${editId}`, payload);
+      toast.success("Employee updated successfully!");
+    } else {
+      await apiHelper.post("/employees", payload);
+      toast.success("Employee created successfully!");
     }
-  };
+
+    await getEmployees();
+    setShowDrawer(false);
+    setEditId(null);
+    reset({
+      department: "",
+      branch: "",
+      role: "",
+      employeeName: "",
+      mobileNumber: "",
+      alternateNumber: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+      status: "ACTIVE",
+    });
+  } catch (error: any) {
+    console.log(error);
+    toast.error(error?.response?.data?.message || "Failed to save employee. Please try again.");
+  }
+};
   // Filter data
   const filteredData = employees.filter((item) => {
     const matchesSearch =
@@ -1091,6 +1114,41 @@ const Employee = () => {
           </TransitionChild>
         </Dialog>
       </Transition>
+
+      {/* Confirmation Modal */}
+<ConfirmModal
+  show={showConfirmModal}
+  onClose={() => {
+    setShowConfirmModal(false);
+    setDeleteTargetId(null);
+    setConfirmState("pending");
+  }}
+  onOk={performDelete}
+  confirmLoading={confirmLoading}
+  state={confirmState}
+  messages={{
+    pending: {
+      Icon: ExclamationTriangleIcon,
+      title: isBulkDelete ? "Delete Selected Employees?" : "Are you sure?",
+      description: isBulkDelete 
+        ? `Are you sure you want to delete ${selectedIds.length} selected employees? This action cannot be undone.`
+        : "Are you sure you want to delete this employee? Once deleted, it cannot be restored.",
+      actionText: isBulkDelete ? "Delete All" : "Delete",
+    },
+    success: {
+      title: "Deleted Successfully",
+      description: isBulkDelete 
+        ? `${selectedIds.length} employees have been deleted.`
+        : "The employee has been deleted.",
+      actionText: "Done",
+    },
+    error: {
+      title: "Delete Failed",
+      description: "Failed to delete. Please try again.",
+      actionText: "Try Again",
+    },
+  }}
+/>
     </div>
   );
 };

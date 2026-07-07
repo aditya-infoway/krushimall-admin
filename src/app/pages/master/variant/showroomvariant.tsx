@@ -24,6 +24,10 @@ import {
   MinusIcon,
 } from "@heroicons/react/24/outline";
 import apiHelper from "@/utils/apiHelper";
+import { toast } from "sonner";
+import { ConfirmModal } from "@/components/shared/ConfirmModal";
+import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
+
 
 // Local UI Imports
 import { Button, Checkbox, Input } from "@/components/ui";
@@ -124,6 +128,8 @@ const [filteredOptions, setFilteredOptions] =
   const wrapperRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  
+
   useEffect(() => {
     setInputValue(value);
   }, [value]);
@@ -223,6 +229,12 @@ const [accessoryOptions, setAccessoryOptions] = useState<any[]>([]);
   const [accessoryErrors, setAccessoryErrors] = useState<{
     [key: number]: string;
   }>({});
+
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+const [confirmState, setConfirmState] = useState<"pending" | "success" | "error">("pending");
+const [confirmLoading, setConfirmLoading] = useState(false);
+const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+const [isBulkDelete, setIsBulkDelete] = useState(false);
 
   const modelOptions = models.map((m) => ({ id: String(m.id), name: m.name }));
 
@@ -506,27 +518,18 @@ totalPrice: Number(acc.totalPrice) || 0,
   setShowDrawer(true);
 };
 
-  const handleDelete = async (id: number) => {
-    try {
-      await apiHelper.delete(`/showroom-variant/${id}`);
-      getVariants();
-    } catch (error) {
-      console.error(error);
-    }
-  };
+ const handleDelete = (id: number) => {
+  setDeleteTargetId(id);
+  setIsBulkDelete(false);
+  setConfirmState("pending");
+  setShowConfirmModal(true);
+};
 
-  const handleBulkDelete = async () => {
-    try {
-      await Promise.all(
-        selectedIds.map((id) => apiHelper.delete(`/showroom-variant/${id}`)),
-      );
-      await getVariants();
-      setSelectedIds([]);
-      setCurrentPage(1);
-    } catch (error) {
-      console.error(error);
-    }
-  };
+ const handleBulkDelete = () => {
+  setIsBulkDelete(true);
+  setConfirmState("pending");
+  setShowConfirmModal(true);
+};
 
   const addAccessory = () => {
     setAccessories([
@@ -536,6 +539,35 @@ totalPrice: Number(acc.totalPrice) || 0,
     // Clear error for new accessory
     setAccessoryErrors({});
   };
+
+  const performDelete = async () => {
+  setConfirmLoading(true);
+  try {
+    if (isBulkDelete) {
+      await Promise.all(selectedIds.map((id) => apiHelper.delete(`/showroom-variant/${id}`)));
+      toast.success(`${selectedIds.length} showroom variants deleted successfully!`);
+      await getVariants();
+      setSelectedIds([]);
+      setCurrentPage(1);
+      setConfirmState("success");
+    } else {
+      if (deleteTargetId === null) return;
+      await apiHelper.delete(`/showroom-variant/${deleteTargetId}`);
+      toast.success("Showroom variant deleted successfully!");
+      await getVariants();
+      setSelectedIds((prev) => prev.filter((id) => id !== deleteTargetId));
+      setDeleteTargetId(null);
+      setConfirmState("success");
+    }
+    setTimeout(() => setShowConfirmModal(false), 1500);
+  } catch (error: any) {
+    console.error("Delete failed:", error);
+    setConfirmState("error");
+    toast.error(error.response?.data?.message || "Failed to delete. Please try again.");
+  } finally {
+    setConfirmLoading(false);
+  }
+};
 
   const removeAccessory = (index: number) => {
     if (accessories.length === 1) {
@@ -585,89 +617,79 @@ const updateAccessory = (
 };
 
   // ─── Form Submit with Validation ───────────────────────────────────
-  // ─── Form Submit with Validation ───────────────────────────────────
+
   const onFormSubmit = async (data: FormValues) => {
-   
+  // Validate accessories - make name required if row has any data
+  const accessoryErrors: { [key: number]: string } = {};
+  let hasAccessoryError = false;
 
-    // Validate accessories - make name required if row has any data
-    const accessoryErrors: { [key: number]: string } = {};
-    let hasAccessoryError = false;
+  accessories.forEach((acc, index) => {
+    const hasName = acc.name.trim() !== "";
+    const hasPrice = acc.price > 0;
+    const hasTax = acc.taxPercent > 0;
 
-    accessories.forEach((acc, index) => {
-      const hasName = acc.name.trim() !== "";
-      const hasPrice = acc.price > 0;
-      const hasTax = acc.taxPercent > 0;
-
-     
-
-      // If name is empty AND (price > 0 OR tax > 0), show error
-      if (!hasName && (hasPrice || hasTax)) {
-        accessoryErrors[index] = "Accessory name is required";
-        hasAccessoryError = true;
-      }
-    });
-
- 
-
-    // Set accessory errors
-    if (hasAccessoryError) {
-      setAccessoryErrors(accessoryErrors);
-    } else {
-      setAccessoryErrors({});
+    if (!hasName && (hasPrice || hasTax)) {
+      accessoryErrors[index] = "Accessory name is required";
+      hasAccessoryError = true;
     }
+  });
 
-    // Now check form validation
-    const isValid = await trigger();
-   
+  if (hasAccessoryError) {
+    setAccessoryErrors(accessoryErrors);
+  } else {
+    setAccessoryErrors({});
+  }
 
-    // If either form has errors or accessories have errors, stop submission
-    if (!isValid || hasAccessoryError) {
-      // Scroll to first accessory error if any
-      if (hasAccessoryError) {
-        const firstErrorIndex = Object.keys(accessoryErrors)[0];
-        if (firstErrorIndex) {
-          const element = document.getElementById(
-            `accessory-${firstErrorIndex}`,
-          );
-          if (element) {
-            element.scrollIntoView({ behavior: "smooth", block: "center" });
-          }
+  const isValid = await trigger();
+
+  if (!isValid || hasAccessoryError) {
+    if (hasAccessoryError) {
+      const firstErrorIndex = Object.keys(accessoryErrors)[0];
+      if (firstErrorIndex) {
+        const element = document.getElementById(`accessory-${firstErrorIndex}`);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "center" });
         }
       }
-      return;
     }
+    return;
+  }
 
-    try {
-      const payload = {
-        modelId: Number(data.modelId),
-        variantName: data.variantName,
-        purPrice: Number(data.purPrice),
-        purTaxPercent: Number(data.purTaxPercent),
-        exShowroomPrice: Number(data.exShowroomPrice),
-        exShowroomTaxPercent: Number(data.exShowroomTaxPercent),
-        insurance: Number(data.insurance),
-        insuranceTaxPercent: Number(data.insuranceTaxPercent),
-        rtoCharge: Number(data.rtoCharge),
-        rtoTaxType: data.rtoTaxType,
-        rtoTaxPercent: Number(data.rtoTaxPercent),
-        accessories: accessories.filter((a) => a.name.trim() !== ""),
-        salesPrice: Number(data.salesPrice),
-        status: data.status,
-      };
-        console.log("Payload:", payload);
-      if (editId !== null)
-        await apiHelper.put(`/showroom-variant/${editId}`, payload);
-      else await apiHelper.post("/showroom-variant", payload);
-      await getVariants();
-    
-      setShowDrawer(false);
-      reset();
-      setAccessoryErrors({});
-    } catch (error) {
-      console.error(error);
-      alert("Failed to save variant. Please try again.");
+  try {
+    const payload = {
+      modelId: Number(data.modelId),
+      variantName: data.variantName,
+      purPrice: Number(data.purPrice),
+      purTaxPercent: Number(data.purTaxPercent),
+      exShowroomPrice: Number(data.exShowroomPrice),
+      exShowroomTaxPercent: Number(data.exShowroomTaxPercent),
+      insurance: Number(data.insurance),
+      insuranceTaxPercent: Number(data.insuranceTaxPercent),
+      rtoCharge: Number(data.rtoCharge),
+      rtoTaxType: data.rtoTaxType,
+      rtoTaxPercent: Number(data.rtoTaxPercent),
+      accessories: accessories.filter((a) => a.name.trim() !== ""),
+      salesPrice: Number(data.salesPrice),
+      status: data.status,
+    };
+
+    if (editId !== null) {
+      await apiHelper.put(`/showroom-variant/${editId}`, payload);
+      toast.success("Showroom variant updated successfully!");
+    } else {
+      await apiHelper.post("/showroom-variant", payload);
+      toast.success("Showroom variant created successfully!");
     }
-  };
+    
+    await getVariants();
+    setShowDrawer(false);
+    reset();
+    setAccessoryErrors({});
+  } catch (error: any) {
+    console.error(error);
+    toast.error(error.response?.data?.message || "Failed to save variant. Please try again.");
+  }
+};
 
   useEffect(() => {
     console.log(errors);
@@ -1364,6 +1386,41 @@ updatedAccessories[i] = {
           </TransitionChild>
         </Dialog>
       </Transition>
+
+      {/* Confirmation Modal */}
+<ConfirmModal
+  show={showConfirmModal}
+  onClose={() => {
+    setShowConfirmModal(false);
+    setDeleteTargetId(null);
+    setConfirmState("pending");
+  }}
+  onOk={performDelete}
+  confirmLoading={confirmLoading}
+  state={confirmState}
+  messages={{
+    pending: {
+      Icon: ExclamationTriangleIcon,
+      title: isBulkDelete ? "Delete Selected Showroom Variants?" : "Are you sure?",
+      description: isBulkDelete 
+        ? `Are you sure you want to delete ${selectedIds.length} selected showroom variants? This action cannot be undone.`
+        : "Are you sure you want to delete this showroom variant? Once deleted, it cannot be restored.",
+      actionText: isBulkDelete ? "Delete All" : "Delete",
+    },
+    success: {
+      title: "Deleted Successfully",
+      description: isBulkDelete 
+        ? `${selectedIds.length} showroom variants have been deleted.`
+        : "The showroom variant has been deleted.",
+      actionText: "Done",
+    },
+    error: {
+      title: "Delete Failed",
+      description: "Failed to delete. Please try again.",
+      actionText: "Try Again",
+    },
+  }}
+/>
     </div>
   );
 }
