@@ -354,6 +354,7 @@ const AddVehicleStock = () => {
           grnDate: "2024-04-01",
           grnRecordDate: "2024-04-01",
         }, 
+
         
         "CH-2024-005": {
           id: 5,
