@@ -159,7 +159,31 @@ const AddVehicleStock = () => {
     null,
   );
   const [isSaved, setIsSaved] = useState(false);
+  const [branchOptions, setBranchOptions] = useState<any[]>([]);
+  const getBranches = async () => {
+    try {
+      const res = await apiHelper.get("/branch");
 
+      console.log("Response =>", res);
+
+      const data = (res || []).map((item: any) => ({
+        label: item.branchName,
+        value: item.id,
+        manager: item.manager?.accountName,
+        contact: item.mobileNo,
+      }));
+
+      console.log("Dropdown =>", data);
+
+      setBranchOptions(data);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  useEffect(() => {
+    getBranches();
+  }, []);
   const {
     register,
     handleSubmit,
@@ -518,14 +542,14 @@ const AddVehicleStock = () => {
             placeholder="Select Branch"
             data={branchOptions}
             value={
-              watch("branch")
-                ? branchOptions.find((item) => item.value === watch("branch"))
-                : null
+              branchOptions.find((item) => item.value === watch("branch")) ||
+              null
             }
             onChange={(val: any) => {
               setValue("branch", val?.value || "");
+              setValue("branchManagerName", val?.manager || "");
+              setValue("contactNo", val?.contact || "");
             }}
-            error={errors?.branch && errors.branch.message}
           />
         </div>
       </div>
@@ -540,16 +564,21 @@ const AddVehicleStock = () => {
               "branchManagerName",
               formValidationRules.branchManagerName,
             )}
+            readOnly
+            className="cursor-not-allowed bg-gray-100 dark:bg-gray-800"
             error={
               errors?.branchManagerName && errors.branchManagerName.message
             }
           />
         </div>
+
         <div>
           <Input
             label="Contact No *"
             placeholder="Enter contact number"
             {...register("contactNo", formValidationRules.contactNo)}
+            readOnly
+            className="cursor-not-allowed bg-gray-100 dark:bg-gray-800"
             error={errors?.contactNo && errors.contactNo.message}
           />
         </div>
@@ -805,192 +834,192 @@ const AddVehicleStock = () => {
       </div>
 
       {/* Selected Vehicles Table - Always shows if there's data */}
-    {selectedVehicles.length > 0 && (
-  <div className="mt-8">
-    <h3 className="mb-4 text-lg font-semibold text-gray-800 dark:text-white">
-      Selected Vehicles
-    </h3>
-    <div className="dark:bg-dark-800 dark:border-dark-700 rounded-xl border border-gray-200 bg-white shadow-sm">
-      <div className="overflow-x-auto">
-        <Table
-          hoverable
-          className="w-full min-w-[1800px] text-left [&_.table-th]:font-semibold"
-        >
-          <THead className="dark:bg-dark-700/60 dark:border-dark-600 border-b border-gray-200 bg-gray-100">
-            <Tr>
-              <Th className="w-12 py-3.5 text-center">
-                <input
-                  type="checkbox"
-                  className="size-4.5"
-                  checked={isAllSelected}
-                  onChange={(e) => handleSelectAll(e.target.checked)}
-                />
-              </Th>
-              <Th className="w-16 py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                S.No
-              </Th>
-             
-              <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400 whitespace-nowrap">
-                Chassis No
-              </Th>
-              <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400 whitespace-nowrap">
-                Vehicle Sr. No
-              </Th>
-              <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400 whitespace-nowrap">
-                Model
-              </Th>
-              <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400 whitespace-nowrap">
-                Variant
-              </Th>
-              <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400 whitespace-nowrap">
-                Colour
-              </Th>
-              <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400 whitespace-nowrap">
-                Item Name
-              </Th>
-              <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400 whitespace-nowrap">
-                Item Code
-              </Th>
-              <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400 whitespace-nowrap">
-                Engine No
-              </Th>
-              <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400 whitespace-nowrap">
-                MFG Date
-              </Th>
-              <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400 whitespace-nowrap">
-                Key No
-              </Th>
-              <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400 whitespace-nowrap">
-                Battery No
-              </Th>
-              <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400 whitespace-nowrap">
-                Battery Make
-              </Th>
-              <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400 whitespace-nowrap">
-                F1 Tyres
-              </Th>
-              <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400 whitespace-nowrap">
-                F2 Tyres
-              </Th>
-              <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400 whitespace-nowrap">
-                S1 Tyres
-              </Th>
-              <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400 whitespace-nowrap">
-                S2 Tyres
-              </Th>
-              <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400 whitespace-nowrap">
-                Location
-              </Th>
-              <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400 whitespace-nowrap">
-                GRN Number
-              </Th>
-              <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400 whitespace-nowrap">
-                GRN Date
-              </Th>
-              <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400 whitespace-nowrap">
-                GRN Record Date
-              </Th>
-            </Tr>
-          </THead>
-          <TBody className="dark:divide-dark-700 divide-y divide-gray-200">
-            {selectedVehicles.map((item, index) => {
-              const isRowSelected = selectedIds.includes(item.id);
-              return (
-                <Tr
-                  key={item.id}
-                  className={`${
-                    isRowSelected
-                      ? "dark:bg-dark-600/30 bg-gray-50/50"
-                      : ""
-                  } dark:hover:bg-dark-700/40 transition-colors hover:bg-gray-50/30`}
-                >
-                  <Td className="py-4 text-center">
-                    <input
-                      type="checkbox"
-                      className="size-4.5"
-                      checked={isRowSelected}
-                      onChange={() => handleSelectRow(item.id)}
-                    />
-                  </Td>
-                  <Td className="py-4 font-medium text-gray-500">
-                    {index + 1}
-                  </Td>
-                 
-                  <Td className="py-4 font-mono text-sm font-medium text-gray-900 dark:text-gray-400 whitespace-nowrap">
-                    {item.chassisNo}
-                  </Td>
-                  <Td className="py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap">
-                    {item.vehicleSrNo}
-                  </Td>
-                  <Td className="py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap">
-                    {item.model}
-                  </Td>
-                  <Td className="py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap">
-                    {item.variant}
-                  </Td>
-                  <Td className="py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap">
-                    <span
-                      className="inline-flex h-3 w-3 rounded-full border border-gray-300"
-                      style={{
-                        backgroundColor: item.colour.toLowerCase(),
-                      }}
-                    ></span>
-                    <span className="ml-1">{item.colour}</span>
-                  </Td>
-                  <Td className="py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap">
-                    {item.itemName}
-                  </Td>
-                  <Td className="py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap">
-                    {item.itemCode}
-                  </Td>
-                  <Td className="py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap">
-                    {item.engineNo}
-                  </Td>
-                  <Td className="py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap">
-                    {item.mfgDate}
-                  </Td>
-                  <Td className="py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap">
-                    {item.keyNo}
-                  </Td>
-                  <Td className="py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap">
-                    {item.batteryNo}
-                  </Td>
-                  <Td className="py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap">
-                    {item.batteryMake}
-                  </Td>
-                  <Td className="py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap">
-                    {item.f1TyresNo}
-                  </Td>
-                  <Td className="py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap">
-                    {item.f2TyresNo}
-                  </Td>
-                  <Td className="py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap">
-                    {item.s1TyresNo}
-                  </Td>
-                  <Td className="py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap">
-                    {item.s2TyresNo}
-                  </Td>
-                  <Td className="py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap">
-                    {item.location}
-                  </Td>
-                  <Td className="py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap">
-                    {item.grnNumber}
-                  </Td>
-                  <Td className="py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap">
-                    {item.grnDate}
-                  </Td>
-                  <Td className="py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap">
-                    {item.grnRecordDate}
-                  </Td>
-                </Tr>
-              );
-            })}
-          </TBody>
-        </Table>
-      </div>
-    </div>
-  </div>
-)}
+      {selectedVehicles.length > 0 && (
+        <div className="mt-8">
+          <h3 className="mb-4 text-lg font-semibold text-gray-800 dark:text-white">
+            Selected Vehicles
+          </h3>
+          <div className="dark:bg-dark-800 dark:border-dark-700 rounded-xl border border-gray-200 bg-white shadow-sm">
+            <div className="overflow-x-auto">
+              <Table
+                hoverable
+                className="w-full min-w-450 text-left [&_.table-th]:font-semibold"
+              >
+                <THead className="dark:bg-dark-700/60 dark:border-dark-600 border-b border-gray-200 bg-gray-100">
+                  <Tr>
+                    <Th className="w-12 py-3.5 text-center">
+                      <input
+                        type="checkbox"
+                        className="size-4.5"
+                        checked={isAllSelected}
+                        onChange={(e) => handleSelectAll(e.target.checked)}
+                      />
+                    </Th>
+                    <Th className="w-16 py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                      S.No
+                    </Th>
+
+                    <Th className="py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                      Chassis No
+                    </Th>
+                    <Th className="py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                      Vehicle Sr. No
+                    </Th>
+                    <Th className="py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                      Model
+                    </Th>
+                    <Th className="py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                      Variant
+                    </Th>
+                    <Th className="py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                      Colour
+                    </Th>
+                    <Th className="py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                      Item Name
+                    </Th>
+                    <Th className="py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                      Item Code
+                    </Th>
+                    <Th className="py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                      Engine No
+                    </Th>
+                    <Th className="py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                      MFG Date
+                    </Th>
+                    <Th className="py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                      Key No
+                    </Th>
+                    <Th className="py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                      Battery No
+                    </Th>
+                    <Th className="py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                      Battery Make
+                    </Th>
+                    <Th className="py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                      F1 Tyres
+                    </Th>
+                    <Th className="py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                      F2 Tyres
+                    </Th>
+                    <Th className="py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                      S1 Tyres
+                    </Th>
+                    <Th className="py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                      S2 Tyres
+                    </Th>
+                    <Th className="py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                      Location
+                    </Th>
+                    <Th className="py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                      GRN Number
+                    </Th>
+                    <Th className="py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                      GRN Date
+                    </Th>
+                    <Th className="py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                      GRN Record Date
+                    </Th>
+                  </Tr>
+                </THead>
+                <TBody className="dark:divide-dark-700 divide-y divide-gray-200">
+                  {selectedVehicles.map((item, index) => {
+                    const isRowSelected = selectedIds.includes(item.id);
+                    return (
+                      <Tr
+                        key={item.id}
+                        className={`${
+                          isRowSelected
+                            ? "dark:bg-dark-600/30 bg-gray-50/50"
+                            : ""
+                        } dark:hover:bg-dark-700/40 transition-colors hover:bg-gray-50/30`}
+                      >
+                        <Td className="py-4 text-center">
+                          <input
+                            type="checkbox"
+                            className="size-4.5"
+                            checked={isRowSelected}
+                            onChange={() => handleSelectRow(item.id)}
+                          />
+                        </Td>
+                        <Td className="py-4 font-medium text-gray-500">
+                          {index + 1}
+                        </Td>
+
+                        <Td className="py-4 font-mono text-sm font-medium whitespace-nowrap text-gray-900 dark:text-gray-400">
+                          {item.chassisNo}
+                        </Td>
+                        <Td className="py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">
+                          {item.vehicleSrNo}
+                        </Td>
+                        <Td className="py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">
+                          {item.model}
+                        </Td>
+                        <Td className="py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">
+                          {item.variant}
+                        </Td>
+                        <Td className="py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">
+                          <span
+                            className="inline-flex h-3 w-3 rounded-full border border-gray-300"
+                            style={{
+                              backgroundColor: item.colour.toLowerCase(),
+                            }}
+                          ></span>
+                          <span className="ml-1">{item.colour}</span>
+                        </Td>
+                        <Td className="py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">
+                          {item.itemName}
+                        </Td>
+                        <Td className="py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">
+                          {item.itemCode}
+                        </Td>
+                        <Td className="py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">
+                          {item.engineNo}
+                        </Td>
+                        <Td className="py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">
+                          {item.mfgDate}
+                        </Td>
+                        <Td className="py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">
+                          {item.keyNo}
+                        </Td>
+                        <Td className="py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">
+                          {item.batteryNo}
+                        </Td>
+                        <Td className="py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">
+                          {item.batteryMake}
+                        </Td>
+                        <Td className="py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">
+                          {item.f1TyresNo}
+                        </Td>
+                        <Td className="py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">
+                          {item.f2TyresNo}
+                        </Td>
+                        <Td className="py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">
+                          {item.s1TyresNo}
+                        </Td>
+                        <Td className="py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">
+                          {item.s2TyresNo}
+                        </Td>
+                        <Td className="py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">
+                          {item.location}
+                        </Td>
+                        <Td className="py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">
+                          {item.grnNumber}
+                        </Td>
+                        <Td className="py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">
+                          {item.grnDate}
+                        </Td>
+                        <Td className="py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">
+                          {item.grnRecordDate}
+                        </Td>
+                      </Tr>
+                    );
+                  })}
+                </TBody>
+              </Table>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
