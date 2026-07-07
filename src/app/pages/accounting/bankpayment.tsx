@@ -31,7 +31,7 @@ import { Input, Radio, Textarea } from "@/components/ui";
 import apiHelper from "@/utils/apiHelper";
 type EntryType = "Manual" | "Purchase" | "Lead Cancel";
 type PaymentMode = "NEFT" | "RTGS" | "IMPS" | "Cheque" | "UPI";
-
+import { RiFileExcel2Fill, RiFilePdfFill } from "react-icons/ri";
 const PAYMENT_MODES = [
   { id: "NEFT", label: "NEFT" },
   { id: "RTGS", label: "RTGS" },
@@ -44,7 +44,7 @@ const initialForm = {
   type: "Manual" as EntryType,
   bankAccount: null as any,
   voucherNo: "",
-   date: [new Date()], 
+  date: [new Date()],
   oppAccount: null as any,
   amount: "",
   paymentMode: PAYMENT_MODES.find((m) => m.id === "UPI") || null, // Default to UPI
@@ -343,7 +343,7 @@ export default function BankPayment() {
       ...initialForm,
       voucherNo: prev.voucherNo,
       paymentMode: PAYMENT_MODES.find((m) => m.id === "UPI") || null,
-       date: [new Date()],
+      date: [new Date()],
     }));
 
     setShowDrawer(true);
@@ -487,7 +487,27 @@ export default function BankPayment() {
   useEffect(() => {
     setCurrentPage(1);
   }, [filterType, filterDateFrom, filterDateTo, filterPaymentMode, search]);
+const downloadExcel = async () => {
+  try {
+    const blob = await apiHelper.getBlob(
+      "/bank-payment/export/excel"
+    );
 
+    const url = window.URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "BankPaymentRegister.xlsx";
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    window.URL.revokeObjectURL(url);
+  } catch (err) {
+    console.log(err);
+  }
+};
   return (
     <div className="relative min-h-screen space-y-6 p-4 pb-28 text-gray-900 md:p-6 dark:text-gray-100">
       {/* Upper Actions Control Toolbar Layout */}
@@ -516,19 +536,17 @@ export default function BankPayment() {
           </button>
 
           <button
-            type="button"
-            className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            type="button"   onClick={downloadExcel} 
+            className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
           >
-            <Download className="size-4.5" />
-            Excel
+            <RiFileExcel2Fill className="text-lg text-green-500" />
           </button>
 
           <button
             type="button"
-            className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
           >
-            <Download className="size-4.5" />
-            PDF
+            <RiFilePdfFill className="text-lg text-red-500" />
           </button>
 
           <button

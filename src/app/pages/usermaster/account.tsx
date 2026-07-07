@@ -285,6 +285,9 @@ useEffect(() => {
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Print Name
                 </Th>
+                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                Group
+                </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Balance
                 </Th>
@@ -335,6 +338,9 @@ useEffect(() => {
                     </Td>
                     <Td className="dark:text-dark-200 py-4 text-gray-600">
                       {item.printName}
+                    </Td>
+                    <Td className="dark:text-dark-200 py-4 text-gray-600">
+                      {item.group}
                     </Td>
                     <Td className="dark:text-dark-200 py-4 text-gray-600">
                        {item.openingBalance} {item.drCr}

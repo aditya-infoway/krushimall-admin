@@ -25,10 +25,12 @@ import {
 } from "@headlessui/react";
 import { Fragment } from "react";
 import { DatePicker } from "@/components/shared/form/Datepicker";
-import { Combobox } from "@/components/shared/form/StyledCombobox";
+// import { Combobox } from "@/components/shared/form/StyledCombobox";
 import { Input, Radio, Textarea } from "@/components/ui";
-
+import { RiFileExcel2Fill, RiFilePdfFill } from "react-icons/ri";
+import apiHelper from "@/utils/apiHelper";
 type EntryType = "Manual" | "Lead Cancel" | "Job Card";
+import { Combobox } from "@/components/shared/form/Combobox";
 type PaymentType = "NEFT" | "RTGS" | "IMPS" | "Cheque" | "UPI";
 
 interface BankReceipt {
@@ -72,8 +74,8 @@ const initialForm = {
   narration: "",
   createdType: "",
   createdBy: "",
-  leadNo: "",
-  jobCardNo: "",
+  leadNo: null as any,
+  jobCardNo: null as any,
 };
 
 const BANK_ACCOUNTS = [
@@ -166,7 +168,11 @@ export default function BankReceipt() {
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredRows.slice(indexOfFirstItem, indexOfLastItem);
-
+  const [bankAccounts, setBankAccounts] = useState<any[]>([]);
+  const [oppAccounts, setOppAccounts] = useState<any[]>([]);
+  const [companyId, setCompanyId] = useState<number | null>(null);
+  const [financialYearId, setFinancialYearId] = useState<number | null>(null);
+  const [leadOptions, setLeadOptions] = useState([]);
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
@@ -201,14 +207,155 @@ export default function BankReceipt() {
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+  const getLeads = async () => {
+    try {
+      const res = await apiHelper.get("/leads");
 
-  const handleAdd = () => {
+      const leads = res.data || [];
+
+      const options = leads.map((item: any) => ({
+        value: item.id,
+        label: `${item.quotationNo} - ${item.customer?.accountName || ""}`,
+        quotationNo: item.quotationNo,
+        customerName: item.customer?.accountName || "",
+        mobile: item.customer?.mobile || "",
+        customerId: item.customer?.id,
+      }));
+
+      setLeadOptions(options);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  useEffect(() => {
+    getLeads();
+  }, []);
+  const getCompany = async () => {
+    try {
+      const res = await apiHelper.get("/company");
+
+      if (!res.data || res.data.length === 0) {
+        return;
+      }
+
+      const company = res.data[0];
+
+      setCompanyId(company.id);
+
+      if (company.financialYears?.length > 0) {
+        setFinancialYearId(company.financialYears[0].id);
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
+  useEffect(() => {
+    getCompany();
+  }, []);
+  const getAccounts = async () => {
+    try {
+      const res = await apiHelper.get("/accounts");
+
+      const accounts = res.data.data || res.data || [];
+
+      // Cash Accounts
+      const bank = accounts
+        .filter((a: any) => a.group === "Bank Accounts")
+        .map((a: any) => ({
+          value: a.id,
+          label: a.accountName,
+          mobile: a.mobile,
+          openingBalance: a.openingBalance,
+          balance: a.closingBalance,
+          balanceType: a.drCr,
+        }));
+
+      // Opposite Accounts
+      const opp = accounts
+        .filter(
+          (a: any) => a.group === "Customer" || a.group === "Sundry Debtors",
+        )
+        .map((a: any) => ({
+          value: a.id,
+          label: a.accountName,
+          mobile: a.mobile,
+          openingBalance: a.openingBalance,
+          balance: a.closingBalance,
+          balanceType: a.drCr,
+        }));
+
+      setBankAccounts(bank);
+      setOppAccounts(opp);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+  useEffect(() => {
+    getAccounts();
+  }, []);
+const getBankReceipts = async () => {
+  try {
+    const res = await apiHelper.get("/bank-receipt");
+
+    // console.log("Bank Receipt Response:", res);
+
+    const data = Array.isArray(res) ? res : res?.data || [];
+
+    setRows(
+      data.map((item: any) => ({
+        id: item.id,
+        date: item.date,
+        voucherNo: item.voucherNo,
+        type: item.type,
+        bankAccount: item.bankAccount?.accountName,
+        oppAccount: item.oppAccount?.accountName,
+        amount: item.amount,
+        paymentType: item.paymentType,
+        chequeNo: item.chequeNo,
+        chequeDate: item.chequeDate,
+        chequeClearDate: item.chequeClearDate,
+        narration: item.narration,
+        createdType: item.createdType,
+        createdBy: item.createdBy,
+        leadNo: item.lead,
+      }))
+    );
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+  useEffect(() => {
+    getBankReceipts();
+  }, []);
+
+  const getVoucherNo = async () => {
+    try {
+      const res = await apiHelper.get("/bank-receipt/voucher");
+
+      const voucherNo = res?.data?.voucherNo ?? res?.voucherNo ?? "";
+
+      setForm((prev) => ({
+        ...prev,
+        voucherNo,
+      }));
+    } catch (err) {
+      console.log(err);
+    }
+  };
+  const handleAdd = async () => {
     setEditId(null);
+    setErrors({});
+
     setForm({
       ...initialForm,
+
       paymentType: PAYMENT_TYPES.find((m) => m.id === "UPI") || null,
+      date: new Date(),
     });
-    setErrors({});
+
+    await getVoucherNo();
     setShowDrawer(true);
   };
 
@@ -248,42 +395,53 @@ export default function BankReceipt() {
     setSelectedIds([]);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validateForm()) return;
-    const newEntry: BankReceipt = {
-      id: editId !== null ? editId : rows.length + 1,
-      date:
-        form.date ||
-        new Date().toLocaleDateString("en-GB", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-        }),
-      voucherNo: form.voucherNo,
-      type: form.type,
-      bankAccount: form.bankAccount.value,
-      oppAccount: form.oppAccount.value,
-      amount: parseFloat(form.amount),
-      paymentType: (form.paymentType?.id as PaymentType) || "UPI",
-      chequeNo: form.paymentType?.id === "Cheque" ? form.chequeNo : undefined,
-      chequeDate:
-        form.paymentType?.id === "Cheque" ? form.chequeDate : undefined,
-      chequeClearDate:
-        form.paymentType?.id === "Cheque" ? form.chequeClearDate : undefined,
-      narration: form.narration,
-      createdType: form.createdType || "Manual",
-      createdBy: "Admin",
-      leadNo: form.type === "Lead Cancel" ? form.leadNo : undefined,
-      jobCardNo: form.type === "Job Card" ? form.jobCardNo : undefined,
-    };
 
-    if (editId !== null) {
-      setRows(rows.map((row) => (row.id === editId ? newEntry : row)));
-    } else {
-      setRows([...rows, newEntry]);
+    try {
+      const payload = {
+        companyId,
+        financialYearId,
+
+        voucherNo: form.voucherNo,
+
+        date: form.date,
+
+        type: form.type,
+
+        bankAccountId: form.bankAccount.value,
+
+        oppAccountId: form.oppAccount.value,
+
+        leadId:
+          form.type === "Lead Cancel" && form.leadNo
+            ? Number(form.leadNo.value)
+            : null,
+        amount: Number(form.amount),
+
+        paymentType: form.paymentType?.id,
+
+        chequeNo: form.chequeNo,
+
+        chequeDate: form.chequeDate,
+
+        chequeClearDate: form.chequeClearDate,
+
+        narration: form.narration,
+      };
+
+      if (editId) {
+        await apiHelper.put(`/bank-receipt/${editId}`, payload);
+      } else {
+        await apiHelper.post("/bank-receipt", payload);
+      }
+
+      setShowDrawer(false);
+
+      getBankReceipts();
+    } catch (err) {
+      console.log(err);
     }
-    setShowDrawer(false);
-    setErrors({});
   };
 
   const isAllPageSelected =
@@ -307,14 +465,6 @@ export default function BankReceipt() {
         : [...prev, id],
     );
   };
-
-  const LEADS = [
-    { id: 1, leadNo: "LEAD-001", name: "John Doe", phone: "9876543210" },
-    { id: 2, leadNo: "LEAD-002", name: "Jane Smith", phone: "9876543211" },
-    { id: 3, leadNo: "LEAD-003", name: "Bob Johnson", phone: "9876543212" },
-    { id: 4, leadNo: "LEAD-004", name: "Alice Brown", phone: "9876543213" },
-    { id: 5, leadNo: "LEAD-005", name: "Charlie Wilson", phone: "9876543214" },
-  ];
 
   const JOB_CARDS = [
     {
@@ -349,13 +499,6 @@ export default function BankReceipt() {
     },
   ];
 
-  const leadOptions = LEADS.map((lead) => ({
-    value: lead.leadNo,
-    label: `${lead.leadNo} - ${lead.name}`,
-    phone: lead.phone,
-    id: lead.id,
-  }));
-
   const jobCardOptions = JOB_CARDS.map((job) => ({
     value: job.jobCardNo,
     label: `${job.jobCardNo} - ${job.customer}`,
@@ -382,7 +525,27 @@ export default function BankReceipt() {
   useEffect(() => {
     setCurrentPage(1);
   }, [filterType, filterDateFrom, filterDateTo, filterPaymentType, search]);
+const downloadExcel = async () => {
+  try {
+    const blob = await apiHelper.getBlob(
+      "/bank-receipt/export/excel"
+    );
 
+    const url = window.URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "BankReceiptRegister.xlsx";
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    window.URL.revokeObjectURL(url);
+  } catch (err) {
+    console.log(err);
+  }
+};
   return (
     <div className="relative min-h-screen space-y-6 p-4 pb-28 text-gray-900 md:p-6 dark:text-gray-100">
       {/* Upper Actions Control Toolbar Layout */}
@@ -411,20 +574,18 @@ export default function BankReceipt() {
           </button>
 
           <button
-            type="button"
-            className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
-          >
-            <Download className="size-4.5" />
-            Excel
-          </button>
-
-          <button
-            type="button"
-            className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
-          >
-            <Download className="size-4.5" />
-            PDF
-          </button>
+                    type="button"   onClick={downloadExcel}
+                    className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 cursor-pointer"
+                  >
+                 <RiFileExcel2Fill className="text-lg text-green-500" />
+                  </button>
+        
+                  <button
+                    type="button"
+                    className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 cursor-pointer"
+                  >
+                   <RiFilePdfFill className="text-lg text-red-500" />
+                  </button>
 
           <button
             type="button"
@@ -593,7 +754,7 @@ export default function BankReceipt() {
                       {indexOfFirstItem + index + 1}
                     </td>
                     <td className="px-3 py-3 text-sm whitespace-nowrap text-gray-900 dark:text-gray-400">
-                      {item.date}
+                  {new Date(item.date).toLocaleDateString("en-GB")}
                     </td>
                     <td className="px-3 py-3 text-sm font-medium whitespace-nowrap text-gray-900 dark:text-gray-400">
                       {item.voucherNo}
@@ -604,8 +765,8 @@ export default function BankReceipt() {
                           item.type === "Manual"
                             ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
                             : item.type === "Lead Cancel"
-                              ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                              : "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                              ? "bg-primary-500 text-white dark:bg-primary-500 dark:text-white"
+                              : "bg-primary-500 text-white dark:bg-primary-500 dark:text-white"
                         }`}
                       >
                         {item.type}
@@ -754,7 +915,7 @@ export default function BankReceipt() {
                   >
                     <MenuItems
                       anchor="top start"
-                      className="dark:bg-dark-700 dark:border-dark-600 z-[200] w-20 space-y-0.5 rounded-lg border border-gray-200 bg-white p-1 shadow-xl ring-1 ring-black/5 [--anchor-gap:6px] focus:outline-none"
+                      className="dark:bg-dark-700 dark:border-dark-600 z-200 w-20 space-y-0.5 rounded-lg border border-gray-200 bg-white p-1 shadow-xl ring-1 ring-black/5 [--anchor-gap:6px] focus:outline-none"
                     >
                       {entriesOptions.map((opt) => (
                         <MenuItem key={opt.id}>
@@ -767,7 +928,7 @@ export default function BankReceipt() {
                               }}
                               className={`flex w-full items-center justify-between rounded-md px-3 py-1.5 text-sm font-medium ${
                                 opt.id === itemsPerPage
-                                  ? "bg-red-600 text-white"
+                                  ? "bg-primary-500 text-white"
                                   : active
                                     ? "dark:bg-dark-600 bg-gray-100 text-gray-900 dark:text-white"
                                     : "text-gray-700 dark:text-gray-200"
@@ -809,7 +970,7 @@ export default function BankReceipt() {
                       onClick={() => setCurrentPage(page)}
                       className={`inline-flex size-8 items-center justify-center rounded-md text-sm font-medium transition-colors ${
                         page === currentPage
-                          ? "bg-red-600 text-white"
+                          ? "bg-primary-500 text-white"
                           : "dark:hover:bg-dark-700 text-gray-600 hover:bg-gray-100 dark:text-gray-300"
                       }`}
                     >
@@ -958,14 +1119,37 @@ export default function BankReceipt() {
                         data={leadOptions}
                         displayField="label"
                         value={form.leadNo}
-                        onChange={(value: any) => {
-                          setForm({ ...form, leadNo: value });
-                          if (errors.leadNo)
-                            setErrors({ ...errors, leadNo: "" });
+                        onChange={(selected: any) => {
+                          const customerAccount = oppAccounts.find(
+                            (acc: any) =>
+                              Number(acc.value) === Number(selected.customerId),
+                          );
+
+                          setForm((prev) => ({
+                            ...prev,
+                            leadNo: selected, // object store કરો
+                            oppAccount: customerAccount || null,
+                          }));
                         }}
-                        placeholder="Search or select lead..."
-                        searchFields={["label"]}
-                        error={errors.leadNo}
+                        placeholder="Search Quotation No / Customer"
+                        searchFields={["quotationNo", "customerName", "mobile"]}
+                        columns={[
+                          {
+                            header: "Quotation No",
+                            field: "quotationNo",
+                            width: "1.5fr",
+                          },
+                          {
+                            header: "Customer",
+                            field: "customerName",
+                            width: "2fr",
+                          },
+                          {
+                            header: "Mobile",
+                            field: "mobile",
+                            width: "1.5fr",
+                          },
+                        ]}
                       />
                     )}
 
@@ -993,17 +1177,34 @@ export default function BankReceipt() {
                       Bank Account <span className="text-red-500">*</span>
                     </label>
                     <Combobox
-                      data={BANK_ACCOUNTS}
+                      data={bankAccounts}
                       displayField="label"
                       value={form.bankAccount}
-                      onChange={(value: any) => {
-                        setForm({ ...form, bankAccount: value });
-                        if (errors.bankAccount)
-                          setErrors({ ...errors, bankAccount: "" });
+                      onChange={(val: any) => {
+                        setForm({
+                          ...form,
+                          bankAccount: val,
+                        });
                       }}
-                      placeholder="Select Bank Account"
-                      searchFields={["label"]}
-                      error={errors.bankAccount}
+                      placeholder="Search Bank Account"
+                      searchFields={["label", "mobile"]}
+                      columns={[
+                        {
+                          header: "Account",
+                          field: "label",
+                          width: "2fr",
+                        },
+                        {
+                          header: "Mobile",
+                          field: "mobile",
+                          width: "1.5fr",
+                        },
+                        {
+                          header: "Opening",
+                          field: "openingBalance",
+                          width: "1fr",
+                        },
+                      ]}
                     />
                   </div>
                   <div>
@@ -1027,7 +1228,7 @@ export default function BankReceipt() {
                       placeholder="Select date..."
                       value={form.date}
                       onChange={(date) => setForm({ ...form, date })}
-                       options={{ disableMobile: true }}
+                      options={{ disableMobile: true }}
                     />
                   </div>
                 </div>
@@ -1039,22 +1240,59 @@ export default function BankReceipt() {
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
                     <div className="mb-1.5 flex items-center justify-between">
-                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      <label className="text-sm font-medium">
                         Opp. Account <span className="text-red-500">*</span>
                       </label>
+
+                      {form.oppAccount && (
+                        <span
+                          className={`text-sm font-semibold ${
+                            form.oppAccount.balanceType === "Dr"
+                              ? "text-green-600"
+                              : "text-red-600"
+                          }`}
+                        >
+                          Balance : ₹
+                          {Number(form.oppAccount.balance || 0).toLocaleString(
+                            "en-IN",
+                            {
+                              minimumFractionDigits: 2,
+                            },
+                          )}{" "}
+                          {form.oppAccount.balanceType}
+                        </span>
+                      )}
                     </div>
                     <Combobox
-                      data={OPP_ACCOUNTS_WITH_BALANCE}
+                      data={oppAccounts}
                       displayField="label"
                       value={form.oppAccount}
-                      onChange={(value: any) => {
-                        setForm({ ...form, oppAccount: value });
-                        if (errors.oppAccount)
-                          setErrors({ ...errors, oppAccount: "" });
+                      onChange={(val: any) => {
+                        setForm({
+                          ...form,
+                          oppAccount: val,
+                        });
                       }}
-                      placeholder="Select Opp. Account"
-                      searchFields={["label"]}
-                      error={errors.oppAccount}
+                      disabled={form.type === "Lead Cancel"}
+                      placeholder="Search Opp. Account"
+                      searchFields={["label", "mobile"]}
+                      columns={[
+                        {
+                          header: "Account",
+                          field: "label",
+                          width: "2fr",
+                        },
+                        {
+                          header: "Mobile",
+                          field: "mobile",
+                          width: "1.5fr",
+                        },
+                        {
+                          header: "Opening",
+                          field: "openingBalance",
+                          width: "1fr",
+                        },
+                      ]}
                     />
                   </div>
                   <div>
@@ -1143,7 +1381,7 @@ export default function BankReceipt() {
                       <DatePicker
                         placeholder="Select cheque date..."
                         value={form.chequeDate}
-                         options={{ disableMobile: true }}
+                        options={{ disableMobile: true }}
                         onChange={(date) => {
                           setForm({ ...form, chequeDate: date });
                           if (errors.chequeDate)
@@ -1164,7 +1402,7 @@ export default function BankReceipt() {
                       <DatePicker
                         placeholder="Select cheque clear date..."
                         value={form.chequeClearDate}
-                         options={{ disableMobile: true }}
+                        options={{ disableMobile: true }}
                         onChange={(date) => {
                           setForm({ ...form, chequeClearDate: date });
                           if (errors.chequeClearDate)

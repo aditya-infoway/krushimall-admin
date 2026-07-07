@@ -155,13 +155,13 @@ const NewAccount = () => {
       effect: "Balance Sheet",
     },
     {
-      label: "Sundry Debitor (invert)",
-      value: "Sundry Debitor (invert)",
+      label: "Sundry Debitor (internal)",
+      value: "Sundry Debitor (internal)",
       effect: "Balance Sheet",
     },
     {
-      label: "Sundry Credito (invert)",
-      value: "Sundry Credito (invert)",
+      label: "Sundry Creditor (internal)",
+      value: "Sundry Creditor (internal)",
       effect: "Balance Sheet",
     },
   ];

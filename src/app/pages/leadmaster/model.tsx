@@ -2290,7 +2290,7 @@ const getCompany = async () => {
                     </div>
                     <button
                       onClick={() => setIsCreateAccountOpen(true)}
-                      className="dark:border-dark-500 dark:hover:bg-dark-600 mt-6 flex-shrink-0 rounded-md border border-blue-900 p-2 hover:bg-gray-100"
+                      className="dark:border-dark-500 dark:hover:bg-dark-600 mt-6 shrink-0 rounded-md border border-blue-900 p-2 hover:bg-gray-100"
                     >
                       <PlusIcon className="dark:text-dark-200 size-6 text-blue-900" />
                     </button>
