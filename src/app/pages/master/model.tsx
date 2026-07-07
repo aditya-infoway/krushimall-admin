@@ -23,6 +23,9 @@ import {
   ChevronRightIcon,
 } from "@heroicons/react/24/outline";
 import apiHelper from "@/utils/apiHelper";
+import { toast } from "sonner";
+import { ConfirmModal } from "@/components/shared/ConfirmModal";
+import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 
 // Local UI Imports
 import { Button, Checkbox, Input } from "@/components/ui";
@@ -102,6 +105,13 @@ export default function Model() {
   const [selectedStatusFilter, setSelectedStatusFilter] = useState("All"); // Status filter state
 
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
+
+
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+const [confirmState, setConfirmState] = useState<"pending" | "success" | "error">("pending");
+const [confirmLoading, setConfirmLoading] = useState(false);
+const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+const [isBulkDelete, setIsBulkDelete] = useState(false);
 
   useEffect(() => {
     getModels();
@@ -273,27 +283,46 @@ export default function Model() {
     setShowDrawer(true);
   };
 
-  const handleDelete = async (id: number) => {
-    try {
-      await apiHelper.delete(`/model/${id}`);
-      getModels();
-    } catch (error) {
-      console.error(error);
-    }
-  };
+ const handleDelete = (id: number) => {
+  setDeleteTargetId(id);
+  setIsBulkDelete(false);
+  setConfirmState("pending");
+  setShowConfirmModal(true);
+};
 
-  const handleBulkDelete = async () => {
-    try {
-      await Promise.all(
-        selectedIds.map((id) => apiHelper.delete(`/model/${id}`)),
-      );
+const handleBulkDelete = () => {
+  setIsBulkDelete(true);
+  setConfirmState("pending");
+  setShowConfirmModal(true);
+};
+
+const performDelete = async () => {
+  setConfirmLoading(true);
+  try {
+    if (isBulkDelete) {
+      await Promise.all(selectedIds.map((id) => apiHelper.delete(`/model/${id}`)));
+      toast.success(`${selectedIds.length} models deleted successfully!`);
       await getModels();
       setSelectedIds([]);
       setCurrentPage(1);
-    } catch (error) {
-      console.error(error);
+      setConfirmState("success");
+    } else {
+      if (deleteTargetId === null) return;
+      await apiHelper.delete(`/model/${deleteTargetId}`);
+      toast.success("Model deleted successfully!");
+      await getModels();
+      setDeleteTargetId(null);
+      setConfirmState("success");
     }
-  };
+    setTimeout(() => setShowConfirmModal(false), 1500);
+  } catch (error: any) {
+    console.error("Delete failed:", error);
+    setConfirmState("error");
+    toast.error(error.response?.data?.message || "Failed to delete. Please try again.");
+  } finally {
+    setConfirmLoading(false);
+  }
+};
 
   const handleToggleTableStatus = async (id: number) => {
     const model = models.find((item) => item.id === id);
@@ -318,39 +347,49 @@ export default function Model() {
   };
 
   const onFormSubmit = async (data: FormValues) => {
-    try {
-      const hasNewImage = data.image && data.image.startsWith("data:");
-      if (hasNewImage) {
-        const formData = new FormData();
-        formData.append("modelName", data.modelName);
-        formData.append("categoryId", String(data.categoryId));
-        formData.append("brandId", String(data.brandId));
-        formData.append("status", data.status);
-        const response = await fetch(data.image);
-        const blob = await response.blob();
-        formData.append("image", blob, "model-image.jpg");
-        if (editId !== null)
-          await apiHelper.put(`/model/${editId}`, formData);
-        else await apiHelper.post("/model", formData);
+  try {
+    const hasNewImage = data.image && data.image.startsWith("data:");
+    if (hasNewImage) {
+      const formData = new FormData();
+      formData.append("modelName", data.modelName);
+      formData.append("categoryId", String(data.categoryId));
+      formData.append("brandId", String(data.brandId));
+      formData.append("status", data.status);
+      const response = await fetch(data.image);
+      const blob = await response.blob();
+      formData.append("image", blob, "model-image.jpg");
+      if (editId !== null) {
+        await apiHelper.put(`/model/${editId}`, formData);
+        toast.success("Model updated successfully!");
       } else {
-        const payload: any = {
-          modelName: data.modelName,
-          categoryId: Number(data.categoryId),
-          brandId: Number(data.brandId),
-          status: data.status,
-        };
-        if (data.image && !data.image.startsWith("data:"))
-          payload.image = data.image;
-        if (editId !== null) await apiHelper.put(`/model/${editId}`, payload);
-        else await apiHelper.post("/model", payload);
+        await apiHelper.post("/model", formData);
+        toast.success("Model created successfully!");
       }
-      await getModels();
-      setShowDrawer(false);
-      reset();
-    } catch (error) {
-      console.error(error);
+    } else {
+      const payload: any = {
+        modelName: data.modelName,
+        categoryId: Number(data.categoryId),
+        brandId: Number(data.brandId),
+        status: data.status,
+      };
+      if (data.image && !data.image.startsWith("data:"))
+        payload.image = data.image;
+      if (editId !== null) {
+        await apiHelper.put(`/model/${editId}`, payload);
+        toast.success("Model updated successfully!");
+      } else {
+        await apiHelper.post("/model", payload);
+        toast.success("Model created successfully!");
+      }
     }
-  };
+    await getModels();
+    setShowDrawer(false);
+    reset();
+  } catch (error: any) {
+    console.error(error);
+    toast.error(error.response?.data?.message || "Failed to save model. Please try again.");
+  }
+};
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -1094,6 +1133,40 @@ export default function Model() {
           </TransitionChild>
         </Dialog>
       </Transition>
+      {/* Confirmation Modal */}
+<ConfirmModal
+  show={showConfirmModal}
+  onClose={() => {
+    setShowConfirmModal(false);
+    setDeleteTargetId(null);
+    setConfirmState("pending");
+  }}
+  onOk={performDelete}
+  confirmLoading={confirmLoading}
+  state={confirmState}
+  messages={{
+    pending: {
+      Icon: ExclamationTriangleIcon,
+      title: isBulkDelete ? "Delete Selected Models?" : "Are you sure?",
+      description: isBulkDelete 
+        ? `Are you sure you want to delete ${selectedIds.length} selected models? This action cannot be undone.`
+        : "Are you sure you want to delete this model? Once deleted, it cannot be restored.",
+      actionText: isBulkDelete ? "Delete All" : "Delete",
+    },
+    success: {
+      title: "Deleted Successfully",
+      description: isBulkDelete 
+        ? `${selectedIds.length} models have been deleted.`
+        : "The model has been deleted.",
+      actionText: "Done",
+    },
+    error: {
+      title: "Delete Failed",
+      description: "Failed to delete. Please try again.",
+      actionText: "Try Again",
+    },
+  }}
+/>
     </div>
   );
 }

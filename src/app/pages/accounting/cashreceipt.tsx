@@ -56,6 +56,7 @@ import { Input, Radio, Textarea } from "@/components/ui";
 import apiHelper from "@/utils/apiHelper";
 type EntryType = "Manual" | "Lead" | "Job Card";
 import { Combobox } from "@/components/shared/form/Combobox";
+import { RiFileExcel2Fill, RiFilePdfFill } from "react-icons/ri";
 interface CashReceipt {
   id: number;
   date: string;
@@ -168,7 +169,7 @@ const [financialYearId, setFinancialYearId] = useState<number | null>(null);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredRows.slice(indexOfFirstItem, indexOfLastItem);
-
+const [leadOptions, setLeadOptions] = useState<any[]>([]);
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
@@ -191,6 +192,30 @@ const [financialYearId, setFinancialYearId] = useState<number | null>(null);
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+  const getLeads = async () => {
+  try {
+    const res = await apiHelper.get("/leads");
+
+    const leads = res.data || [];
+
+    const options = leads.map((item: any) => ({
+      value: item.id,
+      label: `${item.quotationNo} - ${item.customer?.accountName || ""}`,
+      quotationNo: item.quotationNo,
+      customerName: item.customer?.accountName || "",
+      mobile: item.customer?.mobile || "",
+      customerId: item.customer?.id,
+    }));
+
+    setLeadOptions(options);
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+useEffect(() => {
+  getLeads();
+}, []);
   const getCompany = async () => {
   try {
     const res = await apiHelper.get("/company");
@@ -373,12 +398,7 @@ const handleAdd = async () => {
   ];
 
   // Add after LEADS and JOB_CARDS
-  const leadOptions = LEADS.map((lead) => ({
-    value: lead.leadNo,
-    label: `${lead.leadNo} - ${lead.name}`,
-    phone: lead.phone,
-    id: lead.id,
-  }));
+ 
 
   const jobCardOptions = JOB_CARDS.map((job) => ({
     value: job.jobCardNo,
@@ -461,7 +481,27 @@ const handleSubmit = async () => {
   useEffect(() => {
     setCurrentPage(1);
   }, [filterType, filterDateFrom, filterDateTo, search]);
+const downloadExcel = async () => {
+  try {
+    const blob = await apiHelper.getBlob(
+      "/cash-receipt/export/excel"
+    );
 
+    const url = window.URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "CashReceiptRegister.xlsx";
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    window.URL.revokeObjectURL(url);
+  } catch (err) {
+    console.log(err);
+  }
+};
   return (
     <div className="relative min-h-screen space-y-6 p-4 pb-28 text-gray-900 md:p-6 dark:text-gray-100">
       {/* Upper Actions Control Toolbar Layout */}
@@ -490,19 +530,17 @@ const handleSubmit = async () => {
           </button>
 
           <button
-            type="button"
-            className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            type="button"   onClick={downloadExcel}
+            className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 cursor-pointer"
           >
-            <Download className="size-4.5" />
-            Excel
+         <RiFileExcel2Fill className="text-lg text-green-500" />
           </button>
 
           <button
             type="button"
-            className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 cursor-pointer"
           >
-            <Download className="size-4.5" />
-            PDF
+           <RiFilePdfFill className="text-lg text-red-500" />
           </button>
 
           <button
@@ -978,19 +1016,41 @@ const handleSubmit = async () => {
                   {/* Right side - Combobox */}
                   <div className="w-full sm:max-w-sm">
                     {form.type === "Lead" && (
-                      <Combobox
-                        data={leadOptions}
-                        displayField="label"
-                        value={form.leadNo}
-                        onChange={(value: any) => {
-                          setForm({ ...form, leadNo: value });
-                          if (errors.leadNo)
-                            setErrors({ ...errors, leadNo: "" });
-                        }}
-                        placeholder="Search or select lead..."
-                        searchFields={["label"]}
-                        error={errors.leadNo}
-                      />
+                     <Combobox
+  data={leadOptions}
+  displayField="label"
+  value={form.leadNo}
+onChange={(selected: any) => {
+  const customerAccount = oppAccounts.find(
+    (acc: any) => Number(acc.value) === Number(selected.customerId)
+  );
+
+  setForm((prev) => ({
+    ...prev,
+    leadNo: selected,        // object store કરો
+    oppAccount: customerAccount || null,
+  }));
+}}
+  placeholder="Search Quotation No / Customer"
+  searchFields={["quotationNo", "customerName", "mobile"]}
+  columns={[
+    {
+      header: "Quotation No",
+      field: "quotationNo",
+      width: "1.5fr",
+    },
+    {
+      header: "Customer",
+      field: "customerName",
+      width: "2fr",
+    },
+    {
+      header: "Mobile",
+      field: "mobile",
+      width: "1.5fr",
+    },
+  ]}
+/>
                     )}
 
                     {form.type === "Job Card" && (
@@ -1080,11 +1140,27 @@ const handleSubmit = async () => {
                 {/* Row 2: Opp. Account | Amount */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
-                    <div className="mb-1.5 flex items-center justify-between">
-                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Opp. Account <span className="text-red-500">*</span>
-                      </label>
-                    </div>
+                   <div className="mb-1.5 flex items-center justify-between">
+  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+    Opp. Account <span className="text-red-500">*</span>
+  </label>
+
+  {form.oppAccount && (
+    <span
+      className={`text-sm font-semibold ${
+        form.oppAccount.balanceType === "Dr"
+          ? "text-green-600"
+          : "text-red-600"
+      }`}
+    >
+      Balance : ₹
+      {Number(form.oppAccount.balance || 0).toLocaleString("en-IN", {
+        minimumFractionDigits: 2,
+      })}{" "}
+      {form.oppAccount.balanceType}
+    </span>
+  )}
+</div>
                     <Combobox
                       data={oppAccounts}
                       displayField="label"
@@ -1096,6 +1172,7 @@ const handleSubmit = async () => {
                           setErrors({ ...errors, oppAccount: "" });
                         }
                       }}
+                        disabled={form.type === "Lead"}
                       placeholder="Search Opp. Account"
                       searchFields={["label", "mobile"]}
                       columns={[

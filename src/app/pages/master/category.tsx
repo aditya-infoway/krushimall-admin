@@ -24,6 +24,9 @@ import {
 } from "@heroicons/react/24/outline";
 import { Row, Table as TanstackTable } from "@tanstack/react-table";
 import apiHelper from "@/utils/apiHelper";
+import { toast } from "sonner";
+import { ConfirmModal } from "@/components/shared/ConfirmModal";
+import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 
 // Local Imports
 import { Button, Checkbox, Input } from "@/components/ui";
@@ -102,6 +105,14 @@ export default function Category() {
     useState<string>("All");
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [showFilterBar, setShowFilterBar] = useState(false);
+
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [confirmState, setConfirmState] = useState<
+    "pending" | "success" | "error"
+  >("pending");
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+  const [isBulkDelete, setIsBulkDelete] = useState(false);
 
   useEffect(() => {
     getCategories();
@@ -193,27 +204,51 @@ export default function Category() {
     setShowDrawer(true);
   };
 
-  const handleDelete = async (id: number) => {
-    try {
-      await apiHelper.delete(`/category/${id}`); // ✅ just pass url
-      getCategories();
-    } catch (error) {
-      console.error(error);
-    }
+  // Replace handleDelete
+  const handleDelete = (id: number) => {
+    setDeleteTargetId(id);
+    setIsBulkDelete(false);
+    setConfirmState("pending");
+    setShowConfirmModal(true);
   };
 
-  const handleBulkDelete = async () => {
-    try {
-      // Delete all selected categories one by one
-      await Promise.all(
-        selectedIds.map((id) => apiHelper.delete(`/category/${id}`)),
-      );
+  // Replace handleBulkDelete
+  const handleBulkDelete = () => {
+    setIsBulkDelete(true);
+    setConfirmState("pending");
+    setShowConfirmModal(true);
+  };
 
-      await getCategories();
-      setSelectedIds([]);
-      setCurrentPage(1);
-    } catch (error) {
-      console.error("Bulk delete failed:", error);
+  // Add this new function to perform the actual delete
+  const performDelete = async () => {
+    setConfirmLoading(true);
+    try {
+      if (isBulkDelete) {
+        await Promise.all(
+          selectedIds.map((id) => apiHelper.delete(`/category/${id}`)),
+        );
+        toast.success(`${selectedIds.length} categories deleted successfully!`);
+        await getCategories();
+        setSelectedIds([]);
+        setCurrentPage(1);
+        setConfirmState("success");
+      } else {
+        if (deleteTargetId === null) return;
+        await apiHelper.delete(`/category/${deleteTargetId}`);
+        toast.success("Category deleted successfully!");
+        await getCategories();
+        setDeleteTargetId(null);
+        setConfirmState("success");
+      }
+      setTimeout(() => setShowConfirmModal(false), 1500);
+    } catch (error: any) {
+      console.error("Delete failed:", error);
+      setConfirmState("error");
+      toast.error(
+        error.response?.data?.message || "Failed to delete. Please try again.",
+      );
+    } finally {
+      setConfirmLoading(false);
     }
   };
 
@@ -244,11 +279,13 @@ export default function Category() {
           categoryName: data.name,
           status: data.status,
         });
+        toast.success("Category updated successfully!");
       } else {
         await apiHelper.post("/category", {
           categoryName: data.name,
           status: data.status,
         });
+        toast.success("Category created successfully!");
       }
 
       await getCategories();
@@ -257,6 +294,10 @@ export default function Category() {
     } catch (error: any) {
       console.error("Failed to save category:", error);
       console.error("Backend error:", error.response?.data);
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to save category. Please try again.",
+      );
     }
   };
 
@@ -836,6 +877,43 @@ export default function Category() {
           </TransitionChild>
         </Dialog>
       </Transition>
+
+      {/* Confirmation Modal */}
+      <ConfirmModal
+        show={showConfirmModal}
+        onClose={() => {
+          setShowConfirmModal(false);
+          setDeleteTargetId(null);
+          setConfirmState("pending");
+        }}
+        onOk={performDelete}
+        confirmLoading={confirmLoading}
+        state={confirmState}
+        messages={{
+          pending: {
+            Icon: ExclamationTriangleIcon,
+            title: isBulkDelete
+              ? "Delete Selected Categories?"
+              : "Are you sure?",
+            description: isBulkDelete
+              ? `Are you sure you want to delete ${selectedIds.length} selected categories? This action cannot be undone.`
+              : "Are you sure you want to delete this category? Once deleted, it cannot be restored.",
+            actionText: isBulkDelete ? "Delete All" : "Delete",
+          },
+          success: {
+            title: "Deleted Successfully",
+            description: isBulkDelete
+              ? `${selectedIds.length} categories have been deleted.`
+              : "The category has been deleted.",
+            actionText: "Done",
+          },
+          error: {
+            title: "Delete Failed",
+            description: "Failed to delete. Please try again.",
+            actionText: "Try Again",
+          },
+        }}
+      />
     </div>
   );
 }

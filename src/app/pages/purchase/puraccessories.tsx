@@ -1684,7 +1684,7 @@ const parseLocalDate = (dateStr: string): Date | undefined => {
                 </thead>
                 <tbody>
                   {/* Draft row */}
-                  <tr className="sticky top-9 z-10 bg-gray-700">
+                  <tr className="sticky top-9 z-10">
                     <td className="border border-gray-500 px-2 py-1.5 text-center dark:border-gray-500">
                       <button
                         onClick={() => setAccessoryDrawerOpen(true)}

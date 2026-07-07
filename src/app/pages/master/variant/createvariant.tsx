@@ -23,6 +23,9 @@ import {
   ChevronRightIcon,
 } from "@heroicons/react/24/outline";
 import apiHelper from "@/utils/apiHelper";
+import { toast } from "sonner";
+import { ConfirmModal } from "@/components/shared/ConfirmModal";
+import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 
 // Local UI Imports
 import { Button, Checkbox, Input } from "@/components/ui";
@@ -101,6 +104,12 @@ export default function Createvariant() {
   const [brands, setBrands] = useState<{ id: number; name: string }[]>([]);
   const [models, setModels] = useState<{ id: number; name: string }[]>([]);
   const [loading, setLoading] = useState(false);
+
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+const [confirmState, setConfirmState] = useState<"pending" | "success" | "error">("pending");
+const [confirmLoading, setConfirmLoading] = useState(false);
+const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+const [isBulkDelete, setIsBulkDelete] = useState(false);
 
   const categoryOptions = categories.map((cat) => ({
     id: String(cat.id),
@@ -363,27 +372,45 @@ export default function Createvariant() {
     setShowDrawer(true);
   };
 
-  const handleDelete = async (id: number) => {
-    try {
-      await apiHelper.delete(`/variant/${id}`);
-      getVariants();
-    } catch (error) {
-      console.error(error);
-    }
-  };
+ const handleDelete = (id: number) => {
+  setDeleteTargetId(id);
+  setIsBulkDelete(false);
+  setConfirmState("pending");
+  setShowConfirmModal(true);
+};
+  const handleBulkDelete = () => {
+  setIsBulkDelete(true);
+  setConfirmState("pending");
+  setShowConfirmModal(true);
+};
 
-  const handleBulkDelete = async () => {
-    try {
-      await Promise.all(
-        selectedIds.map((id) => apiHelper.delete(`/variant/${id}`)),
-      );
+const performDelete = async () => {
+  setConfirmLoading(true);
+  try {
+    if (isBulkDelete) {
+      await Promise.all(selectedIds.map((id) => apiHelper.delete(`/variant/${id}`)));
+      toast.success(`${selectedIds.length} variants deleted successfully!`);
       await getVariants();
       setSelectedIds([]);
       setCurrentPage(1);
-    } catch (error) {
-      console.error(error);
+      setConfirmState("success");
+    } else {
+      if (deleteTargetId === null) return;
+      await apiHelper.delete(`/variant/${deleteTargetId}`);
+      toast.success("Variant deleted successfully!");
+      await getVariants();
+      setDeleteTargetId(null);
+      setConfirmState("success");
     }
-  };
+    setTimeout(() => setShowConfirmModal(false), 1500);
+  } catch (error: any) {
+    console.error("Delete failed:", error);
+    setConfirmState("error");
+    toast.error(error.response?.data?.message || "Failed to delete. Please try again.");
+  } finally {
+    setConfirmLoading(false);
+  }
+};
 
   const handleToggleTableStatus = async (id: number) => {
     const item = variants.find((v) => v.id === id);
@@ -409,36 +436,59 @@ export default function Createvariant() {
   };
 
   const onFormSubmit = async (data: FormValues) => {
-    try {
-      const hasNewImage = data.image && data.image.startsWith("data:");
+  try {
+    const hasNewImage = data.image && data.image.startsWith("data:");
 
-      if (hasNewImage) {
-        const formData = new FormData();
+    if (hasNewImage) {
+      const formData = new FormData();
+      formData.append("categoryId", String(data.categoryId));
+      formData.append("brandId", String(data.brandId));
+      formData.append("modelId", String(data.modelId));
+      formData.append("modelYearId", String(data.modelYearId));
+      formData.append("variantCode", data.variantCode);
+      formData.append("variantName", data.variantName);
+      formData.append("status", data.status);
 
-        formData.append("categoryId", String(data.categoryId));
-        formData.append("brandId", String(data.brandId));
-        formData.append("modelId", String(data.modelId));
-        formData.append("modelYearId", String(data.modelYearId));
-        formData.append("variantCode", data.variantCode);
-        formData.append("variantName", data.variantName);
-        formData.append("status", data.status);
+      const response = await fetch(data.image);
+      const blob = await response.blob();
+      formData.append("image", blob, "variant-image.jpg");
 
-        const response = await fetch(data.image);
-        const blob = await response.blob();
-
-        formData.append("image", blob, "variant-image.jpg");
-
-        if (editId !== null)
-          await apiHelper.put(`/variant/${editId}`, formData);
-        else await apiHelper.post("/variant", formData);
+      if (editId !== null) {
+        await apiHelper.put(`/variant/${editId}`, formData);
+        toast.success("Variant updated successfully!");
+      } else {
+        await apiHelper.post("/variant", formData);
+        toast.success("Variant created successfully!");
       }
-      await getVariants();
-      setShowDrawer(false);
-      reset();
-    } catch (error: any) {
-      console.error(error);
+    } else {
+      // If no new image, send as JSON
+      const payload = {
+        categoryId: Number(data.categoryId),
+        brandId: Number(data.brandId),
+        modelId: Number(data.modelId),
+        modelYearId: Number(data.modelYearId),
+        variantCode: data.variantCode,
+        variantName: data.variantName,
+        status: data.status,
+      };
+
+      if (editId !== null) {
+        await apiHelper.put(`/variant/${editId}`, payload);
+        toast.success("Variant updated successfully!");
+      } else {
+        await apiHelper.post("/variant", payload);
+        toast.success("Variant created successfully!");
+      }
     }
-  };
+
+    await getVariants();
+    setShowDrawer(false);
+    reset();
+  } catch (error: any) {
+    console.error(error);
+    toast.error(error.response?.data?.message || "Failed to save variant. Please try again.");
+  }
+};
 
   // Filter logic - Added year filter matching
   const filteredData = variants.filter((item) => {
@@ -1240,6 +1290,40 @@ export default function Createvariant() {
           </TransitionChild>
         </Dialog>
       </Transition>
+      {/* Confirmation Modal */}
+<ConfirmModal
+  show={showConfirmModal}
+  onClose={() => {
+    setShowConfirmModal(false);
+    setDeleteTargetId(null);
+    setConfirmState("pending");
+  }}
+  onOk={performDelete}
+  confirmLoading={confirmLoading}
+  state={confirmState}
+  messages={{
+    pending: {
+      Icon: ExclamationTriangleIcon,
+      title: isBulkDelete ? "Delete Selected Variants?" : "Are you sure?",
+      description: isBulkDelete 
+        ? `Are you sure you want to delete ${selectedIds.length} selected variants? This action cannot be undone.`
+        : "Are you sure you want to delete this variant? Once deleted, it cannot be restored.",
+      actionText: isBulkDelete ? "Delete All" : "Delete",
+    },
+    success: {
+      title: "Deleted Successfully",
+      description: isBulkDelete 
+        ? `${selectedIds.length} variants have been deleted.`
+        : "The variant has been deleted.",
+      actionText: "Done",
+    },
+    error: {
+      title: "Delete Failed",
+      description: "Failed to delete. Please try again.",
+      actionText: "Try Again",
+    },
+  }}
+/>
     </div>
   );
 }

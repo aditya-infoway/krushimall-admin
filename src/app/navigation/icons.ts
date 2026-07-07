@@ -20,7 +20,10 @@ import {
   TbBuildingBank as TbBank,
   TbWallet,
   TbPackages,
-  TbUsers
+  TbUsers,
+  TbTransfer,
+  TbBook2,
+  TbReportMoney,
 } from "react-icons/tb";
 
 import DashboardsIcon from "@/assets/dualicons/dashboards.svg?react";
@@ -48,5 +51,8 @@ export const navigationIcons: Record<string, ElementType> = {
   cashbank:TbWallet,
   control:TbPackages,
   follow:TbUsers,
+  stocktransfer: TbTransfer,
+  ledgerreport: TbBook2,
+  bookingbalance: TbReportMoney,
   
 };

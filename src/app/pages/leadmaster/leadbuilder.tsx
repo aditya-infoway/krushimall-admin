@@ -40,7 +40,12 @@ import { LeadDetailsModal } from "./model";
 import apiHelper, { getBaseUrl } from "@/utils/apiHelper";
 import { useNavigate } from "react-router";
 import { TestDriveModal } from "./testdrive";
-// ─── Types based on image_06d90a.jpg ────────────────────────
+import { toast } from "sonner";
+import { ConfirmModal } from "@/components/shared/ConfirmModal";
+import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
+
+
+
 type Lead = {
   id: number;
   customerName: string;
@@ -95,6 +100,13 @@ export default function LeadBuilder() {
   const [selectedLeadId, setSelectedLeadId] = useState<number | undefined>(
     undefined,
   );
+
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+const [confirmState, setConfirmState] = useState<"pending" | "success" | "error">("pending");
+const [confirmLoading, setConfirmLoading] = useState(false);
+const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+
+
   // Filter leads based on search
   const navigate = useNavigate();
   const filteredData = leadData.filter((lead: any) => {
@@ -129,9 +141,32 @@ export default function LeadBuilder() {
   useEffect(() => {
     fetchLeads();
   }, []);
+
+
   const handleDelete = (id: number) => {
-    console.log(`Deleting lead ${id}...`);
-  };
+  setDeleteTargetId(id);
+  setConfirmState("pending");
+  setShowConfirmModal(true);
+};
+
+const performDelete = async () => {
+  setConfirmLoading(true);
+  try {
+    if (deleteTargetId === null) return;
+    await apiHelper.delete(`/leads/${deleteTargetId}`);
+    toast.success("Lead deleted successfully!");
+    await fetchLeads();
+    setDeleteTargetId(null);
+    setConfirmState("success");
+    setTimeout(() => setShowConfirmModal(false), 1500);
+  } catch (error: any) {
+    console.error("Delete failed:", error);
+    setConfirmState("error");
+    toast.error(error.response?.data?.message || "Failed to delete lead. Please try again.");
+  } finally {
+    setConfirmLoading(false);
+  }
+};
 
   const handleEdit = (id: number) => {
     console.log(`Editing lead ${id}...`);
@@ -157,11 +192,9 @@ export default function LeadBuilder() {
     setShowTestDriveModal(true);
   };
 
-const handleCreateOrder = (id: number) => {
-  navigate(`/leadmaster/order/${id}`);
-};
-
-
+  const handleCreateOrder = (id: number) => {
+    navigate(`/leadmaster/order/${id}`);
+  };
 
   const handleCreateBooking = (id: number) => {
     console.log(`Create booking for lead ${id}...`);
@@ -621,6 +654,38 @@ const handleCreateOrder = (id: number) => {
           fetchLeads();
         }}
       />
+
+
+      {/* Confirmation Modal */}
+<ConfirmModal
+  show={showConfirmModal}
+  onClose={() => {
+    setShowConfirmModal(false);
+    setDeleteTargetId(null);
+    setConfirmState("pending");
+  }}
+  onOk={performDelete}
+  confirmLoading={confirmLoading}
+  state={confirmState}
+  messages={{
+    pending: {
+      Icon: ExclamationTriangleIcon,
+      title: "Are you sure?",
+      description: "Are you sure you want to delete this lead? Once deleted, it cannot be restored.",
+      actionText: "Delete",
+    },
+    success: {
+      title: "Deleted Successfully",
+      description: "The lead has been deleted.",
+      actionText: "Done",
+    },
+    error: {
+      title: "Delete Failed",
+      description: "Failed to delete. Please try again.",
+      actionText: "Try Again",
+    },
+  }}
+/>
     </div>
   );
 }

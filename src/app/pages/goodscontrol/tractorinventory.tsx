@@ -2,17 +2,17 @@ import React, { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   MagnifyingGlassIcon,
-  FunnelIcon,
+  // FunnelIcon,
   DocumentArrowDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  PencilIcon,
-  TrashIcon,
-  PlusIcon,
-  EyeIcon,
+  // PencilIcon,
+  // TrashIcon,
+  // PlusIcon,
+  // EyeIcon,
 } from "@heroicons/react/24/outline";
 import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/Table";
-import { Button, Checkbox, Input } from "@/components/ui";
+import {  Checkbox  } from "@/components/ui";
 import { Listbox } from "@/components/shared/form/StyledListbox";
 import apiHelper from "@/utils/apiHelper";
 
@@ -47,6 +47,7 @@ export interface TractorInventoryRow {
   grnNo: string;
   inWardDate: string;
   inWardTime: string;
+    ageDay: number;
 }
 
 interface TractorInventoryProps {
@@ -472,6 +473,9 @@ const TractorInventory: React.FC<TractorInventoryProps> = ({
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   GRN No.
                 </Th>
+                  <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                  Age Day
+                </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   In Ward Date
                 </Th>
@@ -559,6 +563,7 @@ const TractorInventory: React.FC<TractorInventoryProps> = ({
                     <Td className="py-4">{formatDate(item.grnDate)}</Td>
                     <Td className="py-4">{formatDate(item.grnRecordDate)}</Td>
                     <Td className="py-4">{item.grnNo}</Td>
+                     <Td className="py-4">{item.ageDay} Days</Td>
                     <Td className="py-4">{formatDate(item.inWardDate)}</Td>
                     <Td className="py-4">{formatDateTime(item.inWardTime)}</Td>
                   </Tr>
