@@ -71,13 +71,13 @@ const branchOptions = [
   { label: "Pune", value: "Pune" },
 ];
 
-const chassisOptions = [
-  { label: "CH-2024-001 - Honda City", value: "CH-2024-001" },
-  { label: "CH-2024-002 - Toyota Innova", value: "CH-2024-002" },
-  { label: "CH-2024-003 - Hyundai Creta", value: "CH-2024-003" },
-  { label: "CH-2024-004 - Maruti Suzuki", value: "CH-2024-004" },
-  { label: "CH-2024-005 - Tata Nexon", value: "CH-2024-005" },
-];
+// const chassisOptions = [
+//   { label: "CH-2024-001 - Honda City", value: "CH-2024-001" },
+//   { label: "CH-2024-002 - Toyota Innova", value: "CH-2024-002" },
+//   { label: "CH-2024-003 - Hyundai Creta", value: "CH-2024-003" },
+//   { label: "CH-2024-004 - Maruti Suzuki", value: "CH-2024-004" },
+//   { label: "CH-2024-005 - Tata Nexon", value: "CH-2024-005" },
+// ];
 
 const customSelectStyles = {
   control: (provided: any, state: any) => ({
@@ -142,6 +142,181 @@ const customSelectStyles = {
   indicatorSeparator: () => ({
     display: "none",
   }),
+};
+
+const mockData: any = {
+  "CH-2024-001": {
+    id: 1,
+    chassisNo: "CH-2024-001",
+    vehicleSrNo: "VH-001",
+    model: "Honda City",
+    variant: "ZX CVT",
+    colour: "White",
+    itemName: "Honda City ZX CVT",
+    itemCode: "HON-CITY-ZX",
+    engineNo: "ENG-2024-001",
+    mfgDate: "2024-01-15",
+    keyNo: "KEY-001",
+    batteryNo: "BAT-001",
+    batteryMake: "Exide",
+    f1TyresNo: "TYR-F1-001",
+    f2TyresNo: "TYR-F2-001",
+    s1TyresNo: "TYR-S1-001",
+    s2TyresNo: "TYR-S2-001",
+    location: "Warehouse A",
+    grnNumber: "GRN-001",
+    grnDate: "2024-01-10",
+    grnRecordDate: "2024-01-10",
+  },
+  "CH-2024-002": {
+    id: 2,
+    chassisNo: "CH-2024-002",
+    vehicleSrNo: "VH-002",
+    model: "Toyota Innova",
+    variant: "VX",
+    colour: "Silver",
+    itemName: "Toyota Innova VX",
+    itemCode: "TOY-INN-VX",
+    engineNo: "ENG-2024-002",
+    mfgDate: "2024-02-20",
+    keyNo: "KEY-002",
+    batteryNo: "BAT-002",
+    batteryMake: "Amron",
+    f1TyresNo: "TYR-F1-002",
+    f2TyresNo: "TYR-F2-002",
+    s1TyresNo: "TYR-S1-002",
+    s2TyresNo: "TYR-S2-002",
+    location: "Warehouse B",
+    grnNumber: "GRN-002",
+    grnDate: "2024-02-15",
+    grnRecordDate: "2024-02-15",
+  },
+  "CH-2024-003": {
+    id: 3,
+    chassisNo: "CH-2024-003",
+    vehicleSrNo: "VH-003",
+    model: "Hyundai Creta",
+    variant: "SX",
+    colour: "Red",
+    itemName: "Hyundai Creta SX",
+    itemCode: "HYU-CRE-SX",
+    engineNo: "ENG-2024-003",
+    mfgDate: "2024-03-10",
+    keyNo: "KEY-003",
+    batteryNo: "BAT-003",
+    batteryMake: "Exide",
+    f1TyresNo: "TYR-F1-003",
+    f2TyresNo: "TYR-F2-003",
+    s1TyresNo: "TYR-S1-003",
+    s2TyresNo: "TYR-S2-003",
+    location: "Warehouse C",
+    grnNumber: "GRN-003",
+    grnDate: "2024-03-05",
+    grnRecordDate: "2024-03-05",
+  },
+  "CH-2024-004": {
+    id: 4,
+    chassisNo: "CH-2024-004",
+    vehicleSrNo: "VH-004",
+    model: "Maruti Suzuki",
+    variant: "ZXI",
+    colour: "Blue",
+    itemName: "Maruti Suzuki ZXI",
+    itemCode: "MAR-SUZ-ZXI",
+    engineNo: "ENG-2024-004",
+    mfgDate: "2024-04-05",
+    keyNo: "KEY-004",
+    batteryNo: "BAT-004",
+    batteryMake: "Amron",
+    f1TyresNo: "TYR-F1-004",
+    f2TyresNo: "TYR-F2-004",
+    s1TyresNo: "TYR-S1-004",
+    s2TyresNo: "TYR-S2-004",
+    location: "Warehouse D",
+    grnNumber: "GRN-004",
+    grnDate: "2024-04-01",
+    grnRecordDate: "2024-04-01",
+  },
+  "CH-2024-005": {
+    id: 5,
+    chassisNo: "CH-2024-005",
+    vehicleSrNo: "VH-005",
+    model: "Tata Nexon",
+    variant: "XZ",
+    colour: "Black",
+    itemName: "Tata Nexon XZ",
+    itemCode: "TAT-NEX-XZ",
+    engineNo: "ENG-2024-005",
+    mfgDate: "2024-05-20",
+    keyNo: "KEY-005",
+    batteryNo: "BAT-005",
+    batteryMake: "Exide",
+    f1TyresNo: "TYR-F1-005",
+    f2TyresNo: "TYR-F2-005",
+    s1TyresNo: "TYR-S1-005",
+    s2TyresNo: "TYR-S2-005",
+    location: "Warehouse E",
+    grnNumber: "GRN-005",
+    grnDate: "2024-05-15",
+    grnRecordDate: "2024-05-15",
+  },
+};
+
+const vehicleOptions = Object.values(mockData);
+
+const daysSinceInward = (dateStr: string) => {
+  if (!dateStr) return 0;
+  const diff = Math.floor(
+    (Date.now() - new Date(dateStr).getTime()) / (1000 * 60 * 60 * 24),
+  );
+  return diff;
+};
+
+const URGENT_DAYS_THRESHOLD = 30;
+
+const VehicleOption = (props: any) => {
+  const { data, innerRef, innerProps, isFocused } = props;
+  const days = daysSinceInward(data.grnDate);
+  const isUrgent = days >= URGENT_DAYS_THRESHOLD;
+
+  return (
+    <div
+      ref={innerRef}
+      {...innerProps}
+      className={`flex cursor-pointer items-center justify-between border-b px-4 py-2 last:border-b-0 ${
+        isUrgent
+          ? "bg-primary-600 text-white"
+          : isFocused
+            ? "dark:bg-dark-600 bg-gray-100"
+            : "dark:bg-dark-700 dark:text-dark-100 bg-white"
+      }`}
+    >
+      <div className="text-xs leading-5">
+        <div className="font-semibold">Chassis No : {data.chassisNo}</div>
+        <div className="font-semibold">Battery No : {data.batteryNo}</div>
+        <div className="font-semibold">Key No : {data.keyNo}</div>
+      </div>
+      <div className="text-right text-xs leading-5">
+        <div>
+          Inward Date :{" "}
+          <span
+            className={`rounded px-1 ${isUrgent ? "text-primary-600 bg-white" : "bg-gray-100 text-gray-700"}`}
+          >
+            {data.grnDate}
+          </span>
+        </div>
+        <div>
+          Days :{" "}
+          <span
+            className={`rounded px-1 ${isUrgent ? "text-primary-600 bg-white" : "bg-gray-100 text-gray-700"}`}
+          >
+            {days}
+          </span>
+        </div>
+        <div>Motor No : {data.engineNo}</div>
+      </div>
+    </div>
+  );
 };
 
 const AddVehicleStock = () => {
@@ -259,128 +434,9 @@ const AddVehicleStock = () => {
   }, [watchedBranch, setValue]);
 
   // Auto-fill vehicle details based on chassis number (only when checkbox is unchecked and not saved)
+
   useEffect(() => {
     if (watchedChassisNo && !isActionChecked && !isSaved) {
-      const mockData: any = {
-        "CH-2024-001": {
-          id: 1,
-          chassisNo: "CH-2024-001",
-          vehicleSrNo: "VH-001",
-          model: "Honda City",
-          variant: "ZX CVT",
-          colour: "White",
-          itemName: "Honda City ZX CVT",
-          itemCode: "HON-CITY-ZX",
-          engineNo: "ENG-2024-001",
-          mfgDate: "2024-01-15",
-          keyNo: "KEY-001",
-          batteryNo: "BAT-001",
-          batteryMake: "Exide",
-          f1TyresNo: "TYR-F1-001",
-          f2TyresNo: "TYR-F2-001",
-          s1TyresNo: "TYR-S1-001",
-          s2TyresNo: "TYR-S2-001",
-          location: "Warehouse A",
-          grnNumber: "GRN-001",
-          grnDate: "2024-01-10",
-          grnRecordDate: "2024-01-10",
-        },
-        "CH-2024-002": {
-          id: 2,
-          chassisNo: "CH-2024-002",
-          vehicleSrNo: "VH-002",
-          model: "Toyota Innova",
-          variant: "VX",
-          colour: "Silver",
-          itemName: "Toyota Innova VX",
-          itemCode: "TOY-INN-VX",
-          engineNo: "ENG-2024-002",
-          mfgDate: "2024-02-20",
-          keyNo: "KEY-002",
-          batteryNo: "BAT-002",
-          batteryMake: "Amron",
-          f1TyresNo: "TYR-F1-002",
-          f2TyresNo: "TYR-F2-002",
-          s1TyresNo: "TYR-S1-002",
-          s2TyresNo: "TYR-S2-002",
-          location: "Warehouse B",
-          grnNumber: "GRN-002",
-          grnDate: "2024-02-15",
-          grnRecordDate: "2024-02-15",
-        },
-        "CH-2024-003": {
-          id: 3,
-          chassisNo: "CH-2024-003",
-          vehicleSrNo: "VH-003",
-          model: "Hyundai Creta",
-          variant: "SX",
-          colour: "Red",
-          itemName: "Hyundai Creta SX",
-          itemCode: "HYU-CRE-SX",
-          engineNo: "ENG-2024-003",
-          mfgDate: "2024-03-10",
-          keyNo: "KEY-003",
-          batteryNo: "BAT-003",
-          batteryMake: "Exide",
-          f1TyresNo: "TYR-F1-003",
-          f2TyresNo: "TYR-F2-003",
-          s1TyresNo: "TYR-S1-003",
-          s2TyresNo: "TYR-S2-003",
-          location: "Warehouse C",
-          grnNumber: "GRN-003",
-          grnDate: "2024-03-05",
-          grnRecordDate: "2024-03-05",
-        },
-        "CH-2024-004": {
-          id: 4,
-          chassisNo: "CH-2024-004",
-          vehicleSrNo: "VH-004",
-          model: "Maruti Suzuki",
-          variant: "ZXI",
-          colour: "Blue",
-          itemName: "Maruti Suzuki ZXI",
-          itemCode: "MAR-SUZ-ZXI",
-          engineNo: "ENG-2024-004",
-          mfgDate: "2024-04-05",
-          keyNo: "KEY-004",
-          batteryNo: "BAT-004",
-          batteryMake: "Amron",
-          f1TyresNo: "TYR-F1-004",
-          f2TyresNo: "TYR-F2-004",
-          s1TyresNo: "TYR-S1-004",
-          s2TyresNo: "TYR-S2-004",
-          location: "Warehouse D",
-          grnNumber: "GRN-004",
-          grnDate: "2024-04-01",
-          grnRecordDate: "2024-04-01",
-        }, 
-
-        
-        "CH-2024-005": {
-          id: 5,
-          chassisNo: "CH-2024-005",
-          vehicleSrNo: "VH-005",
-          model: "Tata Nexon",
-          variant: "XZ",
-          colour: "Black",
-          itemName: "Tata Nexon XZ",
-          itemCode: "TAT-NEX-XZ",
-          engineNo: "ENG-2024-005",
-          mfgDate: "2024-05-20",
-          keyNo: "KEY-005",
-          batteryNo: "BAT-005",
-          batteryMake: "Exide",
-          f1TyresNo: "TYR-F1-005",
-          f2TyresNo: "TYR-F2-005",
-          s1TyresNo: "TYR-S1-005",
-          s2TyresNo: "TYR-S2-005",
-          location: "Warehouse E",
-          grnNumber: "GRN-005",
-          grnDate: "2024-05-15",
-          grnRecordDate: "2024-05-15",
-        },
-      };
-
       const vehicleData = mockData[watchedChassisNo];
       if (vehicleData) {
         // Store the pending vehicle data
@@ -495,6 +551,9 @@ const AddVehicleStock = () => {
 
       // Auto-uncheck the checkbox
       setIsActionChecked(false);
+
+      // Re-enable chassis selection for the next vehicle
+      setTimeout(() => setIsSaved(false), 0);
     } else if (!checked) {
       // Just toggle state if unchecked manually
       setIsActionChecked(false);
@@ -601,17 +660,20 @@ const AddVehicleStock = () => {
             rules={{ required: "Chassis number is required" }}
             render={({ field }) => (
               <Select
-                options={chassisOptions}
+                options={vehicleOptions}
+                components={{ Option: VehicleOption }}
+                getOptionLabel={(o: any) => o.chassisNo}
+                getOptionValue={(o: any) => o.chassisNo}
                 styles={customSelectStyles}
                 classNamePrefix="react-select"
-                placeholder="Search chassis number..."
+                placeholder="Select Vehicle"
                 value={
-                  chassisOptions.find(
-                    (option) => option.value === field.value,
+                  vehicleOptions.find(
+                    (o: any) => o.chassisNo === field.value,
                   ) || null
                 }
-                onChange={(selected) => {
-                  field.onChange(selected?.value || "");
+                onChange={(selected: any) => {
+                  field.onChange(selected?.chassisNo || "");
                 }}
                 isDisabled={isSaved}
               />

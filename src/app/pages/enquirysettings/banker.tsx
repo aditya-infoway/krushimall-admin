@@ -26,8 +26,10 @@ import {
 } from "@heroicons/react/24/outline";
 import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/Table";
 import { Button, Checkbox, Input } from "@/components/ui";
-
 import { Listbox } from "@/components/shared/form/StyledListbox";
+import { toast } from "sonner";
+import { ConfirmModal } from "@/components/shared/ConfirmModal";
+import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 
 type Banker = {
   id: number;
@@ -74,6 +76,12 @@ const [bankers, setBankers] =
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [selectedStatusFilter, setSelectedStatusFilter] = useState("All");
+
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+const [confirmState, setConfirmState] = useState<"pending" | "success" | "error">("pending");
+const [confirmLoading, setConfirmLoading] = useState(false);
+const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+const [isBulkDelete, setIsBulkDelete] = useState(false);
 
   const {
     register,
@@ -128,33 +136,44 @@ useEffect(() => {
     setShowDrawer(true);
   };
 
- const handleDelete = async (id: number) => {
-  try {
-    await apiHelper.delete(`/bankers/${id}`);
-    getBankers();
-  } catch (error) {
-    console.log(error);
-  }
+const handleDelete = (id: number) => {
+  setDeleteTargetId(id);
+  setIsBulkDelete(false);
+  setConfirmState("pending");
+  setShowConfirmModal(true);
 };
 
-const handleBulkDelete = async () => {
-  try {
-    if (
-      window.confirm(
-        "Are you sure you want to delete selected enquiry types?"
-      )
-    ) {
-      await Promise.all(
-        selectedIds.map((id) =>
-          apiHelper.delete(`/bankers/${id}`)
-        )
-      );
+const handleBulkDelete = () => {
+  setIsBulkDelete(true);
+  setConfirmState("pending");
+  setShowConfirmModal(true);
+};
 
+const performDelete = async () => {
+  setConfirmLoading(true);
+  try {
+    if (isBulkDelete) {
+      await Promise.all(selectedIds.map((id) => apiHelper.delete(`/bankers/${id}`)));
+      toast.success(`${selectedIds.length} bankers deleted successfully!`);
       setSelectedIds([]);
-      getBankers();
+      await getBankers();
+      setCurrentPage(1);
+      setConfirmState("success");
+    } else {
+      if (deleteTargetId === null) return;
+      await apiHelper.delete(`/bankers/${deleteTargetId}`);
+      toast.success("Banker deleted successfully!");
+      await getBankers();
+      setDeleteTargetId(null);
+      setConfirmState("success");
     }
-  } catch (error) {
-    console.log(error);
+    setTimeout(() => setShowConfirmModal(false), 1500);
+  } catch (error: any) {
+    console.error("Delete failed:", error);
+    setConfirmState("error");
+    toast.error(error.response?.data?.message || "Failed to delete. Please try again.");
+  } finally {
+    setConfirmLoading(false);
   }
 };
 
@@ -171,33 +190,26 @@ const handleToggleStatus = async (id: number) => {
   }
 };
 
- const onFormSubmit = async (
-  data: FormValues
-) => {
+ const onFormSubmit = async (data: FormValues) => {
   try {
     if (editId) {
-      await apiHelper.put(
-        `/bankers/${editId}`,
-        data
-      );
+      await apiHelper.put(`/bankers/${editId}`, data);
+      toast.success("Banker updated successfully!");
     } else {
-      await apiHelper.post(
-        "/bankers",
-        data
-      );
+      await apiHelper.post("/bankers", data);
+      toast.success("Banker created successfully!");
     }
 
-    getBankers();
-
+    await getBankers();
     setShowDrawer(false);
     setEditId(null);
-
     reset({
       banker: "",
       status: "ACTIVE",
     });
-  } catch (error) {
+  } catch (error: any) {
     console.log(error);
+    toast.error(error.response?.data?.message || "Failed to save banker. Please try again.");
   }
 };
 
@@ -735,6 +747,41 @@ const handleToggleStatus = async (id: number) => {
           </TransitionChild>
         </Dialog>
       </Transition>
+
+      {/* Confirmation Modal */}
+<ConfirmModal
+  show={showConfirmModal}
+  onClose={() => {
+    setShowConfirmModal(false);
+    setDeleteTargetId(null);
+    setConfirmState("pending");
+  }}
+  onOk={performDelete}
+  confirmLoading={confirmLoading}
+  state={confirmState}
+  messages={{
+    pending: {
+      Icon: ExclamationTriangleIcon,
+      title: isBulkDelete ? "Delete Selected Bankers?" : "Are you sure?",
+      description: isBulkDelete 
+        ? `Are you sure you want to delete ${selectedIds.length} selected bankers? This action cannot be undone.`
+        : "Are you sure you want to delete this banker? Once deleted, it cannot be restored.",
+      actionText: isBulkDelete ? "Delete All" : "Delete",
+    },
+    success: {
+      title: "Deleted Successfully",
+      description: isBulkDelete 
+        ? `${selectedIds.length} bankers have been deleted.`
+        : "The banker has been deleted.",
+      actionText: "Done",
+    },
+    error: {
+      title: "Delete Failed",
+      description: "Failed to delete. Please try again.",
+      actionText: "Try Again",
+    },
+  }}
+/>
     </div>
   );
 };

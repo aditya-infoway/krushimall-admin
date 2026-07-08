@@ -17,6 +17,7 @@ import { Country, State, City } from "country-state-city";
 import Select from "react-select";
 import { Radio } from "@/components/ui";
 import apiHelper from "@/utils/apiHelper";
+import { toast } from "sonner";
 // ---------- Types ----------
 import { PlusIcon } from "@heroicons/react/24/outline";
 // import { Combobox } from "@/components/shared/form/StyledCombobox";
@@ -969,71 +970,70 @@ const getCompany = async () => {
   };
 
   const handleSave = async () => {
-    try {
-      const payload = {
-          companyId,
-  financialYearId,
-        accountId: partyId,
-        purchaseDate: purchaseDate || date,
-        purchaseBillNo,
-        purchaseLocation,
-        dueDate,
-        terms,
-        narration,
-        bankAccountId: bankAccount,
-        cashAccountId: cashAccount,
-        paymentMode: bankDetails.paymentMode,
-        chequeNo: bankDetails.chequeNo,
-        chequeDate: bankDetails.chequeDate,
-        clearDate: bankDetails.clearDate,
-        bankNarration: bankDetails.narration,
-        freightCharge,
-        insurance,
-        otherCharge,
-        roundAmount,
+  try {
+    const payload = {
+      companyId,
+      financialYearId,
+      accountId: partyId,
+      purchaseDate: purchaseDate || date,
+      purchaseBillNo,
+      purchaseLocation,
+      dueDate,
+      terms,
+      narration,
+      bankAccountId: bankAccount,
+      cashAccountId: cashAccount,
+      paymentMode: bankDetails.paymentMode,
+      chequeNo: bankDetails.chequeNo,
+      chequeDate: bankDetails.chequeDate,
+      clearDate: bankDetails.clearDate,
+      bankNarration: bankDetails.narration,
+      freightCharge,
+      insurance,
+      otherCharge,
+      roundAmount,
+      totalQty: totalQuantity,
+      totalAmount,
+      grandTotal,
+      cgst: totalCgst,
+      sgst: totalSgst,
+      igst: totalIgst,
+      items: rows,
+    };
 
-        totalQty: totalQuantity,
-        totalAmount,
-        grandTotal,
-        cgst: totalCgst,
-        sgst: totalSgst,
-        igst: totalIgst,
-
-        items: rows,
-      };
-
-      if (isEdit) {
-        await apiHelper.put(`/purchases/${id}`, payload);
-        alert("Purchase Updated Successfully");
-      } else {
-        await apiHelper.post("/purchases", payload);
-      }
-
-      alert("Purchase Saved Successfully");
-      navigate("/purchase/tractor");
-      // Generate next bill no
-      await getBillNo();
-
-      // Reset form
-      setRows([]);
-      setPurchaseBillNo("");
-      setNarration("");
-      setFreightCharge("");
-      setInsurance("");
-      setOtherCharge("");
-      setRoundAmount("");
-    } catch (error: any) {
-      console.error(error);
-
-      alert(error.response?.data?.message || "Failed to save purchase");
+    if (isEdit) {
+      await apiHelper.put(`/purchases/${id}`, payload);
+      toast.success("Purchase Updated Successfully");
+    } else {
+      await apiHelper.post("/purchases", payload);
+      toast.success("Purchase Saved Successfully");
     }
-  };
-  const handleVerify = async () => {
+
+    navigate("/purchase/tractor");
+    await getBillNo();
+    setRows([]);
+    setPurchaseBillNo("");
+    setNarration("");
+    setFreightCharge("");
+    setInsurance("");
+    setOtherCharge("");
+    setRoundAmount("");
+  } catch (error: any) {
+    console.error(error);
+    toast.error(error.response?.data?.message || "Failed to save purchase");
+  }
+};
+ const handleVerify = async () => {
+  try {
     await apiHelper.put(`/purchases/${id}/verify`, null);
     setBillVerify("verify");
+    toast.success("Purchase Verified Successfully");
+  } catch (error: any) {
+    console.error(error);
+    toast.error(error.response?.data?.message || "Failed to verify purchase");
+  }
+};
 
-    alert("Purchase Verified");
-  };
   const handleBack = () => {
     if (onBack) {
       onBack();
