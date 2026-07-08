@@ -651,7 +651,7 @@ const onFormSubmit = async (data: FormValues) => {
               className="flex items-center gap-1.5 px-3 py-1.5 shadow-sm"
             >
               <TrashIcon className="size-4" />
-              <span className="text-xs font-semibold">Delete Selected</span>
+              <span className="text-xs font-semibold">Delete</span>
             </Button>
           </div>
         </div>
@@ -712,7 +712,12 @@ const onFormSubmit = async (data: FormValues) => {
                 <div className="grow space-y-5 overflow-y-auto p-5">
                   <div>
                     <Input
-                      label="Enquiry Status *"
+                     label={
+      <span>
+       Enquiry Status <span className="text-red-500">*</span>
+      </span>
+    }
+                     
                       placeholder="Enter enquiry status"
                       {...register(
                         "enquiryStatus",

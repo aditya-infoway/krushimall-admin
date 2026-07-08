@@ -627,62 +627,62 @@ const getCompany = async () => {
     setVehicleSearch("");
   };
   const saveDraftRow = () => {
-    // Validate all required fields
-    if (!draft.item.trim()) {
-      alert("Please select or enter an Item Name");
-      return;
-    }
-    if (!draft.itemCode.trim()) {
-      alert("Please enter Item Code");
-      return;
-    }
-    if (!draft.color.trim()) {
-      alert("Please enter Color");
-      return;
-    }
-    // ✅ Duplicate Chassis No in current purchase
-    const chassisExists = rows.some(
-      (r) =>
-        r.chassisNo.trim().toLowerCase() ===
-        draft.chassisNo.trim().toLowerCase(),
-    );
+  // Validate all required fields
+  if (!draft.item.trim()) {
+    toast.warning("Please select or enter an Item Name");
+    return;
+  }
+  if (!draft.itemCode.trim()) {
+    toast.warning("Please enter Item Code");
+    return;
+  }
+  if (!draft.color.trim()) {
+    toast.warning("Please enter Color");
+    return;
+  }
+  // Duplicate Chassis No in current purchase
+  const chassisExists = rows.some(
+    (r) =>
+      r.chassisNo.trim().toLowerCase() ===
+      draft.chassisNo.trim().toLowerCase(),
+  );
 
-    if (chassisExists) {
-      alert("Chassis No already added.");
-      return;
-    }
+  if (chassisExists) {
+    toast.warning("Chassis No already added.");
+    return;
+  }
 
-    // ✅ Duplicate Engine No in current purchase
-    const engineExists = rows.some(
-      (r) =>
-        r.engineNo.trim().toLowerCase() === draft.engineNo.trim().toLowerCase(),
-    );
-    if (engineExists) {
-      alert("Engine No already added.");
-      return;
-    }
-    if (!draft.qty || draft.qty < 1) {
-      alert("Please enter a valid Quantity (minimum 1)");
-      return;
-    }
-    if (!draft.ratePer.trim()) {
-      alert("Please enter Rate Per");
-      return;
-    }
-    if (!draft.gstPercent.trim()) {
-      alert("Please enter GST %");
-      return;
-    }
-    if (!draft.amount.trim()) {
-      alert("Please enter Amount");
-      return;
-    }
+  // Duplicate Engine No in current purchase
+  const engineExists = rows.some(
+    (r) =>
+      r.engineNo.trim().toLowerCase() === draft.engineNo.trim().toLowerCase(),
+  );
+  if (engineExists) {
+    toast.warning("Engine No already added.");
+    return;
+  }
+  if (!draft.qty || draft.qty < 1) {
+    toast.warning("Please enter a valid Quantity (minimum 1)");
+    return;
+  }
+  if (!draft.ratePer.trim()) {
+    toast.warning("Please enter Rate Per");
+    return;
+  }
+  if (!draft.gstPercent.trim()) {
+    toast.warning("Please enter GST %");
+    return;
+  }
+  if (!draft.amount.trim()) {
+    toast.warning("Please enter Amount");
+    return;
+  }
 
-    // All validations passed, save the row
-    setRows((r) => [...r, { ...draft, saved: true }]);
-    setDraft(emptyDraft());
-  };
-
+  // All validations passed, save the row
+  setRows((r) => [...r, { ...draft, saved: true }]);
+  setDraft(emptyDraft());
+  toast.success("Item added successfully!");
+};
   const removeRow = (id: string) =>
     setRows((r) => r.filter((row) => row.id !== id));
   const getAccountError = (field: keyof NewAccountData) => {
@@ -783,14 +783,12 @@ const getCompany = async () => {
 
     const missing = required.filter((k) => !String(accountForm[k]).trim());
 
-    // Supplier & Sundry Creditor require Opening Balance
     if (accountForm.group === "Sundry Creditor") {
       if (!accountForm.openingBalance.trim()) {
         missing.push("openingBalance");
       }
     }
 
-    // Only Sundry Creditor requires Dr/Cr selection
     if (accountForm.group === "Sundry Creditor") {
       if (!accountForm.drCr.trim()) {
         missing.push("drCr");
@@ -829,10 +827,8 @@ const getCompany = async () => {
 
     const account = res.data;
 
-    console.log("API Response:", account);
-
     if (!account?.id) {
-      console.log("Invalid Response:", account);
+      toast.error("Failed to create account. Invalid response.");
       return;
     }
 
@@ -843,19 +839,21 @@ const getCompany = async () => {
       stateCode: accountForm.stateCode,
       openingBalance: accountForm.group === "Sundry Creditor" 
         ? Number(accountForm.openingBalance) 
-        : 0, // ✅ Added required property
+        : 0,
     };
 
     setParties((prev) => [...prev, newParty]);
     setPartyId(account.id);
-
+    toast.success("Account created successfully!");
     setAccountModalOpen(false);
     setAccountForm(emptyAccount);
     setAccountTouched(false);
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
+    toast.error(error.response?.data?.message || "Failed to create account");
   }
 };
+
   const getParties = async () => {
     const res = await apiHelper.get("/accounts");
 

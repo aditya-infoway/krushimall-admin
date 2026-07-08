@@ -640,7 +640,7 @@ const performDelete = async () => {
               className="flex items-center gap-1.5 px-3 py-1.5 shadow-sm"
             >
               <TrashIcon className="size-4" />
-              <span className="text-xs font-semibold">Delete Selected</span>
+              <span className="text-xs font-semibold">Delete</span>
             </Button>
           </div>
         </div>
@@ -699,7 +699,12 @@ const performDelete = async () => {
                 <div className="grow space-y-5 overflow-y-auto p-5">
                   <div>
                     <Input
-                      label="Finance Name *"
+                     label={
+      <span>
+      Finance Name <span className="text-red-500">*</span>
+      </span>
+    }
+                      
                       placeholder="Enter finance name"
                       {...register("finance", formValidationRules.finance)}
                       error={errors?.finance && errors.finance.message}

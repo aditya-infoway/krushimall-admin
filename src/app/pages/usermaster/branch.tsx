@@ -353,7 +353,7 @@ const CreateBranch = () => {
   const getBranches = async () => {
     try {
       const response = await apiHelper.get("/branch");
-   console.log("Branches:", response);
+      console.log("Branches:", response);
       setBranches(response);
     } catch (error) {
       console.log(error);
@@ -531,7 +531,7 @@ const CreateBranch = () => {
     }
   };
 
-  const filteredData = branches.filter((item) => {
+  const filteredData = branches.filter((item: any) => {
     const matchesSearch =
       item.branchName.toLowerCase().includes(search.toLowerCase()) ||
       item.branchCode.toLowerCase().includes(search.toLowerCase()) ||
@@ -1157,7 +1157,11 @@ const CreateBranch = () => {
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                     <div>
                       <Input
-                        label="Branch Code *"
+                        label={
+                          <span>
+                            Branch Code <span className="text-red-500">*</span>
+                          </span>
+                        }
                         placeholder="Enter branch code"
                         {...register(
                           "branchCode",
@@ -1168,7 +1172,11 @@ const CreateBranch = () => {
                     </div>
                     <div>
                       <Input
-                        label="Branch Name *"
+                        label={
+                          <span>
+                            Branch Name <span className="text-red-500">*</span>
+                          </span>
+                        }
                         placeholder="Enter branch name"
                         {...register(
                           "branchName",
@@ -1179,7 +1187,11 @@ const CreateBranch = () => {
                     </div>
                     <div>
                       <Combobox
-                        label="Branch Type *"
+                        label={
+                          <span>
+                            Branch Type <span className="text-red-500">*</span>
+                          </span>
+                        }
                         placeholder="Select type"
                         data={branchTypeOptions}
                         value={branchTypeOptions.find(
@@ -1200,7 +1212,12 @@ const CreateBranch = () => {
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
                       <Combobox
-                        label="Branch Manager Name *"
+                        label={
+                          <span>
+                            Branch Manager Name{" "}
+                            <span className="text-red-500">*</span>
+                          </span>
+                        }
                         placeholder="Search Manager"
                         data={managerAccounts}
                         displayField="label"
@@ -1251,7 +1268,12 @@ const CreateBranch = () => {
                     </div>
                     <div>
                       <Input
-                        label="Mobile Number *"
+                        label={
+                          <span>
+                            Mobile Number{" "}
+                            <span className="text-red-500">*</span>
+                          </span>
+                        }
                         placeholder="Enter mobile number"
                         {...register("mobileNo", formValidationRules.mobileNo)}
                         error={errors?.mobileNo && errors.mobileNo.message}
@@ -1262,7 +1284,11 @@ const CreateBranch = () => {
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                     <div>
                       <Input
-                        label="GST Number *"
+                        label={
+                          <span>
+                            GST Number <span className="text-red-500">*</span>
+                          </span>
+                        }
                         placeholder="Enter GST number"
                         {...register("gstNo", formValidationRules.gstNo)}
                         error={errors?.gstNo && errors.gstNo.message}
@@ -1270,7 +1296,12 @@ const CreateBranch = () => {
                     </div>
                     <div>
                       <Input
-                        label="PAN Card Number *"
+                        label={
+                          <span>
+                            PAN Card Number{" "}
+                            <span className="text-red-500">*</span>
+                          </span>
+                        }
                         placeholder="Enter PAN card number"
                         {...register(
                           "panCardNo",
@@ -1281,7 +1312,12 @@ const CreateBranch = () => {
                     </div>
                     <div>
                       <Input
-                        label="Address Line 1 *"
+                        label={
+                          <span>
+                            Address Line 1{" "}
+                            <span className="text-red-500">*</span>
+                          </span>
+                        }
                         placeholder="Enter address line 1"
                         {...register("address1", formValidationRules.address1)}
                         error={errors?.address1 && errors.address1.message}
@@ -1443,7 +1479,11 @@ const CreateBranch = () => {
 
                     <div>
                       <Input
-                        label="PIN Code *"
+                        label={
+                          <span>
+                            PIN Code <span className="text-red-500">*</span>
+                          </span>
+                        }
                         placeholder="Enter PIN code"
                         {...register("pinCode", formValidationRules.pinCode)}
                         error={errors?.pinCode && errors.pinCode.message}
@@ -1454,7 +1494,11 @@ const CreateBranch = () => {
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                     <div>
                       <Input
-                        label="Gmail ID *"
+                        label={
+                          <span>
+                            Gmail ID <span className="text-red-500">*</span>
+                          </span>
+                        }
                         placeholder="Enter Gmail address"
                         {...register("gmailId", formValidationRules.gmailId)}
                         error={errors?.gmailId && errors.gmailId.message}
@@ -1462,7 +1506,11 @@ const CreateBranch = () => {
                     </div>
                     <div>
                       <Input
-                        label="Password *"
+                        label={
+                          <span>
+                            Password <span className="text-red-500">*</span>
+                          </span>
+                        }
                         placeholder="Enter password"
                         type={showPassword ? "text" : "password"}
                         prefix={
@@ -1488,7 +1536,12 @@ const CreateBranch = () => {
                     </div>
                     <div>
                       <Input
-                        label="Confirm Password *"
+                        label={
+                          <span>
+                            Confirm Password{" "}
+                            <span className="text-red-500">*</span>
+                          </span>
+                        }
                         placeholder="Confirm password"
                         type={showConfirmPassword ? "text" : "password"}
                         prefix={

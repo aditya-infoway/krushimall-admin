@@ -640,7 +640,7 @@ const handleToggleStatus = async (id: number) => {
               className="flex items-center gap-1.5 px-3 py-1.5 shadow-sm"
             >
               <TrashIcon className="size-4" />
-              <span className="text-xs font-semibold">Delete Selected</span>
+              <span className="text-xs font-semibold">Delete</span>
             </Button>
           </div>
         </div>
@@ -699,7 +699,12 @@ const handleToggleStatus = async (id: number) => {
                 <div className="grow space-y-5 overflow-y-auto p-5">
                   <div>
                     <Input
-                      label="Banker Name *"
+                     label={
+      <span>
+        Banker Name <span className="text-red-500">*</span>
+      </span>
+    }
+                      
                       placeholder="Enter banker name"
                       {...register("banker", formValidationRules.banker)}
                       error={errors?.banker && errors.banker.message}

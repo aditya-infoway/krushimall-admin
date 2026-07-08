@@ -24,6 +24,9 @@ import {
 import { Fragment } from "react";
 import { DatePicker } from "@/components/shared/form/Datepicker";
 import apiHelper from "@/utils/apiHelper";
+import { toast } from "sonner";
+import { ConfirmModal } from "@/components/shared/ConfirmModal";
+import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 
 // ---------- Types ----------
 export interface PurchaseItemRow {
@@ -176,6 +179,12 @@ const AccessoriesItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => 
 
   const [transportErrors, setTransportErrors] = useState<any>({});
   const [transportSaved, setTransportSaved] = useState(false);
+
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+const [confirmState, setConfirmState] = useState<"pending" | "success" | "error">("pending");
+const [confirmLoading, setConfirmLoading] = useState(false);
+const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+
   // Fetch purchase items
   useEffect(() => {
     if (id) {
@@ -283,10 +292,11 @@ const handleSelectRow = async (item: PurchaseItemRow) => {
     await apiHelper.put(`/accessories-purchase/item-status/${item.id}`, {
       status: "Inward",
     });
-
-    fetchPurchaseItems();
-  } catch (err) {
+    toast.success("Item status updated to Inward!");
+    await fetchPurchaseItems();
+  } catch (err: any) {
     console.error(err);
+    toast.error(err.response?.data?.message || "Failed to update item status.");
   }
 };
 
@@ -376,27 +386,37 @@ const handleSelectRow = async (item: PurchaseItemRow) => {
 
     return Object.keys(errors).length === 0;
   };
-  const handleTransportSave = async () => {
-    if (!validateTransport()) return;
 
+  
+const handleTransportSave = async () => {
+  if (!validateTransport()) return;
+  try {
     await apiHelper.put(`/purchases/${id}/transport`, transportData);
     setTransportSaved(true);
+    toast.success("Transport details saved successfully!");
     setShowTransportModal(false);
-  };
-  const handleInwardSubmit = async () => {
-    if (!validateInward()) return;
-    try {
-      await apiHelper.put(
-        `/purchases/purchase-items/${selectedItem?.id}/inward`,
-        inwardData,
-      );
+  } catch (err: any) {
+    console.log(err);
+    toast.error(err.response?.data?.message || "Failed to save transport details.");
+  }
+};
 
-      await fetchPurchaseItems();
-      setShowDrawer(false);
-    } catch (err) {
-      console.log(err);
-    }
-  };
+
+const handleInwardSubmit = async () => {
+  if (!validateInward()) return;
+  try {
+    await apiHelper.put(
+      `/purchases/purchase-items/${selectedItem?.id}/inward`,
+      inwardData,
+    );
+    toast.success("Inward details saved successfully!");
+    await fetchPurchaseItems();
+    setShowDrawer(false);
+  } catch (err: any) {
+    console.log(err);
+    toast.error(err.response?.data?.message || "Failed to save inward details.");
+  }
+};
 
   const handleInwardChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;

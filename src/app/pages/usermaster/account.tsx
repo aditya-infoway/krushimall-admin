@@ -27,9 +27,6 @@ import { toast } from "sonner";
 import { ConfirmModal } from "@/components/shared/ConfirmModal";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 
-
-
-
 // Sample data
 const entriesOptions = [
   { id: 10, name: "10" },
@@ -42,7 +39,7 @@ const entriesOptions = [
 
 const Account = () => {
   const navigate = useNavigate();
-const [data, setData] = useState<any[]>([]);
+  const [data, setData] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -50,17 +47,19 @@ const [data, setData] = useState<any[]>([]);
   const [showFilterBar, setShowFilterBar] = useState(false);
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-const [confirmState, setConfirmState] = useState<"pending" | "success" | "error">("pending");
-const [confirmLoading, setConfirmLoading] = useState(false);
-const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
-const [isBulkDelete, setIsBulkDelete] = useState(false);
+  const [confirmState, setConfirmState] = useState<
+    "pending" | "success" | "error"
+  >("pending");
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+  const [isBulkDelete, setIsBulkDelete] = useState(false);
 
-const handleDelete = (id: number) => {
-  setDeleteTargetId(id);
-  setIsBulkDelete(false);
-  setConfirmState("pending");
-  setShowConfirmModal(true);
-};
+  const handleDelete = (id: number) => {
+    setDeleteTargetId(id);
+    setIsBulkDelete(false);
+    setConfirmState("pending");
+    setShowConfirmModal(true);
+  };
 
   const handleAdd = () => {
     navigate("/usermaster/newaccount");
@@ -70,62 +69,63 @@ const handleDelete = (id: number) => {
     navigate(`/usermaster/newaccount/${item.id}`, { state: { item } });
   };
 
- const handleBulkDelete = () => {
-  setIsBulkDelete(true);
-  setConfirmState("pending");
-  setShowConfirmModal(true);
-};
+  const handleBulkDelete = () => {
+    setIsBulkDelete(true);
+    setConfirmState("pending");
+    setShowConfirmModal(true);
+  };
 
-const performDelete = async () => {
-  setConfirmLoading(true);
-  try {
-    if (isBulkDelete) {
-      await Promise.all(selectedIds.map((id) => apiHelper.delete(`/accounts/${id}`)));
-      toast.success(`${selectedIds.length} accounts deleted successfully!`);
-      setData((prev) => prev.filter((item) => !selectedIds.includes(item.id)));
-      setSelectedIds([]);
-      setCurrentPage(1);
-      setConfirmState("success");
-    } else {
-      if (deleteTargetId === null) return;
-      await apiHelper.delete(`/accounts/${deleteTargetId}`);
-      toast.success("Account deleted successfully!");
-      setData((prev) => prev.filter((item) => item.id !== deleteTargetId));
-      setDeleteTargetId(null);
-      setConfirmState("success");
+  const performDelete = async () => {
+    setConfirmLoading(true);
+    try {
+      if (isBulkDelete) {
+        await Promise.all(
+          selectedIds.map((id) => apiHelper.delete(`/accounts/${id}`)),
+        );
+        toast.success(`${selectedIds.length} accounts deleted successfully!`);
+        setData((prev) =>
+          prev.filter((item) => !selectedIds.includes(item.id)),
+        );
+        setSelectedIds([]);
+        setCurrentPage(1);
+        setConfirmState("success");
+      } else {
+        if (deleteTargetId === null) return;
+        await apiHelper.delete(`/accounts/${deleteTargetId}`);
+        toast.success("Account deleted successfully!");
+        setData((prev) => prev.filter((item) => item.id !== deleteTargetId));
+        setDeleteTargetId(null);
+        setConfirmState("success");
+      }
+      setTimeout(() => setShowConfirmModal(false), 1500);
+    } catch (error: any) {
+      console.error("Delete failed:", error);
+      setConfirmState("error");
+      toast.error(
+        error.response?.data?.message || "Failed to delete. Please try again.",
+      );
+    } finally {
+      setConfirmLoading(false);
     }
-    setTimeout(() => setShowConfirmModal(false), 1500);
-  } catch (error: any) {
-    console.error("Delete failed:", error);
-    setConfirmState("error");
-    toast.error(error.response?.data?.message || "Failed to delete. Please try again.");
-  } finally {
-    setConfirmLoading(false);
-  }
-};
+  };
 
   // Filter data based on search
-const filteredData = data.filter((item: any) => {
-  if (!search.trim()) return true;
+  const filteredData = data.filter((item: any) => {
+    if (!search.trim()) return true;
 
-
-  return (
-    String(item.accountName || "")
-      .toLowerCase()
-      .includes(search.toLowerCase()) ||
-
-    String(item.printName || "")
-      .toLowerCase()
-      .includes(search.toLowerCase()) ||
-
-    String(item.email || "")
-      .toLowerCase()
-      .includes(search.toLowerCase()) ||
-
-    String(item.mobile || "")
-      .includes(search)
-  );
-});
+    return (
+      String(item.accountName || "")
+        .toLowerCase()
+        .includes(search.toLowerCase()) ||
+      String(item.printName || "")
+        .toLowerCase()
+        .includes(search.toLowerCase()) ||
+      String(item.email || "")
+        .toLowerCase()
+        .includes(search.toLowerCase()) ||
+      String(item.mobile || "").includes(search)
+    );
+  });
   const totalItems = filteredData.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -150,26 +150,23 @@ const filteredData = data.filter((item: any) => {
     setSelectedIds((prev) =>
       prev.includes(id)
         ? prev.filter((selectedId) => selectedId !== id)
-        : [...prev, id]
+        : [...prev, id],
     );
   };
-const getAccounts = async () => {
-  try {
-    const response = await apiHelper.get("/accounts");
+  const getAccounts = async () => {
+    try {
+      const response = await apiHelper.get("/accounts");
 
+      // Check actual structure
 
-
-    // Check actual structure
-
-
-    setData([...response.data]);
-  } catch (error) {
-    console.log(error);
-  }
-};
-useEffect(() => {
-  getAccounts();
-}, []);
+      setData([...response.data]);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  useEffect(() => {
+    getAccounts();
+  }, []);
 
   return (
     <div className="relative min-h-screen space-y-6 p-4 pb-28 text-gray-900 md:p-6 dark:text-gray-100">
@@ -211,7 +208,7 @@ useEffect(() => {
             onClick={handleAdd}
             className="w-full sm:w-auto"
           >
-            <PlusIcon className="size-4.5 mr-1.5" />
+            <PlusIcon className="mr-1.5 size-4.5" />
             Add Account
           </Button>
         </div>
@@ -285,15 +282,15 @@ useEffect(() => {
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Print Name
                 </Th>
-                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                Group
+                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                  Group
                 </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Balance
                 </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-  Closing Balance
-</Th>
+                  Closing Balance
+                </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Mobile
                 </Th>
@@ -313,7 +310,7 @@ useEffect(() => {
             </THead>
 
             <TBody className="dark:divide-dark-700 divide-y divide-gray-200">
-              {currentItems.map((item : any, index) => {
+              {currentItems.map((item: any, index) => {
                 const isRowSelected = selectedIds.includes(item.id);
                 return (
                   <Tr
@@ -329,7 +326,7 @@ useEffect(() => {
                         onChange={() => handleSelectRow(item.id)}
                       />
                     </Td>
-                  
+
                     <Td className="py-4 font-medium text-gray-500">
                       {indexOfFirstItem + index + 1}
                     </Td>
@@ -343,11 +340,11 @@ useEffect(() => {
                       {item.group}
                     </Td>
                     <Td className="dark:text-dark-200 py-4 text-gray-600">
-                       {item.openingBalance} {item.drCr}
+                      {item.openingBalance} {item.drCr}
                     </Td>
                     <Td className="dark:text-dark-200 py-4 text-gray-600">
-{item.closingBalance} {item.drCr}
-</Td>
+                      {item.closingBalance} {item.drCr}
+                    </Td>
                     <Td className="dark:text-dark-200 py-4 text-gray-600">
                       {item.mobile}
                     </Td>
@@ -543,7 +540,7 @@ useEffect(() => {
                     >
                       {page}
                     </button>
-                  )
+                  ),
                 )}
 
                 <button
@@ -587,46 +584,46 @@ useEffect(() => {
               className="flex items-center gap-1.5 px-3 py-1.5 shadow-sm"
             >
               <TrashIcon className="size-4" />
-              <span className="text-xs font-semibold">Delete Selected</span>
+              <span className="text-xs font-semibold">Delete</span>
             </Button>
           </div>
         </div>
       )}
 
       {/* Confirmation Modal */}
-<ConfirmModal
-  show={showConfirmModal}
-  onClose={() => {
-    setShowConfirmModal(false);
-    setDeleteTargetId(null);
-    setConfirmState("pending");
-  }}
-  onOk={performDelete}
-  confirmLoading={confirmLoading}
-  state={confirmState}
-  messages={{
-    pending: {
-      Icon: ExclamationTriangleIcon,
-      title: isBulkDelete ? "Delete Selected Accounts?" : "Are you sure?",
-      description: isBulkDelete 
-        ? `Are you sure you want to delete ${selectedIds.length} selected accounts? This action cannot be undone.`
-        : "Are you sure you want to delete this account? Once deleted, it cannot be restored.",
-      actionText: isBulkDelete ? "Delete All" : "Delete",
-    },
-    success: {
-      title: "Deleted Successfully",
-      description: isBulkDelete 
-        ? `${selectedIds.length} accounts have been deleted.`
-        : "The account has been deleted.",
-      actionText: "Done",
-    },
-    error: {
-      title: "Delete Failed",
-      description: "Failed to delete. Please try again.",
-      actionText: "Try Again",
-    },
-  }}
-/>
+      <ConfirmModal
+        show={showConfirmModal}
+        onClose={() => {
+          setShowConfirmModal(false);
+          setDeleteTargetId(null);
+          setConfirmState("pending");
+        }}
+        onOk={performDelete}
+        confirmLoading={confirmLoading}
+        state={confirmState}
+        messages={{
+          pending: {
+            Icon: ExclamationTriangleIcon,
+            title: isBulkDelete ? "Delete Selected Accounts?" : "Are you sure?",
+            description: isBulkDelete
+              ? `Are you sure you want to delete ${selectedIds.length} selected accounts? This action cannot be undone.`
+              : "Are you sure you want to delete this account? Once deleted, it cannot be restored.",
+            actionText: isBulkDelete ? "Delete All" : "Delete",
+          },
+          success: {
+            title: "Deleted Successfully",
+            description: isBulkDelete
+              ? `${selectedIds.length} accounts have been deleted.`
+              : "The account has been deleted.",
+            actionText: "Done",
+          },
+          error: {
+            title: "Delete Failed",
+            description: "Failed to delete. Please try again.",
+            actionText: "Try Again",
+          },
+        }}
+      />
     </div>
   );
 };
