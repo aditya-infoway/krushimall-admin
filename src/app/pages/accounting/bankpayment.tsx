@@ -541,7 +541,7 @@ const downloadExcel = async () => {
           </button>
 
           <button
-            type="button"
+            type="button" 
             className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
           >
             <RiFilePdfFill className="text-lg text-red-500" />

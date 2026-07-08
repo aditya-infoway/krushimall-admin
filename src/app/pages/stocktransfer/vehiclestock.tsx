@@ -27,32 +27,26 @@ import { Listbox } from "@/components/shared/form/StyledListbox";
 
 type VehicleStock = {
   id: number;
-  stockTransferId: string;
-  date: string;
-  branch: string;
-  branchManagerName: string;
-  contactNo: string;
-  chassisNo: string;
-  vehicleSrNo: string;
-  model: string;
-  variant: string;
+  transferNo: string;
+  transferDate: string;
+
+  branch: {
+    id: number;
+    branchName: string;
+  };
+
+  manager: {
+    id: number;
+    accountName: string;
+  };
+
+  modelName: string;
+  variantName: string;
   colour: string;
+  chassisNo: string;
+  engineNo: string;
   itemName: string;
   itemCode: string;
-  engineNo: string;
-  mfgDate: string;
-  keyNo: string;
-  batteryNo: string;
-  batteryMake: string;
-  f1TyresNo: string;
-  f2TyresNo: string;
-  s1TyresNo: string;
-  s2TyresNo: string;
-  location: string;
-  grnNumber: string;
-  grnDate: string;
-  grnRecordDate: string;
-  createdAt: string;
 };
 
 const entriesOptions = [
@@ -85,14 +79,17 @@ const VehicleStock = () => {
   const [selectedVehicle, setSelectedVehicle] = useState<VehicleStock | null>(null);
   const [showDetails, setShowDetails] = useState(false);
 
-  const getVehicleStocks = async () => {
-    try {
-      const response = await apiHelper.get("/vehicle-stocks");
-      setVehicleStocks(response.data || []);
-    } catch (error) {
-      console.log(error);
-    }
-  };
+const getVehicleStocks = async () => {
+  try {
+    const response = await apiHelper.get("/vehicle-stock-transfer");
+
+   console.log("Response Data:", response.data);
+
+setVehicleStocks(response.data);
+  } catch (error) {
+    console.log("API Error:", error);
+  }
+};
 
   useEffect(() => {
     getVehicleStocks();
@@ -148,20 +145,25 @@ const handleEdit = (item: VehicleStock) => {
     ...vehicleStocks.map(v => ({ id: v.chassisNo, name: v.chassisNo })),
   ];
 
-  const filteredData = vehicleStocks.filter((item) => {
-    const matchesSearch =
-      item.stockTransferId.toLowerCase().includes(search.toLowerCase()) ||
-      item.chassisNo.toLowerCase().includes(search.toLowerCase()) ||
-      item.model.toLowerCase().includes(search.toLowerCase()) ||
-      item.branch.toLowerCase().includes(search.toLowerCase());
+ const filteredData = vehicleStocks.filter((item: any) => {
+  const matchesSearch =
+    (item.transferNo ?? "").toLowerCase().includes(search.toLowerCase()) ||
+    (item.chassisNo ?? "").toLowerCase().includes(search.toLowerCase()) ||
+    (item.modelName ?? "").toLowerCase().includes(search.toLowerCase()) ||
+    (item.branch?.branchName ?? "")
+      .toLowerCase()
+      .includes(search.toLowerCase());
 
-    const matchesBranch =
-      selectedBranchFilter === "All" || item.branch === selectedBranchFilter;
-    const matchesChassis =
-      selectedChassisFilter === "All" || item.chassisNo === selectedChassisFilter;
+  const matchesBranch =
+    selectedBranchFilter === "All" ||
+    item.branch?.branchName === selectedBranchFilter;
 
-    return matchesSearch && matchesBranch && matchesChassis;
-  });
+  const matchesChassis =
+    selectedChassisFilter === "All" ||
+    item.chassisNo === selectedChassisFilter;
+
+  return matchesSearch && matchesBranch && matchesChassis;
+});
 
   const totalItems = filteredData.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
@@ -365,22 +367,22 @@ const handleEdit = (item: VehicleStock) => {
                       {indexOfFirstItem + index + 1}
                     </Td>
                     <Td className="py-4 font-mono text-sm font-medium text-gray-900 dark:text-gray-400">
-                      {item.stockTransferId}
+                      {item.transferNo}
                     </Td>
                     <Td className="dark:text-dark-200 py-4 text-gray-600">
-                      {new Date(item.date).toLocaleDateString("en-IN")}
+                    {new Date(item.transferDate).toLocaleDateString("en-IN")}
                     </Td>
                     <Td className="dark:text-dark-200 py-4 text-gray-600">
-                      {item.branch}
+                    {item.branch?.branchName}
                     </Td>
                     <Td className="py-4 font-mono text-sm text-gray-600 dark:text-gray-400">
                       {item.chassisNo}
                     </Td>
                     <Td className="dark:text-dark-200 py-4 text-gray-600">
-                      {item.model}
+                     {item.modelName}
                     </Td>
                     <Td className="dark:text-dark-200 py-4 text-gray-600">
-                      {item.variant}
+                      {item.variantName}
                     </Td>
                     <Td className="dark:text-dark-200 py-4 text-gray-600">
                       <span className="inline-flex h-4 w-4 rounded-full border border-gray-300" style={{ backgroundColor: item.colour.toLowerCase() }}></span>

@@ -41,26 +41,57 @@ type FormValues = {
 
 type SelectedVehicle = {
   id: number;
+
+ 
+
+  itemName: string;
+  itemCode: string;
+
   chassisNo: string;
-  vehicleSrNo: string;
+  engineNo: string;
+  serialNo: string;
+
   model: string;
   variant: string;
   colour: string;
-  itemName: string;
-  itemCode: string;
-  engineNo: string;
-  mfgDate: string;
-  keyNo: string;
-  batteryNo: string;
-  batteryMake: string;
-  f1TyresNo: string;
-  f2TyresNo: string;
-  s1TyresNo: string;
-  s2TyresNo: string;
-  location: string;
-  grnNumber: string;
-  grnDate: string;
-  grnRecordDate: string;
+
+  purchasePriceNoGST: number;
+  purchasePriceTaxable: number;
+
+  fuelType?: string;
+  fuelCapacity?: string;
+
+  mfgDate?: string;
+
+  keyNumber?: string;
+
+  batteryMake?: string;
+  batteryNo?: string;
+
+  first1Tyer?: string;
+  first2Tyer?: string;
+  second1Tyer?: string;
+  second2Tyer?: string;
+
+  location?: string;
+
+  grnNo?: string;
+  grnDate?: string;
+  grnRecordDate?: string;
+
+  supplierName?: string;
+  billNo?: string;
+  purchaseBillNo?: string;
+
+  stock?: string;
+  currentLocation?: string;
+
+  inWardDate?: string;
+  inWardTime?: string;
+
+  ageDay?: number;
+
+  status?: string;
 };
 
 const branchOptions = [
@@ -122,7 +153,7 @@ const customSelectStyles = {
   option: (provided: any, state: any) => ({
     ...provided,
     backgroundColor: state.isSelected
-      ? "var(--color-primary-600)"
+      ? "var(--color-primary-600)" // <-- this causes blue background
       : state.isFocused
         ? "var(--color-primary-500)"
         : "var(--color-dark-700)",
@@ -284,17 +315,13 @@ const VehicleOption = (props: any) => {
       ref={innerRef}
       {...innerProps}
       className={`flex cursor-pointer items-center justify-between border-b px-4 py-2 last:border-b-0 ${
-        isUrgent
-          ? "bg-primary-600 text-white"
-          : isFocused
-            ? "dark:bg-dark-600 bg-gray-100"
-            : "dark:bg-dark-700 dark:text-dark-100 bg-white"
+        isFocused ? "bg-primary-600 text-white" : "bg-white text-black"
       }`}
     >
       <div className="text-xs leading-5">
         <div className="font-semibold">Chassis No : {data.chassisNo}</div>
         <div className="font-semibold">Battery No : {data.batteryNo}</div>
-        <div className="font-semibold">Key No : {data.keyNo}</div>
+        <div className="font-semibold">Key No : {data.keyNumber}</div>
       </div>
       <div className="text-right text-xs leading-5">
         <div>
@@ -335,21 +362,90 @@ const AddVehicleStock = () => {
   );
   const [isSaved, setIsSaved] = useState(false);
   const [branchOptions, setBranchOptions] = useState<any[]>([]);
+  const [vehicleOptions, setVehicleOptions] = useState<any[]>([]);
+  const [companyStateCode, setCompanyStateCode] = useState("");
+  const [branchStateCode, setBranchStateCode] = useState("");
+  const [branchOpeningBalance, setBranchOpeningBalance] = useState(0);
+  const [companyId, setCompanyId] = useState<number | null>(null);
+const [financialYearId, setFinancialYearId] = useState<number | null>(null);
+
+ const getCompany = async () => {
+  try {
+    const res = await apiHelper.get("/company");
+
+    const company = res?.data?.[0];
+
+    if (!company) return;
+
+    setCompanyId(company.id);
+
+    if (company.financialYears?.length > 0) {
+      setFinancialYearId(company.financialYears[0].id);
+    }
+
+    setCompanyStateCode(company.stateCode || "");
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+  useEffect(() => {
+    getCompany();
+  }, []);
+  const totalValue = selectedVehicles.reduce(
+    (sum, item) => sum + Number(item.purchasePriceNoGST || 0),
+    0,
+  );
+  const taxableValue = selectedVehicles.reduce(
+    (sum, item) => sum + Number(item.purchasePriceTaxable || 0),
+    0,
+  );
+  const totalGST = taxableValue - totalValue;
+  const isSameState =
+    (companyStateCode || "").trim().toUpperCase() ===
+    (branchStateCode || "").trim().toUpperCase();
+  const cgst = isSameState ? totalGST / 2 : 0;
+
+  const sgst = isSameState ? totalGST / 2 : 0;
+
+  const igst = isSameState ? 0 : totalGST;
+  const grandTotal = taxableValue;
+  const getInventory = async () => {
+    try {
+      const res = await apiHelper.get("/purchases/tractor-inventory");
+
+      const data = res.data || res || [];
+
+      const presentVehicles = data.filter(
+        (item: any) => item.status === "Present",
+      );
+
+      console.log("Present Vehicles =>", presentVehicles);
+
+      setVehicleOptions(presentVehicles);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+  useEffect(() => {
+    getInventory();
+  }, []);
   const getBranches = async () => {
     try {
       const res = await apiHelper.get("/branch");
+    const data = (res || []).map((item: any) => ({
+  label: item.branchName,
+  value: item.id,
+  managerId: item.manager?.id,
+  manager: item.manager?.accountName,
+  contact: item.mobileNo,
 
-      console.log("Response =>", res);
+  stateCode: item.stateCode,
 
-      const data = (res || []).map((item: any) => ({
-        label: item.branchName,
-        value: item.id,
-        manager: item.manager?.accountName,
-        contact: item.mobileNo,
-      }));
-
-      console.log("Dropdown =>", data);
-
+  openingBalance: item.manager?.openingBalance || 0,
+  closingBalance: item.manager?.closingBalance || 0,
+  drCr: item.manager?.drCr || "",
+}));
       setBranchOptions(data);
     } catch (err) {
       console.log(err);
@@ -401,19 +497,21 @@ const AddVehicleStock = () => {
   const watchedBranch = watch("branch");
 
   // Auto-generate stock transfer ID
-  useEffect(() => {
-    const generateStockId = () => {
-      const date = new Date();
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const day = String(date.getDate()).padStart(2, "0");
-      const random = Math.floor(Math.random() * 10000)
-        .toString()
-        .padStart(4, "0");
-      return `STK-${year}${month}${day}-${random}`;
-    };
-    setValue("stockTransferId", generateStockId());
-  }, [setValue]);
+ const getTransferNo = async () => {
+  try {
+    const res = await apiHelper.get(
+      "/vehicle-stock-transfer/generate-transfer-no"
+    );
+
+    setValue("stockTransferId", res.transferNo);
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+useEffect(() => {
+  getTransferNo();
+}, []);
 
   // Auto-fill manager name and contact based on branch
   useEffect(() => {
@@ -434,23 +532,40 @@ const AddVehicleStock = () => {
   }, [watchedBranch, setValue]);
 
   // Auto-fill vehicle details based on chassis number (only when checkbox is unchecked and not saved)
-
   useEffect(() => {
-    if (watchedChassisNo && !isActionChecked && !isSaved) {
-      const vehicleData = mockData[watchedChassisNo];
-      if (vehicleData) {
-        // Store the pending vehicle data
-        setPendingVehicle(vehicleData);
+    if (!watchedChassisNo || isActionChecked || isSaved) return;
 
-        // Auto-fill form fields - INCLUDING chassisNo
-        Object.keys(vehicleData).forEach((key) => {
-          if (key !== "id") {
-            setValue(key as keyof FormValues, vehicleData[key]);
-          }
-        });
-      }
-    }
-  }, [watchedChassisNo, setValue, isActionChecked, isSaved]);
+    const vehicleData = vehicleOptions.find(
+      (item: any) => item.chassisNo === watchedChassisNo,
+    );
+
+    console.log("Selected Vehicle =>", vehicleData);
+
+    if (!vehicleData) return;
+
+    setPendingVehicle(vehicleData);
+
+    setValue("vehicleSrNo", vehicleData.serialNo || "");
+    setValue("model", vehicleData.model || "");
+    setValue("variant", vehicleData.variant || "");
+    setValue("colour", vehicleData.colour || "");
+    setValue("itemName", vehicleData.itemName || "");
+    setValue("chassisNo", vehicleData.chassisNo || "");
+    setValue("itemCode", vehicleData.itemCode || "");
+    setValue("engineNo", vehicleData.engineNo || "");
+    setValue("mfgDate", formatDate(vehicleData.mfgDate));
+    setValue("keyNo", vehicleData.keyNo || vehicleData.keyNumber || "");
+    setValue("batteryNo", vehicleData.batteryNo || "");
+    setValue("batteryMake", vehicleData.batteryMake || "");
+    setValue("f1TyresNo", vehicleData.first1Tyer || "");
+    setValue("f2TyresNo", vehicleData.first2Tyer || "");
+    setValue("s1TyresNo", vehicleData.second1Tyer || "");
+    setValue("s2TyresNo", vehicleData.second2Tyer || "");
+    setValue("location", vehicleData.location || "");
+    setValue("grnNumber", vehicleData.grnNo || "");
+    setValue("grnDate", formatDate(vehicleData.grnDate));
+    setValue("grnRecordDate", formatDate(vehicleData.grnRecordDate));
+  }, [watchedChassisNo, vehicleOptions]);
 
   // Set edit data
   useEffect(() => {
@@ -495,7 +610,67 @@ const AddVehicleStock = () => {
       setSelectedIds([]);
     }
   };
+const handleSave = async () => {
+  try {
+    if (!watch("branch")) {
+      alert("Please select branch");
+      return;
+    }
 
+    if (selectedVehicles.length === 0) {
+      alert("Please add at least one vehicle");
+      return;
+    }
+
+    const payload = {
+      companyId: Number(companyId),
+  financialYearId: Number(financialYearId),
+
+      transferDate: watch("date"),
+      transferNo: watch("stockTransferId"),
+
+      branchId: Number(watch("branch")),
+
+      managerId: Number(
+        branchOptions.find(
+          (x: any) => x.value === Number(watch("branch"))
+        )?.managerId
+      ),
+
+      branchOpeningBalance,
+
+      totalValue,
+      taxableValue,
+
+      freight: 0,
+      insurance: 0,
+      otherCharge: 0,
+
+      cgst,
+      sgst,
+      igst,
+
+      grandTotal,
+
+      vehicles: selectedVehicles,
+    };
+
+    console.log("Payload =>", payload);
+
+    const res = await apiHelper.post(
+      "/vehicle-stock-transfer",
+      payload
+    );
+
+    console.log(res);
+
+    alert("Vehicle Stock Transfer Created Successfully");
+
+    navigate("/stocktransfer/vehiclestock");
+  } catch (error) {
+    console.log(error);
+  }
+};
   const isAllSelected =
     selectedVehicles.length > 0 &&
     selectedVehicles.every((item) => selectedIds.includes(item.id));
@@ -559,6 +734,17 @@ const AddVehicleStock = () => {
       setIsActionChecked(false);
     }
   };
+  const formatDate = (date: string) => {
+    if (!date) return "";
+
+    const d = new Date(date);
+
+    const day = String(d.getDate()).padStart(2, "0");
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const year = d.getFullYear();
+
+    return `${day}-${month}-${year}`;
+  };
   return (
     <div className="min-h-screen bg-white p-6 transition-colors duration-200 dark:bg-gray-900">
       {/* Header with Back Button */}
@@ -597,22 +783,35 @@ const AddVehicleStock = () => {
             className="cursor-not-allowed bg-gray-50 dark:bg-gray-800"
           />
         </div>
-        <div>
-          <Combobox
-            label="Select Branch *"
-            placeholder="Select Branch"
-            data={branchOptions}
-            value={
-              branchOptions.find((item) => item.value === watch("branch")) ||
-              null
-            }
-            onChange={(val: any) => {
-              setValue("branch", val?.value || "");
-              setValue("branchManagerName", val?.manager || "");
-              setValue("contactNo", val?.contact || "");
-            }}
-          />
-        </div>
+         <div>
+    <div className="mb-1 flex items-center justify-between">
+      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+        Select Branch *
+      </label>
+
+      <span className="text-sm font-semibold text-green-600">
+        Balance : ₹{Number(branchOpeningBalance).toLocaleString("en-IN")}
+      </span>
+    </div>
+
+    <Combobox
+      placeholder="Select Branch"
+      data={branchOptions}
+      value={
+        branchOptions.find(
+          (item) => item.value === watch("branch")
+        ) || null
+      }
+     onChange={(val: any) => {
+  setValue("branch", val?.value || "");
+  setValue("branchManagerName", val?.manager || "");
+  setValue("contactNo", val?.contact || "");
+
+  setBranchStateCode(val?.stateCode || "");
+  setBranchOpeningBalance(Number(val?.closingBalance || 0));
+}}
+    />
+  </div>
       </div>
 
       {/* Row 2: Branch Manager Name, Contact No - 2 columns */}
@@ -983,6 +1182,7 @@ const AddVehicleStock = () => {
                     <Th className="py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
                       GRN Record Date
                     </Th>
+                    <Th className="py-3.5 whitespace-nowrap">Purchase Price</Th>
                   </Tr>
                 </THead>
                 <TBody className="dark:divide-dark-700 divide-y divide-gray-200">
@@ -1013,7 +1213,7 @@ const AddVehicleStock = () => {
                           {item.chassisNo}
                         </Td>
                         <Td className="py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">
-                          {item.vehicleSrNo}
+                          {item.serialNo}
                         </Td>
                         <Td className="py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">
                           {item.model}
@@ -1040,10 +1240,10 @@ const AddVehicleStock = () => {
                           {item.engineNo}
                         </Td>
                         <Td className="py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">
-                          {item.mfgDate}
+                          {formatDate(item.mfgDate)}
                         </Td>
                         <Td className="py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">
-                          {item.keyNo}
+                          {item.keyNumber}
                         </Td>
                         <Td className="py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">
                           {item.batteryNo}
@@ -1052,28 +1252,34 @@ const AddVehicleStock = () => {
                           {item.batteryMake}
                         </Td>
                         <Td className="py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">
-                          {item.f1TyresNo}
+                          {item.first1Tyer}
                         </Td>
                         <Td className="py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">
-                          {item.f2TyresNo}
+                          {item.first2Tyer}
                         </Td>
                         <Td className="py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">
-                          {item.s1TyresNo}
+                          {item.second1Tyer}
                         </Td>
                         <Td className="py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">
-                          {item.s2TyresNo}
+                          {item.second2Tyer}
                         </Td>
                         <Td className="py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">
                           {item.location}
                         </Td>
                         <Td className="py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">
-                          {item.grnNumber}
+                          {item.grnNo}
                         </Td>
                         <Td className="py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">
-                          {item.grnDate}
+                          {formatDate(item.grnDate)}
                         </Td>
                         <Td className="py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">
-                          {item.grnRecordDate}
+                          {formatDate(item.grnRecordDate)}
+                        </Td>
+                        <Td className="py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">
+                          ₹
+                          {Number(item.purchasePriceNoGST || 0).toLocaleString(
+                            "en-IN",
+                          )}
                         </Td>
                       </Tr>
                     );
@@ -1084,6 +1290,85 @@ const AddVehicleStock = () => {
           </div>
         </div>
       )}
+      <div className="mt-10 flex justify-end">
+        <div className="w-full max-w-130">
+          <div className="rounded-lg border border-gray-200 bg-linear-to-br from-blue-50 to-white p-4 shadow-sm dark:border-gray-700 dark:from-gray-800 dark:to-gray-800/50">
+            <h3 className="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
+              Bill Summary
+            </h3>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between border-b border-gray-200/60 pb-2 dark:border-gray-700/60">
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  Total Value
+                </span>
+                <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                  ₹{totalValue.toLocaleString("en-IN")}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between border-b border-gray-200/60 pb-2 dark:border-gray-700/60">
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  New Taxable Value
+                </span>
+                <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                  ₹{taxableValue.toLocaleString("en-IN")}
+                </span>
+              </div>
+
+              {isSameState && (
+                <>
+                  <div className="flex items-center justify-between border-b pb-2">
+                    <span>CGST</span>
+                    <span>₹{cgst.toLocaleString("en-IN")}</span>
+                  </div>
+
+                  <div className="flex items-center justify-between border-b pb-2">
+                    <span>SGST</span>
+                    <span>₹{sgst.toLocaleString("en-IN")}</span>
+                  </div>
+                </>
+              )}
+
+              {!isSameState && (
+                <div className="flex items-center justify-between border-b border-gray-200/60 pb-2 dark:border-gray-700/60">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    IGST
+                  </span>
+                  <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                    ₹{igst.toLocaleString("en-IN")}
+                  </span>
+                </div>
+              )}
+
+              <div className="flex items-center justify-between rounded-lg bg-blue-600/10 p-2 dark:bg-blue-500/20">
+                <span className="text-sm font-bold text-gray-900 dark:text-white">
+                  Grand Total
+                </span>
+                <span className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                  ₹{grandTotal.toLocaleString("en-IN")}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="mt-6 flex justify-end gap-3">
+  <button
+    type="button"
+    onClick={handleBack}
+    className="rounded-lg border border-gray-300 px-6 py-2 text-gray-700 hover:bg-gray-100"
+  >
+    Cancel
+  </button>
+
+  <button
+    type="button"
+    onClick={handleSave}
+    className="rounded-lg bg-blue-600 px-6 py-2 font-medium text-white hover:bg-blue-700"
+  >
+    Save
+  </button>
+</div>
     </div>
   );
 };
