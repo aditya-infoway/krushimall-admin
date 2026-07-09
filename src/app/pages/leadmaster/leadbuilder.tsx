@@ -44,8 +44,6 @@ import { toast } from "sonner";
 import { ConfirmModal } from "@/components/shared/ConfirmModal";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 
-
-
 type Lead = {
   id: number;
   customerName: string;
@@ -102,10 +100,11 @@ export default function LeadBuilder() {
   );
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-const [confirmState, setConfirmState] = useState<"pending" | "success" | "error">("pending");
-const [confirmLoading, setConfirmLoading] = useState(false);
-const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
-
+  const [confirmState, setConfirmState] = useState<
+    "pending" | "success" | "error"
+  >("pending");
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
 
   // Filter leads based on search
   const navigate = useNavigate();
@@ -142,31 +141,33 @@ const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
     fetchLeads();
   }, []);
 
-
   const handleDelete = (id: number) => {
-  setDeleteTargetId(id);
-  setConfirmState("pending");
-  setShowConfirmModal(true);
-};
+    setDeleteTargetId(id);
+    setConfirmState("pending");
+    setShowConfirmModal(true);
+  };
 
-const performDelete = async () => {
-  setConfirmLoading(true);
-  try {
-    if (deleteTargetId === null) return;
-    await apiHelper.delete(`/leads/${deleteTargetId}`);
-    toast.success("Lead deleted successfully!");
-    await fetchLeads();
-    setDeleteTargetId(null);
-    setConfirmState("success");
-    setTimeout(() => setShowConfirmModal(false), 1500);
-  } catch (error: any) {
-    console.error("Delete failed:", error);
-    setConfirmState("error");
-    toast.error(error.response?.data?.message || "Failed to delete lead. Please try again.");
-  } finally {
-    setConfirmLoading(false);
-  }
-};
+  const performDelete = async () => {
+    setConfirmLoading(true);
+    try {
+      if (deleteTargetId === null) return;
+      await apiHelper.delete(`/leads/${deleteTargetId}`);
+      toast.success("Lead deleted successfully!");
+      await fetchLeads();
+      setDeleteTargetId(null);
+      setConfirmState("success");
+      setTimeout(() => setShowConfirmModal(false), 1500);
+    } catch (error: any) {
+      console.error("Delete failed:", error);
+      setConfirmState("error");
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to delete lead. Please try again.",
+      );
+    } finally {
+      setConfirmLoading(false);
+    }
+  };
 
   const handleEdit = (id: number) => {
     console.log(`Editing lead ${id}...`);
@@ -207,6 +208,9 @@ const performDelete = async () => {
   const handleOrderBill = (id: number) => {
     window.open(`${getBaseUrl()}/api/leads/${id}/Quotation`, "_blank");
   };
+  const handleEditQuotation = (id: number) => {
+  navigate(`/leadmaster/quotation/edit/${id}`);
+};
   return (
     <div className="relative min-h-screen space-y-6 p-4 pb-28 text-gray-900 md:p-6 dark:text-gray-100">
       {/* Page Header */}
@@ -355,12 +359,22 @@ const performDelete = async () => {
                         Payment
                       </button>
                       {/* Send Quotation: Yellow/Orange border */}
-                      <button
-                        onClick={() => handleOrderBill(lead.id)}
-                        className="w-full cursor-pointer rounded-full border border-yellow-500 py-0.5 text-[12px] text-yellow-600"
-                      >
-                        Send Quotation
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleOrderBill(lead.id)}
+                          className="flex-1 cursor-pointer rounded-full border border-yellow-500 py-1 text-[12px] text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-900/20"
+                        >
+                          Send Quotation
+                        </button>
+
+                        <button
+                          onClick={() => handleEditQuotation(lead.id)}
+                          className="flex h-8 w-8 items-center justify-center rounded-full border border-blue-500 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                          title="Edit Quotation"
+                        >
+                          <PencilSquareIcon className="h-4 w-4" />
+                        </button>
+                      </div>
                       {/* Test Drive: Red border */}
                       <button
                         onClick={() => handleTestDrive(lead.id)}
@@ -655,37 +669,37 @@ const performDelete = async () => {
         }}
       />
 
-
       {/* Confirmation Modal */}
-<ConfirmModal
-  show={showConfirmModal}
-  onClose={() => {
-    setShowConfirmModal(false);
-    setDeleteTargetId(null);
-    setConfirmState("pending");
-  }}
-  onOk={performDelete}
-  confirmLoading={confirmLoading}
-  state={confirmState}
-  messages={{
-    pending: {
-      Icon: ExclamationTriangleIcon,
-      title: "Are you sure?",
-      description: "Are you sure you want to delete this lead? Once deleted, it cannot be restored.",
-      actionText: "Delete",
-    },
-    success: {
-      title: "Deleted Successfully",
-      description: "The lead has been deleted.",
-      actionText: "Done",
-    },
-    error: {
-      title: "Delete Failed",
-      description: "Failed to delete. Please try again.",
-      actionText: "Try Again",
-    },
-  }}
-/>
+      <ConfirmModal
+        show={showConfirmModal}
+        onClose={() => {
+          setShowConfirmModal(false);
+          setDeleteTargetId(null);
+          setConfirmState("pending");
+        }}
+        onOk={performDelete}
+        confirmLoading={confirmLoading}
+        state={confirmState}
+        messages={{
+          pending: {
+            Icon: ExclamationTriangleIcon,
+            title: "Are you sure?",
+            description:
+              "Are you sure you want to delete this lead? Once deleted, it cannot be restored.",
+            actionText: "Delete",
+          },
+          success: {
+            title: "Deleted Successfully",
+            description: "The lead has been deleted.",
+            actionText: "Done",
+          },
+          error: {
+            title: "Delete Failed",
+            description: "Failed to delete. Please try again.",
+            actionText: "Try Again",
+          },
+        }}
+      />
     </div>
   );
 }

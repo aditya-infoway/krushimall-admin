@@ -186,8 +186,17 @@ const protectedRoutes: RouteObject = {
                       .default,
                   }),
                 },
+                
               ],
             },
+             {
+     path: "quotation/edit/:id",
+      lazy: async () => ({
+        Component: (
+          await import("@/app/pages/leadmaster/quotationEdit")
+        ).default,
+      }),
+    },
           ],
         },
         {
@@ -412,6 +421,14 @@ const protectedRoutes: RouteObject = {
                     ).default,
                   }),
                 },
+                  {
+          path: "view/:id",
+          lazy: async () => ({
+            Component: (
+            await import("@/app/pages/stocktransfer/ViewVehicleStock")
+            ).default,
+          }),
+        },
               ],
             },
           ],
