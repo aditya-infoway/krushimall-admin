@@ -27,6 +27,9 @@ import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/Table";
 import { Button, Checkbox, Input } from "@/components/ui";
 import apiHelper from "@/utils/apiHelper";
 import { Listbox } from "@/components/shared/form/StyledListbox";
+import { toast } from "sonner";
+import { ConfirmModal } from "@/components/shared/ConfirmModal";
+import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 
 type EnquiryStatus = {
   id: number;
@@ -74,6 +77,12 @@ const [enquiryStatuses, setEnquiryStatuses] =
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [selectedStatusFilter, setSelectedStatusFilter] = useState("All");
+
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+const [confirmState, setConfirmState] = useState<"pending" | "success" | "error">("pending");
+const [confirmLoading, setConfirmLoading] = useState(false);
+const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+const [isBulkDelete, setIsBulkDelete] = useState(false);
 
   const {
     register,
@@ -131,36 +140,44 @@ useEffect(() => {
     setShowDrawer(true);
   };
 
- const handleDelete = async (id: number) => {
-  try {
-    await apiHelper.delete(
-      `/enquiry-statuses/${id}`
-    );
-
-    getEnquiryStatuses();
-  } catch (error) {
-    console.log(error);
-  }
+const handleDelete = (id: number) => {
+  setDeleteTargetId(id);
+  setIsBulkDelete(false);
+  setConfirmState("pending");
+  setShowConfirmModal(true);
 };
 
- const handleBulkDelete = async () => {
-  try {
-    if (
-      window.confirm(
-        "Are you sure you want to delete selected enquiry types?"
-      )
-    ) {
-      await Promise.all(
-        selectedIds.map((id) =>
-          apiHelper.delete(`/enquiry-statuses/${id}`)
-        )
-      );
+const handleBulkDelete = () => {
+  setIsBulkDelete(true);
+  setConfirmState("pending");
+  setShowConfirmModal(true);
+};
 
+const performDelete = async () => {
+  setConfirmLoading(true);
+  try {
+    if (isBulkDelete) {
+      await Promise.all(selectedIds.map((id) => apiHelper.delete(`/enquiry-statuses/${id}`)));
+      toast.success(`${selectedIds.length} enquiry statuses deleted successfully!`);
       setSelectedIds([]);
-      getEnquiryStatuses();
+      await getEnquiryStatuses();
+      setCurrentPage(1);
+      setConfirmState("success");
+    } else {
+      if (deleteTargetId === null) return;
+      await apiHelper.delete(`/enquiry-statuses/${deleteTargetId}`);
+      toast.success("Enquiry status deleted successfully!");
+      await getEnquiryStatuses();
+      setDeleteTargetId(null);
+      setConfirmState("success");
     }
-  } catch (error) {
-    console.log(error);
+    setTimeout(() => setShowConfirmModal(false), 1500);
+  } catch (error: any) {
+    console.error("Delete failed:", error);
+    setConfirmState("error");
+    toast.error(error.response?.data?.message || "Failed to delete. Please try again.");
+  } finally {
+    setConfirmLoading(false);
   }
 };
 
@@ -179,33 +196,26 @@ useEffect(() => {
   }
 };
 
- const onFormSubmit = async (
-  data: FormValues
-) => {
+const onFormSubmit = async (data: FormValues) => {
   try {
     if (editId) {
-      await apiHelper.put(
-        `/enquiry-statuses/${editId}`,
-        data
-      );
+      await apiHelper.put(`/enquiry-statuses/${editId}`, data);
+      toast.success("Enquiry status updated successfully!");
     } else {
-      await apiHelper.post(
-        "/enquiry-statuses",
-        data
-      );
+      await apiHelper.post("/enquiry-statuses", data);
+      toast.success("Enquiry status created successfully!");
     }
 
-    getEnquiryStatuses();
-
+    await getEnquiryStatuses();
     setShowDrawer(false);
     setEditId(null);
-
     reset({
       enquiryStatus: "",
       status: "ACTIVE",
     });
-  } catch (error) {
+  } catch (error: any) {
     console.log(error);
+    toast.error(error.response?.data?.message || "Failed to save enquiry status. Please try again.");
   }
 };
 
@@ -641,7 +651,7 @@ useEffect(() => {
               className="flex items-center gap-1.5 px-3 py-1.5 shadow-sm"
             >
               <TrashIcon className="size-4" />
-              <span className="text-xs font-semibold">Delete Selected</span>
+              <span className="text-xs font-semibold">Delete</span>
             </Button>
           </div>
         </div>
@@ -702,7 +712,12 @@ useEffect(() => {
                 <div className="grow space-y-5 overflow-y-auto p-5">
                   <div>
                     <Input
-                      label="Enquiry Status *"
+                     label={
+      <span>
+       Enquiry Status <span className="text-red-500">*</span>
+      </span>
+    }
+                     
                       placeholder="Enter enquiry status"
                       {...register(
                         "enquiryStatus",
@@ -755,6 +770,41 @@ useEffect(() => {
           </TransitionChild>
         </Dialog>
       </Transition>
+
+      {/* Confirmation Modal */}
+<ConfirmModal
+  show={showConfirmModal}
+  onClose={() => {
+    setShowConfirmModal(false);
+    setDeleteTargetId(null);
+    setConfirmState("pending");
+  }}
+  onOk={performDelete}
+  confirmLoading={confirmLoading}
+  state={confirmState}
+  messages={{
+    pending: {
+      Icon: ExclamationTriangleIcon,
+      title: isBulkDelete ? "Delete Selected Enquiry Statuses?" : "Are you sure?",
+      description: isBulkDelete 
+        ? `Are you sure you want to delete ${selectedIds.length} selected enquiry statuses? This action cannot be undone.`
+        : "Are you sure you want to delete this enquiry status? Once deleted, it cannot be restored.",
+      actionText: isBulkDelete ? "Delete All" : "Delete",
+    },
+    success: {
+      title: "Deleted Successfully",
+      description: isBulkDelete 
+        ? `${selectedIds.length} enquiry statuses have been deleted.`
+        : "The enquiry status has been deleted.",
+      actionText: "Done",
+    },
+    error: {
+      title: "Delete Failed",
+      description: "Failed to delete. Please try again.",
+      actionText: "Try Again",
+    },
+  }}
+/>
     </div>
   );
 };

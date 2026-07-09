@@ -54,6 +54,9 @@ import { DatePicker } from "@/components/shared/form/Datepicker";
 // import { Combobox } from "@/components/shared/form/StyledCombobox";
 import { Input, Radio, Textarea } from "@/components/ui";
 import apiHelper from "@/utils/apiHelper";
+import { toast } from "sonner";
+
+
 type EntryType = "Manual" | "Lead" | "Job Card";
 import { Combobox } from "@/components/shared/form/Combobox";
 import { RiFileExcel2Fill, RiFilePdfFill } from "react-icons/ri";
@@ -428,33 +431,32 @@ const handleSubmit = async () => {
   try {
     const payload = {
       companyId,
-        financialYearId,
+      financialYearId,
       voucherNo: form.voucherNo,
       date: form.date,
       type: form.type,
       cashAccountId: form.cashAccount.value,
       oppAccountId: form.oppAccount.value,
-      leadId:
-        form.type === "Lead"
-          ? Number(form.leadNo)
-          : null,
+      leadId: form.type === "Lead" ? Number(form.leadNo) : null,
       amount: Number(form.amount),
       narration: form.narration,
     };
 
     if (editId) {
       await apiHelper.put(`/cash-receipt/${editId}`, payload);
+      toast.success("Cash receipt updated successfully!");
     } else {
       await apiHelper.post("/cash-receipt", payload);
+      toast.success("Cash receipt added successfully!");
     }
 
     setShowDrawer(false);
-    getCashReceipts();
-  } catch (err) {
-    console.log(err);
+    await getCashReceipts();
+  } catch (error: any) {
+    console.log(error);
+    toast.error(error.response?.data?.message || "Failed to save cash receipt. Please try again.");
   }
 };
-
   const isAllPageSelected =
     currentItems.length > 0 &&
     currentItems.every((item) => selectedIds.includes(item.id));

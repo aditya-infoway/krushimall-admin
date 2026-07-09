@@ -31,6 +31,7 @@ import { Button, Textarea } from "@/components/ui";
 import { DatePicker } from "@/components/shared/form/Datepicker";
 import { Timepicker } from "@/components/shared/form/Timepicker";
 import { Listbox } from "@/components/shared/form/StyledListbox";
+import { toast } from "sonner";
 const columns = [
   {
     title: "New",
@@ -194,6 +195,7 @@ export default function Followup() {
       setNextDate(new Date(lead.followUpDate).toISOString().split("T")[0]);
     }
   }, [lead]);
+
   const handleSaveFollowup = async () => {
     if (!validateForm()) {
       console.log("VALIDATION FAILED");
@@ -216,18 +218,19 @@ export default function Followup() {
 
       console.log("Saved:", res);
 
-      // Close Modal
+      toast.success("Follow-up added successfully!");
+
       setOpenFollowupModal(false);
       await fetchFollowups();
-      // Clear Form
       setCallTime("");
       setCallResponse("");
       setDiscussion("");
-
-      // Optional: refresh followup list
-      // fetchFollowups();
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      toast.error(
+        err.response?.data?.message ||
+          "Failed to save follow-up. Please try again.",
+      );
     }
   };
   const openFollowupDrawer = (item: any) => {

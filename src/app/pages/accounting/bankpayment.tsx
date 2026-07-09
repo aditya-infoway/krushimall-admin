@@ -29,6 +29,8 @@ import { DatePicker } from "@/components/shared/form/Datepicker";
 import { Combobox } from "@/components/shared/form/Combobox";
 import { Input, Radio, Textarea } from "@/components/ui";
 import apiHelper from "@/utils/apiHelper";
+import { toast } from "sonner";
+
 type EntryType = "Manual" | "Purchase" | "Lead Cancel";
 type PaymentMode = "NEFT" | "RTGS" | "IMPS" | "Cheque" | "UPI";
 import { RiFileExcel2Fill, RiFilePdfFill } from "react-icons/ri";
@@ -363,7 +365,7 @@ export default function BankPayment() {
           (a: any) => Number(a.value) === Number(item.oppAccount),
         ) || null,
       voucherNo: item.voucherNo,
-      date: item.date,
+      date: item.date ? [new Date(item.date)] : [],
 
       amount: String(item.amount),
       paymentMode:
@@ -392,45 +394,41 @@ export default function BankPayment() {
   };
 
   const handleSubmit = async () => {
-    if (!validateForm()) return;
+  if (!validateForm()) return;
 
-    try {
-      const payload = {
-        companyId,
-        financialYearId,
+  try {
+    const payload = {
+      companyId,
+      financialYearId,
+      date: form.date,
+      bankAccountId: form.bankAccount.value,
+      oppAccountId: form.oppAccount.value,
+      amount: Number(form.amount),
+      paymentMode: form.paymentMode?.id,
+      chequeNo: form.chequeNo,
+      chequeDate: form.chequeDate,
+      clearDate: form.chequeClearDate,
+      narration: form.narration,
+      purchaseId: form.type === "Purchase" ? purchaseBill?.value : null,
+      leadId: null,
+    };
 
-        date: form.date,
-        bankAccountId: form.bankAccount.value,
-        oppAccountId: form.oppAccount.value,
-        amount: Number(form.amount),
-
-        paymentMode: form.paymentMode?.id,
-        chequeNo: form.chequeNo,
-        chequeDate: form.chequeDate,
-        clearDate: form.chequeClearDate,
-
-        narration: form.narration,
-
-        purchaseId: form.type === "Purchase" ? purchaseBill?.value : null,
-
-        leadId: null,
-      };
-
-      if (editId) {
-        await apiHelper.put(`/bank-payment/${editId}`, payload);
-      } else {
-        await apiHelper.post("/bank-payment", payload);
-      }
-
-      await getBankPayments();
-      await getVoucherNo();
-
-      setShowDrawer(false);
-    } catch (err) {
-      console.log(err);
+    if (editId) {
+      await apiHelper.put(`/bank-payment/${editId}`, payload);
+      toast.success("Bank payment updated successfully!");
+    } else {
+      await apiHelper.post("/bank-payment", payload);
+      toast.success("Bank payment added successfully!");
     }
-  };
 
+    await getBankPayments();
+    await getVoucherNo();
+    setShowDrawer(false);
+  } catch (error: any) {
+    console.log(error);
+    toast.error(error.response?.data?.message || "Failed to save bank payment. Please try again.");
+  }
+};
   const isAllPageSelected =
     currentItems.length > 0 &&
     currentItems.every((item) => selectedIds.includes(item.id));
@@ -543,7 +541,7 @@ const downloadExcel = async () => {
           </button>
 
           <button
-            type="button"
+            type="button" 
             className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
           >
             <RiFilePdfFill className="text-lg text-red-500" />
@@ -552,7 +550,7 @@ const downloadExcel = async () => {
           <button
             type="button"
             onClick={handleAdd}
-            className="bg-primary-600 hover:bg-primary-700 inline-flex items-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-medium text-white transition-colors"
+            className="bg-primary-600 hover:bg-primary-700 cursor-pointer inline-flex items-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-medium text-white transition-colors"
           >
             <Plus className="size-4.5" />
             Add Bank Payment

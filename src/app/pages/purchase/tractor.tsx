@@ -18,6 +18,9 @@ import {
 import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/Table";
 import { Button, Checkbox, Input } from "@/components/ui";
 import { Listbox } from "@/components/shared/form/StyledListbox";
+import { toast } from "sonner";
+import { ConfirmModal } from "@/components/shared/ConfirmModal";
+import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 
 // ---------- Types ----------
 export interface PurchaseRegisterRow {
@@ -27,7 +30,7 @@ export interface PurchaseRegisterRow {
   supplierName: string;
   billNo: string;
   purchaseBillNo: string;
-    location: string; 
+  location: string;
   purchaseLocation: string;
   totalQuantity: number;
   totalAmount: number;
@@ -115,6 +118,14 @@ const TractorPurchaseRegister: React.FC<TractorPurchaseRegisterProps> = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [rows, setRows] = useState<PurchaseRegisterRow[]>([]);
   const navigate = useNavigate();
+
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [confirmState, setConfirmState] = useState<
+    "pending" | "success" | "error"
+  >("pending");
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [isBulkDelete, setIsBulkDelete] = useState(false);
 
   // Filter rows
   const filteredRows = useMemo(() => {
@@ -228,9 +239,49 @@ const TractorPurchaseRegister: React.FC<TractorPurchaseRegisterProps> = ({
   };
 
   const handleDeleteRow = (row: PurchaseRegisterRow) => {
-    if (window.confirm(`Are you sure you want to delete this purchase?`)) {
-      if (onDeleteRow) onDeleteRow(row);
+    setDeleteTargetId(row.id);
+    setIsBulkDelete(false);
+    setConfirmState("pending");
+    setShowConfirmModal(true);
+  };
+
+  const performDelete = async () => {
+    setConfirmLoading(true);
+    try {
+      if (isBulkDelete) {
+        await Promise.all(
+          selectedIds.map((id) => apiHelper.delete(`/purchases/${id}`)),
+        );
+        toast.success(`${selectedIds.length} purchases deleted successfully!`);
+        setSelectedIds([]);
+        await getPurchases();
+        setCurrentPage(1);
+        setConfirmState("success");
+      } else {
+        if (deleteTargetId === null) return;
+        await apiHelper.delete(`/purchases/${deleteTargetId}`);
+        toast.success("Purchase deleted successfully!");
+        await getPurchases();
+        setDeleteTargetId(null);
+        setConfirmState("success");
+      }
+      setTimeout(() => setShowConfirmModal(false), 1500);
+    } catch (error: any) {
+      console.error("Delete failed:", error);
+      setConfirmState("error");
+      toast.error(
+        error.response?.data?.message || "Failed to delete. Please try again.",
+      );
+    } finally {
+      setConfirmLoading(false);
     }
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedIds.length === 0) return;
+    setIsBulkDelete(true);
+    setConfirmState("pending");
+    setShowConfirmModal(true);
   };
 
   const handleInward = (row: PurchaseRegisterRow) => {
@@ -424,9 +475,9 @@ const TractorPurchaseRegister: React.FC<TractorPurchaseRegisterProps> = ({
                       </div>
                     </Td>
                     <Td className="py-4 whitespace-nowrap">
-                       {item.purchaseDate
-    ? item.purchaseDate.split("-").reverse().join("-")
-    : ""}
+                      {item.purchaseDate
+                        ? item.purchaseDate.split("-").reverse().join("-")
+                        : ""}
                     </Td>
                     <Td className="py-4">{item.terms}</Td>
                     <Td className="py-4 font-medium">{item.supplierName}</Td>
@@ -557,6 +608,43 @@ const TractorPurchaseRegister: React.FC<TractorPurchaseRegisterProps> = ({
           </div>
         )}
       </div>
+
+      {/* Confirmation Modal */}
+      <ConfirmModal
+        show={showConfirmModal}
+        onClose={() => {
+          setShowConfirmModal(false);
+          setDeleteTargetId(null);
+          setConfirmState("pending");
+        }}
+        onOk={performDelete}
+        confirmLoading={confirmLoading}
+        state={confirmState}
+        messages={{
+          pending: {
+            Icon: ExclamationTriangleIcon,
+            title: isBulkDelete
+              ? "Delete Selected Purchases?"
+              : "Are you sure?",
+            description: isBulkDelete
+              ? `Are you sure you want to delete ${selectedIds.length} selected purchases? This action cannot be undone.`
+              : "Are you sure you want to delete this purchase? Once deleted, it cannot be restored.",
+            actionText: isBulkDelete ? "Delete All" : "Delete",
+          },
+          success: {
+            title: "Deleted Successfully",
+            description: isBulkDelete
+              ? `${selectedIds.length} purchases have been deleted.`
+              : "The purchase has been deleted.",
+            actionText: "Done",
+          },
+          error: {
+            title: "Delete Failed",
+            description: "Failed to delete. Please try again.",
+            actionText: "Try Again",
+          },
+        }}
+      />
     </div>
   );
 };

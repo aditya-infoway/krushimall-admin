@@ -55,6 +55,9 @@ import { DatePicker } from "@/components/shared/form/Datepicker";
 import { Combobox } from "@/components/shared/form/Combobox";
 import { Input, Radio, Textarea } from "@/components/ui";
 import apiHelper from "@/utils/apiHelper";
+import { toast } from "sonner";
+
+
 type EntryType = "Manual" | "Purchase" | "Lead Cancel";
 import { RiFileExcel2Fill, RiFilePdfFill } from "react-icons/ri";
 interface CashPayment {
@@ -347,7 +350,7 @@ export default function CashPayment() {
       cashAccount:
         CASH_ACCOUNTS.find((a) => a.value === item.cashAccount) || null,
       voucherNo: item.voucherNo,
-      date: item.date,
+      date: item.date ? [new Date(item.date)] : [],
       oppAccount: OPP_ACCOUNTS.find((a) => a.value === item.oppAccount) || null,
       amount: String(item.amount),
       narration: item.narration,
@@ -384,35 +387,39 @@ export default function CashPayment() {
     setSelectedIds([]);
   };
 
-  const handleSubmit = async () => {
-    if (!validateForm()) return;
+ const handleSubmit = async () => {
+  if (!validateForm()) return;
 
-    try {
-      const payload = {
-        companyId,
-        financialYearId, // or from auth context
-        date: form.date || new Date(),
-        cashAccountId: form.cashAccount.value,
-        oppAccountId: form.oppAccount.value,
-        purchaseId:
-          form.type === "Purchase" && purchaseBill ? purchaseBill.value : null,
-        leadId:
-          form.type === "Lead Cancel" && form.leadNo ? form.leadNo.id : null,
-        amount: Number(form.amount),
-        narration: form.narration,
-      };
-      console.log(payload);
+  try {
+    const payload = {
+      companyId,
+      financialYearId,
+      date: form.date || new Date(),
+      cashAccountId: form.cashAccount.value,
+      oppAccountId: form.oppAccount.value,
+      purchaseId: form.type === "Purchase" && purchaseBill ? purchaseBill.value : null,
+      leadId: form.type === "Lead Cancel" && form.leadNo ? form.leadNo.id : null,
+      amount: Number(form.amount),
+      narration: form.narration,
+    };
+    console.log(payload);
+    
+    if (editId !== null) {
+      await apiHelper.put(`/cash-payment/${editId}`, payload);
+      toast.success("Cash payment updated successfully!");
+    } else {
       await apiHelper.post("/cash-payment", payload);
-
-      setShowDrawer(false);
-
-      getCashPayments(); // refresh table
-      getVoucherNo(); // next voucher
-    } catch (err) {
-      console.log(err);
+      toast.success("Cash payment added successfully!");
     }
-  };
 
+    setShowDrawer(false);
+    await getCashPayments();
+    await getVoucherNo();
+  } catch (error: any) {
+    console.log(error);
+    toast.error(error.response?.data?.message || "Failed to save cash payment. Please try again.");
+  }
+};
   const isAllPageSelected =
     currentItems.length > 0 &&
     currentItems.every((item) => selectedIds.includes(item.id));

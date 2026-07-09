@@ -18,6 +18,7 @@ import {
   Send,
 } from "lucide-react";
 import { data } from "react-router";
+import { toast } from "sonner";
 // ----------------------------------------------------------------------
 
 export function PreviewSubmit({
@@ -101,34 +102,38 @@ export function PreviewSubmit({
       console.error(error);
     }
   };
-  const handleSubmit = async () => {
-    try {
-      setLoading(true);
 
-      const websiteVariantId = localStorage.getItem("websiteVariantId");
 
-      if (!websiteVariantId) {
-        alert("Website Variant ID not found");
-        return;
-      }
+ const handleSubmit = async () => {
+  try {
+    setLoading(true);
 
-      await apiHelper.put(`/website-variants/${websiteVariantId}/submit`, {
-        agreed,
-      });
+    const websiteVariantId = localStorage.getItem("websiteVariantId");
 
-      setFinished(true);
-
-      localStorage.removeItem("websiteVariantId");
-    } catch (error) {
-      console.error("Submit Error:", error);
-    } finally {
-      setLoading(false);
+    if (!websiteVariantId) {
+      toast.warning("Website Variant ID not found");
+      return;
     }
-  };
 
-  const handleSaveDraft = () => {
-    console.log("Saving draft...", tractorData);
-  };
+    await apiHelper.put(`/website-variants/${websiteVariantId}/submit`, {
+      agreed,
+    });
+
+    toast.success("Tractor submitted successfully for review!");
+    setFinished(true);
+    localStorage.removeItem("websiteVariantId");
+  } catch (error: any) {
+    console.error("Submit Error:", error);
+    toast.error(error.response?.data?.message || "Failed to submit. Please try again.");
+  } finally {
+    setLoading(false);
+  }
+};
+
+const handleSaveDraft = () => {
+  
+  toast.success("Draft saved successfully!");
+};
 
   return (
     <div className="mt-6">

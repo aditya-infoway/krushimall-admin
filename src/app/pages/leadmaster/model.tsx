@@ -13,6 +13,7 @@ import Select from "react-select";
 import { Controller, useForm } from "react-hook-form";
 import apiHelper from "@/utils/apiHelper";
 import { Combobox } from "@/components/shared/form/Combobox";
+import { toast } from "sonner";
 // ─── Types ──────────────────────────────────────────────────────────────────
 interface AccountForm {
   accountName: string;
@@ -1760,28 +1761,26 @@ export function LeadDetailsModal({
   const [customers, setCustomers] = useState<OptionType[]>([]);
 
   const [executives, setExecutives] = useState<OptionType[]>([]);
-const [companyId, setCompanyId] = useState<number | null>(null);
+  const [companyId, setCompanyId] = useState<number | null>(null);
   const [company, setCompany] = useState<any>(null);
-const [financialYearId, setFinancialYearId] = useState<number | null>(null);
-const getCompany = async () => {
-  try {
-    const res = await apiHelper.get("/company");
+  const [financialYearId, setFinancialYearId] = useState<number | null>(null);
+  const getCompany = async () => {
+    try {
+      const res = await apiHelper.get("/company");
 
-    const company = Array.isArray(res.data)
-      ? res.data[0]
-      : res.data;
+      const company = Array.isArray(res.data) ? res.data[0] : res.data;
 
-    setCompany(company);
+      setCompany(company);
 
-    setCompanyId(company.id);
+      setCompanyId(company.id);
 
-    if (company.financialYears?.length > 0) {
-      setFinancialYearId(company.financialYears[0].id);
+      if (company.financialYears?.length > 0) {
+        setFinancialYearId(company.financialYears[0].id);
+      }
+    } catch (err) {
+      console.log(err);
     }
-  } catch (err) {
-    console.log(err);
-  }
-};
+  };
   const fetchExecutives = async () => {
     try {
       const res = await apiHelper.get("/employees");
@@ -1808,7 +1807,7 @@ const getCompany = async () => {
 
   useEffect(() => {
     fetchExecutives();
-      getCompany();
+    getCompany();
   }, []);
   const [financeData, setFinanceData] = useState<FinanceType>({
     wantsFinance: false,
@@ -1895,9 +1894,7 @@ const getCompany = async () => {
 
     if (reviewSummaryValidateRef.current) {
       const isValid = reviewSummaryValidateRef.current();
-
       console.log("VALID:", isValid);
-
       if (!isValid) return;
     }
 
@@ -1906,64 +1903,53 @@ const getCompany = async () => {
     try {
       const payload = {
         companyId,
-  financialYearId,
+        financialYearId,
         modelId: selectedModel?.id,
         showroomVariantId: selectedShowroomVariant?.id,
         colourId: selectedColor?.id,
         customerId: selectedCustomer?.id,
         executiveId: selectedExecutive?.id,
-
         ...financeData,
         ...reviewData,
-
         customerExpectedPrice: financeData.customerExpectedPrice
           ? Number(financeData.customerExpectedPrice)
           : null,
-
         marketPrice: financeData.marketPrice
           ? Number(financeData.marketPrice)
           : null,
-
         chassisNo: financeData.chassisNo || null,
-
         companyShare: financeData.companyShare
           ? Number(financeData.companyShare)
           : null,
-
         dealerShares: financeData.dealerShares
           ? Number(financeData.dealerShares)
           : null,
-
         rcNo: financeData.rcNo || null,
-
         insurance: financeData.insurance ? Number(financeData.insurance) : null,
-
         vehicleNo: financeData.vehicleNo || null,
-
         expectedPurchaseDate: reviewData.expectedPurchaseDate?.[0] || null,
-
         expectedDeliveryDate: reviewData.expectedDeliveryDate?.[0] || null,
-
         bookingDate: reviewData.bookingDate?.[0] || null,
-
         followUpDate: reviewData.followUpDate?.[0] || null,
-
         dmsEnquiryDate: reviewData.dmsEnquiryDate?.[0] || null,
-
         chequeNo: reviewData.chequeNo,
-
         chequeDate: reviewData.chequeDate?.[0] || null,
-
         chequeClearDate: reviewData.chequeClearDate?.[0] || null,
       };
+
       console.log("PAYLOAD", payload);
 
       const res = await apiHelper.post("/leads", payload);
-
       console.log("SUCCESS", res.data);
+
+      toast.success("Lead created successfully!");
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error("API ERROR", error);
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to create lead. Please try again.",
+      );
     }
   };
 
@@ -1972,20 +1958,14 @@ const getCompany = async () => {
       const res = await apiHelper.post("/accounts", {
         accountName: formData.accountName,
         printName: formData.accountName,
-
         mobile: formData.mobile,
-
         country: formData.countryName,
         countryCode: formData.countryCode,
-
         state: formData.stateName,
         stateCode: formData.stateCode,
-
         district: formData.district,
         city: formData.city,
-
         address1: formData.address,
-
         panCard: formData.panCard,
         aadharNo: formData.aadharCard,
         group: "Customer",
@@ -1994,13 +1974,16 @@ const getCompany = async () => {
 
       console.log("Create Response:", res.data);
 
-      // Refresh customer list from API
-      await fetchCustomers();
+      toast.success("Account created successfully!");
 
-      // Close modal
+      await fetchCustomers();
       setIsCreateAccountOpen(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to create account. Please try again.",
+      );
     }
   };
 

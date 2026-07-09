@@ -419,6 +419,7 @@ const TractorInventory: React.FC<TractorInventoryProps> = ({
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Item Name
                 </Th>
+                
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Model
                 </Th>

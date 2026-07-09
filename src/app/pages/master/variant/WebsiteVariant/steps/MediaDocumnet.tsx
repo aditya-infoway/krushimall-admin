@@ -8,6 +8,8 @@ import { Button } from "@/components/ui";
 import { useKYCFormContext } from "../KYCFormContext";
 import { MediaDocumnetSchema, MediaDocumnetType } from "../schema";
 import { Upload, Trash2, FileText } from "lucide-react";
+import { toast } from "sonner";
+
 // ----------------------------------------------------------------------
 import apiHelper from "@/utils/apiHelper";
 // Image upload fields
@@ -116,38 +118,35 @@ export function MediaDocumnet({
   //   setValue(`${key}Link` as any, link);
   // };
 
- const onSubmit = async (
-  data: MediaDocumnetType
-) => {
+ const onSubmit = async (data: MediaDocumnetType) => {
   try {
     setLoading(true);
 
-    const websiteVariantId =
-      localStorage.getItem("websiteVariantId");
+    const websiteVariantId = localStorage.getItem("websiteVariantId");
 
-    if (!websiteVariantId) return;
+    if (!websiteVariantId) {
+      toast.warning("No website variant found. Please save basic information first.");
+      return;
+    }
 
     const formData = new FormData();
 
-    Object.entries(data).forEach(
-      ([key, value]) => {
-        if (value instanceof File) {
-          formData.append(key, value);
-        }
+    Object.entries(data).forEach(([key, value]) => {
+      if (value instanceof File) {
+        formData.append(key, value);
+      }
+    });
+
+    await apiHelper.put(
+      `/website-variants/${websiteVariantId}/save-step`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       }
     );
 
-  
-
-await apiHelper.put(
-  `/website-variants/${websiteVariantId}/save-step`,
-  formData,
-  {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  }
-);
     kycFormCtx.dispatch({
       type: "SET_FORM_DATA",
       payload: {
@@ -164,22 +163,24 @@ await apiHelper.put(
       },
     });
 
+    toast.success("Media and documents saved successfully!");
     setCurrentStep(6);
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
+    toast.error(error.response?.data?.message || "Failed to save media and documents. Please try again.");
   } finally {
     setLoading(false);
   }
 };
 
-  const handleSaveDraft = () => {
-    const formData = watch();
-    kycFormCtx.dispatch({
-      type: "SET_FORM_DATA",
-      payload: { MediaDocumnet: { ...formData } },
-    });
-    // Show toast notification here if needed
-  };
+const handleSaveDraft = () => {
+  const formData = watch();
+  kycFormCtx.dispatch({
+    type: "SET_FORM_DATA",
+    payload: { MediaDocumnet: { ...formData } },
+  });
+  toast.success("Draft saved successfully!");
+};
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">

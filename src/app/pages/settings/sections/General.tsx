@@ -43,6 +43,7 @@ export default function General() {
   const prefixForOptions = [
   { value: "CUSTOMER", label: "CUSTOMER" },
   { value: "CASH_RECEIPT", label: "CASH_RECEIPT" },
+  { value: "VEHICLE_STOCK_TRANSFER", label: "VEHICLE_STOCK_TRANSFER" },
   { value: "BANK_RECEIPT", label: "BANK_RECEIPT" },
    { value: "CONTRA", label: "CONTRA" },
   { value: "ACCESSORIES_PURCHASE", label: "ACCESSORIES_PURCHASE" },

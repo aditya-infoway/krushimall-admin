@@ -35,8 +35,6 @@ import { toast } from "sonner";
 import { ConfirmModal } from "@/components/shared/ConfirmModal";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 
-
-
 type Employee = {
   id: number;
   department: string;
@@ -123,12 +121,13 @@ const Employee = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-const [showConfirmModal, setShowConfirmModal] = useState(false);
-const [confirmState, setConfirmState] = useState<"pending" | "success" | "error">("pending");
-const [confirmLoading, setConfirmLoading] = useState(false);
-const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
-const [isBulkDelete, setIsBulkDelete] = useState(false);
-
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [confirmState, setConfirmState] = useState<
+    "pending" | "success" | "error"
+  >("pending");
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+  const [isBulkDelete, setIsBulkDelete] = useState(false);
 
   // Add this after your useForm declaration
   const {
@@ -272,45 +271,49 @@ const [isBulkDelete, setIsBulkDelete] = useState(false);
       console.log(error);
     }
   };
-const handleDelete = (id: number) => {
-  setDeleteTargetId(id);
-  setIsBulkDelete(false);
-  setConfirmState("pending");
-  setShowConfirmModal(true);
-};
+  const handleDelete = (id: number) => {
+    setDeleteTargetId(id);
+    setIsBulkDelete(false);
+    setConfirmState("pending");
+    setShowConfirmModal(true);
+  };
   const handleBulkDelete = () => {
-  setIsBulkDelete(true);
-  setConfirmState("pending");
-  setShowConfirmModal(true);
-};
+    setIsBulkDelete(true);
+    setConfirmState("pending");
+    setShowConfirmModal(true);
+  };
 
-const performDelete = async () => {
-  setConfirmLoading(true);
-  try {
-    if (isBulkDelete) {
-      await Promise.all(selectedIds.map((id) => apiHelper.delete(`/employees/${id}`)));
-      toast.success(`${selectedIds.length} employees deleted successfully!`);
-      setSelectedIds([]);
-      await getEmployees();
-      setCurrentPage(1);
-      setConfirmState("success");
-    } else {
-      if (deleteTargetId === null) return;
-      await apiHelper.delete(`/employees/${deleteTargetId}`);
-      toast.success("Employee deleted successfully!");
-      await getEmployees();
-      setDeleteTargetId(null);
-      setConfirmState("success");
+  const performDelete = async () => {
+    setConfirmLoading(true);
+    try {
+      if (isBulkDelete) {
+        await Promise.all(
+          selectedIds.map((id) => apiHelper.delete(`/employees/${id}`)),
+        );
+        toast.success(`${selectedIds.length} employees deleted successfully!`);
+        setSelectedIds([]);
+        await getEmployees();
+        setCurrentPage(1);
+        setConfirmState("success");
+      } else {
+        if (deleteTargetId === null) return;
+        await apiHelper.delete(`/employees/${deleteTargetId}`);
+        toast.success("Employee deleted successfully!");
+        await getEmployees();
+        setDeleteTargetId(null);
+        setConfirmState("success");
+      }
+      setTimeout(() => setShowConfirmModal(false), 1500);
+    } catch (error: any) {
+      console.error("Delete failed:", error);
+      setConfirmState("error");
+      toast.error(
+        error.response?.data?.message || "Failed to delete. Please try again.",
+      );
+    } finally {
+      setConfirmLoading(false);
     }
-    setTimeout(() => setShowConfirmModal(false), 1500);
-  } catch (error: any) {
-    console.error("Delete failed:", error);
-    setConfirmState("error");
-    toast.error(error.response?.data?.message || "Failed to delete. Please try again.");
-  } finally {
-    setConfirmLoading(false);
-  }
-};
+  };
 
   const handleToggleStatus = async (id: number) => {
     try {
@@ -322,47 +325,50 @@ const performDelete = async () => {
     }
   };
   const onFormSubmit = async (data: FormValues) => {
-  try {
-    const payload = {
-      department: data.department,
-      branch: data.branch,
-      role: data.role,
-      employeeName: data.employeeName,
-      mobileNumber: data.mobileNumber,
-      alternateNumber: data.alternateNumber,
-      email: data.email,
-      password: data.password,
-      status: data.status,
-    };
+    try {
+      const payload = {
+        department: data.department,
+        branch: data.branch,
+        role: data.role,
+        employeeName: data.employeeName,
+        mobileNumber: data.mobileNumber,
+        alternateNumber: data.alternateNumber,
+        email: data.email,
+        password: data.password,
+        status: data.status,
+      };
 
-    if (editId) {
-      await apiHelper.put(`/employees/${editId}`, payload);
-      toast.success("Employee updated successfully!");
-    } else {
-      await apiHelper.post("/employees", payload);
-      toast.success("Employee created successfully!");
+      if (editId) {
+        await apiHelper.put(`/employees/${editId}`, payload);
+        toast.success("Employee updated successfully!");
+      } else {
+        await apiHelper.post("/employees", payload);
+        toast.success("Employee created successfully!");
+      }
+
+      await getEmployees();
+      setShowDrawer(false);
+      setEditId(null);
+      reset({
+        department: "",
+        branch: "",
+        role: "",
+        employeeName: "",
+        mobileNumber: "",
+        alternateNumber: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+        status: "ACTIVE",
+      });
+    } catch (error: any) {
+      console.log(error);
+      toast.error(
+        error?.response?.data?.message ||
+          "Failed to save employee. Please try again.",
+      );
     }
-
-    await getEmployees();
-    setShowDrawer(false);
-    setEditId(null);
-    reset({
-      department: "",
-      branch: "",
-      role: "",
-      employeeName: "",
-      mobileNumber: "",
-      alternateNumber: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-      status: "ACTIVE",
-    });
-  } catch (error: any) {
-    console.log(error);
-    toast.error(error?.response?.data?.message || "Failed to save employee. Please try again.");
-  }
-};
+  };
   // Filter data
   const filteredData = employees.filter((item) => {
     const matchesSearch =
@@ -869,7 +875,7 @@ const performDelete = async () => {
               className="flex items-center gap-1.5 px-3 py-1.5 shadow-sm"
             >
               <TrashIcon className="size-4" />
-              <span className="text-xs font-semibold">Delete Selected</span>
+              <span className="text-xs font-semibold">Delete</span>
             </Button>
           </div>
         </div>
@@ -928,51 +934,72 @@ const performDelete = async () => {
                 <div className="grow space-y-5 overflow-y-auto p-5">
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
-                     <Combobox
-  label="Type of Department *"
-  placeholder="Select Department"
-  data={departmentOptions}
-  value={departmentOptions.find(
-    (item) => item.value === formDepartmentValue
-  )}
-  onChange={(val: any) =>
-    setValue("department", val?.value || "")
-  }
-  error={errors?.department && errors.department.message}
-/>
+                      <div>
+                        <Combobox
+                          label={
+                            <span>
+                              Type of Department{" "}
+                              <span className="text-red-500">*</span>
+                            </span>
+                          }
+                          placeholder="Select Department"
+                          data={departmentOptions}
+                          value={departmentOptions.find(
+                            (item) => item.value === formDepartmentValue,
+                          )}
+                          onChange={(val: any) =>
+                            setValue("department", val?.value || "")
+                          }
+                          error={
+                            errors?.department && errors.department.message
+                          }
+                        />
+                      </div>
                     </div>
                     <div>
-                     <Combobox
-  label="Branch *"
-  data={branchOptions}
-  value={branchOptions.find(
-    (item) => item.value === formBranchValue
-  )}
-  onChange={(val: any) =>
-    setValue("branch", val?.value || "")
-  }
-  error={errors?.branch && errors.branch.message}
-/>
+                      <Combobox
+                        label={
+                          <span>
+                            Branch <span className="text-red-500">*</span>
+                          </span>
+                        }
+                        data={branchOptions}
+                        value={branchOptions.find(
+                          (item) => item.value === formBranchValue,
+                        )}
+                        onChange={(val: any) =>
+                          setValue("branch", val?.value || "")
+                        }
+                        error={errors?.branch && errors.branch.message}
+                      />
                     </div>
                   </div>
 
                   <div>
                     <Combobox
-   label="Role *"
-  data={roleOptions}
-  value={roleOptions.find(
-    (item) => item.value === formRoleValue
-  )}
-  onChange={(val: any) =>
-    setValue("role", val?.value || "")
-  }
-  error={errors?.role && errors.role.message}
-/>
+                      label={
+                        <span>
+                          Role <span className="text-red-500">*</span>
+                        </span>
+                      }
+                      data={roleOptions}
+                      value={roleOptions.find(
+                        (item) => item.value === formRoleValue,
+                      )}
+                      onChange={(val: any) =>
+                        setValue("role", val?.value || "")
+                      }
+                      error={errors?.role && errors.role.message}
+                    />
                   </div>
 
                   <div>
                     <Input
-                      label="Employee Name *"
+                      label={
+                        <span>
+                          Employee Name <span className="text-red-500">*</span>
+                        </span>
+                      }
                       placeholder="Enter employee name"
                       {...register(
                         "employeeName",
@@ -987,7 +1014,12 @@ const performDelete = async () => {
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
                       <Input
-                        label="Mobile Number *"
+                        label={
+                          <span>
+                            Mobile Number{" "}
+                            <span className="text-red-500">*</span>
+                          </span>
+                        }
                         placeholder="Enter mobile number"
                         {...register(
                           "mobileNumber",
@@ -1009,7 +1041,11 @@ const performDelete = async () => {
 
                   <div>
                     <Input
-                      label="Email *"
+                      label={
+                        <span>
+                          Email <span className="text-red-500">*</span>
+                        </span>
+                      }
                       placeholder="Enter email address"
                       type="email"
                       {...register("email", formValidationRules.email)}
@@ -1020,7 +1056,11 @@ const performDelete = async () => {
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
                       <Input
-                        label="Password *"
+                        label={
+                          <span>
+                            Password <span className="text-red-500">*</span>
+                          </span>
+                        }
                         placeholder="Enter password"
                         type={showPassword ? "text" : "password"}
                         prefix={
@@ -1046,7 +1086,12 @@ const performDelete = async () => {
                     </div>
                     <div>
                       <Input
-                        label="Confirm Password *"
+                        label={
+                          <span>
+                            Confirm Password{" "}
+                            <span className="text-red-500">*</span>
+                          </span>
+                        }
                         placeholder="Confirm password"
                         type={showConfirmPassword ? "text" : "password"}
                         prefix={
@@ -1083,13 +1128,13 @@ const performDelete = async () => {
                     </label>
 
                     <Listbox
-                     data={statusOptions}
-  value={statusOptions.find(
-    (item) => item.value === formStatusValue
-  )}
-  onChange={(val: any) =>
-    setValue("status", val?.value || "")
-  }
+                      data={statusOptions}
+                      value={statusOptions.find(
+                        (item) => item.value === formStatusValue,
+                      )}
+                      onChange={(val: any) =>
+                        setValue("status", val?.value || "")
+                      }
                     />
                   </div>
                 </div>
@@ -1116,39 +1161,41 @@ const performDelete = async () => {
       </Transition>
 
       {/* Confirmation Modal */}
-<ConfirmModal
-  show={showConfirmModal}
-  onClose={() => {
-    setShowConfirmModal(false);
-    setDeleteTargetId(null);
-    setConfirmState("pending");
-  }}
-  onOk={performDelete}
-  confirmLoading={confirmLoading}
-  state={confirmState}
-  messages={{
-    pending: {
-      Icon: ExclamationTriangleIcon,
-      title: isBulkDelete ? "Delete Selected Employees?" : "Are you sure?",
-      description: isBulkDelete 
-        ? `Are you sure you want to delete ${selectedIds.length} selected employees? This action cannot be undone.`
-        : "Are you sure you want to delete this employee? Once deleted, it cannot be restored.",
-      actionText: isBulkDelete ? "Delete All" : "Delete",
-    },
-    success: {
-      title: "Deleted Successfully",
-      description: isBulkDelete 
-        ? `${selectedIds.length} employees have been deleted.`
-        : "The employee has been deleted.",
-      actionText: "Done",
-    },
-    error: {
-      title: "Delete Failed",
-      description: "Failed to delete. Please try again.",
-      actionText: "Try Again",
-    },
-  }}
-/>
+      <ConfirmModal
+        show={showConfirmModal}
+        onClose={() => {
+          setShowConfirmModal(false);
+          setDeleteTargetId(null);
+          setConfirmState("pending");
+        }}
+        onOk={performDelete}
+        confirmLoading={confirmLoading}
+        state={confirmState}
+        messages={{
+          pending: {
+            Icon: ExclamationTriangleIcon,
+            title: isBulkDelete
+              ? "Delete Selected Employees?"
+              : "Are you sure?",
+            description: isBulkDelete
+              ? `Are you sure you want to delete ${selectedIds.length} selected employees? This action cannot be undone.`
+              : "Are you sure you want to delete this employee? Once deleted, it cannot be restored.",
+            actionText: isBulkDelete ? "Delete All" : "Delete",
+          },
+          success: {
+            title: "Deleted Successfully",
+            description: isBulkDelete
+              ? `${selectedIds.length} employees have been deleted.`
+              : "The employee has been deleted.",
+            actionText: "Done",
+          },
+          error: {
+            title: "Delete Failed",
+            description: "Failed to delete. Please try again.",
+            actionText: "Try Again",
+          },
+        }}
+      />
     </div>
   );
 };
