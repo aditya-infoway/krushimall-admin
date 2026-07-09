@@ -48,6 +48,8 @@ type Employee = {
   confirmPassword: string;
   status: string;
   createdAt: string;
+  createdBy: string;
+  createdType: string;
 };
 
 type FormValues = {
@@ -584,6 +586,12 @@ const Employee = () => {
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Created
                 </Th>
+                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                  Created By
+                </Th>
+                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                  Created Type
+                </Th>
                 <Th className="w-20 py-3.5 text-center text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Actions
                 </Th>
@@ -647,6 +655,13 @@ const Employee = () => {
                     </Td>
                     <Td className="py-4 text-gray-500 dark:text-gray-400">
                       {new Date(item.createdAt).toLocaleDateString("en-IN")}
+                    </Td>
+
+                    <Td className="dark:text-dark-200 py-4 text-gray-600">
+                      {item.createdBy}
+                    </Td>
+                    <Td className="dark:text-dark-200 py-4 text-gray-600">
+                      {item.createdType}
                     </Td>
                     <Td className="py-4 text-center">
                       <Menu
@@ -712,7 +727,7 @@ const Employee = () => {
               {currentItems.length === 0 && (
                 <Tr>
                   <Td
-                    colSpan={10}
+                    colSpan={12}
                     className="py-12 text-center text-gray-400 dark:text-gray-500"
                   >
                     No employees found
