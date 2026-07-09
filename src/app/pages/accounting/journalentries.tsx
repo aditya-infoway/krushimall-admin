@@ -28,6 +28,7 @@ import { Fragment } from "react";
 import { DatePicker } from "@/components/shared/form/Datepicker";
 import { Combobox } from "@/components/shared/form/StyledCombobox";
 import { Input, Textarea } from "@/components/ui";
+import { toast } from "sonner";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 interface JournalRow {
@@ -160,27 +161,38 @@ export default function Contra() {
     if (!validateForm()) return;
     const validRows = rows.filter((r) => r.party && (r.debit || r.credit));
     if (!validRows.length) return;
-    const newEntries: JournalEntry[] = validRows.map((r, idx) => ({
-      id: entries.length + idx + 1,
-      date:
-        date ||
-        new Date().toLocaleDateString("en-GB", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-        }),
-      voucherNo,
-      type: "Journal",
-      account: r.party,
-      debit: parseFloat(r.debit) || 0,
-      credit: parseFloat(r.credit) || 0,
-      narration: r.narration,
-      createdType: "Manual",
-      createdBy: "Admin",
-    }));
-    setEntries([...entries, ...newEntries]);
-    setShowModal(false);
-    setErrors({});
+
+    try {
+      const newEntries: JournalEntry[] = validRows.map((r, idx) => ({
+        id: entries.length + idx + 1,
+        date:
+          date ||
+          new Date().toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+          }),
+        voucherNo,
+        type: "Journal",
+        account: r.party,
+        debit: parseFloat(r.debit) || 0,
+        credit: parseFloat(r.credit) || 0,
+        narration: r.narration,
+        createdType: "Manual",
+        createdBy: "Admin",
+      }));
+
+      setEntries([...entries, ...newEntries]);
+      setShowModal(false);
+      setErrors({});
+      toast.success("Journal entry added successfully!");
+    } catch (error: any) {
+      console.error(error);
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to add journal entry. Please try again.",
+      );
+    }
   };
 
   const handleDelete = (id: number) => {
@@ -280,7 +292,7 @@ export default function Contra() {
           <button
             type="button"
             onClick={openModal}
-            className="bg-primary-600 hover:bg-primary-700 inline-flex items-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-medium text-white transition-colors"
+            className="bg-primary-600 hover:bg-primary-700 cursor-pointer inline-flex items-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-medium text-white transition-colors"
           >
             <Plus className="size-4.5" />
             Add Journal Entry

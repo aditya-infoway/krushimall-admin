@@ -31,6 +31,8 @@ import { Button, Textarea } from "@/components/ui";
 import { DatePicker } from "@/components/shared/form/Datepicker";
 import { Timepicker } from "@/components/shared/form/Timepicker";
 import { Listbox } from "@/components/shared/form/StyledListbox";
+import { toast } from "sonner";
+
 const columns = [
   {
     title: "New",
@@ -90,11 +92,11 @@ export default function Followup() {
   const [openFollowupModal, setOpenFollowupModal] = useState(false);
   const [nextDate, setNextDate] = useState("");
   const [callTime, setCallTime] = useState("");
-const [callResponse, setCallResponse] = useState<any>(null);
+  const [callResponse, setCallResponse] = useState<any>(null);
   const [discussion, setDiscussion] = useState("");
   const [followups, setFollowups] = useState<any[]>([]);
   const [expectedPurchaseDate, setExpectedPurchaseDate] = useState<any>(null);
-  
+
   const [errors, setErrors] = useState({
     expectedPurchaseDate: "",
     nextDate: "",
@@ -145,23 +147,22 @@ const [callResponse, setCallResponse] = useState<any>(null);
     { label: "Call Back", value: "Call Back" },
     { label: "Other", value: "Other" },
   ];
-const displayFollowups =
-  followups.length === 0 && lead
-    ? [
-        {
-          id: lead.id,
-          expectedPurchaseDate: lead.expectedPurchaseDate,
-          nextScheduledDate: lead.followUpDate,
-          callResponse: "New",
-        },
-      ]
-    : followups;
+  const displayFollowups =
+    followups.length === 0 && lead
+      ? [
+          {
+            id: lead.id,
+            expectedPurchaseDate: lead.expectedPurchaseDate,
+            nextScheduledDate: lead.followUpDate,
+            callResponse: "New",
+          },
+        ]
+      : followups;
   const fetchFollowups = async () => {
     try {
       const res = await apiHelper.get(`/followup/lead/${id}`);
 
       setFollowups(res.data || []);
-      
     } catch (error) {
       console.error(error);
     }
@@ -170,12 +171,12 @@ const displayFollowups =
     if (id) {
       fetchFollowups();
     }
-  }, [id])
+  }, [id]);
   useEffect(() => {
-  if (lead?.expectedPurchaseDate) {
-    setExpectedPurchaseDate(new Date(lead.expectedPurchaseDate));
-  }
-}, [lead]);;
+    if (lead?.expectedPurchaseDate) {
+      setExpectedPurchaseDate(new Date(lead.expectedPurchaseDate));
+    }
+  }, [lead]);
   useEffect(() => {
     const fetchLead = async () => {
       try {
@@ -195,6 +196,7 @@ const displayFollowups =
       setNextDate(new Date(lead.followUpDate).toISOString().split("T")[0]);
     }
   }, [lead]);
+
   const handleSaveFollowup = async () => {
     if (!validateForm()) {
       console.log("VALIDATION FAILED");
@@ -205,11 +207,9 @@ const displayFollowups =
       const payload = {
         leadId: Number(id),
         expectedPurchaseDate: expectedPurchaseDate
-    ? new Date(expectedPurchaseDate).toISOString()
-    : null,
-        nextScheduledDate: nextDate
-    ? new Date(nextDate).toISOString()
-    : null,
+          ? new Date(expectedPurchaseDate).toISOString()
+          : null,
+        nextScheduledDate: nextDate ? new Date(nextDate).toISOString() : null,
         callTime,
         callResponse: callResponse?.value || callResponse,
         discussion,
@@ -219,45 +219,44 @@ const displayFollowups =
 
       console.log("Saved:", res);
 
-      // Close Modal
+      toast.success("Follow-up added successfully!");
+
       setOpenFollowupModal(false);
       await fetchFollowups();
-      // Clear Form
       setCallTime("");
       setCallResponse("");
       setDiscussion("");
-
-      // Optional: refresh followup list
-      // fetchFollowups();
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      toast.error(
+        err.response?.data?.message ||
+          "Failed to save follow-up. Please try again.",
+      );
     }
   };
-const openFollowupDrawer = (item: any) => {
-  setExpectedPurchaseDate(
-    item.expectedPurchaseDate
-      ? new Date(item.expectedPurchaseDate)
-      : null
-  );
 
-  setNextDate(
-    item.nextScheduledDate
-      ? new Date(item.nextScheduledDate).toISOString().split("T")[0]
-      : ""
-  );
+  const openFollowupDrawer = (item: any) => {
+    setExpectedPurchaseDate(
+      item.expectedPurchaseDate ? new Date(item.expectedPurchaseDate) : null,
+    );
 
-  setCallTime(item.callTime || "");
+    setNextDate(
+      item.nextScheduledDate
+        ? new Date(item.nextScheduledDate).toISOString().split("T")[0]
+        : "",
+    );
 
- setCallResponse(
-  responseOptions.find(
-    (option) => option.value === item.callResponse
-  ) || null
-);
+    setCallTime(item.callTime || "");
 
-  setDiscussion(item.discussion || "");
+    setCallResponse(
+      responseOptions.find((option) => option.value === item.callResponse) ||
+        null,
+    );
 
-  setOpenFollowupModal(true);
-};
+    setDiscussion(item.discussion || "");
+
+    setOpenFollowupModal(true);
+  };
   return (
     <div className="dark:bg-dark-800 min-h-screen p-6">
       {/* Header */}
@@ -339,7 +338,7 @@ const openFollowupDrawer = (item: any) => {
                     </div>
                     <div className="dark:border-dark-600 dark:text-dark-300 mt-18 flex items-center justify-between border-t border-gray-200 pt-2 text-gray-600">
                       <button
-                     onClick={() => openFollowupDrawer(item)}
+                        onClick={() => openFollowupDrawer(item)}
                         className="hover:text-primary-500 dark:hover:text-primary-400 cursor-pointer transition-colors"
                         title="Move"
                       >
@@ -361,12 +360,10 @@ const openFollowupDrawer = (item: any) => {
                       </button>
 
                       <div className="flex items-center gap-1">
-                        
                         <ChatBubbleLeftEllipsisIcon className="hover:text-primary-500 dark:hover:text-primary-400 h-5 w-5 cursor-pointer transition-colors" />
-                        
+
                         <span className="dark:text-dark-400 text-xs text-gray-500">
-                            
-                        {item.callResponse === "New" ? 1 : item.followupCount}
+                          {item.callResponse === "New" ? 1 : item.followupCount}
                         </span>
                       </div>
                     </div>
@@ -430,10 +427,10 @@ const openFollowupDrawer = (item: any) => {
                     <label className="dark:text-dark-200 mb-2 block text-sm font-medium text-gray-700">
                       Expected Purchase Date
                     </label>
-                   <DatePicker
-  value={expectedPurchaseDate}
-  onChange={(date: any) => setExpectedPurchaseDate(date)}
-/>
+                    <DatePicker
+                      value={expectedPurchaseDate}
+                      onChange={(date: any) => setExpectedPurchaseDate(date)}
+                    />
                     {errors.expectedPurchaseDate && (
                       <p className="mt-1 text-xs text-red-500">
                         {errors.expectedPurchaseDate}

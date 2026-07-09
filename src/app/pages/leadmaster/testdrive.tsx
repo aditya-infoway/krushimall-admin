@@ -6,6 +6,7 @@ import { Combobox } from "@/components/shared/form/Combobox";
 import { DatePicker } from "@/components/shared/form/Datepicker";
 import { Timepicker } from "@/components/shared/form/Timepicker";
 import apiHelper from "@/utils/apiHelper";
+import { toast } from "sonner";
 
 interface TestDriveFormData {
   modelId: number | null;
@@ -197,37 +198,40 @@ export function TestDriveModal({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async () => {
-    if (!validate()) return;
+ const handleSubmit = async () => {
+  if (!validate()) return;
 
-    setLoading(true);
-    try {
-      const payload = {
-        leadId: leadId,
-        modelId: formData.modelId,
-        variantId: formData.variantId,
-        colourId: formData.colourId,
-        testDriveDate: formData.testDriveDate,
-        testDriveFromTime: formData.testDriveFromTime,
-        testDriveToTime: formData.testDriveToTime,
-        duration: formData.duration,
-        vehicleSpeedometerRunning: formData.vehicleSpeedometerRunning,
-        licenceNo: formData.licenceNo,
-        feedback: formData.feedback,
-        remarks: formData.remarks,
-        placeOfTestDrive: formData.placeOfTestDrive,
-      };
+  setLoading(true);
+  try {
+    const payload = {
+      leadId: leadId,
+      modelId: formData.modelId,
+      variantId: formData.variantId,
+      colourId: formData.colourId,
+      testDriveDate: formData.testDriveDate,
+      testDriveFromTime: formData.testDriveFromTime,
+      testDriveToTime: formData.testDriveToTime,
+      duration: formData.duration,
+      vehicleSpeedometerRunning: formData.vehicleSpeedometerRunning,
+      licenceNo: formData.licenceNo,
+      feedback: formData.feedback,
+      remarks: formData.remarks,
+      placeOfTestDrive: formData.placeOfTestDrive,
+    };
 
-      await apiHelper.post("/test-drives", payload);
+    await apiHelper.post("/test-drives", payload);
+    
+    toast.success("Test drive added successfully!");
 
-      if (onSuccess) onSuccess();
-      onClose();
-    } catch (error) {
-      console.error("Error submitting test drive:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    if (onSuccess) onSuccess();
+    onClose();
+  } catch (error: any) {
+    console.error("Error submitting test drive:", error);
+    toast.error(error.response?.data?.message || "Failed to add test drive. Please try again.");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <Dialog open={isOpen} onClose={onClose} className="relative z-50">

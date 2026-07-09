@@ -31,6 +31,7 @@ import { Combobox } from "@/components/shared/form/Combobox";
 import { Input, Radio, Textarea } from "@/components/ui";
 import apiHelper from "@/utils/apiHelper";
 import { RiFileExcel2Fill, RiFilePdfFill } from "react-icons/ri";
+import { toast } from "sonner";
 // ── Types ──────────────────────────────────────────────────────────────────────
 type ContraType = "Cash Deposit" | "Cash Withdrawal" | "Bank Transfer";
 
@@ -249,29 +250,28 @@ const getVoucher = async () => {
 
   try {
     await apiHelper.post("/contra", {
-        companyId,
-  financialYearId,
+      companyId,
+      financialYearId,
       date,
       type,
-    
       cashBankAccountId: cashBankAccount.id,
       oppAccountId: oppAccount.id,
       amount: Number(amount),
       narration,
     });
 
-    fetchContras();
+    toast.success("Contra entry added successfully!");
+    await fetchContras();
 
     setShowModal(false);
-
     setCashBankAccount(null);
     setOppAccount(null);
     setAmount("");
     setNarration("");
     setDate(null);
-
-  } catch (err) {
-    console.log(err);
+  } catch (error: any) {
+    console.log(error);
+    toast.error(error.response?.data?.message || "Failed to add contra entry. Please try again.");
   }
 };
 
@@ -385,7 +385,7 @@ const downloadExcel = async () => {
           <button
             type="button"
             onClick={openModal}
-            className="bg-primary-600 hover:bg-primary-700 inline-flex items-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-medium text-white transition-colors"
+            className="bg-primary-600 hover:bg-primary-700 cursor-pointer inline-flex items-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-medium text-white transition-colors"
           >
             <Plus className="size-4.5" />
             Add Contra

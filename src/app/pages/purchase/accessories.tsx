@@ -16,6 +16,10 @@ import { Button, Checkbox } from "@/components/ui";
 import { Listbox } from "@/components/shared/form/StyledListbox";
 import { useEffect } from "react";
 import apiHelper from "@/utils/apiHelper";
+import { toast } from "sonner";
+import { ConfirmModal } from "@/components/shared/ConfirmModal";
+import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
+
 // ---------- Types ----------
 export interface AccessoriesPurchaseRegisterRow {
   id: string;
@@ -112,6 +116,12 @@ const AccessoriesPurchaseRegister: React.FC<
   const [currentPage, setCurrentPage] = useState(1);
 const [rows, setRows] = useState<AccessoriesPurchaseRegisterRow[]>([]);
   const navigate = useNavigate();
+
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+const [confirmState, setConfirmState] = useState<"pending" | "success" | "error">("pending");
+const [confirmLoading, setConfirmLoading] = useState(false);
+const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+const [isBulkDelete, setIsBulkDelete] = useState(false);
 
   // Filter rows
   const filteredRows = useMemo(() => {
@@ -242,11 +252,50 @@ useEffect(() => {
   navigate(`/purchase/accessories/add/${row.id}`);
 };
 
-  const handleDeleteRow = (row: AccessoriesPurchaseRegisterRow) => {
-    if (window.confirm(`Are you sure you want to delete this purchase?`)) {
-      onDeleteRow?.(row);
+ const handleDeleteRow = (row: AccessoriesPurchaseRegisterRow) => {
+  setDeleteTargetId(row.id);
+  setIsBulkDelete(false);
+  setConfirmState("pending");
+  setShowConfirmModal(true);
+};
+
+
+const performDelete = async () => {
+  setConfirmLoading(true);
+  try {
+    if (isBulkDelete) {
+      await Promise.all(selectedIds.map((id) => apiHelper.delete(`/accessories-purchase/${id}`)));
+      toast.success(`${selectedIds.length} purchases deleted successfully!`);
+      setSelectedIds([]);
+      await fetchAccessoriesPurchases();
+      setCurrentPage(1);
+      setConfirmState("success");
+    } else {
+      if (deleteTargetId === null) return;
+      await apiHelper.delete(`/accessories-purchase/${deleteTargetId}`);
+      toast.success("Purchase deleted successfully!");
+      await fetchAccessoriesPurchases();
+      setDeleteTargetId(null);
+      setConfirmState("success");
     }
-  };
+    setTimeout(() => setShowConfirmModal(false), 1500);
+  } catch (error: any) {
+    console.error("Delete failed:", error);
+    setConfirmState("error");
+    toast.error(error.response?.data?.message || "Failed to delete. Please try again.");
+  } finally {
+    setConfirmLoading(false);
+  }
+};
+
+const handleBulkDelete = () => {
+  if (selectedIds.length === 0) return;
+  setIsBulkDelete(true);
+  setConfirmState("pending");
+  setShowConfirmModal(true);
+};
+
+
  const handleInward = (row: AccessoriesPurchaseRegisterRow) => {
  navigate(`/purchase/accessories-inward/${row.id}`);
 };
@@ -572,6 +621,41 @@ useEffect(() => {
           </div>
         )}
       </div>
+
+      {/* Confirmation Modal */}
+<ConfirmModal
+  show={showConfirmModal}
+  onClose={() => {
+    setShowConfirmModal(false);
+    setDeleteTargetId(null);
+    setConfirmState("pending");
+  }}
+  onOk={performDelete}
+  confirmLoading={confirmLoading}
+  state={confirmState}
+  messages={{
+    pending: {
+      Icon: ExclamationTriangleIcon,
+      title: isBulkDelete ? "Delete Selected Purchases?" : "Are you sure?",
+      description: isBulkDelete 
+        ? `Are you sure you want to delete ${selectedIds.length} selected purchases? This action cannot be undone.`
+        : "Are you sure you want to delete this purchase? Once deleted, it cannot be restored.",
+      actionText: isBulkDelete ? "Delete All" : "Delete",
+    },
+    success: {
+      title: "Deleted Successfully",
+      description: isBulkDelete 
+        ? `${selectedIds.length} purchases have been deleted.`
+        : "The purchase has been deleted.",
+      actionText: "Done",
+    },
+    error: {
+      title: "Delete Failed",
+      description: "Failed to delete. Please try again.",
+      actionText: "Try Again",
+    },
+  }}
+/>
     </div>
   );
 };

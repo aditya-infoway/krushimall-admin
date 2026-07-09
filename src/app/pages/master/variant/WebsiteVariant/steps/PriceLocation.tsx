@@ -15,6 +15,9 @@ import Select from "react-select";
 import { Country, State, City } from "country-state-city";
 // Options for select fields
 import apiHelper from "@/utils/apiHelper";
+import { toast } from "sonner";
+
+
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 
@@ -79,83 +82,50 @@ export function PriceLocation({
   const [city, setCity] = useState("");
   const [district, setDistrict] = useState("");
   const [stateCode, setStateCode] = useState("");
-  const onSubmit = async (
-  data: PriceLocationType
-) => {
+
+
+
+
+
+
+
+
+ const onSubmit = async (data: PriceLocationType) => {
   try {
-    const websiteVariantId =
-      localStorage.getItem("websiteVariantId");
+    const websiteVariantId = localStorage.getItem("websiteVariantId");
 
     if (!websiteVariantId) {
+      toast.warning("No website variant found. Please save basic information first.");
       return;
     }
 
     const payload = {
-      exShowroomPrice: data.exShowroomPrice
-        ? Number(data.exShowroomPrice)
-        : null,
-
-      onRoadPrice: data.onRoadPrice
-        ? Number(data.onRoadPrice)
-        : null,
-
+      exShowroomPrice: data.exShowroomPrice ? Number(data.exShowroomPrice) : null,
+      onRoadPrice: data.onRoadPrice ? Number(data.onRoadPrice) : null,
       currency: data.currency,
-
-      gst: data.gst
-        ? Number(data.gst)
-        : null,
-
-      tcsApplicable:
-        data.tcsApplicable,
-
-      tcsPercentage:
-        data.tcsPercentage
-          ? Number(data.tcsPercentage)
-          : null,
-
-      financeAvailable:
-        data.financeAvailable,
-
-      emiAvailable:
-        data.emiAvailable,
-
-      downPayment:
-        data.downPayment
-          ? Number(data.downPayment)
-          : null,
-
-      exchangeOffer:
-        data.exchangeOffer,
-
-      offerPrice:
-        data.offerPrice
-          ? Number(data.offerPrice)
-          : null,
-
-      negotiable:
-        data.negotiable,
-
+      gst: data.gst ? Number(data.gst) : null,
+      tcsApplicable: data.tcsApplicable,
+      tcsPercentage: data.tcsPercentage ? Number(data.tcsPercentage) : null,
+      financeAvailable: data.financeAvailable,
+      emiAvailable: data.emiAvailable,
+      downPayment: data.downPayment ? Number(data.downPayment) : null,
+      exchangeOffer: data.exchangeOffer,
+      offerPrice: data.offerPrice ? Number(data.offerPrice) : null,
+      negotiable: data.negotiable,
       country: data.country,
       state: data.state,
       district: data.district,
       taluka: data.taluka,
       city: data.city,
-
       pincode: data.pincode,
       landmark: data.landmark,
-      fullAddress:
-        data.fullAddress,
-
+      fullAddress: data.fullAddress,
       latitude: position[0],
       longitude: position[1],
-
       currentStep: 5,
     };
 
-    await apiHelper.put(
-      `/website-variants/${websiteVariantId}/save-step`,
-      payload
-    );
+    await apiHelper.put(`/website-variants/${websiteVariantId}/save-step`, payload);
 
     kycFormCtx.dispatch({
       type: "SET_FORM_DATA",
@@ -173,14 +143,15 @@ export function PriceLocation({
       },
     });
 
+    toast.success("Price and location details saved successfully!");
     setCurrentStep(5);
-  } catch (error) {
-    console.error(
-      "Price Location Save Error:",
-      error
-    );
+  } catch (error: any) {
+    console.error("Price Location Save Error:", error);
+    toast.error(error.response?.data?.message || "Failed to save price and location details. Please try again.");
   }
 };
+
+
   const countryOptions = Country.getAllCountries().map((country) => ({
     value: country.isoCode,
     label: country.name,

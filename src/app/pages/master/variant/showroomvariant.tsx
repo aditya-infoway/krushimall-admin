@@ -981,7 +981,7 @@ const updateAccessory = (
               Selected {selectedIds.length} items
             </span>
             <Button variant="filled" color="error" onClick={handleBulkDelete}>
-              <TrashIcon className="mr-1 size-4" /> Delete Selected
+              <TrashIcon className="mr-1 size-4" /> Delete 
             </Button>
           </div>
         </div>

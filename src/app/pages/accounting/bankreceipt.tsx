@@ -25,6 +25,7 @@ import {
 } from "@headlessui/react";
 import { Fragment } from "react";
 import { DatePicker } from "@/components/shared/form/Datepicker";
+import { toast } from "sonner";
 // import { Combobox } from "@/components/shared/form/StyledCombobox";
 import { Input, Radio, Textarea } from "@/components/ui";
 import { RiFileExcel2Fill, RiFilePdfFill } from "react-icons/ri";
@@ -294,37 +295,37 @@ export default function BankReceipt() {
   useEffect(() => {
     getAccounts();
   }, []);
-const getBankReceipts = async () => {
-  try {
-    const res = await apiHelper.get("/bank-receipt");
+  const getBankReceipts = async () => {
+    try {
+      const res = await apiHelper.get("/bank-receipt");
 
-    // console.log("Bank Receipt Response:", res);
+      // console.log("Bank Receipt Response:", res);
 
-    const data = Array.isArray(res) ? res : res?.data || [];
+      const data = Array.isArray(res) ? res : res?.data || [];
 
-    setRows(
-      data.map((item: any) => ({
-        id: item.id,
-        date: item.date,
-        voucherNo: item.voucherNo,
-        type: item.type,
-        bankAccount: item.bankAccount?.accountName,
-        oppAccount: item.oppAccount?.accountName,
-        amount: item.amount,
-        paymentType: item.paymentType,
-        chequeNo: item.chequeNo,
-        chequeDate: item.chequeDate,
-        chequeClearDate: item.chequeClearDate,
-        narration: item.narration,
-        createdType: item.createdType,
-        createdBy: item.createdBy,
-        leadNo: item.lead,
-      }))
-    );
-  } catch (err) {
-    console.log(err);
-  }
-};
+      setRows(
+        data.map((item: any) => ({
+          id: item.id,
+          date: item.date,
+          voucherNo: item.voucherNo,
+          type: item.type,
+          bankAccount: item.bankAccount?.accountName,
+          oppAccount: item.oppAccount?.accountName,
+          amount: item.amount,
+          paymentType: item.paymentType,
+          chequeNo: item.chequeNo,
+          chequeDate: item.chequeDate,
+          chequeClearDate: item.chequeClearDate,
+          narration: item.narration,
+          createdType: item.createdType,
+          createdBy: item.createdBy,
+          leadNo: item.lead,
+        })),
+      );
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   useEffect(() => {
     getBankReceipts();
@@ -402,45 +403,39 @@ const getBankReceipts = async () => {
       const payload = {
         companyId,
         financialYearId,
-
         voucherNo: form.voucherNo,
-
         date: form.date,
-
         type: form.type,
-
         bankAccountId: form.bankAccount.value,
-
         oppAccountId: form.oppAccount.value,
-
         leadId:
           form.type === "Lead Cancel" && form.leadNo
             ? Number(form.leadNo.value)
             : null,
         amount: Number(form.amount),
-
         paymentType: form.paymentType?.id,
-
         chequeNo: form.chequeNo,
-
         chequeDate: form.chequeDate,
-
         chequeClearDate: form.chequeClearDate,
-
         narration: form.narration,
       };
 
       if (editId) {
         await apiHelper.put(`/bank-receipt/${editId}`, payload);
+        toast.success("Bank receipt updated successfully!");
       } else {
         await apiHelper.post("/bank-receipt", payload);
+        toast.success("Bank receipt added successfully!");
       }
 
       setShowDrawer(false);
-
-      getBankReceipts();
-    } catch (err) {
-      console.log(err);
+      await getBankReceipts();
+    } catch (error: any) {
+      console.log(error);
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to save bank receipt. Please try again.",
+      );
     }
   };
 
@@ -525,27 +520,25 @@ const getBankReceipts = async () => {
   useEffect(() => {
     setCurrentPage(1);
   }, [filterType, filterDateFrom, filterDateTo, filterPaymentType, search]);
-const downloadExcel = async () => {
-  try {
-    const blob = await apiHelper.getBlob(
-      "/bank-receipt/export/excel"
-    );
+  const downloadExcel = async () => {
+    try {
+      const blob = await apiHelper.getBlob("/bank-receipt/export/excel");
 
-    const url = window.URL.createObjectURL(blob);
+      const url = window.URL.createObjectURL(blob);
 
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "BankReceiptRegister.xlsx";
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "BankReceiptRegister.xlsx";
 
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
 
-    window.URL.revokeObjectURL(url);
-  } catch (err) {
-    console.log(err);
-  }
-};
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.log(err);
+    }
+  };
   return (
     <div className="relative min-h-screen space-y-6 p-4 pb-28 text-gray-900 md:p-6 dark:text-gray-100">
       {/* Upper Actions Control Toolbar Layout */}
@@ -574,23 +567,24 @@ const downloadExcel = async () => {
           </button>
 
           <button
-                    type="button"   onClick={downloadExcel}
-                    className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 cursor-pointer"
-                  >
-                 <RiFileExcel2Fill className="text-lg text-green-500" />
-                  </button>
-        
-                  <button
-                    type="button"
-                    className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 cursor-pointer"
-                  >
-                   <RiFilePdfFill className="text-lg text-red-500" />
-                  </button>
+            type="button"
+            onClick={downloadExcel}
+            className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+          >
+            <RiFileExcel2Fill className="text-lg text-green-500" />
+          </button>
+
+          <button
+            type="button"
+            className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+          >
+            <RiFilePdfFill className="text-lg text-red-500" />
+          </button>
 
           <button
             type="button"
             onClick={handleAdd}
-            className="bg-primary-600 hover:bg-primary-700 inline-flex items-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-medium text-white transition-colors"
+            className="bg-primary-600 hover:bg-primary-700 inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-medium text-white transition-colors"
           >
             <Plus className="size-4.5" />
             Add Bank Receipt
@@ -754,7 +748,7 @@ const downloadExcel = async () => {
                       {indexOfFirstItem + index + 1}
                     </td>
                     <td className="px-3 py-3 text-sm whitespace-nowrap text-gray-900 dark:text-gray-400">
-                  {new Date(item.date).toLocaleDateString("en-GB")}
+                      {new Date(item.date).toLocaleDateString("en-GB")}
                     </td>
                     <td className="px-3 py-3 text-sm font-medium whitespace-nowrap text-gray-900 dark:text-gray-400">
                       {item.voucherNo}
@@ -765,8 +759,8 @@ const downloadExcel = async () => {
                           item.type === "Manual"
                             ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
                             : item.type === "Lead Cancel"
-                              ? "bg-primary-500 text-white dark:bg-primary-500 dark:text-white"
-                              : "bg-primary-500 text-white dark:bg-primary-500 dark:text-white"
+                              ? "bg-primary-500 dark:bg-primary-500 text-white dark:text-white"
+                              : "bg-primary-500 dark:bg-primary-500 text-white dark:text-white"
                         }`}
                       >
                         {item.type}

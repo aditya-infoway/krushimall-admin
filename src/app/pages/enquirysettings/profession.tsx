@@ -1,4 +1,4 @@
-import { useState,useEffect  } from "react";
+import { useState, useEffect } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import apiHelper from "@/utils/apiHelper";
 import {
@@ -28,6 +28,9 @@ import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/Table";
 import { Button, Checkbox, Input } from "@/components/ui";
 import { Combobox } from "@/components/shared/form/StyledCombobox";
 import { Listbox } from "@/components/shared/form/StyledListbox";
+import { toast } from "sonner";
+import { ConfirmModal } from "@/components/shared/ConfirmModal";
+import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 
 type Profession = {
   id: number;
@@ -66,14 +69,21 @@ const statusFilterOptions = [
 const Profession = () => {
   const [showDrawer, setShowDrawer] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
-const [professions, setProfessions] =
-  useState<Profession[]>([]);
+  const [professions, setProfessions] = useState<Profession[]>([]);
   const [search, setSearch] = useState("");
   const [showFilterBar, setShowFilterBar] = useState(false);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [selectedStatusFilter, setSelectedStatusFilter] = useState("All");
+
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [confirmState, setConfirmState] = useState<
+    "pending" | "success" | "error"
+  >("pending");
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+  const [isBulkDelete, setIsBulkDelete] = useState(false);
 
   const {
     register,
@@ -92,27 +102,25 @@ const [professions, setProfessions] =
   const formStatusValue = useWatch({
     control,
     name: "status",
-    defaultValue: "ACTIVE"
+    defaultValue: "ACTIVE",
   });
 
   const formValidationRules = {
     profession: { required: "Profession is required" },
   };
-const getProfessions = async () => {
-  try {
-    const response = await apiHelper.get(
-      "/professions"
-    );
+  const getProfessions = async () => {
+    try {
+      const response = await apiHelper.get("/professions");
 
-    setProfessions(response.data || []);
-  } catch (error) {
-    console.log(error);
-  }
-};
+      setProfessions(response.data || []);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
-useEffect(() => {
-  getProfessions();
-}, []);
+  useEffect(() => {
+    getProfessions();
+  }, []);
   const handleOpenAddDrawer = () => {
     setEditId(null);
     reset({
@@ -131,83 +139,93 @@ useEffect(() => {
     setShowDrawer(true);
   };
 
- const handleDelete = async (id: number) => {
-  try {
-    await apiHelper.delete(`/professions/${id}`);
-    getProfessions();
-  } catch (error) {
-    console.log(error);
-  }
-};
+  const handleDelete = (id: number) => {
+    setDeleteTargetId(id);
+    setIsBulkDelete(false);
+    setConfirmState("pending");
+    setShowConfirmModal(true);
+  };
 
- 
- const handleBulkDelete = async () => {
-  try {
-    if (
-      window.confirm(
-        "Are you sure you want to delete selected enquiry types?"
-      )
-    ) {
-      await Promise.all(
-        selectedIds.map((id) =>
-          apiHelper.delete(`/professions/${id}`)
-        )
+  const handleBulkDelete = () => {
+    setIsBulkDelete(true);
+    setConfirmState("pending");
+    setShowConfirmModal(true);
+  };
+
+  const performDelete = async () => {
+    setConfirmLoading(true);
+    try {
+      if (isBulkDelete) {
+        await Promise.all(
+          selectedIds.map((id) => apiHelper.delete(`/professions/${id}`)),
+        );
+        toast.success(
+          `${selectedIds.length} professions deleted successfully!`,
+        );
+        setSelectedIds([]);
+        await getProfessions();
+        setCurrentPage(1);
+        setConfirmState("success");
+      } else {
+        if (deleteTargetId === null) return;
+        await apiHelper.delete(`/professions/${deleteTargetId}`);
+        toast.success("Profession deleted successfully!");
+        await getProfessions();
+        setDeleteTargetId(null);
+        setConfirmState("success");
+      }
+      setTimeout(() => setShowConfirmModal(false), 1500);
+    } catch (error: any) {
+      console.error("Delete failed:", error);
+      setConfirmState("error");
+      toast.error(
+        error.response?.data?.message || "Failed to delete. Please try again.",
       );
+    } finally {
+      setConfirmLoading(false);
+    }
+  };
 
-      setSelectedIds([]);
+  const handleToggleStatus = async (id: number) => {
+    try {
+      await apiHelper.patch(`/professions/toggle-status/${id}`, {});
+
       getProfessions();
+    } catch (error) {
+      console.log(error);
     }
-  } catch (error) {
-    console.log(error);
-  }
-};
- const handleToggleStatus = async (id: number) => {
-  try {
-    await apiHelper.patch(
-      `/professions/toggle-status/${id}`,
-      {}
-    );
+  };
 
-    getProfessions();
-  } catch (error) {
-    console.log(error);
-  }
-};
+  const onFormSubmit = async (data: FormValues) => {
+    try {
+      if (editId) {
+        await apiHelper.put(`/professions/${editId}`, data);
+        toast.success("Profession updated successfully!");
+      } else {
+        await apiHelper.post("/professions", data);
+        toast.success("Profession created successfully!");
+      }
 
-  const onFormSubmit = async (
-  data: FormValues
-) => {
-  try {
-    if (editId) {
-      await apiHelper.put(
-        `/professions/${editId}`,
-        data
-      );
-    } else {
-      await apiHelper.post(
-        "/professions",
-        data
+      await getProfessions();
+      setShowDrawer(false);
+      setEditId(null);
+      reset({
+        profession: "",
+        status: "ACTIVE",
+      });
+    } catch (error: any) {
+      console.log(error);
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to save profession. Please try again.",
       );
     }
-
-    getProfessions();
-
-    setShowDrawer(false);
-    setEditId(null);
-
-    reset({
-      profession: "",
-      status: "ACTIVE",
-    });
-  } catch (error) {
-    console.log(error);
-  }
-};
-
+  };
   // Filter data
   const filteredData = professions.filter((item) => {
-    const matchesSearch =
-      item.profession.toLowerCase().includes(search.toLowerCase());
+    const matchesSearch = item.profession
+      .toLowerCase()
+      .includes(search.toLowerCase());
 
     const matchesStatus =
       selectedStatusFilter === "All" || item.status === selectedStatusFilter;
@@ -239,7 +257,7 @@ useEffect(() => {
     setSelectedIds((prev) =>
       prev.includes(id)
         ? prev.filter((selectedId) => selectedId !== id)
-        : [...prev, id]
+        : [...prev, id],
     );
   };
 
@@ -278,8 +296,12 @@ useEffect(() => {
             Excel
           </button>
 
-          <Button color="primary" onClick={handleOpenAddDrawer} className="w-full sm:w-auto">
-            <PlusIcon className="size-4.5 mr-1.5" />
+          <Button
+            color="primary"
+            onClick={handleOpenAddDrawer}
+            className="w-full sm:w-auto"
+          >
+            <PlusIcon className="mr-1.5 size-4.5" />
             Add Profession
           </Button>
         </div>
@@ -312,7 +334,7 @@ useEffect(() => {
                 data={statusFilterOptions}
                 value={
                   statusFilterOptions.find(
-                    (o) => o.id === selectedStatusFilter
+                    (o) => o.id === selectedStatusFilter,
                   ) || statusFilterOptions[0]
                 }
                 placeholder="All Statuses"
@@ -402,7 +424,7 @@ useEffect(() => {
                       </button>
                     </Td>
                     <Td className="py-4 text-gray-500 dark:text-gray-400">
-                         {new Date(item.createdAt).toLocaleDateString("en-IN")}
+                      {new Date(item.createdAt).toLocaleDateString("en-IN")}
                     </Td>
                     <Td className="py-4 text-center">
                       <Menu
@@ -587,7 +609,7 @@ useEffect(() => {
                     >
                       {page}
                     </button>
-                  )
+                  ),
                 )}
 
                 <button
@@ -631,7 +653,7 @@ useEffect(() => {
               className="flex items-center gap-1.5 px-3 py-1.5 shadow-sm"
             >
               <TrashIcon className="size-4" />
-              <span className="text-xs font-semibold">Delete Selected</span>
+              <span className="text-xs font-semibold">Delete</span>
             </Button>
           </div>
         </div>
@@ -690,9 +712,17 @@ useEffect(() => {
                 <div className="grow space-y-5 overflow-y-auto p-5">
                   <div>
                     <Input
-                      label="Profession *"
+                     label={
+      <span>
+       Profession <span className="text-red-500">*</span>
+      </span>
+    }
+                      
                       placeholder="Enter profession"
-                      {...register("profession", formValidationRules.profession)}
+                      {...register(
+                        "profession",
+                        formValidationRules.profession,
+                      )}
                       error={errors?.profession && errors.profession.message}
                     />
                   </div>
@@ -701,12 +731,12 @@ useEffect(() => {
                     <label className="mb-2 block text-sm font-medium">
                       Status
                     </label>
-                  
+
                     <Listbox
                       data={statusOptions}
                       value={
                         statusOptions.find(
-                          (item) => item.value === formStatusValue
+                          (item) => item.value === formStatusValue,
                         ) || statusOptions[0]
                       }
                       placeholder="Select Status"
@@ -738,6 +768,42 @@ useEffect(() => {
           </TransitionChild>
         </Dialog>
       </Transition>
+      {/* Confirmation Modal */}
+      <ConfirmModal
+        show={showConfirmModal}
+        onClose={() => {
+          setShowConfirmModal(false);
+          setDeleteTargetId(null);
+          setConfirmState("pending");
+        }}
+        onOk={performDelete}
+        confirmLoading={confirmLoading}
+        state={confirmState}
+        messages={{
+          pending: {
+            Icon: ExclamationTriangleIcon,
+            title: isBulkDelete
+              ? "Delete Selected Professions?"
+              : "Are you sure?",
+            description: isBulkDelete
+              ? `Are you sure you want to delete ${selectedIds.length} selected professions? This action cannot be undone.`
+              : "Are you sure you want to delete this profession? Once deleted, it cannot be restored.",
+            actionText: isBulkDelete ? "Delete All" : "Delete",
+          },
+          success: {
+            title: "Deleted Successfully",
+            description: isBulkDelete
+              ? `${selectedIds.length} professions have been deleted.`
+              : "The profession has been deleted.",
+            actionText: "Done",
+          },
+          error: {
+            title: "Delete Failed",
+            description: "Failed to delete. Please try again.",
+            actionText: "Try Again",
+          },
+        }}
+      />
     </div>
   );
 };

@@ -24,6 +24,9 @@ import {
 import { Fragment } from "react";
 import { DatePicker } from "@/components/shared/form/Datepicker";
 import apiHelper from "@/utils/apiHelper";
+import { toast } from "sonner";
+import { ConfirmModal } from "@/components/shared/ConfirmModal";
+import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 
 // ---------- Types ----------
 export interface PurchaseItemRow {
@@ -137,6 +140,13 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
   const [rows, setRows] = useState<PurchaseItemRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [isView, setIsView] = useState(false);
+
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+const [confirmState, setConfirmState] = useState<"pending" | "success" | "error">("pending");
+const [confirmLoading, setConfirmLoading] = useState(false);
+const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+const [isBulkDelete, setIsBulkDelete] = useState(false);
+
   // Drawer states
   const [showDrawer, setShowDrawer] = useState(false);
   const [selectedItem, setSelectedItem] = useState<PurchaseItemRow | null>(
@@ -375,27 +385,37 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
 
     return Object.keys(errors).length === 0;
   };
-  const handleTransportSave = async () => {
-    if (!validateTransport()) return;
 
+
+ const handleTransportSave = async () => {
+  if (!validateTransport()) return;
+  try {
     await apiHelper.put(`/purchases/${id}/transport`, transportData);
     setTransportSaved(true);
+    toast.success("Transport details saved successfully!");
     setShowTransportModal(false);
-  };
-  const handleInwardSubmit = async () => {
-    if (!validateInward()) return;
-    try {
-      await apiHelper.put(
-        `/purchases/purchase-items/${selectedItem?.id}/inward`,
-        inwardData,
-      );
+  } catch (error: any) {
+    console.error(error);
+    toast.error(error.response?.data?.message || "Failed to save transport details.");
+  }
+};
 
-      await fetchPurchaseItems();
-      setShowDrawer(false);
-    } catch (err) {
-      console.log(err);
-    }
-  };
+
+const handleInwardSubmit = async () => {
+  if (!validateInward()) return;
+  try {
+    await apiHelper.put(
+      `/purchases/purchase-items/${selectedItem?.id}/inward`,
+      inwardData,
+    );
+    toast.success("Inward details saved successfully!");
+    await fetchPurchaseItems();
+    setShowDrawer(false);
+  } catch (error: any) {
+    console.log(error);
+    toast.error(error.response?.data?.message || "Failed to save inward details.");
+  }
+};
 
   const handleInwardChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;

@@ -10,6 +10,9 @@ import { Droplets, Filter, Cog, CheckCircle, Thermometer } from "lucide-react";
 // ----------------------------------------------------------------------
 import { Listbox } from "@/components/shared/form/StyledListbox";
 import apiHelper from "@/utils/apiHelper";
+import { toast } from "sonner";
+
+
 // Options for various select fields
 const engineTypeOptions = [
   { label: "Diesel", value: "diesel" },
@@ -112,82 +115,56 @@ export function Enginedetails({
     defaultValues: kycFormCtx.state.formData.Enginedetails,
   });
 
-  const onSubmit = async (
-  data: EnginedetailsType
-) => {
+  const onSubmit = async (data: EnginedetailsType) => {
   try {
-    const websiteVariantId =
-      localStorage.getItem("websiteVariantId");
+    const websiteVariantId = localStorage.getItem("websiteVariantId");
 
     if (!websiteVariantId) {
+      toast.warning("No website variant found. Please save basic information first.");
       return;
     }
 
     const payload = {
       engineType: data.engineType,
       fuelType: data.fuelType,
-
-      horsePower: data.horsePower
-        ? Number(data.horsePower)
-        : null,
-
-    numberOfCylinders: data.numberOfCylinders,
-
-      cubicCapacity: data.cubicCapacity
-        ? Number(data.cubicCapacity)
-        : null,
-
-      ratedRpm: data.ratedRpm
-        ? Number(data.ratedRpm)
-        : null,
-
+      horsePower: data.horsePower ? Number(data.horsePower) : null,
+      numberOfCylinders: data.numberOfCylinders,
+      cubicCapacity: data.cubicCapacity ? Number(data.cubicCapacity) : null,
+      ratedRpm: data.ratedRpm ? Number(data.ratedRpm) : null,
       aspiratedType: data.aspiratedType,
       emissionNorms: data.emissionNorms,
       coolingSystem: data.coolingSystem,
       airFilterType: data.airFilterType,
-
-      maximumTorque: data.maximumTorque
-        ? Number(data.maximumTorque)
-        : null,
-
-      torqueRpm: data.torqueRpm
-        ? Number(data.torqueRpm)
-        : null,
-
-      torqueBackup: data.torqueBackup
-        ? Number(data.torqueBackup)
-        : null,
-
-      engineCondition:
-        data.engineCondition,
-
+      maximumTorque: data.maximumTorque ? Number(data.maximumTorque) : null,
+      torqueRpm: data.torqueRpm ? Number(data.torqueRpm) : null,
+      torqueBackup: data.torqueBackup ? Number(data.torqueBackup) : null,
+      engineCondition: data.engineCondition,
       currentStep: 1,
     };
 
-    await apiHelper.put(
-      `/website-variants/${websiteVariantId}/save-step`,
-      payload
-    );
+    await apiHelper.put(`/website-variants/${websiteVariantId}/save-step`, payload);
 
     kycFormCtx.dispatch({
-  type: "SET_FORM_DATA",
-  payload: {
-    Enginedetails: data,
-  },
-});
+      type: "SET_FORM_DATA",
+      payload: {
+        Enginedetails: data,
+      },
+    });
 
-kycFormCtx.dispatch({
-  type: "SET_STEP_STATUS",
-  payload: {
-    Enginedetails: {
-      isDone: true,
-    },
-  },
-});
+    kycFormCtx.dispatch({
+      type: "SET_STEP_STATUS",
+      payload: {
+        Enginedetails: {
+          isDone: true,
+        },
+      },
+    });
 
-setCurrentStep(2);
-  } catch (error) {
+    toast.success("Engine details saved successfully!");
+    setCurrentStep(2);
+  } catch (error: any) {
     console.error(error);
+    toast.error(error.response?.data?.message || "Failed to save engine details. Please try again.");
   }
 };
 

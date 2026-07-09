@@ -27,6 +27,9 @@ import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/Table";
 import { Button, Checkbox, Input } from "@/components/ui";
 import apiHelper from "@/utils/apiHelper";
 import { Listbox } from "@/components/shared/form/StyledListbox";
+import { toast } from "sonner";
+import { ConfirmModal } from "@/components/shared/ConfirmModal";
+import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 
 type Finance = {
   id: number;
@@ -72,6 +75,12 @@ const Finance = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [selectedStatusFilter, setSelectedStatusFilter] = useState("All");
+
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+const [confirmState, setConfirmState] = useState<"pending" | "success" | "error">("pending");
+const [confirmLoading, setConfirmLoading] = useState(false);
+const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+const [isBulkDelete, setIsBulkDelete] = useState(false);
 
   const {
     register,
@@ -126,33 +135,45 @@ const Finance = () => {
     setShowDrawer(true);
   };
 
-  const handleDelete = async (id: number) => {
-    try {
-      await apiHelper.delete(`/finances/${id}`);
-      getFinances();
-    } catch (error) {
-      console.log(error);
-    }
-  };
+const handleDelete = (id: number) => {
+  setDeleteTargetId(id);
+  setIsBulkDelete(false);
+  setConfirmState("pending");
+  setShowConfirmModal(true);
+};
+const handleBulkDelete = () => {
+  setIsBulkDelete(true);
+  setConfirmState("pending");
+  setShowConfirmModal(true);
+};
 
-  const handleBulkDelete = async () => {
-    try {
-      if (
-        window.confirm(
-          "Are you sure you want to delete selected enquiry types?",
-        )
-      ) {
-        await Promise.all(
-          selectedIds.map((id) => apiHelper.delete(`/finances/${id}`)),
-        );
-
-        setSelectedIds([]);
-        getFinances();
-      }
-    } catch (error) {
-      console.log(error);
+const performDelete = async () => {
+  setConfirmLoading(true);
+  try {
+    if (isBulkDelete) {
+      await Promise.all(selectedIds.map((id) => apiHelper.delete(`/finances/${id}`)));
+      toast.success(`${selectedIds.length} finances deleted successfully!`);
+      setSelectedIds([]);
+      await getFinances();
+      setCurrentPage(1);
+      setConfirmState("success");
+    } else {
+      if (deleteTargetId === null) return;
+      await apiHelper.delete(`/finances/${deleteTargetId}`);
+      toast.success("Finance deleted successfully!");
+      await getFinances();
+      setDeleteTargetId(null);
+      setConfirmState("success");
     }
-  };
+    setTimeout(() => setShowConfirmModal(false), 1500);
+  } catch (error: any) {
+    console.error("Delete failed:", error);
+    setConfirmState("error");
+    toast.error(error.response?.data?.message || "Failed to delete. Please try again.");
+  } finally {
+    setConfirmLoading(false);
+  }
+};
 
   const handleToggleStatus = async (id: number) => {
     try {
@@ -164,27 +185,28 @@ const Finance = () => {
     }
   };
 
-  const onFormSubmit = async (data: FormValues) => {
-    try {
-      if (editId) {
-        await apiHelper.put(`/finances/${editId}`, data);
-      } else {
-        await apiHelper.post("/finances", data);
-      }
-
-      getFinances();
-
-      setShowDrawer(false);
-      setEditId(null);
-
-      reset({
-        finance: "",
-        status: "ACTIVE",
-      });
-    } catch (error) {
-      console.log(error);
+ const onFormSubmit = async (data: FormValues) => {
+  try {
+    if (editId) {
+      await apiHelper.put(`/finances/${editId}`, data);
+      toast.success("Finance updated successfully!");
+    } else {
+      await apiHelper.post("/finances", data);
+      toast.success("Finance created successfully!");
     }
-  };
+
+    await getFinances();
+    setShowDrawer(false);
+    setEditId(null);
+    reset({
+      finance: "",
+      status: "ACTIVE",
+    });
+  } catch (error: any) {
+    console.log(error);
+    toast.error(error.response?.data?.message || "Failed to save finance. Please try again.");
+  }
+};
 
   // Filter data
   const filteredData = finances.filter((item) => {
@@ -618,7 +640,7 @@ const Finance = () => {
               className="flex items-center gap-1.5 px-3 py-1.5 shadow-sm"
             >
               <TrashIcon className="size-4" />
-              <span className="text-xs font-semibold">Delete Selected</span>
+              <span className="text-xs font-semibold">Delete</span>
             </Button>
           </div>
         </div>
@@ -677,7 +699,12 @@ const Finance = () => {
                 <div className="grow space-y-5 overflow-y-auto p-5">
                   <div>
                     <Input
-                      label="Finance Name *"
+                     label={
+      <span>
+      Finance Name <span className="text-red-500">*</span>
+      </span>
+    }
+                      
                       placeholder="Enter finance name"
                       {...register("finance", formValidationRules.finance)}
                       error={errors?.finance && errors.finance.message}
@@ -725,6 +752,41 @@ const Finance = () => {
           </TransitionChild>
         </Dialog>
       </Transition>
+
+      {/* Confirmation Modal */}
+<ConfirmModal
+  show={showConfirmModal}
+  onClose={() => {
+    setShowConfirmModal(false);
+    setDeleteTargetId(null);
+    setConfirmState("pending");
+  }}
+  onOk={performDelete}
+  confirmLoading={confirmLoading}
+  state={confirmState}
+  messages={{
+    pending: {
+      Icon: ExclamationTriangleIcon,
+      title: isBulkDelete ? "Delete Selected Finances?" : "Are you sure?",
+      description: isBulkDelete 
+        ? `Are you sure you want to delete ${selectedIds.length} selected finances? This action cannot be undone.`
+        : "Are you sure you want to delete this finance? Once deleted, it cannot be restored.",
+      actionText: isBulkDelete ? "Delete All" : "Delete",
+    },
+    success: {
+      title: "Deleted Successfully",
+      description: isBulkDelete 
+        ? `${selectedIds.length} finances have been deleted.`
+        : "The finance has been deleted.",
+      actionText: "Done",
+    },
+    error: {
+      title: "Delete Failed",
+      description: "Failed to delete. Please try again.",
+      actionText: "Try Again",
+    },
+  }}
+/>
     </div>
   );
 };

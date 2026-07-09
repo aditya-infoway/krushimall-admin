@@ -7,15 +7,12 @@ import { Button, Input } from "@/components/ui";
 import { useKYCFormContext } from "../KYCFormContext";
 import { TransmissionSchema, TransmissionType } from "../schema";
 import { Listbox } from "@/components/shared/form/StyledListbox";
+
 // ----------------------------------------------------------------------
 import apiHelper from "@/utils/apiHelper";
-import {
-  Disc3,
-  Settings,
-  Cog,
-  
-  CheckCircle,
-} from "lucide-react";
+import { Disc3, Settings, Cog, CheckCircle } from "lucide-react";
+import { toast } from "sonner";
+
 // Options for various select fields
 const gearTypeOptions = [
   { label: "Side Shift", value: "side_shift" },
@@ -112,118 +109,79 @@ export function Transmission({
   const kycFormCtx = useKYCFormContext();
 
   const {
-  register,
-  handleSubmit,
-  control,
-  watch,
-  formState: { errors },
-} = useForm<TransmissionType>({
-  resolver: yupResolver(TransmissionSchema) as Resolver<TransmissionType>,
-  defaultValues: kycFormCtx.state.formData.Transmission,
-});
-const onSubmit = async (
-  data: TransmissionType
-) => {
-  try {
-    const websiteVariantId =
-      localStorage.getItem("websiteVariantId");
+    register,
+    handleSubmit,
+    control,
+    watch,
+    formState: { errors },
+  } = useForm<TransmissionType>({
+    resolver: yupResolver(TransmissionSchema) as Resolver<TransmissionType>,
+    defaultValues: kycFormCtx.state.formData.Transmission,
+  });
 
-    if (!websiteVariantId) {
-      return;
-    }
+  const onSubmit = async (data: TransmissionType) => {
+    try {
+      const websiteVariantId = localStorage.getItem("websiteVariantId");
 
-    const payload = {
-      clutchType: data.clutchType,
+      if (!websiteVariantId) {
+        toast.warning(
+          "No website variant found. Please save basic information first.",
+        );
+        return;
+      }
 
-      forwardGears: data.forwardGears
-        ? Number(data.forwardGears)
-        : null,
+      const payload = {
+        clutchType: data.clutchType,
+        forwardGears: data.forwardGears ? Number(data.forwardGears) : null,
+        reverseGears: data.reverseGears ? Number(data.reverseGears) : null,
+        gearType: data.gearType,
+        transmissionType: data.transmissionType,
+        ptoHp: data.ptoHp ? Number(data.ptoHp) : null,
+        ptoRpm: data.ptoRpm ? Number(data.ptoRpm) : null,
+        ptoType: data.ptoType,
+        ptoPosition: data.ptoPosition,
+        creeperGears: data.features?.creeperGears ?? false,
+        shuttleShift: data.features?.shuttleShift ?? false,
+        sideShiftGear: data.features?.sideShiftGear ?? false,
+        powerShuttle: data.features?.powerShuttle ?? false,
+        hiLoGears: data.features?.hiLoGears ?? false,
+        multiSpeedPto: data.features?.multiSpeedPto ?? false,
+        reversePto: data.features?.reversePto ?? false,
+        superReducer: data.features?.superReducer ?? false,
+        currentStep: 3,
+      };
 
-      reverseGears: data.reverseGears
-        ? Number(data.reverseGears)
-        : null,
+      await apiHelper.put(
+        `/website-variants/${websiteVariantId}/save-step`,
+        payload,
+      );
 
-      gearType: data.gearType,
-
-      transmissionType:
-        data.transmissionType,
-
-      ptoHp: data.ptoHp
-        ? Number(data.ptoHp)
-        : null,
-
-      ptoRpm: data.ptoRpm
-        ? Number(data.ptoRpm)
-        : null,
-
-      ptoType: data.ptoType,
-      ptoPosition: data.ptoPosition,
-
-      creeperGears:
-        data.features?.creeperGears ??
-        false,
-
-      shuttleShift:
-        data.features?.shuttleShift ??
-        false,
-
-      sideShiftGear:
-        data.features?.sideShiftGear ??
-        false,
-
-      powerShuttle:
-        data.features?.powerShuttle ??
-        false,
-
-      hiLoGears:
-        data.features?.hiLoGears ??
-        false,
-
-      multiSpeedPto:
-        data.features?.multiSpeedPto ??
-        false,
-
-      reversePto:
-        data.features?.reversePto ??
-        false,
-
-      superReducer:
-        data.features?.superReducer ??
-        false,
-
-      currentStep: 3,
-    };
-
-    await apiHelper.put(
-      `/website-variants/${websiteVariantId}/save-step`,
-      payload
-    );
-
-    kycFormCtx.dispatch({
-      type: "SET_FORM_DATA",
-      payload: {
-        Transmission: data,
-      },
-    });
-
-    kycFormCtx.dispatch({
-      type: "SET_STEP_STATUS",
-      payload: {
-        Transmission: {
-          isDone: true,
+      kycFormCtx.dispatch({
+        type: "SET_FORM_DATA",
+        payload: {
+          Transmission: data,
         },
-      },
-    });
+      });
 
-    setCurrentStep(3);
-  } catch (error) {
-    console.error(
-      "Transmission Save Error:",
-      error
-    );
-  }
-};
+      kycFormCtx.dispatch({
+        type: "SET_STEP_STATUS",
+        payload: {
+          Transmission: {
+            isDone: true,
+          },
+        },
+      });
 
+      toast.success("Transmission details saved successfully!");
+      setCurrentStep(3);
+    } catch (error: any) {
+      console.error("Transmission Save Error:", error);
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to save transmission details. Please try again.",
+      );
+    }
+  };
   return (
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
       <div className="mt-6 space-y-8">
@@ -237,43 +195,42 @@ const onSubmit = async (
           {/* Clutch Section */}
           <div className="mb-6">
             <h4 className="mb-3 font-medium text-gray-700">Clutch</h4>
-           <div className="flex flex-wrap gap-4">
-  {clutchOptions.map((option) => {
-    const selected = watch("clutchType") === option.value;
+            <div className="flex flex-wrap gap-4">
+              {clutchOptions.map((option) => {
+                const selected = watch("clutchType") === option.value;
 
-    return (
-      <label
-        key={option.value}
-        className={`relative flex min-w-[280px] cursor-pointer items-center gap-4 rounded-lg border p-4
-          ${
-            selected
-              ? "border-primary-500 bg-primary/10"
-              : "border-gray-300"
-          }`}
-      >
-        <input
-          type="radio"
-          value={option.value}
-          {...register("clutchType")}
-          className="hidden"
-        />
+                return (
+                  <label
+                    key={option.value}
+                    className={`relative flex min-w-[280px] cursor-pointer items-center gap-4 rounded-lg border p-4 ${
+                      selected
+                        ? "border-primary-500 bg-primary/10"
+                        : "border-gray-300"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      value={option.value}
+                      {...register("clutchType")}
+                      className="hidden"
+                    />
 
-        {selected && (
-          <CheckCircle className="text-primary-500 absolute top-3 right-3 h-5 w-5" />
-        )}
+                    {selected && (
+                      <CheckCircle className="text-primary-500 absolute top-3 right-3 h-5 w-5" />
+                    )}
 
-        <option.icon className="h-10 w-10 text-primary-500" />
+                    <option.icon className="text-primary-500 h-10 w-10" />
 
-        <div>
-          <h4 className="font-medium">{option.label}</h4>
-          <p className="text-sm text-gray-500">
-            {option.description}
-          </p>
-        </div>
-      </label>
-    );
-  })}
-</div>
+                    <div>
+                      <h4 className="font-medium">{option.label}</h4>
+                      <p className="text-sm text-gray-500">
+                        {option.description}
+                      </p>
+                    </div>
+                  </label>
+                );
+              })}
+            </div>
             {errors?.clutchType && (
               <p className="mt-2 text-sm text-red-500">
                 {errors.clutchType.message}
@@ -292,11 +249,11 @@ const onSubmit = async (
                   render={({ field }) => (
                     <Listbox
                       data={forwardGearOptions}
-                     value={
-  forwardGearOptions.find(
-    (item) => item.value === Number(field.value)
-  ) || null
-}
+                      value={
+                        forwardGearOptions.find(
+                          (item) => item.value === Number(field.value),
+                        ) || null
+                      }
                       onChange={(option: any) => field.onChange(option?.value)}
                       displayField="label"
                       label="Forword Gears"
@@ -372,42 +329,41 @@ const onSubmit = async (
               Transmission Type
             </h4>
             <div className="flex flex-wrap gap-4">
-  {transmissionTypeOptions.map((option) => {
-    const selected = watch("transmissionType") === option.value;
+              {transmissionTypeOptions.map((option) => {
+                const selected = watch("transmissionType") === option.value;
 
-    return (
-      <label
-        key={option.value}
-        className={`relative flex min-w-[280px] cursor-pointer items-center gap-4 rounded-lg border p-4
-          ${
-            selected
-              ? "border-primary-500 bg-primary/10"
-              : "border-gray-300"
-          }`}
-      >
-        <input
-          type="radio"
-          value={option.value}
-          {...register("transmissionType")}
-          className="hidden"
-        />
+                return (
+                  <label
+                    key={option.value}
+                    className={`relative flex min-w-[280px] cursor-pointer items-center gap-4 rounded-lg border p-4 ${
+                      selected
+                        ? "border-primary-500 bg-primary/10"
+                        : "border-gray-300"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      value={option.value}
+                      {...register("transmissionType")}
+                      className="hidden"
+                    />
 
-        {selected && (
-          <CheckCircle className="text-primary-500 absolute top-3 right-3 h-5 w-5" />
-        )}
+                    {selected && (
+                      <CheckCircle className="text-primary-500 absolute top-3 right-3 h-5 w-5" />
+                    )}
 
-        <option.icon className="h-10 w-10 text-primary-500" />
+                    <option.icon className="text-primary-500 h-10 w-10" />
 
-        <div>
-          <h4 className="font-medium">{option.label}</h4>
-          <p className="text-sm text-gray-500">
-            {option.description}
-          </p>
-        </div>
-      </label>
-    );
-  })}
-</div>
+                    <div>
+                      <h4 className="font-medium">{option.label}</h4>
+                      <p className="text-sm text-gray-500">
+                        {option.description}
+                      </p>
+                    </div>
+                  </label>
+                );
+              })}
+            </div>
             {errors?.transmissionType && (
               <p className="mt-2 text-sm text-red-500">
                 {errors.transmissionType.message}
