@@ -628,41 +628,51 @@ export default function General() {
           </div>
         </div>
       </div>
-      <div className="mt-6 overflow-x-auto">
-        <table className="w-full border border-gray-700">
-          <thead>
-            <tr>
-              <th className="border border-gray-700 p-3 text-left">
-                Prefix For
-              </th>
+    <div className="mt-6 max-h-[500px] overflow-auto rounded-lg border border-gray-700">
+  <table className="w-full border-collapse">
+    <thead className="sticky top-0 z-10 bg-white dark:bg-gray-900">
+      <tr>
+        <th className="sticky top-0 border border-gray-700 bg-white dark:bg-gray-900 p-3 text-left">
+          Prefix For
+        </th>
 
-              <th className="border border-gray-700 p-3 text-left">Prefix</th>
+        <th className="sticky top-0 border border-gray-700 bg-white dark:bg-gray-900 p-3 text-left">
+          Prefix
+        </th>
 
-              <th className="border border-gray-700 p-3 text-center">Action</th>
-            </tr>
-          </thead>
+        <th className="sticky top-0 border border-gray-700 bg-white dark:bg-gray-900 p-3 text-center">
+          Action
+        </th>
+      </tr>
+    </thead>
 
-          <tbody>
-            {prefixes.map((item) => (
-              <tr key={item.id}>
-                <td className="border border-gray-700 p-3">{item.prefixFor}</td>
+    <tbody>
+      {prefixes.map((item) => (
+        <tr key={item.id}>
+          <td className="border border-gray-700 p-3">
+            {item.prefixFor}
+          </td>
 
-                <td className="border border-gray-700 p-3">{item.prefix}</td>
+          <td className="border border-gray-700 p-3">
+            {item.prefix}
+          </td>
 
-                <td className="border border-gray-700 p-3 text-center">
-                  <Button
-                    isIcon
-                    color="primary"
-                    onClick={() => handleEditPrefix(item)}
-                    className="size-8 rounded-lg"
-                  >
-                    <PencilSquareIcon className="size-4" />
-                  </Button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+          <td className="border border-gray-700 p-3 text-center">
+            <Button
+              isIcon
+              color="primary"
+              onClick={() => handleEditPrefix(item)}
+              className="size-8 rounded-lg"
+            >
+              <PencilSquareIcon className="size-4" />
+            </Button>
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+
+
       </div>
     </div>
   );

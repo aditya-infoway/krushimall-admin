@@ -5,10 +5,11 @@ import { useForm, useWatch, Controller } from "react-hook-form";
 import { Input } from "@/components/ui";
 import { Combobox } from "@/components/shared/form/StyledCombobox";
 import { DatePicker } from "@/components/shared/form/Datepicker";
-import { ArrowLeftIcon } from "@heroicons/react/24/outline";
+import { ArrowLeftIcon,  TrashIcon, } from "@heroicons/react/24/outline";
 import Select from "react-select";
 import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/Table";
 import { Checkbox } from "@/components/ui";
+import { useParams } from "react-router-dom";
 
 type FormValues = {
   id?: number;
@@ -72,7 +73,12 @@ type SelectedVehicle = {
   first2Tyer?: string;
   second1Tyer?: string;
   second2Tyer?: string;
-
+second2TyreNo?:number;
+second1TyreNo?:number;
+first2TyreNo?:number;
+first1TyreNo?:number;
+variantName?: string;
+modelName?: string;
   location?: string;
 
   grnNo?: string;
@@ -360,6 +366,7 @@ const AddVehicleStock = () => {
   const [pendingVehicle, setPendingVehicle] = useState<SelectedVehicle | null>(
     null,
   );
+  const { id } = useParams();
   const [isSaved, setIsSaved] = useState(false);
   const [branchOptions, setBranchOptions] = useState<any[]>([]);
   const [vehicleOptions, setVehicleOptions] = useState<any[]>([]);
@@ -368,7 +375,75 @@ const AddVehicleStock = () => {
   const [branchOpeningBalance, setBranchOpeningBalance] = useState(0);
   const [companyId, setCompanyId] = useState<number | null>(null);
 const [financialYearId, setFinancialYearId] = useState<number | null>(null);
+const getTransferById = async () => {
+  try {
+    const res = await apiHelper.get(`/vehicle-stock-transfer/${id}`);
 
+    console.log("API Response =>", res);
+
+    const transfer = res.data;
+
+    console.log("Transfer =>", transfer);
+
+    setValue("date", transfer.transferDate?.split("T")[0] || "");
+    setValue("stockTransferId", transfer.transferNo || "");
+    setValue("branch", String(transfer.branchId || ""));
+    setValue("branchManagerName", transfer.manager?.accountName || "");
+    setValue("contactNo", transfer.branch?.mobileNo || "");
+const selectedBranch = branchOptions.find(
+  (b: any) => Number(b.value) === Number(transfer.branchId)
+);
+
+if (selectedBranch) {
+  setBranchStateCode(selectedBranch.stateCode || "");
+  setBranchOpeningBalance(Number(selectedBranch.closingBalance || 0));
+}
+    // If backend returns a vehicles array
+    if (transfer.vehicles) {
+      setSelectedVehicles(transfer.vehicles);
+      const vehicle = transfer.vehicles[0];
+
+if (vehicle) {
+  setValue("chassisNo", vehicle.chassisNo);
+
+  setValue("vehicleSrNo", vehicle.serialNo || "");
+ setValue("model", vehicle.modelName || "");
+setValue("variant", vehicle.variantName || "");
+  setValue("colour", vehicle.colour || "");
+  setValue("itemName", vehicle.itemName || "");
+  setValue("itemCode", vehicle.itemCode || "");
+  setValue("engineNo", vehicle.engineNo || "");
+  setValue("mfgDate", formatDate(vehicle.mfgDate));
+  setValue("keyNo", vehicle.keyNumber || "");
+  setValue("batteryNo", vehicle.batteryNo || "");
+  setValue("batteryMake", vehicle.batteryMake || "");
+ setValue("f1TyresNo", vehicle.first1TyreNo || "");
+setValue("f2TyresNo", vehicle.first2TyreNo || "");
+setValue("s1TyresNo", vehicle.second1TyreNo || "");
+setValue("s2TyresNo", vehicle.second2TyreNo || "");
+  setValue("location", vehicle.location || "");
+  setValue("grnNumber", vehicle.grnNo || "");
+  setValue("grnDate", formatDate(vehicle.grnDate));
+  setValue("grnRecordDate", formatDate(vehicle.grnRecordDate));
+}
+    } else {
+      // Your backend currently returns a single vehicle
+      setSelectedVehicles([transfer]);
+    }
+    
+  } catch (err) {
+    console.log(err);
+  }
+};
+useEffect(() => {
+  if (
+    id &&
+    vehicleOptions.length > 0 &&
+    branchOptions.length > 0
+  ) {
+    getTransferById();
+  }
+}, [id, vehicleOptions, branchOptions]);
  const getCompany = async () => {
   try {
     const res = await apiHelper.get("/company");
@@ -392,14 +467,15 @@ const [financialYearId, setFinancialYearId] = useState<number | null>(null);
   useEffect(() => {
     getCompany();
   }, []);
-  const totalValue = selectedVehicles.reduce(
-    (sum, item) => sum + Number(item.purchasePriceNoGST || 0),
-    0,
-  );
-  const taxableValue = selectedVehicles.reduce(
-    (sum, item) => sum + Number(item.purchasePriceTaxable || 0),
-    0,
-  );
+ const totalValue = (selectedVehicles || []).reduce(
+  (sum, item) => sum + Number(item.purchasePriceNoGST || 0),
+  0
+);
+
+const taxableValue = (selectedVehicles || []).reduce(
+  (sum, item) => sum + Number(item.purchasePriceTaxable || 0),
+  0
+);
   const totalGST = taxableValue - totalValue;
   const isSameState =
     (companyStateCode || "").trim().toUpperCase() ===
@@ -514,22 +590,7 @@ useEffect(() => {
 }, []);
 
   // Auto-fill manager name and contact based on branch
-  useEffect(() => {
-    if (watchedBranch) {
-      const branchData: any = {
-        Mumbai: { manager: "Mr. Rajesh Sharma", contact: "9876543210" },
-        Delhi: { manager: "Mr. Amit Kumar", contact: "9876543211" },
-        Bangalore: { manager: "Ms. Priya Patel", contact: "9876543212" },
-        Chennai: { manager: "Mr. Suresh Iyer", contact: "9876543213" },
-        Pune: { manager: "Ms. Sneha Desai", contact: "9876543214" },
-      };
-      const data = branchData[watchedBranch];
-      if (data) {
-        setValue("branchManagerName", data.manager);
-        setValue("contactNo", data.contact);
-      }
-    }
-  }, [watchedBranch, setValue]);
+
 
   // Auto-fill vehicle details based on chassis number (only when checkbox is unchecked and not saved)
   useEffect(() => {
@@ -568,13 +629,21 @@ useEffect(() => {
   }, [watchedChassisNo, vehicleOptions]);
 
   // Set edit data
-  useEffect(() => {
-    if (isEditMode && editData) {
-      Object.keys(editData).forEach((key) => {
-        setValue(key as keyof FormValues, editData[key]);
-      });
-    }
-  }, [isEditMode, editData, setValue]);
+ useEffect(() => {
+  if (!isEditMode || !editData) return;
+
+  // Header fields
+  setValue("date", editData.transferDate);
+  setValue("stockTransferId", editData.transferNo);
+  setValue("branch", String(editData.branchId));
+  setValue("branchManagerName", editData.manager?.accountName || "");
+  setValue("contactNo", editData.branch?.mobileNo || "");
+
+  // Vehicle table
+  if (editData.vehicles) {
+    setSelectedVehicles(editData.vehicles);
+  }
+}, [isEditMode, editData]);
 
   const formValidationRules = {
     date: { required: "Date is required" },
@@ -624,7 +693,7 @@ const handleSave = async () => {
 
     const payload = {
       companyId: Number(companyId),
-  financialYearId: Number(financialYearId),
+      financialYearId: Number(financialYearId),
 
       transferDate: watch("date"),
       transferNo: watch("stockTransferId"),
@@ -633,7 +702,7 @@ const handleSave = async () => {
 
       managerId: Number(
         branchOptions.find(
-          (x: any) => x.value === Number(watch("branch"))
+          (x: any) => Number(x.value) === Number(watch("branch"))
         )?.managerId
       ),
 
@@ -657,14 +726,27 @@ const handleSave = async () => {
 
     console.log("Payload =>", payload);
 
-    const res = await apiHelper.post(
-      "/vehicle-stock-transfer",
-      payload
-    );
+    let res;
+
+    if (id) {
+      // Update
+      res = await apiHelper.put(
+        `/vehicle-stock-transfer/${id}`,
+        payload
+      );
+
+      alert("Vehicle Stock Transfer Updated Successfully");
+    } else {
+      // Create
+      res = await apiHelper.post(
+        "/vehicle-stock-transfer",
+        payload
+      );
+
+      alert("Vehicle Stock Transfer Created Successfully");
+    }
 
     console.log(res);
-
-    alert("Vehicle Stock Transfer Created Successfully");
 
     navigate("/stocktransfer/vehiclestock");
   } catch (error) {
@@ -745,6 +827,11 @@ const handleSave = async () => {
 
     return `${day}-${month}-${year}`;
   };
+  const handleDeleteVehicle = (id: number) => {
+  setSelectedVehicles((prev) => prev.filter((item) => item.id !== id));
+
+  setSelectedIds((prev) => prev.filter((itemId) => itemId !== id));
+};
   return (
     <div className="min-h-screen bg-white p-6 transition-colors duration-200 dark:bg-gray-900">
       {/* Header with Back Button */}
@@ -756,7 +843,7 @@ const handleSave = async () => {
           <ArrowLeftIcon className="h-5 w-5 text-gray-600 dark:text-gray-400" />
         </button>
         <h2 className="text-xl font-bold text-gray-800 dark:text-white">
-          Add Vehicle Stock
+         {id ? "Edit Vehicle Stock Transfer" : "Add Vehicle Stock Transfer"}
         </h2>
       </div>
 
@@ -797,11 +884,11 @@ const handleSave = async () => {
     <Combobox
       placeholder="Select Branch"
       data={branchOptions}
-      value={
-        branchOptions.find(
-          (item) => item.value === watch("branch")
-        ) || null
-      }
+    value={
+  branchOptions.find(
+    (item) => Number(item.value) === Number(watch("branch"))
+  ) || null
+}
      onChange={(val: any) => {
   setValue("branch", val?.value || "");
   setValue("branchManagerName", val?.manager || "");
@@ -1183,6 +1270,9 @@ const handleSave = async () => {
                       GRN Record Date
                     </Th>
                     <Th className="py-3.5 whitespace-nowrap">Purchase Price</Th>
+                    <Th className="py-3.5 text-center whitespace-nowrap">
+  Action
+</Th>
                   </Tr>
                 </THead>
                 <TBody className="dark:divide-dark-700 divide-y divide-gray-200">
@@ -1216,10 +1306,10 @@ const handleSave = async () => {
                           {item.serialNo}
                         </Td>
                         <Td className="py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">
-                          {item.model}
+                        {item.modelName || item.model}
                         </Td>
                         <Td className="py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">
-                          {item.variant}
+                       {item.variantName || item.variant}
                         </Td>
                         <Td className="py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">
                           <span
@@ -1252,16 +1342,16 @@ const handleSave = async () => {
                           {item.batteryMake}
                         </Td>
                         <Td className="py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">
-                          {item.first1Tyer}
+                         {item.first1TyreNo || item.first1Tyer}
                         </Td>
                         <Td className="py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">
-                          {item.first2Tyer}
+                        {item.first2TyreNo || item.first2Tyer}
                         </Td>
                         <Td className="py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">
-                          {item.second1Tyer}
+                         {item.second1TyreNo || item.second1Tyer}
                         </Td>
                         <Td className="py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">
-                          {item.second2Tyer}
+                          {item.second2TyreNo || item.second2Tyer}
                         </Td>
                         <Td className="py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">
                           {item.location}
@@ -1281,6 +1371,15 @@ const handleSave = async () => {
                             "en-IN",
                           )}
                         </Td>
+                        <Td className="py-4 text-center">
+  <button
+    type="button"
+    onClick={() => handleDeleteVehicle(item.id)}
+    className="rounded-md p-2 text-red-500 transition hover:bg-red-100 hover:text-red-700 dark:hover:bg-red-900/30"
+  >
+    <TrashIcon className="h-5 w-5" />
+  </button>
+</Td>
                       </Tr>
                     );
                   })}
@@ -1366,7 +1465,7 @@ const handleSave = async () => {
     onClick={handleSave}
     className="rounded-lg bg-blue-600 px-6 py-2 font-medium text-white hover:bg-blue-700"
   >
-    Save
+    {id ? "Update" : "Save"}
   </button>
 </div>
     </div>

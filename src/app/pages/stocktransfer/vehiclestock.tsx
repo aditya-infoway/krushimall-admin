@@ -100,8 +100,8 @@ const handleAdd = () => {
 };
 
 const handleEdit = (item: VehicleStock) => {
-  navigate(`/stocktransfer/vehiclestock/edit/${item.id}`, { state: { item } });
-}
+  navigate(`/stocktransfer/vehiclestock/edit/${item.id}`);
+};
 
   const handleDelete = async (id: number) => {
     try {
@@ -130,10 +130,9 @@ const handleEdit = (item: VehicleStock) => {
     }
   };
 
-  const handleViewDetails = (item: VehicleStock) => {
-    setSelectedVehicle(item);
-    setShowDetails(true);
-  };
+const handleViewDetails = (item: VehicleStock) => {
+ navigate(`/stocktransfer/vehiclestock/view/${item.id}`);
+};
 
   const branchFilterOptions = [
     { id: "All", name: "All Branches" },

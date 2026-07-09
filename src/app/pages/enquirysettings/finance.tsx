@@ -30,16 +30,21 @@ import { Listbox } from "@/components/shared/form/StyledListbox";
 import { toast } from "sonner";
 import { ConfirmModal } from "@/components/shared/ConfirmModal";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
-
+import { Combobox } from "@/components/shared/form/Combobox";
 type Finance = {
   id: number;
-  finance: string;
+  account: {
+    id: number;
+    accountName: string;
+  };
+  employeeName: string;
   status: string;
   createdAt: string;
 };
 
 type FormValues = {
   finance: string;
+  employeeName:string
   status: string;
 };
 
@@ -77,11 +82,43 @@ const Finance = () => {
   const [selectedStatusFilter, setSelectedStatusFilter] = useState("All");
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-const [confirmState, setConfirmState] = useState<"pending" | "success" | "error">("pending");
-const [confirmLoading, setConfirmLoading] = useState(false);
-const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
-const [isBulkDelete, setIsBulkDelete] = useState(false);
+  const [confirmState, setConfirmState] = useState<
+    "pending" | "success" | "error"
+  >("pending");
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+  const [isBulkDelete, setIsBulkDelete] = useState(false);
+  const [financeAccounts, setFinanceAccounts] = useState<any[]>([]);
+  const [selectedFinance, setSelectedFinance] = useState<any>(null);
 
+  const getFinanceAccounts = async () => {
+    try {
+      const res = await apiHelper.get("/accounts");
+
+      setFinanceAccounts(
+        res.data
+          .filter(
+            (a: any) =>
+              a.group === "Sundry Debitor (finance)" ||
+              a.group === "Sundry Creditor (finance)",
+          )
+          .map((a: any) => ({
+            value: a.id,
+            label: `${a.accountName} (${a.mobile ?? ""})`,
+            accountName: a.accountName,
+            mobile: a.mobile,
+            openingBalance: a.openingBalance,
+            balance: a.closingBalance,
+            balanceType: a.drCr,
+          })),
+      );
+    } catch (err) {
+      console.log(err);
+    }
+  };
+  useEffect(() => {
+    getFinanceAccounts();
+  }, []);
   const {
     register,
     handleSubmit,
@@ -121,59 +158,72 @@ const [isBulkDelete, setIsBulkDelete] = useState(false);
     setEditId(null);
     reset({
       finance: "",
+      employeeName:"",
       status: "ACTIVE",
     });
     setShowDrawer(true);
   };
 
-  const handleOpenEditDrawer = (item: Finance) => {
-    setEditId(item.id);
-    reset({
-      finance: item.finance,
-      status: item.status,
-    });
-    setShowDrawer(true);
+const handleOpenEditDrawer = (item: Finance) => {
+  setEditId(item.id);
+
+  reset({
+    employeeName: item.employeeName,
+    status: item.status,
+  });
+
+  setSelectedFinance({
+    value: item.account.id,
+    label: item.account.accountName,
+    accountName: item.account.accountName,
+  });
+
+  setShowDrawer(true);
+};
+
+  const handleDelete = (id: number) => {
+    setDeleteTargetId(id);
+    setIsBulkDelete(false);
+    setConfirmState("pending");
+    setShowConfirmModal(true);
+  };
+  const handleBulkDelete = () => {
+    setIsBulkDelete(true);
+    setConfirmState("pending");
+    setShowConfirmModal(true);
   };
 
-const handleDelete = (id: number) => {
-  setDeleteTargetId(id);
-  setIsBulkDelete(false);
-  setConfirmState("pending");
-  setShowConfirmModal(true);
-};
-const handleBulkDelete = () => {
-  setIsBulkDelete(true);
-  setConfirmState("pending");
-  setShowConfirmModal(true);
-};
-
-const performDelete = async () => {
-  setConfirmLoading(true);
-  try {
-    if (isBulkDelete) {
-      await Promise.all(selectedIds.map((id) => apiHelper.delete(`/finances/${id}`)));
-      toast.success(`${selectedIds.length} finances deleted successfully!`);
-      setSelectedIds([]);
-      await getFinances();
-      setCurrentPage(1);
-      setConfirmState("success");
-    } else {
-      if (deleteTargetId === null) return;
-      await apiHelper.delete(`/finances/${deleteTargetId}`);
-      toast.success("Finance deleted successfully!");
-      await getFinances();
-      setDeleteTargetId(null);
-      setConfirmState("success");
+  const performDelete = async () => {
+    setConfirmLoading(true);
+    try {
+      if (isBulkDelete) {
+        await Promise.all(
+          selectedIds.map((id) => apiHelper.delete(`/finances/${id}`)),
+        );
+        toast.success(`${selectedIds.length} finances deleted successfully!`);
+        setSelectedIds([]);
+        await getFinances();
+        setCurrentPage(1);
+        setConfirmState("success");
+      } else {
+        if (deleteTargetId === null) return;
+        await apiHelper.delete(`/finances/${deleteTargetId}`);
+        toast.success("Finance deleted successfully!");
+        await getFinances();
+        setDeleteTargetId(null);
+        setConfirmState("success");
+      }
+      setTimeout(() => setShowConfirmModal(false), 1500);
+    } catch (error: any) {
+      console.error("Delete failed:", error);
+      setConfirmState("error");
+      toast.error(
+        error.response?.data?.message || "Failed to delete. Please try again.",
+      );
+    } finally {
+      setConfirmLoading(false);
     }
-    setTimeout(() => setShowConfirmModal(false), 1500);
-  } catch (error: any) {
-    console.error("Delete failed:", error);
-    setConfirmState("error");
-    toast.error(error.response?.data?.message || "Failed to delete. Please try again.");
-  } finally {
-    setConfirmLoading(false);
-  }
-};
+  };
 
   const handleToggleStatus = async (id: number) => {
     try {
@@ -185,40 +235,53 @@ const performDelete = async () => {
     }
   };
 
- const onFormSubmit = async (data: FormValues) => {
+const onFormSubmit = async (data: FormValues) => {
   try {
+    const payload = {
+      accountId: selectedFinance?.value,
+      employeeName: data.employeeName,
+      status: data.status,
+    };
+
     if (editId) {
-      await apiHelper.put(`/finances/${editId}`, data);
+      await apiHelper.put(`/finances/${editId}`, payload);
       toast.success("Finance updated successfully!");
     } else {
-      await apiHelper.post("/finances", data);
+      await apiHelper.post("/finances", payload);
       toast.success("Finance created successfully!");
     }
 
     await getFinances();
+
     setShowDrawer(false);
     setEditId(null);
+    setSelectedFinance(null);
+
     reset({
-      finance: "",
+      employeeName: "",
       status: "ACTIVE",
     });
   } catch (error: any) {
     console.log(error);
-    toast.error(error.response?.data?.message || "Failed to save finance. Please try again.");
+    toast.error(
+      error.response?.data?.message ||
+        "Failed to save finance. Please try again."
+    );
   }
 };
 
   // Filter data
-  const filteredData = finances.filter((item) => {
-    const matchesSearch = item.finance
-      .toLowerCase()
-      .includes(search.toLowerCase());
+ const filteredData = finances.filter((item: any) => {
+  const matchesSearch = (item.account?.accountName ?? "")
+    .toLowerCase()
+    .includes(search.toLowerCase());
 
-    const matchesStatus =
-      selectedStatusFilter === "All" || item.status === selectedStatusFilter;
+  const matchesStatus =
+    selectedStatusFilter === "All" ||
+    item.status === selectedStatusFilter;
 
-    return matchesSearch && matchesStatus;
-  });
+  return matchesSearch && matchesStatus;
+});
 
   const totalItems = filteredData.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
@@ -358,6 +421,9 @@ const performDelete = async () => {
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Finance Name
                 </Th>
+                  <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+             Employee Name
+                </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Status
                 </Th>
@@ -391,7 +457,10 @@ const performDelete = async () => {
                       {indexOfFirstItem + index + 1}
                     </Td>
                     <Td className="py-4 font-medium text-gray-900 dark:text-gray-400">
-                      {item.finance}
+                  {item.account?.accountName}
+                    </Td>
+                     <Td className="py-4 font-medium text-gray-900 dark:text-gray-400">
+                      {item.employeeName}
                     </Td>
                     <Td className="py-4">
                       <button
@@ -698,19 +767,47 @@ const performDelete = async () => {
                 {/* Content */}
                 <div className="grow space-y-5 overflow-y-auto p-5">
                   <div>
-                    <Input
-                     label={
-      <span>
-      Finance Name <span className="text-red-500">*</span>
-      </span>
-    }
-                      
-                      placeholder="Enter finance name"
-                      {...register("finance", formValidationRules.finance)}
-                      error={errors?.finance && errors.finance.message}
+                    <label className="mb-2 block text-sm font-medium">
+                      Finance Accounts
+                    </label>
+                    <Combobox
+                      data={financeAccounts}
+                      value={selectedFinance}
+                      onChange={(val: any) => setSelectedFinance(val)}
+                      displayField="label"
+                      placeholder="Search Finance Account"
+                      searchFields={["label", "mobile"]}
+                      columns={[
+                        {
+                          header: "Account",
+                          field: "label",
+                          width: "2fr",
+                        },
+                        {
+                          header: "Mobile",
+                          field: "mobile",
+                          width: "1fr",
+                        },
+                        {
+                          header: "Opening",
+                          field: "openingBalance",
+                          width: "1fr",
+                        },
+                      ]}
                     />
                   </div>
-
+                <Input
+  label={
+    <span>
+      Employee Name <span className="text-red-500">*</span>
+    </span>
+  }
+  placeholder="Enter Employee Name"
+  {...register("employeeName", {
+    required: "Employee Name is required",
+  })}
+  error={errors.employeeName?.message}
+/>
                   <div>
                     <label className="mb-2 block text-sm font-medium">
                       Status
@@ -754,39 +851,39 @@ const performDelete = async () => {
       </Transition>
 
       {/* Confirmation Modal */}
-<ConfirmModal
-  show={showConfirmModal}
-  onClose={() => {
-    setShowConfirmModal(false);
-    setDeleteTargetId(null);
-    setConfirmState("pending");
-  }}
-  onOk={performDelete}
-  confirmLoading={confirmLoading}
-  state={confirmState}
-  messages={{
-    pending: {
-      Icon: ExclamationTriangleIcon,
-      title: isBulkDelete ? "Delete Selected Finances?" : "Are you sure?",
-      description: isBulkDelete 
-        ? `Are you sure you want to delete ${selectedIds.length} selected finances? This action cannot be undone.`
-        : "Are you sure you want to delete this finance? Once deleted, it cannot be restored.",
-      actionText: isBulkDelete ? "Delete All" : "Delete",
-    },
-    success: {
-      title: "Deleted Successfully",
-      description: isBulkDelete 
-        ? `${selectedIds.length} finances have been deleted.`
-        : "The finance has been deleted.",
-      actionText: "Done",
-    },
-    error: {
-      title: "Delete Failed",
-      description: "Failed to delete. Please try again.",
-      actionText: "Try Again",
-    },
-  }}
-/>
+      <ConfirmModal
+        show={showConfirmModal}
+        onClose={() => {
+          setShowConfirmModal(false);
+          setDeleteTargetId(null);
+          setConfirmState("pending");
+        }}
+        onOk={performDelete}
+        confirmLoading={confirmLoading}
+        state={confirmState}
+        messages={{
+          pending: {
+            Icon: ExclamationTriangleIcon,
+            title: isBulkDelete ? "Delete Selected Finances?" : "Are you sure?",
+            description: isBulkDelete
+              ? `Are you sure you want to delete ${selectedIds.length} selected finances? This action cannot be undone.`
+              : "Are you sure you want to delete this finance? Once deleted, it cannot be restored.",
+            actionText: isBulkDelete ? "Delete All" : "Delete",
+          },
+          success: {
+            title: "Deleted Successfully",
+            description: isBulkDelete
+              ? `${selectedIds.length} finances have been deleted.`
+              : "The finance has been deleted.",
+            actionText: "Done",
+          },
+          error: {
+            title: "Delete Failed",
+            description: "Failed to delete. Please try again.",
+            actionText: "Try Again",
+          },
+        }}
+      />
     </div>
   );
 };
