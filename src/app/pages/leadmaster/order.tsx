@@ -784,12 +784,13 @@ const Order: React.FC = () => {
             title="Exchange Details"
             colorClass="bg-amber-600"
           />
+
           <div className={fieldGrid}>
             <Field>
               <Input
                 label="Existing Customer Model"
                 value={exchange.existingCustomerModel}
-                placeholder="Enter Customer Model"
+                placeholder="Enter Existing Customer Model"
                 onChange={(e) =>
                   setExchange((s) => ({
                     ...s,
@@ -798,11 +799,12 @@ const Order: React.FC = () => {
                 }
               />
             </Field>
+
             <Field>
               <Input
                 label="Existing Customer Variant"
                 value={exchange.existingCustomerVariant}
-                placeholder="Enter Customer Variant"
+                placeholder="Enter Existing Customer Variant"
                 onChange={(e) =>
                   setExchange((s) => ({
                     ...s,
@@ -811,6 +813,7 @@ const Order: React.FC = () => {
                 }
               />
             </Field>
+
             <Field>
               <Input
                 label="Existing Vehicle Year"
@@ -824,6 +827,7 @@ const Order: React.FC = () => {
                 }
               />
             </Field>
+
             <Field>
               <Input
                 label="Customer Expected Price"
@@ -837,78 +841,106 @@ const Order: React.FC = () => {
                 }
               />
             </Field>
+
             <Field>
               <Input
                 label="Market Price"
                 value={exchange.marketPrice}
                 placeholder="Enter Market Price"
                 onChange={(e) =>
-                  setExchange((s) => ({ ...s, marketPrice: e.target.value }))
-                }
-              />
-            </Field>
-            <Field>
-              <Input
-                label="Exchange Bonus"
-                value={exchange.exchangeBonus}
-                placeholder="Enter Exchange Bonus"
-                onChange={(e) =>
                   setExchange((s) => ({
                     ...s,
-                    exchangeBonus: e.target.value,
+                    marketPrice: e.target.value,
                   }))
                 }
               />
             </Field>
+
             <Field>
               <Input
-                label="SMIPL Shares"
-                value={exchange.smiplShares}
-                placeholder="Enter SMIPL Shares"
+                label="Chassis No"
+                value={exchange.chassisNo}
+                placeholder="Enter Chassis No"
                 onChange={(e) =>
-                  setExchange((s) => ({ ...s, smiplShares: e.target.value }))
+                  setExchange((s) => ({
+                    ...s,
+                    chassisNo: e.target.value,
+                  }))
                 }
               />
             </Field>
+
+            <Field>
+              <Input
+                label="Company Share"
+                value={exchange.companyShare}
+                placeholder="Enter Company Share"
+                onChange={(e) =>
+                  setExchange((s) => ({
+                    ...s,
+                    companyShare: e.target.value,
+                  }))
+                }
+              />
+            </Field>
+
             <Field>
               <Input
                 label="Dealer Shares"
                 value={exchange.dealerShares}
                 placeholder="Enter Dealer Shares"
                 onChange={(e) =>
-                  setExchange((s) => ({ ...s, dealerShares: e.target.value }))
-                }
-              />
-            </Field>
-            <Field>
-              <Input
-                label="Value Add Accessories"
-                value={exchange.valueAddAccessories}
-                placeholder="Enter Accessories Value"
-                onChange={(e) =>
                   setExchange((s) => ({
                     ...s,
-                    valueAddAccessories: e.target.value,
+                    dealerShares: e.target.value,
                   }))
                 }
               />
             </Field>
+
             <Field>
               <Input
-                label="Insurance"
-                placeholder="Enter Insurance"
-                value={exchange.insurance}
+                label="RC No"
+                value={exchange.rcNo}
+                placeholder="Enter RC No"
                 onChange={(e) =>
-                  setExchange((s) => ({ ...s, insurance: e.target.value }))
+                  setExchange((s) => ({
+                    ...s,
+                    rcNo: e.target.value,
+                  }))
                 }
               />
             </Field>
-            <div className="col-span-2 mt-1 text-right text-sm font-semibold text-gray-700 dark:text-gray-300">
-              Total Value: {totalValue}
-            </div>
+
+            <Field>
+              <Input
+                label="Insurance"
+                value={exchange.insurance}
+                placeholder="Enter Insurance"
+                onChange={(e) =>
+                  setExchange((s) => ({
+                    ...s,
+                    insurance: e.target.value,
+                  }))
+                }
+              />
+            </Field>
+
+            <Field>
+              <Input
+                label="Vehicle No"
+                value={exchange.vehicleNo}
+                placeholder="Enter Vehicle No"
+                onChange={(e) =>
+                  setExchange((s) => ({
+                    ...s,
+                    vehicleNo: e.target.value,
+                  }))
+                }
+              />
+            </Field>
           </div>
         </Card>
-
         {/* 5. Payment Details - Rose */}
         <Card>
           <CardHeader
