@@ -11,7 +11,10 @@ import axios from "@/utils/axios";
 import apiHelper from "@/utils/apiHelper";
 import Select from "react-select";
 import { Country, State, City } from "country-state-city";
+import TextEditor from "@/components/shared/TextEditor";
+import Quill from "quill";
 
+const Delta = Quill.import("delta");
 export default function General() {
   const [avatar, setAvatar] = useState<File | null>(null);
   const [company, setCompany] = useState<any>(null);
@@ -23,6 +26,10 @@ export default function General() {
   const [stateCode, setStateCode] = useState("");
   const [prefixes, setPrefixes] = useState<any[]>([]);
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [savingTerms, setSavingTerms] = useState(false);
+  const [termsValue, setTermsValue] = useState(
+  new Delta(),
+);
   const [newPrefix, setNewPrefix] = useState({
     prefixFor: "",
     prefix: "",
@@ -84,23 +91,81 @@ export default function General() {
       console.error(error);
     }
   };
-  const fetchCompany = async () => {
-    try {
-      const response = await axios.get("/company");
+const fetchCompany = async () => {
+  try {
+    const response = await axios.get(
+      "/company",
+    );
 
-      const data = response.data.data[0];
+    const data =
+      response.data.data[0];
 
-      setCompany(data);
+    console.log(
+      "Company:",
+      data,
+    );
 
-      setCountry(data.country || "");
-      setState(data.state || "");
-      setCity(data.city || "");
-      setDistrict(data.district || "");
-      setStateCode(data.stateCode || "");
-    } catch (error) {
-      console.error(error);
-    }
-  };
+    console.log(
+      "Saved quotation terms:",
+      data?.quotationTerms,
+    );
+
+    setCompany(data);
+
+    setCountry(data.country || "");
+    setState(data.state || "");
+    setCity(data.city || "");
+    setDistrict(
+      data.district || "",
+    );
+    setStateCode(
+      data.stateCode || "",
+    );
+  } catch (error) {
+    console.error(error);
+  }
+};
+  const handleSaveTerms = async () => {
+  try {
+    if (!company?.id) return;
+
+    setSavingTerms(true);
+
+    const formData = new FormData();
+
+    formData.append(
+      "quotationTerms",
+      company?.quotationTerms || "",
+    );
+
+    await axios.put(
+      `/company/${company.id}`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      },
+    );
+
+    await fetchCompany();
+
+    alert(
+      "Quotation terms saved successfully",
+    );
+  } catch (error) {
+    console.error(
+      "Save quotation terms error:",
+      error,
+    );
+
+    alert(
+      "Failed to save quotation terms",
+    );
+  } finally {
+    setSavingTerms(false);
+  }
+};
   const handleSavePrefix = async () => {
     try {
       if (editingId) {
@@ -326,7 +391,20 @@ export default function General() {
           className="rounded-xl"
           prefix={<PhoneIcon className="size-4.5" />}
         />
-
+<Input
+  label="Email"
+  type="email"
+  value={company?.email || ""}
+  readOnly={!isEditing}
+  onChange={(e) =>
+    setCompany({
+      ...company,
+      email: e.target.value,
+    })
+  }
+  className="rounded-xl"
+  prefix={<EnvelopeIcon className="size-4.5" />}
+/>
         <Input
           label="GST Number"
           value={company?.gstNumber || ""}
@@ -504,7 +582,22 @@ export default function General() {
           }
           className="rounded-xl"
         />
+<Input
+  label="Account Number"
+  type="text"
+  inputMode="numeric"
+  value={company?.accountNumber || ""}
+  readOnly={!isEditing}
+  onChange={(e) => {
+    const value = e.target.value.replace(/\D/g, "");
 
+    setCompany({
+      ...company,
+      accountNumber: value,
+    });
+  }}
+  className="rounded-xl"
+/>
         <Input
           label="IFSC Code"
           value={company?.ifscCode || ""}
@@ -671,10 +764,45 @@ export default function General() {
       ))}
     </tbody>
   </table>
-
+ 
 
       </div>
+     <div className="mt-8">
+  <h3 className="mb-4 text-lg font-semibold">
+    Quotation Terms & Conditions
+  </h3>
+
+ <TextEditor
+  value={
+    company?.quotationTerms || ""
+  }
+  onChange={(html) => {
+    console.log(
+      "Updated terms:",
+      html,
+    );
+
+    setCompany((prev: any) => ({
+      ...prev,
+      quotationTerms: html,
+    }));
+  }}
+/>
+
+  <div className="mt-4 flex justify-end">
+    <Button
+      color="primary"
+      onClick={handleSaveTerms}
+      disabled={savingTerms}
+    >
+      {savingTerms
+        ? "Saving..."
+        : "Save Terms & Conditions"}
+    </Button>
+  </div>
+</div>
     </div>
+    
   );
 }
 {
