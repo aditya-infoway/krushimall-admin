@@ -75,7 +75,15 @@ interface ReviewSummaryType {
   chequeDate: string;
   chequeClearDate: string;
 }
-
+interface FinanceDetailsType {
+  financeDoneBy: string;
+  financeAmount: string;
+  emi: string;
+  tenureMonths: string;
+  processingCharge: string;
+  loanROI: string;
+  marginMoney: string;
+}
 interface OptionType {
   id: number;
   name: string;
@@ -1719,7 +1727,214 @@ function ReviewLeadSummaryStep({
     </div>
   );
 }
+function FinanceDetailsStep({
+  financeDetails,
+  setFinanceDetails,
+  financeOptions,
+}: {
+  financeDetails: FinanceDetailsType;
 
+  setFinanceDetails: React.Dispatch<
+    React.SetStateAction<FinanceDetailsType>
+  >;
+
+  financeOptions: any[];
+}) {
+  const handleChange = (
+    field: keyof FinanceDetailsType,
+    value: string,
+  ) => {
+    setFinanceDetails((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const inputClass =
+    "dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 " +
+    "w-full rounded-md border border-gray-300 px-3 py-2 " +
+    "text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none";
+
+  return (
+    <div className="space-y-6">
+      <h3 className="dark:text-dark-50 text-lg font-bold text-gray-800">
+        Finance Details
+      </h3>
+
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+        {/* Finance Done By */}
+        <div className="flex flex-col gap-1">
+          <label className="dark:text-dark-200 text-sm font-medium">
+            Finance Done By
+          </label>
+
+    <Combobox
+  data={financeOptions}
+  value={
+    financeOptions.find(
+      (item: any) =>
+        String(item.id) ===
+        String(financeDetails.financeDoneBy),
+    ) || null
+  }
+  onChange={(item: any) => {
+    handleChange(
+      "financeDoneBy",
+      item?.id
+        ? String(item.id)
+        : "",
+    );
+  }}
+  displayField="name"
+  placeholder="Select Finance"
+  searchFields={[
+    "name",
+    "employeeName",
+  ]}
+  columns={[
+    {
+      header: "Finance Name",
+      field: "name",
+      width: "2fr",
+    },
+    {
+      header: "Employee Name",
+      field: "employeeName",
+      width: "1.5fr",
+    },
+  ]}
+/>
+        </div>
+
+        {/* Finance Amount */}
+        <div className="flex flex-col gap-1">
+          <label className="dark:text-dark-200 text-sm font-medium">
+            Finance Amount
+          </label>
+
+          <input
+            type="number"
+            min="0"
+            placeholder="0"
+            value={financeDetails.financeAmount}
+            onChange={(e) =>
+              handleChange(
+                "financeAmount",
+                e.target.value,
+              )
+            }
+            className={inputClass}
+          />
+        </div>
+
+        {/* EMI */}
+        <div className="flex flex-col gap-1">
+          <label className="dark:text-dark-200 text-sm font-medium">
+            EMI
+          </label>
+
+          <input
+            type="number"
+            min="0"
+            placeholder="0"
+            value={financeDetails.emi}
+            onChange={(e) =>
+              handleChange("emi", e.target.value)
+            }
+            className={inputClass}
+          />
+        </div>
+
+        {/* Tenure */}
+        <div className="flex flex-col gap-1">
+          <label className="dark:text-dark-200 text-sm font-medium">
+            Tenure (Months)
+          </label>
+
+          <input
+            type="number"
+            min="0"
+            placeholder="0"
+            value={financeDetails.tenureMonths}
+            onChange={(e) =>
+              handleChange(
+                "tenureMonths",
+                e.target.value,
+              )
+            }
+            className={inputClass}
+          />
+        </div>
+
+        {/* Processing Charge */}
+        <div className="flex flex-col gap-1">
+          <label className="dark:text-dark-200 text-sm font-medium">
+            Processing Charge
+          </label>
+
+          <input
+            type="number"
+            min="0"
+            placeholder="0"
+            value={
+              financeDetails.processingCharge
+            }
+            onChange={(e) =>
+              handleChange(
+                "processingCharge",
+                e.target.value,
+              )
+            }
+            className={inputClass}
+          />
+        </div>
+
+        {/* Loan ROI */}
+        <div className="flex flex-col gap-1">
+          <label className="dark:text-dark-200 text-sm font-medium">
+            Loan ROI
+          </label>
+
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            placeholder="0"
+            value={financeDetails.loanROI}
+            onChange={(e) =>
+              handleChange(
+                "loanROI",
+                e.target.value,
+              )
+            }
+            className={inputClass}
+          />
+        </div>
+
+        {/* Margin Money */}
+        <div className="flex flex-col gap-1">
+          <label className="dark:text-dark-200 text-sm font-medium">
+            Margin Money (Down Payment)
+          </label>
+
+          <input
+            type="number"
+            min="0"
+            placeholder="0"
+            value={financeDetails.marginMoney}
+            onChange={(e) =>
+              handleChange(
+                "marginMoney",
+                e.target.value,
+              )
+            }
+            className={inputClass}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
 // ─── Main Lead Details Drawer ────────────────────────────────────────────────
 export function LeadDetailsModal({
   isOpen,
@@ -1750,7 +1965,7 @@ export function LeadDetailsModal({
 
   const leadInfoValidateRef = useRef<(() => boolean) | null>(null);
   const reviewSummaryValidateRef = useRef<(() => boolean) | null>(null);
-  const totalSteps = 4;
+
 
   const [models, setModels] = useState([]);
   // const [variants, setVariants] = useState([]);
@@ -1855,6 +2070,21 @@ export function LeadDetailsModal({
     chequeDate: "",
     chequeClearDate: "",
   });
+  const [financeDetails, setFinanceDetails] =
+  useState<FinanceDetailsType>({
+    financeDoneBy: "",
+    financeAmount: "",
+    emi: "",
+    tenureMonths: "",
+    processingCharge: "",
+    loanROI: "",
+    marginMoney: "",
+  });
+  const isFinancePurchase =
+  reviewData.purchaseType === "Finance";
+const [financeOptions, setFinanceOptions] =
+  useState<any[]>([]);
+const totalSteps = isFinancePurchase ? 5 : 4;
   const validateStep1And2 = (currentStep: number) => {
     const newErrors: Record<string, string> = {};
     if (currentStep === 1) {
@@ -1872,18 +2102,36 @@ export function LeadDetailsModal({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleNext = () => {
-    // Validate current step
-    if (step === 1 || step === 2) {
-      if (!validateStep1And2(step)) return;
-    }
-    if (step === 3 && leadInfoValidateRef.current) {
-      const isValid = leadInfoValidateRef.current();
-      if (!isValid) return;
-    }
+ const handleNext = () => {
+  if (step === 1 || step === 2) {
+    if (!validateStep1And2(step)) return;
+  }
 
-    if (step < totalSteps) setStep(step + 1);
-  };
+  if (
+    step === 3 &&
+    leadInfoValidateRef.current
+  ) {
+    const isValid =
+      leadInfoValidateRef.current();
+
+    if (!isValid) return;
+  }
+
+  // Step 4 validation
+  if (
+    step === 4 &&
+    reviewSummaryValidateRef.current
+  ) {
+    const isValid =
+      reviewSummaryValidateRef.current();
+
+    if (!isValid) return;
+  }
+
+  if (step < totalSteps) {
+    setStep((prev) => prev + 1);
+  }
+};
 
   const handlePrevious = () => {
     if (step > 1) setStep(step - 1);
@@ -1935,6 +2183,38 @@ export function LeadDetailsModal({
         chequeNo: reviewData.chequeNo,
         chequeDate: reviewData.chequeDate?.[0] || null,
         chequeClearDate: reviewData.chequeClearDate?.[0] || null,
+        financeDoneBy:
+  financeDetails.financeDoneBy || null,
+
+financeAmount:
+  financeDetails.financeAmount
+    ? Number(financeDetails.financeAmount)
+    : null,
+
+emi:
+  financeDetails.emi
+    ? Number(financeDetails.emi)
+    : null,
+
+tenureMonths:
+  financeDetails.tenureMonths
+    ? Number(financeDetails.tenureMonths)
+    : null,
+
+processingCharge:
+  financeDetails.processingCharge
+    ? Number(financeDetails.processingCharge)
+    : null,
+
+loanROI:
+  financeDetails.loanROI
+    ? Number(financeDetails.loanROI)
+    : null,
+
+marginMoney:
+  financeDetails.marginMoney
+    ? Number(financeDetails.marginMoney)
+    : null,
       };
 
       console.log("PAYLOAD", payload);
@@ -2024,7 +2304,34 @@ export function LeadDetailsModal({
       })),
     );
   };
+const fetchFinances = async () => {
+  try {
+    const res = await apiHelper.get("/finances");
 
+    const data = Array.isArray(res.data)
+      ? res.data
+      : Array.isArray(res.data?.data)
+        ? res.data.data
+        : [];
+
+    const activeFinances = data
+      .filter((item: any) => item.status === "ACTIVE")
+      .map((item: any) => ({
+        id: item.id,
+
+        // Finance company/account name
+        name: item.account?.accountName || "",
+
+        // Employee/person handling finance
+        employeeName: item.employeeName || "",
+      }));
+
+    setFinanceOptions(activeFinances);
+  } catch (error) {
+    console.error("Failed to fetch finances:", error);
+    setFinanceOptions([]);
+  }
+};
   const fetchShowroomVariants = async () => {
     try {
       const res = await apiHelper.get("/showroom-variant");
@@ -2059,6 +2366,7 @@ export function LeadDetailsModal({
     fetchShowroomVariants();
     fetchColors();
     fetchCustomers();
+      fetchFinances();
   }, []);
   const handleModelChange = (model: any) => {
     setSelectedModel(model);
@@ -2105,20 +2413,27 @@ export function LeadDetailsModal({
     }
   };
 
-  const getStepTitle = () => {
-    switch (step) {
-      case 1:
-        return "Vehicle Selection";
-      case 2:
-        return "Customer Detail";
-      case 3:
-        return "Lead Info";
-      case 4:
-        return "Review Lead Summary";
-      default:
-        return "";
-    }
-  };
+ const getStepTitle = () => {
+  switch (step) {
+    case 1:
+      return "Vehicle Selection";
+
+    case 2:
+      return "Customer Detail";
+
+    case 3:
+      return "Lead Info";
+
+    case 4:
+      return "Review Lead Summary";
+
+    case 5:
+      return "Finance Details";
+
+    default:
+      return "";
+  }
+};
 
   return (
     <>
@@ -2342,6 +2657,13 @@ export function LeadDetailsModal({
                   }}
                 />
               )}
+              {step === 5 && (
+  <FinanceDetailsStep
+    financeDetails={financeDetails}
+    setFinanceDetails={setFinanceDetails}
+      financeOptions={financeOptions}
+  />
+)}
             </div>
 
             {/* Footer */}
@@ -2353,21 +2675,51 @@ export function LeadDetailsModal({
               >
                 Previous
               </button>
-              {step < totalSteps ? (
-                <button
-                  onClick={handleNext}
-                  className="rounded-lg bg-blue-700 px-6 py-2 text-sm font-semibold text-white hover:bg-blue-800"
-                >
-                  Next
-                </button>
-              ) : (
-                <button
-                  onClick={handleSubmit}
-                  className="rounded-lg bg-blue-700 px-6 py-2 text-sm font-semibold text-white hover:bg-blue-800"
-                >
-                  Submit
-                </button>
-              )}
+             {/* Step 1, 2 and 3 */}
+{step < 4 && (
+  <button
+    type="button"
+    onClick={handleNext}
+    className="rounded-lg bg-blue-600 px-6 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+  >
+    Next
+  </button>
+)}
+
+{/* Step 4 + Finance = Next */}
+{step === 4 &&
+  reviewData.purchaseType === "Finance" && (
+    <button
+      type="button"
+      onClick={handleNext}
+      className="rounded-lg bg-blue-600 px-6 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+    >
+      Next
+    </button>
+  )}
+
+{/* Step 4 + Cash/Bank = Submit */}
+{step === 4 &&
+  reviewData.purchaseType !== "Finance" && (
+    <button
+      type="button"
+      onClick={handleSubmit}
+      className="rounded-lg bg-blue-600 px-6 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+    >
+      Submit
+    </button>
+  )}
+
+{/* Step 5 Finance Details = Submit */}
+{step === 5 && (
+  <button
+    type="button"
+    onClick={handleSubmit}
+    className="rounded-lg bg-blue-600 px-6 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+  >
+    Submit
+  </button>
+)}
             </div>
           </DialogPanel>
         </div>

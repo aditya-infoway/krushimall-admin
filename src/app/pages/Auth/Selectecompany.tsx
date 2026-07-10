@@ -43,7 +43,8 @@ export default function Selectcomapny() {
   const [formData, setFormData] = useState({
     companyName: "",
     logo: null as File | null,
-
+ email: "",
+  accountNumber: "",
     country: "",
     state: "",
     stateCode: "",
@@ -93,6 +94,8 @@ export default function Selectcomapny() {
   const [errors, setErrors] = useState({
     companyName: "",
     country: "",
+     email: "",
+  accountNumber: "",
     state: "",
     district: "",
     city: "",
@@ -109,7 +112,15 @@ export default function Selectcomapny() {
   const validateForm = () => {
     const newErrors = {
       companyName: !formData.companyName ? "Company Name is required" : "",
+email: !formData.email
+  ? "Email is required"
+  : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)
+    ? "Enter a valid email"
+    : "",
 
+accountNumber: !formData.accountNumber
+  ? "Account Number is required"
+  : "",
       country: !country ? "Country is required" : "",
 
       state: !state ? "State is required" : "",
@@ -552,6 +563,19 @@ export default function Selectcomapny() {
                 />
               </div>
               <div>
+  <label className="mb-1 inline-block">Email</label>
+
+  <Input
+    name="email"
+    value={formData.email}
+    onChange={handleInputChange}
+    type="email"
+    placeholder="Company Email"
+    className="w-full rounded border p-3"
+     error={errors.email}
+  />
+</div>
+              <div>
                 <label className="mb-1 inline-block">GST Number</label>
                 <Input
                   type="text"
@@ -625,6 +649,27 @@ export default function Selectcomapny() {
                   error={errors.bankHolderName}
                 />
               </div>
+              <div>
+  <label className="mb-1 inline-block">Account Number</label>
+
+   <Input
+    name="accountNumber"
+    value={formData.accountNumber}
+    onChange={(e) => {
+      const value = e.target.value.replace(/\D/g, "");
+
+      setFormData((prev) => ({
+        ...prev,
+        accountNumber: value,
+      }));
+    }}
+    type="text"
+    inputMode="numeric"
+    placeholder="Bank Account Number"
+    className="w-full rounded border p-3"
+    error={errors.accountNumber}
+  />
+</div>
               <div>
                 <label className="mb-1 inline-block">IFSC Code</label>
                 <Input
