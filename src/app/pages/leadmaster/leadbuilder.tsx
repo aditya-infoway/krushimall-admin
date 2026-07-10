@@ -369,7 +369,7 @@ export default function LeadBuilder() {
 
                         <button
                           onClick={() => handleEditQuotation(lead.id)}
-                          className="flex h-8 w-8 items-center justify-center rounded-full border border-blue-500 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                          className="flex h-8 w-8 items-center justify-center rounded-full border border-blue-500 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-pointer"
                           title="Edit Quotation"
                         >
                           <PencilSquareIcon className="h-4 w-4" />
