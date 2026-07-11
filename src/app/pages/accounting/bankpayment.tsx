@@ -303,38 +303,89 @@ export default function BankPayment() {
     getBankPayments();
   }, []);
   const purchaseBillOptions = purchaseBills;
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
+ const validateForm = () => {
+  const newErrors: Record<string, string> = {};
 
-    if (!form.bankAccount?.value) {
-      newErrors.bankAccount = "Bank Account is required";
+  // Bank Account
+  if (!form.bankAccount?.value) {
+    newErrors.bankAccount = "Bank Account is required";
+  }
+
+  // Opp. Account
+  if (!form.oppAccount?.value) {
+    newErrors.oppAccount = "Opp. Account is required";
+  }
+
+  // Date
+  if (
+    !form.date ||
+    (Array.isArray(form.date) &&
+      form.date.length === 0)
+  ) {
+    newErrors.date = "Date is required";
+  }
+
+  // Purchase Bill
+  if (
+    form.type === "Purchase" &&
+    !purchaseBill?.value
+  ) {
+    newErrors.purchaseBill =
+      "Purchase Bill is required";
+  }
+
+  // Lead
+  if (
+    form.type === "Lead Cancel" &&
+    !form.leadNo?.id
+  ) {
+    newErrors.leadNo = "Lead is required";
+  }
+
+  // Amount
+  const amount = Number(form.amount);
+
+  if (
+    form.amount === "" ||
+    form.amount === null ||
+    form.amount === undefined
+  ) {
+    newErrors.amount = "Amount is required";
+  } else if (isNaN(amount)) {
+    newErrors.amount = "Enter a valid amount";
+  } else if (amount <= 0) {
+    newErrors.amount =
+      "Amount must be greater than 0";
+  }
+
+  // Payment Mode
+  if (!form.paymentMode?.id) {
+    newErrors.paymentMode =
+      "Payment Mode is required";
+  }
+
+  // Cheque validations
+  if (form.paymentMode?.id === "Cheque") {
+    if (!form.chequeNo?.trim()) {
+      newErrors.chequeNo =
+        "Cheque No. is required";
     }
 
-    if (!form.oppAccount?.value) {
-      newErrors.oppAccount = "Opp. Account is required";
-    }
-    if (!form.amount || form.amount === "") {
-      newErrors.amount = "Amount is required";
-    }
-    if (!form.paymentMode) {
-      newErrors.paymentMode = "Payment Mode is required";
-    }
-    if (form.type === "Lead Cancel" && !form.leadNo) {
-      newErrors.leadNo = "Lead No. is required";
-    }
-    if (form.paymentMode?.id === "Cheque" && !form.chequeNo) {
-      newErrors.chequeNo = "Cheque No. is required";
-    }
-    if (form.paymentMode?.id === "Cheque" && !form.chequeDate) {
-      newErrors.chequeDate = "Cheque Date is required";
-    }
-    if (form.paymentMode?.id === "Cheque" && !form.chequeClearDate) {
-      newErrors.chequeClearDate = "Cheque Clear Date is required";
+    if (!form.chequeDate) {
+      newErrors.chequeDate =
+        "Cheque Date is required";
     }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+    if (!form.chequeClearDate) {
+      newErrors.chequeClearDate =
+        "Cheque Clear Date is required";
+    }
+  }
+
+  setErrors(newErrors);
+
+  return Object.keys(newErrors).length === 0;
+};
 
   const handleAdd = async () => {
     setEditId(null);
@@ -1053,6 +1104,7 @@ const downloadExcel = async () => {
                         value={purchaseBill}
                         placeholder="Search Purchase Bill No..."
                         searchFields={["label", "party"]}
+                          error={errors.purchaseBill}
                         columns={[
                           {
                             header: "Bill No",
@@ -1119,6 +1171,7 @@ const downloadExcel = async () => {
                       displayField="label"
                       placeholder="Search Bank Account"
                       searchFields={["label", "mobile"]}
+                       error={errors.bankAccount}
                       columns={[
                         {
                           header: "Account",
@@ -1188,6 +1241,7 @@ const downloadExcel = async () => {
                       displayField="label"
                       placeholder="Search Opp. Account"
                       searchFields={["label", "mobile"]}
+                        error={errors.oppAccount}
                       columns={[
                         {
                           header: "Account",
