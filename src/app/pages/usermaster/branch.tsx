@@ -43,7 +43,7 @@ type Branch = {
   branchCode: string;
   branchName: string;
   branchType: string;
-
+  logo: string | null;
   managerId: number;
   manager: {
     id: number;
@@ -195,6 +195,9 @@ const CreateBranch = () => {
   const [selectedCountryFilter, setSelectedCountryFilter] = useState("All");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [existingLogo, setExistingLogo] = useState<string | null>(null);
 
   const {
     register,
@@ -389,6 +392,8 @@ const CreateBranch = () => {
       pinCode: "",
     });
     setShowDrawer(true);
+    setLogoFile(null);
+    setExistingLogo(null);
   };
 
   const handleOpenEditDrawer = async (item: Branch) => {
@@ -426,6 +431,8 @@ const CreateBranch = () => {
       });
 
       setShowDrawer(true);
+      setExistingLogo(branch.logo || null);
+      setLogoFile(null);
     } catch (err) {
       console.log(err);
     }
@@ -459,46 +466,56 @@ const CreateBranch = () => {
 
   const onFormSubmit = async (data: FormValues) => {
     try {
-      const payload = {
-        companyId,
-        financialYearId,
+      const formData = new FormData();
 
-        branchCode: data.branchCode,
-        branchName: data.branchName,
-        branchType: data.branchType,
+      formData.append("companyId", String(companyId));
+      formData.append("financialYearId", String(financialYearId));
 
-        managerId: data.managerId,
+      formData.append("branchCode", data.branchCode);
+      formData.append("branchName", data.branchName);
+      formData.append("branchType", data.branchType);
 
-        mobileNo: data.mobileNo,
-        gmailId: data.gmailId,
-        password: data.password,
+      formData.append("managerId", String(data.managerId));
 
-        gstNo: data.gstNo,
-        panCardNo: data.panCardNo,
+      formData.append("mobileNo", data.mobileNo);
+      formData.append("gmailId", data.gmailId);
+      if (data.password) {
+        formData.append("password", data.password);
+      }
 
-        address1: data.address1,
-        address2: data.address2,
+      formData.append("gstNo", data.gstNo);
+      formData.append("panCardNo", data.panCardNo);
 
-        country: data.country,
-        countryCode: data.countryCode,
+      formData.append("address1", data.address1);
+      formData.append("address2", data.address2 || "");
 
-        state: data.state,
-        stateCode: data.stateCode,
+      formData.append("country", data.country);
+      formData.append("countryCode", data.countryCode);
 
-        district: data.district,
-        city: data.city,
-        pinCode: data.pinCode,
-      };
+      formData.append("state", data.state);
+      formData.append("stateCode", data.stateCode);
+
+      formData.append("district", data.district);
+      formData.append("city", data.city);
+      formData.append("pinCode", data.pinCode);
+
+      if (logoFile) {
+        formData.append("logo", logoFile);
+      }
 
       if (editId) {
-        await apiHelper.put(`/branch/${editId}`, payload);
+        await apiHelper.put(`/branch/${editId}`, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
       } else {
-        await apiHelper.post("/branch", payload);
+        await apiHelper.upload("/branch", formData);
       }
 
       getBranches();
       setShowDrawer(false);
       setEditId(null);
+      setLogoFile(null);
+      setExistingLogo(null);
       reset({
         branchCode: "",
         branchName: "",
@@ -530,7 +547,6 @@ const CreateBranch = () => {
       );
     }
   };
-
   const filteredData = branches.filter((item: any) => {
     const matchesSearch =
       item.branchName.toLowerCase().includes(search.toLowerCase()) ||
@@ -753,6 +769,9 @@ const CreateBranch = () => {
                 <Th className="w-16 py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   S.No
                 </Th>
+                <Th className="w-16 py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                  Logo
+                </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Branch Code
                 </Th>
@@ -808,6 +827,24 @@ const CreateBranch = () => {
                     </Td>
                     <Td className="py-4 font-medium text-gray-500">
                       {indexOfFirstItem + index + 1}
+                    </Td>
+                    <Td className="py-4">
+                      <div className="dark:border-dark-500 dark:bg-dark-800 flex size-20 items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
+                        {item.logo ? (
+                          <img
+                            src={apiHelper.getImageUrl(item.logo)}
+                            alt={item.branchName}
+                            className="size-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-[9px] text-gray-400">
+                            No logo
+                          </span>
+                        )}
+                      </div>
+                    </Td>
+                    <Td className="py-4 font-mono text-sm font-medium text-gray-900 dark:text-gray-400">
+                      {item.branchCode}
                     </Td>
                     <Td className="py-4 font-mono text-sm font-medium text-gray-900 dark:text-gray-400">
                       {item.branchCode}
@@ -906,22 +943,6 @@ const CreateBranch = () => {
                                 </button>
                               )}
                             </MenuItem>
-                            {/* <MenuItem>
-                              {({ focus }) => (
-                                <button
-                                  type="button"
-                                  onClick={() => handleDelete(item.id)}
-                                  className={`${
-                                    focus
-                                      ? "bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-400"
-                                      : "dark:text-dark-200 text-gray-700"
-                                  } flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium`}
-                                >
-                                  <TrashIcon className="size-4" />
-                                  Delete
-                                </button>
-                              )}
-                            </MenuItem> */}
                           </MenuItems>
                         </Transition>
                       </Menu>
@@ -933,7 +954,7 @@ const CreateBranch = () => {
               {currentItems.length === 0 && (
                 <Tr>
                   <Td
-                    colSpan={12}
+                    colSpan={13}
                     className="py-12 text-center text-gray-400 dark:text-gray-500"
                   >
                     No branches found
@@ -1153,6 +1174,40 @@ const CreateBranch = () => {
 
                 {/* Content */}
                 <div className="grow space-y-5 overflow-y-auto p-6">
+                  <div className="flex items-center gap-4">
+                    <div className="dark:border-dark-500 dark:bg-dark-800 flex size-20 items-center justify-center overflow-hidden rounded-xl border border-gray-200 bg-gray-50">
+                      {logoFile ? (
+                        <img
+                          src={URL.createObjectURL(logoFile)}
+                          alt="Branch logo"
+                          className="size-full object-cover"
+                        />
+                      ) : existingLogo ? (
+                        <img
+                          src={apiHelper.getImageUrl(existingLogo)}
+                          alt="Branch logo"
+                          className="size-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-xs text-gray-400">No logo</span>
+                      )}
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="dark:text-dark-200 text-sm font-medium text-gray-700">
+                        Branch Logo
+                      </label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) =>
+                          setLogoFile(e.target.files?.[0] || null)
+                        }
+                        className="dark:text-dark-200 text-sm text-gray-600 file:mr-3 file:rounded-lg file:border-0 file:bg-blue-50 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-blue-700 hover:file:bg-blue-100"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="border-primary-600 dark:border-primary-500 border-b border-dashed"></div>
                   {/* Row 1: Branch Code, Name, Type - 3 columns */}
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                     <div>
