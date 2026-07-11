@@ -218,7 +218,7 @@ const getVoucher = async () => {
     setType("Cash Deposit");
     setCashBankAccount(null);
      setVoucherNo("");
-    setDate(null);
+   setDate(new Date());
     setOppAccount(null);
     setAmount("");
     setNarration("");
@@ -227,23 +227,62 @@ const getVoucher = async () => {
     setShowModal(true);
   };
 
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-    if (!cashBankAccount) {
-      newErrors.cashBankAccount = "Cash/Bank Account is required";
-    }
-    if (!oppAccount) {
-      newErrors.oppAccount = "Opp. Account is required";
-    }
-    if (!amount || amount === "") {
-      newErrors.amount = "Amount is required";
-    }
-    if (!date) {
-      newErrors.date = "Date is required";
-    }
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+const validateForm = () => {
+  const newErrors: Record<string, string> = {};
+
+  // Cash/Bank Account
+  if (!cashBankAccount?.value) {
+    newErrors.cashBankAccount =
+      "Cash/Bank Account is required";
+  }
+
+  // Opp. Account
+  if (!oppAccount?.value) {
+    newErrors.oppAccount =
+      "Opp. Account is required";
+  }
+
+  // Same account validation
+  if (
+    cashBankAccount?.value &&
+    oppAccount?.value &&
+    Number(cashBankAccount.value) ===
+      Number(oppAccount.value)
+  ) {
+    newErrors.oppAccount =
+      "Both accounts cannot be the same";
+  }
+
+  // Date
+  if (
+    !date ||
+    (Array.isArray(date) &&
+      date.length === 0)
+  ) {
+    newErrors.date = "Date is required";
+  }
+
+  // Amount
+  const numericAmount = Number(amount);
+
+  if (
+    amount === "" ||
+    amount === null ||
+    amount === undefined
+  ) {
+    newErrors.amount = "Amount is required";
+  } else if (Number.isNaN(numericAmount)) {
+    newErrors.amount =
+      "Enter a valid amount";
+  } else if (numericAmount <= 0) {
+    newErrors.amount =
+      "Amount must be greater than 0";
+  }
+
+  setErrors(newErrors);
+
+  return Object.keys(newErrors).length === 0;
+};
 
  const handleSubmit = async () => {
   if (!validateForm()) return;
@@ -851,6 +890,7 @@ const downloadExcel = async () => {
   displayField="label"
   placeholder="Search Account"
   searchFields={["label", "mobile"]}
+   error={errors.cashBankAccount}
   columns={[
     {
       header: "Account",
@@ -914,6 +954,7 @@ const downloadExcel = async () => {
   displayField="label"
   placeholder="Search Account"
   searchFields={["label", "mobile"]}
+   error={errors.oppAccount}
   columns={[
     {
       header: "Account",

@@ -56,7 +56,6 @@ import { Input, Radio, Textarea } from "@/components/ui";
 import apiHelper from "@/utils/apiHelper";
 import { toast } from "sonner";
 
-
 type EntryType = "Manual" | "Lead" | "Job Card";
 import { Combobox } from "@/components/shared/form/Combobox";
 import { RiFileExcel2Fill, RiFilePdfFill } from "react-icons/ri";
@@ -165,117 +164,162 @@ export default function CashReceipt() {
     const matchesType = filterType === "All" || r.type === filterType;
     return matchesSearch && matchesType;
   });
-const [companyId, setCompanyId] = useState<number | null>(null);
-const [financialYearId, setFinancialYearId] = useState<number | null>(null);
+  const [companyId, setCompanyId] = useState<number | null>(null);
+  const [financialYearId, setFinancialYearId] = useState<number | null>(null);
   const totalItems = filteredRows.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredRows.slice(indexOfFirstItem, indexOfLastItem);
-const [leadOptions, setLeadOptions] = useState<any[]>([]);
+  const [leadOptions, setLeadOptions] = useState<any[]>([]);
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!form.cashAccount) {
+    // Company validation
+    if (!companyId) {
+      newErrors.companyId = "Company is required";
+    }
+
+    // Financial year validation
+    if (!financialYearId) {
+      newErrors.financialYearId = "Financial year is required";
+    }
+
+    // Voucher validation
+    if (!form.voucherNo?.trim()) {
+      newErrors.voucherNo = "Voucher No. is required";
+    }
+
+    // Date validation
+    if (!form.date) {
+      newErrors.date = "Date is required";
+    }
+
+    // Cash account validation
+    if (!form.cashAccount?.value) {
       newErrors.cashAccount = "Cash Account is required";
     }
-    if (!form.oppAccount) {
+
+    // Opposite account validation
+    if (!form.oppAccount?.value) {
       newErrors.oppAccount = "Opp. Account is required";
     }
-    if (!form.amount || form.amount === "") {
+
+    // Same account validation
+    if (
+      form.cashAccount?.value &&
+      form.oppAccount?.value &&
+      Number(form.cashAccount.value) === Number(form.oppAccount.value)
+    ) {
+      newErrors.oppAccount = "Cash Account and Opp. Account cannot be the same";
+    }
+
+    // Amount validation
+    const amount = Number(form.amount);
+
+    if (!form.amount || form.amount.trim() === "") {
       newErrors.amount = "Amount is required";
+    } else if (isNaN(amount)) {
+      newErrors.amount = "Enter a valid amount";
+    } else if (amount <= 0) {
+      newErrors.amount = "Amount must be greater than 0";
     }
-    if (form.type === "Lead" && !form.leadNo) {
-      newErrors.leadNo = "Lead No. is required";
+
+    // Lead validation
+    if (form.type === "Lead" && !form.leadNo?.value) {
+      newErrors.leadNo = "Lead is required";
     }
+
+    // Job Card validation
     if (form.type === "Job Card" && !form.jobCardNo) {
-      newErrors.jobCardNo = "Job Card No. is required";
+      newErrors.jobCardNo = "Job Card is required";
     }
 
     setErrors(newErrors);
+
     return Object.keys(newErrors).length === 0;
   };
   const getLeads = async () => {
-  try {
-    const res = await apiHelper.get("/leads");
+    try {
+      const res = await apiHelper.get("/leads");
 
-    const leads = res.data || [];
+      const leads = res.data || [];
 
-    const options = leads.map((item: any) => ({
-      value: item.id,
-      label: `${item.quotationNo} - ${item.customer?.accountName || ""}`,
-      quotationNo: item.quotationNo,
-      customerName: item.customer?.accountName || "",
-      mobile: item.customer?.mobile || "",
-      customerId: item.customer?.id,
-    }));
+      const options = leads.map((item: any) => ({
+        value: item.id,
+        label: `${item.quotationNo} - ${item.customer?.accountName || ""}`,
+        quotationNo: item.quotationNo,
+        customerName: item.customer?.accountName || "",
+        mobile: item.customer?.mobile || "",
+        customerId: item.customer?.id,
+      }));
 
-    setLeadOptions(options);
-  } catch (err) {
-    console.log(err);
-  }
-};
+      setLeadOptions(options);
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
-useEffect(() => {
-  getLeads();
-}, []);
+  useEffect(() => {
+    getLeads();
+  }, []);
   const getCompany = async () => {
-  try {
-    const res = await apiHelper.get("/company");
+    try {
+      const res = await apiHelper.get("/company");
 
-    if (!res.data || res.data.length === 0) {
-      return;
+      if (!res.data || res.data.length === 0) {
+        return;
+      }
+
+      const company = res.data[0];
+
+      setCompanyId(company.id);
+
+      if (company.financialYears?.length > 0) {
+        setFinancialYearId(company.financialYears[0].id);
+      }
+    } catch (err) {
+      console.log(err);
     }
+  };
+  useEffect(() => {
+    getCompany();
+  }, []);
+  const getCashReceipts = async () => {
+    try {
+      const res = await apiHelper.get("/cash-receipt");
 
-    const company = res.data[0];
+      const data = res.map((item: any) => ({
+        ...item,
+        cashAccount: item.cashAccount?.accountName || "",
+        oppAccount: item.oppAccount?.accountName || "",
+      }));
 
-    setCompanyId(company.id);
-
-    if (company.financialYears?.length > 0) {
-      setFinancialYearId(company.financialYears[0].id);
+      setRows(data);
+    } catch (err) {
+      console.log(err);
     }
-  } catch (err) {
-    console.log(err);
-  }
-};
-useEffect(() => {
-  getCompany();
-}, []);
-const getCashReceipts = async () => {
-  try {
-    const res = await apiHelper.get("/cash-receipt");
+  };
 
-    const data = res.map((item: any) => ({
-      ...item,
-      cashAccount: item.cashAccount?.accountName || "",
-      oppAccount: item.oppAccount?.accountName || "",
-    }));
+  useEffect(() => {
+    getCashReceipts();
+  }, []);
+  const getVoucherNo = async () => {
+    try {
+      const res = await apiHelper.get("/cash-receipt/voucher");
 
-    setRows(data);
-  } catch (err) {
-    console.log(err);
-  }
-};
+      console.log("Voucher API:", res);
 
-useEffect(() => {
-  getCashReceipts();
-}, []);
-const getVoucherNo = async () => {
-  try {
-    const res = await apiHelper.get("/cash-receipt/voucher");
+      const voucherNo = res?.data?.voucherNo ?? res?.voucherNo ?? "";
 
-    console.log("Voucher API:", res);
-
-    const voucherNo = res?.data?.voucherNo ?? res?.voucherNo ?? "";
-
-    setForm((prev) => ({
-      ...prev,
-      voucherNo,
-    }));
-  } catch (err) {
-    console.log(err);
-  }
-};
+      setForm((prev) => ({
+        ...prev,
+        voucherNo,
+      }));
+    } catch (err) {
+      console.log(err);
+    }
+  };
   const getAccounts = async () => {
     try {
       const res = await apiHelper.get("/accounts");
@@ -317,17 +361,17 @@ const getVoucherNo = async () => {
   useEffect(() => {
     getAccounts();
   }, []);
-const handleAdd = async () => {
-  setEditId(null);
-  setErrors({});
-  setForm({
-    ...initialForm,
-    date: new Date(),
-  });
+  const handleAdd = async () => {
+    setEditId(null);
+    setErrors({});
+    setForm({
+      ...initialForm,
+      date: new Date(),
+    });
 
-  await getVoucherNo();
-  setShowDrawer(true);
-};
+    await getVoucherNo();
+    setShowDrawer(true);
+  };
 
   const handleEdit = (item: CashReceipt) => {
     setEditId(item.id);
@@ -401,7 +445,6 @@ const handleAdd = async () => {
   ];
 
   // Add after LEADS and JOB_CARDS
- 
 
   const jobCardOptions = JOB_CARDS.map((job) => ({
     value: job.jobCardNo,
@@ -425,38 +468,41 @@ const handleAdd = async () => {
     };
   });
 
-const handleSubmit = async () => {
-  if (!validateForm()) return;
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
 
-  try {
-    const payload = {
-      companyId,
-      financialYearId,
-      voucherNo: form.voucherNo,
-      date: form.date,
-      type: form.type,
-      cashAccountId: form.cashAccount.value,
-      oppAccountId: form.oppAccount.value,
-      leadId: form.type === "Lead" ? Number(form.leadNo) : null,
-      amount: Number(form.amount),
-      narration: form.narration,
-    };
+    try {
+      const payload = {
+        companyId,
+        financialYearId,
+        voucherNo: form.voucherNo,
+        date: form.date,
+        type: form.type,
+        cashAccountId: form.cashAccount.value,
+        oppAccountId: form.oppAccount.value,
+        leadId: form.type === "Lead" ? Number(form.leadNo) : null,
+        amount: Number(form.amount),
+        narration: form.narration,
+      };
 
-    if (editId) {
-      await apiHelper.put(`/cash-receipt/${editId}`, payload);
-      toast.success("Cash receipt updated successfully!");
-    } else {
-      await apiHelper.post("/cash-receipt", payload);
-      toast.success("Cash receipt added successfully!");
+      if (editId) {
+        await apiHelper.put(`/cash-receipt/${editId}`, payload);
+        toast.success("Cash receipt updated successfully!");
+      } else {
+        await apiHelper.post("/cash-receipt", payload);
+        toast.success("Cash receipt added successfully!");
+      }
+
+      setShowDrawer(false);
+      await getCashReceipts();
+    } catch (error: any) {
+      console.log(error);
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to save cash receipt. Please try again.",
+      );
     }
-
-    setShowDrawer(false);
-    await getCashReceipts();
-  } catch (error: any) {
-    console.log(error);
-    toast.error(error.response?.data?.message || "Failed to save cash receipt. Please try again.");
-  }
-};
+  };
   const isAllPageSelected =
     currentItems.length > 0 &&
     currentItems.every((item) => selectedIds.includes(item.id));
@@ -483,27 +529,25 @@ const handleSubmit = async () => {
   useEffect(() => {
     setCurrentPage(1);
   }, [filterType, filterDateFrom, filterDateTo, search]);
-const downloadExcel = async () => {
-  try {
-    const blob = await apiHelper.getBlob(
-      "/cash-receipt/export/excel"
-    );
+  const downloadExcel = async () => {
+    try {
+      const blob = await apiHelper.getBlob("/cash-receipt/export/excel");
 
-    const url = window.URL.createObjectURL(blob);
+      const url = window.URL.createObjectURL(blob);
 
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "CashReceiptRegister.xlsx";
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "CashReceiptRegister.xlsx";
 
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
 
-    window.URL.revokeObjectURL(url);
-  } catch (err) {
-    console.log(err);
-  }
-};
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.log(err);
+    }
+  };
   return (
     <div className="relative min-h-screen space-y-6 p-4 pb-28 text-gray-900 md:p-6 dark:text-gray-100">
       {/* Upper Actions Control Toolbar Layout */}
@@ -532,17 +576,18 @@ const downloadExcel = async () => {
           </button>
 
           <button
-            type="button"   onClick={downloadExcel}
-            className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 cursor-pointer"
+            type="button"
+            onClick={downloadExcel}
+            className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
           >
-         <RiFileExcel2Fill className="text-lg text-green-500" />
+            <RiFileExcel2Fill className="text-lg text-green-500" />
           </button>
 
           <button
             type="button"
-            className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 cursor-pointer"
+            className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
           >
-           <RiFilePdfFill className="text-lg text-red-500" />
+            <RiFilePdfFill className="text-lg text-red-500" />
           </button>
 
           <button
@@ -683,7 +728,7 @@ const downloadExcel = async () => {
                       {indexOfFirstItem + index + 1}
                     </td>
                     <td className="py-3 text-sm whitespace-nowrap text-gray-900 dark:text-gray-400">
-                        {new Date(item.date).toLocaleDateString("en-GB")}
+                      {new Date(item.date).toLocaleDateString("en-GB")}
                     </td>
                     <td className="py-3 text-sm font-medium whitespace-nowrap text-gray-900 dark:text-gray-400">
                       {item.voucherNo}
@@ -694,8 +739,8 @@ const downloadExcel = async () => {
                           item.type === "Manual"
                             ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
                             : item.type === "Lead"
-                              ? "bg-primary-500 text-white dark:bg-red-primary-500 dark:text-white"
-                              : "bg-primary-500 text-white dark:bg-primary-500 dark:text-white"
+                              ? "bg-primary-500 dark:bg-red-primary-500 text-white dark:text-white"
+                              : "bg-primary-500 dark:bg-primary-500 text-white dark:text-white"
                         }`}
                       >
                         {item.type}
@@ -719,7 +764,7 @@ const downloadExcel = async () => {
                     <td className="py-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
                       {item.createdType}
                     </td>
-                      <td className="py-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
+                    <td className="py-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
                       {item.createdBy}
                     </td>
                     <td className="py-3 text-center whitespace-nowrap">
@@ -1018,41 +1063,43 @@ const downloadExcel = async () => {
                   {/* Right side - Combobox */}
                   <div className="w-full sm:max-w-sm">
                     {form.type === "Lead" && (
-                     <Combobox
-  data={leadOptions}
-  displayField="label"
-  value={form.leadNo}
-onChange={(selected: any) => {
-  const customerAccount = oppAccounts.find(
-    (acc: any) => Number(acc.value) === Number(selected.customerId)
-  );
+                      <Combobox
+                        data={leadOptions}
+                        displayField="label"
+                        value={form.leadNo}
+                        onChange={(selected: any) => {
+                          const customerAccount = oppAccounts.find(
+                            (acc: any) =>
+                              Number(acc.value) === Number(selected.customerId),
+                          );
 
-  setForm((prev) => ({
-    ...prev,
-    leadNo: selected,        // object store કરો
-    oppAccount: customerAccount || null,
-  }));
-}}
-  placeholder="Search Quotation No / Customer"
-  searchFields={["quotationNo", "customerName", "mobile"]}
-  columns={[
-    {
-      header: "Quotation No",
-      field: "quotationNo",
-      width: "1.5fr",
-    },
-    {
-      header: "Customer",
-      field: "customerName",
-      width: "2fr",
-    },
-    {
-      header: "Mobile",
-      field: "mobile",
-      width: "1.5fr",
-    },
-  ]}
-/>
+                          setForm((prev) => ({
+                            ...prev,
+                            leadNo: selected, // object store કરો
+                            oppAccount: customerAccount || null,
+                          }));
+                        }}
+                        placeholder="Search Quotation No / Customer"
+                        searchFields={["quotationNo", "customerName", "mobile"]}
+                        error={errors.leadNo}
+                        columns={[
+                          {
+                            header: "Quotation No",
+                            field: "quotationNo",
+                            width: "1.5fr",
+                          },
+                          {
+                            header: "Customer",
+                            field: "customerName",
+                            width: "2fr",
+                          },
+                          {
+                            header: "Mobile",
+                            field: "mobile",
+                            width: "1.5fr",
+                          },
+                        ]}
+                      />
                     )}
 
                     {form.type === "Job Card" && (
@@ -1091,6 +1138,7 @@ onChange={(selected: any) => {
                       }}
                       placeholder="Search Cash Account"
                       searchFields={["label", "mobile"]}
+                      error={errors.cashAccount}
                       columns={[
                         {
                           header: "Account",
@@ -1142,27 +1190,30 @@ onChange={(selected: any) => {
                 {/* Row 2: Opp. Account | Amount */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
-                   <div className="mb-1.5 flex items-center justify-between">
-  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-    Opp. Account <span className="text-red-500">*</span>
-  </label>
+                    <div className="mb-1.5 flex items-center justify-between">
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Opp. Account <span className="text-red-500">*</span>
+                      </label>
 
-  {form.oppAccount && (
-    <span
-      className={`text-sm font-semibold ${
-        form.oppAccount.balanceType === "Dr"
-          ? "text-green-600"
-          : "text-red-600"
-      }`}
-    >
-      Balance : ₹
-      {Number(form.oppAccount.balance || 0).toLocaleString("en-IN", {
-        minimumFractionDigits: 2,
-      })}{" "}
-      {form.oppAccount.balanceType}
-    </span>
-  )}
-</div>
+                      {form.oppAccount && (
+                        <span
+                          className={`text-sm font-semibold ${
+                            form.oppAccount.balanceType === "Dr"
+                              ? "text-green-600"
+                              : "text-red-600"
+                          }`}
+                        >
+                          Balance : ₹
+                          {Number(form.oppAccount.balance || 0).toLocaleString(
+                            "en-IN",
+                            {
+                              minimumFractionDigits: 2,
+                            },
+                          )}{" "}
+                          {form.oppAccount.balanceType}
+                        </span>
+                      )}
+                    </div>
                     <Combobox
                       data={oppAccounts}
                       displayField="label"
@@ -1174,9 +1225,10 @@ onChange={(selected: any) => {
                           setErrors({ ...errors, oppAccount: "" });
                         }
                       }}
-                        disabled={form.type === "Lead"}
+                      disabled={form.type === "Lead"}
                       placeholder="Search Opp. Account"
                       searchFields={["label", "mobile"]}
+                      error={errors.oppAccount}
                       columns={[
                         {
                           header: "Account",
