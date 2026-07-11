@@ -174,40 +174,103 @@ export default function BankReceipt() {
   const [companyId, setCompanyId] = useState<number | null>(null);
   const [financialYearId, setFinancialYearId] = useState<number | null>(null);
   const [leadOptions, setLeadOptions] = useState([]);
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
+ const validateForm = () => {
+  const newErrors: Record<string, string> = {};
 
-    if (!form.bankAccount) {
-      newErrors.bankAccount = "Bank Account is required";
-    }
-    if (!form.oppAccount) {
-      newErrors.oppAccount = "Opp. Account is required";
-    }
-    if (!form.amount || form.amount === "") {
-      newErrors.amount = "Amount is required";
-    }
-    if (!form.paymentType) {
-      newErrors.paymentType = "Payment Type is required";
-    }
-    if (form.type === "Lead Cancel" && !form.leadNo) {
-      newErrors.leadNo = "Lead No. is required";
-    }
-    if (form.type === "Job Card" && !form.jobCardNo) {
-      newErrors.jobCardNo = "Job Card No. is required";
-    }
-    if (form.paymentType?.id === "Cheque" && !form.chequeNo) {
-      newErrors.chequeNo = "Cheque No. is required";
-    }
-    if (form.paymentType?.id === "Cheque" && !form.chequeDate) {
-      newErrors.chequeDate = "Cheque Date is required";
-    }
-    if (form.paymentType?.id === "Cheque" && !form.chequeClearDate) {
-      newErrors.chequeClearDate = "Cheque Clear Date is required";
+  // Bank Account
+  if (!form.bankAccount?.value) {
+    newErrors.bankAccount =
+      "Bank Account is required";
+  }
+
+  // Opp. Account
+  if (!form.oppAccount?.value) {
+    newErrors.oppAccount =
+      "Opp. Account is required";
+  }
+
+  // Date
+  if (
+    !form.date ||
+    (Array.isArray(form.date) &&
+      form.date.length === 0)
+  ) {
+    newErrors.date = "Date is required";
+  }
+
+  // Amount
+  const amount = Number(form.amount);
+
+  if (
+    form.amount === "" ||
+    form.amount === null ||
+    form.amount === undefined
+  ) {
+    newErrors.amount = "Amount is required";
+  } else if (Number.isNaN(amount)) {
+    newErrors.amount =
+      "Enter a valid amount";
+  } else if (amount <= 0) {
+    newErrors.amount =
+      "Amount must be greater than 0";
+  }
+
+  // Payment Type
+  if (!form.paymentType?.id) {
+    newErrors.paymentType =
+      "Payment Type is required";
+  }
+
+  // Lead validation
+  if (
+    form.type === "Lead Cancel" &&
+    !form.leadNo?.value
+  ) {
+    newErrors.leadNo =
+      "Lead is required";
+  }
+
+  // Job Card validation
+  if (
+    form.type === "Job Card" &&
+    !form.jobCardNo?.value
+  ) {
+    newErrors.jobCardNo =
+      "Job Card is required";
+  }
+
+  // Cheque validation
+  if (form.paymentType?.id === "Cheque") {
+    if (!form.chequeNo?.trim()) {
+      newErrors.chequeNo =
+        "Cheque No. is required";
     }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+    if (
+      !form.chequeDate ||
+      (Array.isArray(form.chequeDate) &&
+        form.chequeDate.length === 0)
+    ) {
+      newErrors.chequeDate =
+        "Cheque Date is required";
+    }
+
+    if (
+      !form.chequeClearDate ||
+      (Array.isArray(
+        form.chequeClearDate,
+      ) &&
+        form.chequeClearDate.length === 0)
+    ) {
+      newErrors.chequeClearDate =
+        "Cheque Clear Date is required";
+    }
+  }
+
+  setErrors(newErrors);
+
+  return Object.keys(newErrors).length === 0;
+};
   const getLeads = async () => {
     try {
       const res = await apiHelper.get("/leads");
@@ -502,19 +565,9 @@ export default function BankReceipt() {
   }));
 
   // Transform OPP_ACCOUNTS to include balance on the right
-  const maxLabelLength = Math.max(...OPP_ACCOUNTS.map((a) => a.label.length));
-  const EXTRA_SPACING = 6;
+  
 
-  const OPP_ACCOUNTS_WITH_BALANCE = OPP_ACCOUNTS.map((account) => {
-    const paddedLabel = account.label.padEnd(
-      maxLabelLength + EXTRA_SPACING,
-      " ",
-    );
-    return {
-      ...account,
-      label: `${paddedLabel}${account.balance}`,
-    };
-  });
+
 
   // Apply filters automatically when any filter changes
   useEffect(() => {
@@ -1127,6 +1180,7 @@ export default function BankReceipt() {
                         }}
                         placeholder="Search Quotation No / Customer"
                         searchFields={["quotationNo", "customerName", "mobile"]}
+                          error={errors.leadNo}
                         columns={[
                           {
                             header: "Quotation No",
@@ -1182,6 +1236,7 @@ export default function BankReceipt() {
                       }}
                       placeholder="Search Bank Account"
                       searchFields={["label", "mobile"]}
+                        error={errors.bankAccount}
                       columns={[
                         {
                           header: "Account",
@@ -1270,6 +1325,7 @@ export default function BankReceipt() {
                       disabled={form.type === "Lead Cancel"}
                       placeholder="Search Opp. Account"
                       searchFields={["label", "mobile"]}
+                        error={errors.oppAccount}
                       columns={[
                         {
                           header: "Account",

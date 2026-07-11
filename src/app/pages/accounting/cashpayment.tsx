@@ -295,26 +295,67 @@ export default function CashPayment() {
     getCashPayments();
   }, []);
   const purchaseBillOptions = purchaseBills;
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
+ const validateForm = () => {
+  const newErrors: Record<string, string> = {};
 
-    if (!form.cashAccount?.value) {
-      newErrors.cashAccount = "Cash Account is required";
-    }
+  // Cash Account
+  if (!form.cashAccount?.value) {
+    newErrors.cashAccount = "Cash Account is required";
+  }
 
-    if (!form.oppAccount?.value) {
-      newErrors.oppAccount = "Opp. Account is required";
-    }
-    if (!form.amount || form.amount === "") {
-      newErrors.amount = "Amount is required";
-    }
-    if (form.type === "Lead Cancel" && !form.leadNo) {
-      newErrors.leadNo = "Lead No. is required";
-    }
+  // Purchase Bill
+  if (form.type === "Purchase" && !purchaseBill?.value) {
+    newErrors.purchaseBill = "Purchase Bill is required";
+  }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  // Lead
+  if (form.type === "Lead Cancel" && !form.leadNo?.id) {
+    newErrors.leadNo = "Lead is required";
+  }
+
+  // Opp. Account
+  if (!form.oppAccount?.value) {
+    newErrors.oppAccount = "Opp. Account is required";
+  }
+
+  // Cash and Opp. account cannot be same
+  if (
+    form.cashAccount?.value &&
+    form.oppAccount?.value &&
+    Number(form.cashAccount.value) ===
+      Number(form.oppAccount.value)
+  ) {
+    newErrors.oppAccount =
+      "Cash Account and Opp. Account cannot be the same";
+  }
+
+  // Date
+  if (
+    !form.date ||
+    (Array.isArray(form.date) && form.date.length === 0)
+  ) {
+    newErrors.date = "Date is required";
+  }
+
+  // Amount
+  const amount = Number(form.amount);
+
+  if (
+    form.amount === "" ||
+    form.amount === null ||
+    form.amount === undefined
+  ) {
+    newErrors.amount = "Amount is required";
+  } else if (isNaN(amount)) {
+    newErrors.amount = "Enter a valid amount";
+  } else if (amount <= 0) {
+    newErrors.amount = "Amount must be greater than 0";
+  }
+
+  setErrors(newErrors);
+
+  return Object.keys(newErrors).length === 0;
+};
 
   const handleAdd = async () => {
     setEditId(null);
@@ -693,7 +734,7 @@ const handleExportExcel = async () => {
                         >
                           <MenuItems
                             anchor="bottom end"
-                            className="dark:bg-dark-800 dark:ring-dark-500 dark:border-dark-500 z-[100] w-36 rounded-lg border border-gray-100 bg-white p-1 shadow-lg ring-1 ring-black/5 [--anchor-gap:4px] focus:outline-none"
+                            className="dark:bg-dark-800 dark:ring-dark-500 dark:border-dark-500 z-100 w-36 rounded-lg border border-gray-100 bg-white p-1 shadow-lg ring-1 ring-black/5 [--anchor-gap:4px] focus:outline-none"
                           >
                             <MenuItem>
                               {({ active }) => (
@@ -774,7 +815,7 @@ const handleExportExcel = async () => {
                   >
                     <MenuItems
                       anchor="top start"
-                      className="dark:bg-dark-700 dark:border-dark-600 z-[200] w-20 space-y-0.5 rounded-lg border border-gray-200 bg-white p-1 shadow-xl ring-1 ring-black/5 [--anchor-gap:6px] focus:outline-none"
+                      className="dark:bg-dark-700 dark:border-dark-600 z-200 w-20 space-y-0.5 rounded-lg border border-gray-200 bg-white p-1 shadow-xl ring-1 ring-black/5 [--anchor-gap:6px] focus:outline-none"
                     >
                       {entriesOptions.map((opt) => (
                         <MenuItem key={opt.id}>
@@ -887,7 +928,7 @@ const handleExportExcel = async () => {
       <Transition appear show={showDrawer} as={Fragment}>
         <Dialog
           as="div"
-          className="relative z-[100]"
+          className="relative z-100"
           onClose={() => setShowDrawer(false)}
         >
           <TransitionChild
@@ -925,6 +966,7 @@ const handleExportExcel = async () => {
               </div>
 
               <div className="grow space-y-5 overflow-y-auto p-5">
+
                 {/* Radio Buttons + Lead No inline */}
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex flex-wrap items-center gap-4 sm:gap-6">
@@ -961,6 +1003,7 @@ const handleExportExcel = async () => {
                         displayField="label"
                         value={purchaseBill}
                         placeholder="Search Purchase Bill No..."
+                          error={errors.purchaseBill}
                         searchFields={["label", "party"]}
                         columns={[
                           {
@@ -1028,6 +1071,7 @@ const handleExportExcel = async () => {
                       }}
                       placeholder="Search Cash Account"
                       searchFields={["label", "mobile"]}
+                        error={errors.cashAccount}
                       columns={[
                         {
                           header: "Account",
@@ -1046,11 +1090,7 @@ const handleExportExcel = async () => {
                         },
                       ]}
                     />
-                    {errors.cashAccount && (
-                      <p className="mt-1 text-sm text-red-500">
-                        {errors.cashAccount}
-                      </p>
-                    )}
+                   
                   </div>
                   <div>
                     <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -1100,6 +1140,7 @@ const handleExportExcel = async () => {
                       }}
                       placeholder="Search Opp. Account"
                       searchFields={["label", "mobile"]}
+                       error={errors.oppAccount}
                       columns={[
                         {
                           header: "Account",
@@ -1118,11 +1159,7 @@ const handleExportExcel = async () => {
                         },
                       ]}
                     />
-                    {errors.oppAccount && (
-                      <p className="mt-1 text-sm text-red-500">
-                        {errors.oppAccount}
-                      </p>
-                    )}
+                   
                   </div>
                   <div>
                     <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">

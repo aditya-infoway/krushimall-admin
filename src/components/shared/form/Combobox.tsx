@@ -11,7 +11,6 @@ import {
 import { ChevronDownIcon } from "@heroicons/react/20/solid";
 import clsx from "clsx";
 import {
-  Fragment,
   useRef,
   ReactNode,
   Dispatch,
@@ -251,7 +250,7 @@ function GroupCombobox<TValue = DataItem>(
                 )}
 
                 <Transition
-                  as={Fragment}
+                  as="div"
                   enter="transition ease-out"
                   enterFrom="opacity-0 translate-y-2"
                   enterTo="opacity-100 translate-y-0"
@@ -276,7 +275,7 @@ function GroupCombobox<TValue = DataItem>(
                         Nothing found for {query}
                       </div>
                     ) : (
-                      <>
+                     <div>
                         {/* Header */}
                         {columns && (
                           <div
@@ -367,7 +366,7 @@ function GroupCombobox<TValue = DataItem>(
                             }
                           </ComboboxOption>
                         ))}
-                      </>
+                      </div>
                     )}
                   </ComboboxOptions>
                 </Transition>
