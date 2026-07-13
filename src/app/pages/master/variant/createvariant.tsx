@@ -10,6 +10,7 @@ import {
   MenuItem,
 } from "@headlessui/react";
 import { Fragment, useState, useEffect } from "react";
+import { RiFileExcel2Fill, RiFilePdfFill } from "react-icons/ri";
 import { useForm, useWatch } from "react-hook-form";
 import {
   XMarkIcon,
@@ -31,6 +32,7 @@ import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 import { Button, Checkbox, Input } from "@/components/ui";
 import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/Table";
 import { Listbox } from "@/components/shared/form/StyledListbox";
+import { Combobox } from "@/components/shared/form/Combobox";
 
 type VariantType = {
   id: number;
@@ -106,10 +108,12 @@ export default function Createvariant() {
   const [loading, setLoading] = useState(false);
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-const [confirmState, setConfirmState] = useState<"pending" | "success" | "error">("pending");
-const [confirmLoading, setConfirmLoading] = useState(false);
-const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
-const [isBulkDelete, setIsBulkDelete] = useState(false);
+  const [confirmState, setConfirmState] = useState<
+    "pending" | "success" | "error"
+  >("pending");
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+  const [isBulkDelete, setIsBulkDelete] = useState(false);
 
   const categoryOptions = categories.map((cat) => ({
     id: String(cat.id),
@@ -313,18 +317,18 @@ const [isBulkDelete, setIsBulkDelete] = useState(false);
 
   const handleOpenAddDrawer = () => {
     setEditId(null);
-    const firstCategory = categories[0] || { id: "", name: "" };
-    const firstBrand = brands[0] || { id: "", name: "" };
-    const firstModel = models[0] || { id: "", name: "" };
+    // const firstCategory = categories[0] || { id: "", name: "" };
+    // const firstBrand = brands[0] || { id: "", name: "" };
+    // const firstModel = models[0] || { id: "", name: "" };
     reset({
-      category: firstCategory.name,
-      categoryId: firstCategory.id,
+      category: "",
+      categoryId: "",
 
-      brand: firstBrand.name,
-      brandId: firstBrand.id,
+      brand: "",
+      brandId: "",
 
-      model: firstModel.name,
-      modelId: firstModel.id,
+      model: "",
+      modelId: "",
 
       modelYear: "",
       modelYearId: "",
@@ -335,6 +339,9 @@ const [isBulkDelete, setIsBulkDelete] = useState(false);
       image: "",
       status: "ACTIVE",
     });
+
+    setSelectedFile(null);
+
     setShowDrawer(true);
   };
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -364,53 +371,55 @@ const [isBulkDelete, setIsBulkDelete] = useState(false);
       modelYearId: item.modelYearId || "",
       variantCode: item.variantCode || "",
       variantName: item.variantName || "",
-        image: item.image
-      ? apiHelper.getImageUrl(item.image)
-      : "",
+      image: item.image ? apiHelper.getImageUrl(item.image) : "",
       status: item.status,
     });
     setShowDrawer(true);
   };
 
- const handleDelete = (id: number) => {
-  setDeleteTargetId(id);
-  setIsBulkDelete(false);
-  setConfirmState("pending");
-  setShowConfirmModal(true);
-};
+  const handleDelete = (id: number) => {
+    setDeleteTargetId(id);
+    setIsBulkDelete(false);
+    setConfirmState("pending");
+    setShowConfirmModal(true);
+  };
   const handleBulkDelete = () => {
-  setIsBulkDelete(true);
-  setConfirmState("pending");
-  setShowConfirmModal(true);
-};
+    setIsBulkDelete(true);
+    setConfirmState("pending");
+    setShowConfirmModal(true);
+  };
 
-const performDelete = async () => {
-  setConfirmLoading(true);
-  try {
-    if (isBulkDelete) {
-      await Promise.all(selectedIds.map((id) => apiHelper.delete(`/variant/${id}`)));
-      toast.success(`${selectedIds.length} variants deleted successfully!`);
-      await getVariants();
-      setSelectedIds([]);
-      setCurrentPage(1);
-      setConfirmState("success");
-    } else {
-      if (deleteTargetId === null) return;
-      await apiHelper.delete(`/variant/${deleteTargetId}`);
-      toast.success("Variant deleted successfully!");
-      await getVariants();
-      setDeleteTargetId(null);
-      setConfirmState("success");
+  const performDelete = async () => {
+    setConfirmLoading(true);
+    try {
+      if (isBulkDelete) {
+        await Promise.all(
+          selectedIds.map((id) => apiHelper.delete(`/variant/${id}`)),
+        );
+        toast.success(`${selectedIds.length} variants deleted successfully!`);
+        await getVariants();
+        setSelectedIds([]);
+        setCurrentPage(1);
+        setConfirmState("success");
+      } else {
+        if (deleteTargetId === null) return;
+        await apiHelper.delete(`/variant/${deleteTargetId}`);
+        toast.success("Variant deleted successfully!");
+        await getVariants();
+        setDeleteTargetId(null);
+        setConfirmState("success");
+      }
+      setTimeout(() => setShowConfirmModal(false), 1500);
+    } catch (error: any) {
+      console.error("Delete failed:", error);
+      setConfirmState("error");
+      toast.error(
+        error.response?.data?.message || "Failed to delete. Please try again.",
+      );
+    } finally {
+      setConfirmLoading(false);
     }
-    setTimeout(() => setShowConfirmModal(false), 1500);
-  } catch (error: any) {
-    console.error("Delete failed:", error);
-    setConfirmState("error");
-    toast.error(error.response?.data?.message || "Failed to delete. Please try again.");
-  } finally {
-    setConfirmLoading(false);
-  }
-};
+  };
 
   const handleToggleTableStatus = async (id: number) => {
     const item = variants.find((v) => v.id === id);
@@ -436,59 +445,62 @@ const performDelete = async () => {
   };
 
   const onFormSubmit = async (data: FormValues) => {
-  try {
-    const hasNewImage = data.image && data.image.startsWith("data:");
+    try {
+      const hasNewImage = data.image && data.image.startsWith("data:");
 
-    if (hasNewImage) {
-      const formData = new FormData();
-      formData.append("categoryId", String(data.categoryId));
-      formData.append("brandId", String(data.brandId));
-      formData.append("modelId", String(data.modelId));
-      formData.append("modelYearId", String(data.modelYearId));
-      formData.append("variantCode", data.variantCode);
-      formData.append("variantName", data.variantName);
-      formData.append("status", data.status);
+      if (hasNewImage) {
+        const formData = new FormData();
+        formData.append("categoryId", String(data.categoryId));
+        formData.append("brandId", String(data.brandId));
+        formData.append("modelId", String(data.modelId));
+        formData.append("modelYearId", String(data.modelYearId));
+        formData.append("variantCode", data.variantCode);
+        formData.append("variantName", data.variantName);
+        formData.append("status", data.status);
 
-      const response = await fetch(data.image);
-      const blob = await response.blob();
-      formData.append("image", blob, "variant-image.jpg");
+        const response = await fetch(data.image);
+        const blob = await response.blob();
+        formData.append("image", blob, "variant-image.jpg");
 
-      if (editId !== null) {
-        await apiHelper.put(`/variant/${editId}`, formData);
-        toast.success("Variant updated successfully!");
+        if (editId !== null) {
+          await apiHelper.put(`/variant/${editId}`, formData);
+          toast.success("Variant updated successfully!");
+        } else {
+          await apiHelper.post("/variant", formData);
+          toast.success("Variant created successfully!");
+        }
       } else {
-        await apiHelper.post("/variant", formData);
-        toast.success("Variant created successfully!");
-      }
-    } else {
-      // If no new image, send as JSON
-      const payload = {
-        categoryId: Number(data.categoryId),
-        brandId: Number(data.brandId),
-        modelId: Number(data.modelId),
-        modelYearId: Number(data.modelYearId),
-        variantCode: data.variantCode,
-        variantName: data.variantName,
-        status: data.status,
-      };
+        // If no new image, send as JSON
+        const payload = {
+          categoryId: Number(data.categoryId),
+          brandId: Number(data.brandId),
+          modelId: Number(data.modelId),
+          modelYearId: Number(data.modelYearId),
+          variantCode: data.variantCode,
+          variantName: data.variantName,
+          status: data.status,
+        };
 
-      if (editId !== null) {
-        await apiHelper.put(`/variant/${editId}`, payload);
-        toast.success("Variant updated successfully!");
-      } else {
-        await apiHelper.post("/variant", payload);
-        toast.success("Variant created successfully!");
+        if (editId !== null) {
+          await apiHelper.put(`/variant/${editId}`, payload);
+          toast.success("Variant updated successfully!");
+        } else {
+          await apiHelper.post("/variant", payload);
+          toast.success("Variant created successfully!");
+        }
       }
+
+      await getVariants();
+      setShowDrawer(false);
+      reset();
+    } catch (error: any) {
+      console.error(error);
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to save variant. Please try again.",
+      );
     }
-
-    await getVariants();
-    setShowDrawer(false);
-    reset();
-  } catch (error: any) {
-    console.error(error);
-    toast.error(error.response?.data?.message || "Failed to save variant. Please try again.");
-  }
-};
+  };
 
   // Filter logic - Added year filter matching
   const filteredData = variants.filter((item) => {
@@ -569,44 +581,46 @@ const performDelete = async () => {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setShowFilterBar(!showFilterBar)}
-            className={`inline-flex items-center gap-1.5 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
-              showFilterBar
-                ? "bg-primary-50 border-primary-200 text-primary-600 dark:bg-dark-600 dark:border-dark-500 dark:text-white"
-                : "dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
-            }`}
-          >
-            <FunnelIcon className="size-4.5" />
-            Filter
-          </button>
+       <div className="flex flex-wrap items-center justify-between gap-2 md:flex-nowrap">
+  {/* Left side - Filter and icons */}
+  <div className="flex items-center gap-2">
+    <button
+      type="button"
+      onClick={() => setShowFilterBar(!showFilterBar)}
+      className={`inline-flex items-center gap-1.5 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
+        showFilterBar
+          ? "bg-primary-50 border-primary-200 text-primary-600 dark:bg-dark-600 dark:border-dark-500 dark:text-white"
+          : "dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+      }`}
+    >
+      <FunnelIcon className="size-4.5" />
+      <span className="hidden sm:inline">Filter</span>
+    </button>
 
-          <button
-            type="button"
-            className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
-          >
-            <DocumentArrowDownIcon className="size-4.5 text-gray-400" />
-            Excel
-          </button>
+    <button
+      type="button"
+      className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+    >
+      <RiFileExcel2Fill className="text-lg text-green-500" />
+    </button>
 
-          <button
-            type="button"
-            className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
-          >
-            <DocumentArrowDownIcon className="size-4.5 text-gray-400" />
-            PDF
-          </button>
+    <button
+      type="button"
+      className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+    >
+      <RiFilePdfFill className="text-lg text-red-500" />
+    </button>
+  </div>
 
-          <Button
-            color="primary"
-            onClick={handleOpenAddDrawer}
-            className="w-full sm:w-auto"
-          >
-            Add Variant
-          </Button>
-        </div>
+  {/* Right side - Add Variant button */}
+  <Button
+    color="primary"
+    onClick={handleOpenAddDrawer}
+    className="whitespace-nowrap"
+  >
+    Add Variant
+  </Button>
+</div>
       </div>
 
       {/* Global Context Search Box */}
@@ -632,18 +646,20 @@ const performDelete = async () => {
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
                 Category
               </span>
-              <Listbox
+              <Combobox
                 data={categoryOptions}
+                displayField="name"
                 value={
                   categoryOptions.find(
                     (opt) => opt.name === formCategoryValue,
-                  ) || categoryOptions[0]
+                  ) || null
                 }
                 onChange={(opt: any) => {
-                  setValue("category", opt.name);
-                  setValue("categoryId", opt.id);
+                  setValue("category", opt?.name || "");
+                  setValue("categoryId", opt?.id || "");
                 }}
-                displayField="name"
+                placeholder="Search or select category..."
+                searchFields={["name"]}
               />
             </div>
 
@@ -651,17 +667,19 @@ const performDelete = async () => {
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
                 Brand
               </span>
-              <Listbox
+              <Combobox
                 data={brandOptions}
+                displayField="name"
                 value={
                   brandOptions.find((opt) => opt.name === formBrandValue) ||
                   brandOptions[0]
                 }
                 onChange={(opt: any) => {
-                  setValue("brand", opt.name);
-                  setValue("brandId", opt.id);
+                  setValue("brand", opt?.name || "");
+                  setValue("brandId", opt?.id || "");
                 }}
-                displayField="name"
+                placeholder="Search or select brand..."
+                searchFields={["name"]}
               />
             </div>
 
@@ -669,37 +687,38 @@ const performDelete = async () => {
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
                 Model
               </span>
-              <Listbox
+              <Combobox
                 data={modelOptions}
+                displayField="name"
                 value={
                   modelOptions.find((opt) => opt.name === formModelValue) ||
                   modelOptions[0]
                 }
                 onChange={(opt: any) => {
-                  setValue("model", opt.name);
-                  setValue("modelId", opt.id);
+                  setValue("model", opt?.name || "");
+                  setValue("modelId", opt?.id || "");
                 }}
-                displayField="name"
+                placeholder="Search or select model"
+                searchFields={["name"]}
               />
             </div>
 
             {/* New Year Filter */}
-            <div className="flex flex-col gap-1">
-              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
-                Year
-              </span>
-              <Listbox
-                data={yearFilterOptions}
-                value={
-                  yearFilterOptions.find((o) => o.id === selectedYearFilter) ||
-                  yearFilterOptions[0]
-                }
-                placeholder="All Years"
-                onChange={(opt: any) => {
-                  setSelectedYearFilter(opt.id);
-                  setCurrentPage(1);
-                }}
+            <div>
+              <label className="mb-2 block text-sm font-medium">Year</label>
+              <Combobox
+                data={modelYearOptions}
                 displayField="name"
+                value={
+                  modelYearOptions.find((opt) => opt.name === formModelValue) ||
+                  modelYearOptions[0]
+                }
+                onChange={(opt: any) => {
+                  setValue("modelYear", opt?.name || "");
+                  setValue("modelYearId", opt?.id || "");
+                }}
+                placeholder="Search or select year"
+                searchFields={["name"]}
               />
             </div>
 
@@ -846,7 +865,7 @@ const performDelete = async () => {
                       </button>
                     </Td>
                     <Td className="py-4 text-gray-500 dark:text-gray-400">
-                        {new Date(item.createdAt).toLocaleDateString("en-IN")}
+                      {new Date(item.createdAt).toLocaleDateString("en-IN")}
                     </Td>
                     <Td className="py-4 text-center">
                       <Menu
@@ -1139,19 +1158,20 @@ const performDelete = async () => {
                     <span className="mb-2 block text-sm font-medium">
                       Category
                     </span>
-                    <Listbox
+                    <Combobox
                       data={categoryOptions}
+                      displayField="name"
                       value={
                         categoryOptions.find(
                           (opt) => opt.name === formCategoryValue,
                         ) || categoryOptions[0]
                       }
-                      placeholder="Select Category"
                       onChange={(opt: any) => {
-                        setValue("category", opt.name);
-                        setValue("categoryId", opt.id);
+                        setValue("category", opt?.name || "");
+                        setValue("categoryId", opt?.id || "");
                       }}
-                      displayField="name"
+                      placeholder="Search or select category"
+                      searchFields={["name"]}
                     />
                   </div>
 
@@ -1159,19 +1179,20 @@ const performDelete = async () => {
                     <span className="mb-2 block text-sm font-medium">
                       Brand
                     </span>
-                    <Listbox
+                    <Combobox
                       data={brandOptions}
+                      displayField="name"
                       value={
                         brandOptions.find(
                           (opt) => opt.name === formBrandValue,
                         ) || brandOptions[0]
                       }
-                      placeholder="Select Brand"
                       onChange={(opt: any) => {
-                        setValue("brand", opt.name);
-                        setValue("brandId", opt.id);
+                        setValue("brand", opt?.name || "");
+                        setValue("brandId", opt?.id || "");
                       }}
-                      displayField="name"
+                      placeholder="Search or select brand"
+                      searchFields={["name"]}
                     />
                   </div>
 
@@ -1179,19 +1200,20 @@ const performDelete = async () => {
                     <span className="mb-2 block text-sm font-medium">
                       Model
                     </span>
-                    <Listbox
+                    <Combobox
                       data={modelOptions}
+                      displayField="name"
                       value={
                         modelOptions.find(
                           (opt) => opt.name === formModelValue,
-                        ) || brandOptions[0]
+                        ) || modelOptions[0]
                       }
-                      placeholder="Select Model"
                       onChange={(opt: any) => {
-                        setValue("model", opt.name);
-                        setValue("modelId", opt.id);
+                        setValue("model", opt?.name || "");
+                        setValue("modelId", opt?.id || "");
                       }}
-                      displayField="name"
+                      placeholder="Search or select model"
+                      searchFields={["name"]}
                     />
                   </div>
 
@@ -1246,7 +1268,6 @@ const performDelete = async () => {
                         src={formImageValue}
                         alt="Preview"
                         className="dark:border-dark-500 mt-3 h-20 w-20 rounded-xl border border-gray-200 object-contain"
-                        
                       />
                     )}
                   </div>
@@ -1291,39 +1312,39 @@ const performDelete = async () => {
         </Dialog>
       </Transition>
       {/* Confirmation Modal */}
-<ConfirmModal
-  show={showConfirmModal}
-  onClose={() => {
-    setShowConfirmModal(false);
-    setDeleteTargetId(null);
-    setConfirmState("pending");
-  }}
-  onOk={performDelete}
-  confirmLoading={confirmLoading}
-  state={confirmState}
-  messages={{
-    pending: {
-      Icon: ExclamationTriangleIcon,
-      title: isBulkDelete ? "Delete Selected Variants?" : "Are you sure?",
-      description: isBulkDelete 
-        ? `Are you sure you want to delete ${selectedIds.length} selected variants? This action cannot be undone.`
-        : "Are you sure you want to delete this variant? Once deleted, it cannot be restored.",
-      actionText: isBulkDelete ? "Delete All" : "Delete",
-    },
-    success: {
-      title: "Deleted Successfully",
-      description: isBulkDelete 
-        ? `${selectedIds.length} variants have been deleted.`
-        : "The variant has been deleted.",
-      actionText: "Done",
-    },
-    error: {
-      title: "Delete Failed",
-      description: "Failed to delete. Please try again.",
-      actionText: "Try Again",
-    },
-  }}
-/>
+      <ConfirmModal
+        show={showConfirmModal}
+        onClose={() => {
+          setShowConfirmModal(false);
+          setDeleteTargetId(null);
+          setConfirmState("pending");
+        }}
+        onOk={performDelete}
+        confirmLoading={confirmLoading}
+        state={confirmState}
+        messages={{
+          pending: {
+            Icon: ExclamationTriangleIcon,
+            title: isBulkDelete ? "Delete Selected Variants?" : "Are you sure?",
+            description: isBulkDelete
+              ? `Are you sure you want to delete ${selectedIds.length} selected variants? This action cannot be undone.`
+              : "Are you sure you want to delete this variant? Once deleted, it cannot be restored.",
+            actionText: isBulkDelete ? "Delete All" : "Delete",
+          },
+          success: {
+            title: "Deleted Successfully",
+            description: isBulkDelete
+              ? `${selectedIds.length} variants have been deleted.`
+              : "The variant has been deleted.",
+            actionText: "Done",
+          },
+          error: {
+            title: "Delete Failed",
+            description: "Failed to delete. Please try again.",
+            actionText: "Try Again",
+          },
+        }}
+      />
     </div>
   );
 }

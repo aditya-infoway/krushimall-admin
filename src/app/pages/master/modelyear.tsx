@@ -11,6 +11,7 @@ import {
 } from "@headlessui/react";
 import { Fragment, useState, useEffect } from "react";
 import { useForm, useWatch } from "react-hook-form";
+import { RiFileExcel2Fill, RiFilePdfFill } from "react-icons/ri";
 import {
   XMarkIcon,
   PencilSquareIcon,
@@ -31,6 +32,7 @@ import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 import { Button, Checkbox, Input } from "@/components/ui";
 import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/Table";
 import { Listbox } from "@/components/shared/form/StyledListbox";
+import { Combobox } from "@/components/shared/form/Combobox";
 
 type YearDataType = {
   id: number;
@@ -478,44 +480,46 @@ const performDelete = async () => {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setShowFilterBar(!showFilterBar)}
-            className={`inline-flex items-center gap-1.5 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
-              showFilterBar
-                ? "bg-primary-50 border-primary-200 text-primary-600 dark:bg-dark-600 dark:border-dark-500 dark:text-white"
-                : "dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
-            }`}
-          >
-            <FunnelIcon className="size-4.5" />
-            Filter
-          </button>
+       <div className="flex flex-wrap items-center justify-between gap-2 md:flex-nowrap">
+  {/* Left side - Filter and icons */}
+  <div className="flex items-center gap-2">
+    <button
+      type="button"
+      onClick={() => setShowFilterBar(!showFilterBar)}
+      className={`inline-flex items-center gap-1.5 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
+        showFilterBar
+          ? "bg-primary-50 border-primary-200 text-primary-600 dark:bg-dark-600 dark:border-dark-500 dark:text-white"
+          : "dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+      }`}
+    >
+      <FunnelIcon className="size-4.5" />
+      <span className="hidden sm:inline">Filter</span>
+    </button>
 
-          <button
-            type="button"
-            className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
-          >
-            <DocumentArrowDownIcon className="size-4.5 text-gray-400" />
-            Excel
-          </button>
+    <button
+      type="button"
+      className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+    >
+      <RiFileExcel2Fill className="text-lg text-green-500" />
+    </button>
 
-          <button
-            type="button"
-            className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
-          >
-            <DocumentArrowDownIcon className="size-4.5 text-gray-400" />
-            PDF
-          </button>
+    <button
+      type="button"
+      className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+    >
+      <RiFilePdfFill className="text-lg text-red-500" />
+    </button>
+  </div>
 
-          <Button
-            color="primary"
-            onClick={handleOpenAddDrawer}
-            className="w-full sm:w-auto"
-          >
-            Add Year
-          </Button>
-        </div>
+  {/* Right side - Add Year button */}
+  <Button
+    color="primary"
+    onClick={handleOpenAddDrawer}
+    className="whitespace-nowrap"
+  >
+    Add Year
+  </Button>
+</div>
       </div>
 
       {/* Global Context Search Box */}
@@ -537,80 +541,77 @@ const performDelete = async () => {
       {showFilterBar && (
         <div className="dark:bg-dark-700 dark:border-dark-500 animate-in fade-in slide-in-from-top-2 rounded-xl border border-gray-200 bg-white p-4 transition-all duration-150">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
-            <div className="flex flex-col gap-1">
-              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
-                Category
-              </span>
-              <Listbox
-                data={categoryOptions}
-                value={
-                  categoryOptions.find(
-                    (opt) => opt.name === formCategoryValue,
-                  ) || categoryOptions[0]
-                }
-                onChange={(opt: any) => {
-                  setValue("category", opt.name);
-                  setValue("categoryId", opt.id);
-                }}
-                displayField="name"
-              />
-            </div>
+           <div className="flex flex-col gap-1">
+  <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
+    Category
+  </span>
+  <Combobox
+    data={categoryOptions}
+    displayField="name"
+    value={categoryOptions.find((opt) => opt.name === formCategoryValue) || categoryOptions[0]}
+    onChange={(opt: any) => {
+      setValue("category", opt?.name || "");
+      setValue("categoryId", opt?.id || "");
+    }}
+    placeholder="Search or select category..."
+    searchFields={["name"]}
+  />
+</div>
 
-            <div className="flex flex-col gap-1">
-              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
-                Brand
-              </span>
-              <Listbox
-                data={brandOptions}
-                value={
-                  brandOptions.find((opt) => opt.name === formBrandValue) ||
-                  brandOptions[0]
-                }
-                onChange={(opt: any) => {
-                  setValue("brand", opt.name);
-                  setValue("brandId", opt.id);
-                }}
-                displayField="name"
-              />
-            </div>
+<div className="flex flex-col gap-1">
+  <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
+    Brand
+  </span>
+  <Combobox
+    data={brandOptions}
+    displayField="name"
+    value={brandOptions.find((opt) => opt.name === formBrandValue) || brandOptions[0]}
+    onChange={(opt: any) => {
+      setValue("brand", opt?.name || "");
+      setValue("brandId", opt?.id || "");
+    }}
+    placeholder="Search or select brand..."
+    searchFields={["name"]}
+  />
+</div>
 
-            <div className="flex flex-col gap-1">
-              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
-                Model
-              </span>
-              <Listbox
-                data={modelOptions}
-                value={
-                  modelOptions.find((opt) => opt.name === formModelValue) ||
-                  modelOptions[0]
-                }
-                onChange={(opt: any) => {
-                  setValue("model", opt.name);
-                  setValue("modelId", opt.id);
-                }}
-                displayField="name"
-              />
-            </div>
+<div className="flex flex-col gap-1">
+  <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
+    Model
+  </span>
+  <Combobox
+    data={modelOptions}
+    displayField="name"
+    value={modelOptions.find((opt) => opt.name === formModelValue) || modelOptions[0]}
+    onChange={(opt: any) => {
+      setValue("model", opt?.name || "");
+      setValue("modelId", opt?.id || "");
+    }}
+    placeholder="Search or select model..."
+    searchFields={["name"]}
+  />
+</div>
 
-            {/* New Year Filter */}
-            <div className="flex flex-col gap-1">
-              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
-                Year
-              </span>
-              <Listbox
-                data={yearFilterOptions}
-                value={
-                  yearFilterOptions.find((o) => o.id === selectedYearFilter) ||
-                  yearFilterOptions[0]
-                }
-                placeholder="All Years"
-                onChange={(opt: any) => {
-                  setSelectedYearFilter(opt.id);
-                  setCurrentPage(1);
-                }}
-                displayField="name"
-              />
-            </div>
+{/* New Year Filter */}
+<div className="flex flex-col gap-1">
+  <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
+    Year
+  </span>
+  <Combobox
+    data={yearFilterOptions}
+    displayField="name"
+    value={yearFilterOptions.find((o) => o.id === selectedYearFilter) || yearFilterOptions[0]}
+    onChange={(opt: any) => {
+      setSelectedYearFilter(opt?.id || "All");
+      setCurrentPage(1);
+    }}
+    placeholder="Search or select year..."
+    searchFields={["name"]}
+  />
+</div>
+
+
+          
 
             <div className="flex flex-col gap-1">
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
@@ -1009,66 +1010,55 @@ const performDelete = async () => {
 
                 {/* Content Input Fields */}
                 <div className="grow space-y-5 overflow-y-auto p-5">
-                  <div>
-                    <span className="mb-2 block text-sm font-medium">
-                      Category
-                    </span>
-                    <Listbox
-                      data={categoryOptions}
-                      value={
-                        categoryOptions.find(
-                          (opt) => opt.name === formCategoryValue,
-                        ) || categoryOptions[0]
-                      }
-                      placeholder="Select Category"
-                      onChange={(opt: any) => {
-                        setValue("category", opt.name);
-                        setValue("categoryId", opt.id);
-                      }}
-                      displayField="name"
-                    />
-                  </div>
+                 <div>
+  <span className="mb-2 block text-sm font-medium">
+    Category
+  </span>
+  <Combobox
+    data={categoryOptions}
+    displayField="name"
+    value={categoryOptions.find((opt) => opt.name === formCategoryValue) || categoryOptions[0]}
+    onChange={(opt: any) => {
+      setValue("category", opt?.name || "");
+      setValue("categoryId", opt?.id || "");
+    }}
+    placeholder="Search or select category..."
+    searchFields={["name"]}
+  />
+</div>
 
-                  <div>
-                    <span className="mb-2 block text-sm font-medium">
-                      Brand
-                    </span>
-                    <Listbox
-                      data={brandOptions}
-                      value={
-                        brandOptions.find(
-                          (opt) => opt.name === formBrandValue,
-                        ) || brandOptions[0]
-                      }
-                      placeholder="Select Brand"
-                      onChange={(opt: any) => {
-                        setValue("brand", opt.name);
-                        setValue("brandId", opt.id);
-                      }}
-                      displayField="name"
-                    />
-                  </div>
-
-                  <div>
-                    <span className="mb-2 block text-sm font-medium">
-                      Model
-                    </span>
-                    <Listbox
-                      data={modelOptions}
-                      value={
-                        modelOptions.find(
-                          (opt) => opt.name === formModelValue,
-                        ) || brandOptions[0]
-                      }
-                      placeholder="Select Model"
-                      onChange={(opt: any) => {
-                        setValue("model", opt.name);
-                        setValue("modelId", opt.id);
-                      }}
-                      displayField="name"
-                    />
-                  </div>
-
+                 <div>
+  <span className="mb-2 block text-sm font-medium">
+    Brand
+  </span>
+  <Combobox
+    data={brandOptions}
+    displayField="name"
+    value={brandOptions.find((opt) => opt.name === formBrandValue) || brandOptions[0]}
+    onChange={(opt: any) => {
+      setValue("brand", opt?.name || "");
+      setValue("brandId", opt?.id || "");
+    }}
+    placeholder="Search or select brand..."
+    searchFields={["name"]}
+  />
+</div>
+                <div>
+  <span className="mb-2 block text-sm font-medium">
+    Model
+  </span>
+  <Combobox
+    data={modelOptions}
+    displayField="name"
+    value={modelOptions.find((opt) => opt.name === formModelValue) || modelOptions[0]}
+    onChange={(opt: any) => {
+      setValue("model", opt?.name || "");
+      setValue("modelId", opt?.id || "");
+    }}
+    placeholder="Search or select model..."
+    searchFields={["name"]}
+  />
+</div>
                   <div>
                     <label className="mb-2 block text-sm font-medium">
                       Year

@@ -11,6 +11,7 @@ import {
 } from "@headlessui/react";
 import { Fragment, useState, useEffect } from "react";
 import { useForm, useWatch } from "react-hook-form";
+import { RiFileExcel2Fill, RiFilePdfFill } from "react-icons/ri";
 import {
   XMarkIcon,
   PencilSquareIcon,
@@ -31,6 +32,7 @@ import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 import { Button, Checkbox, Input } from "@/components/ui";
 import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/Table";
 import { Listbox } from "@/components/shared/form/StyledListbox";
+import { Combobox } from "@/components/shared/form/Combobox";
 
 type ModelType = {
   id: number;
@@ -75,15 +77,20 @@ export default function Model() {
   const [categories, setCategories] = useState<{ id: number; name: string }[]>(
     [],
   );
-  const [brands, setBrands] = useState<{ id: number; name: string }[]>([]);
+  type BrandOption = {
+    id: number;
+    name: string;
+    categoryId: number;
+  };
+
+  const [brands, setBrands] = useState<BrandOption[]>([]);
+
+  const [filteredBrands, setFilteredBrands] = useState<BrandOption[]>([]);
   const [loading, setLoading] = useState(false);
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [filteredBrands, setFilteredBrands] = useState<
-    { id: number; name: string }[]
-  >([]);
 
   // Change from id: number to id: string
   const categoryOptions = categories.map((cat) => ({
@@ -106,12 +113,13 @@ export default function Model() {
 
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
-
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-const [confirmState, setConfirmState] = useState<"pending" | "success" | "error">("pending");
-const [confirmLoading, setConfirmLoading] = useState(false);
-const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
-const [isBulkDelete, setIsBulkDelete] = useState(false);
+  const [confirmState, setConfirmState] = useState<
+    "pending" | "success" | "error"
+  >("pending");
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+  const [isBulkDelete, setIsBulkDelete] = useState(false);
 
   useEffect(() => {
     getModels();
@@ -173,22 +181,33 @@ const [isBulkDelete, setIsBulkDelete] = useState(false);
       setCategories([]);
     }
   };
-
   const getBrands = async () => {
     try {
       const response = await apiHelper.get("/brand");
+
       const data = response?.data || response;
-      const list = (Array.isArray(data) ? data : []).map((item: any) => ({
-        id: item.id || item._id,
-        name: item.brandName || item.name,
-        categoryId:
-          typeof item.category === "object"
-            ? item.category?.id
-            : item.categoryId, // ✅ Include categoryId
-      }));
+
+      const list: BrandOption[] = (Array.isArray(data) ? data : []).map(
+        (item: any) => ({
+          id: Number(item.id || item._id),
+
+          name: item.brandName || item.name || "",
+
+          categoryId: Number(
+            typeof item.category === "object"
+              ? item.category?.id
+              : item.categoryId,
+          ),
+        }),
+      );
+
+      console.log("All Brands:", list);
+
       setBrands(list);
-      setFilteredBrands(list); // Initially show all brands
+      setFilteredBrands([]);
     } catch (error) {
+      console.error("Failed to fetch brands:", error);
+
       setBrands([]);
       setFilteredBrands([]);
     }
@@ -215,8 +234,15 @@ const [isBulkDelete, setIsBulkDelete] = useState(false);
   });
 
   const formStatusValue = useWatch({ control, name: "status" });
-  const formCategoryValue = useWatch({ control, name: "category" });
-  const formBrandValue = useWatch({ control, name: "brand" });
+  const formCategoryId = useWatch({
+    control,
+    name: "categoryId",
+  });
+
+  const formBrandId = useWatch({
+    control,
+    name: "brandId",
+  });
   const formImageValue = useWatch({ control, name: "image" });
 
   const formValidationRules = {
@@ -253,18 +279,19 @@ const [isBulkDelete, setIsBulkDelete] = useState(false);
 
   const handleOpenAddDrawer = () => {
     setEditId(null);
-    setFilteredBrands(brands); // Reset to all brands
-    const firstCategory = categories[0] || { id: "", name: "" };
-    const firstBrand = brands[0] || { id: "", name: "" };
+
     reset({
-      category: firstCategory.name,
-      categoryId: firstCategory.id,
-      brand: firstBrand.name,
-      brandId: firstBrand.id,
+      category: "",
+      categoryId: "",
+      brand: "",
+      brandId: "",
       modelName: "",
       status: "ACTIVE",
       image: "",
     });
+
+    setFilteredBrands([]);
+
     setShowDrawer(true);
   };
 
@@ -283,46 +310,50 @@ const [isBulkDelete, setIsBulkDelete] = useState(false);
     setShowDrawer(true);
   };
 
- const handleDelete = (id: number) => {
-  setDeleteTargetId(id);
-  setIsBulkDelete(false);
-  setConfirmState("pending");
-  setShowConfirmModal(true);
-};
+  const handleDelete = (id: number) => {
+    setDeleteTargetId(id);
+    setIsBulkDelete(false);
+    setConfirmState("pending");
+    setShowConfirmModal(true);
+  };
 
-const handleBulkDelete = () => {
-  setIsBulkDelete(true);
-  setConfirmState("pending");
-  setShowConfirmModal(true);
-};
+  const handleBulkDelete = () => {
+    setIsBulkDelete(true);
+    setConfirmState("pending");
+    setShowConfirmModal(true);
+  };
 
-const performDelete = async () => {
-  setConfirmLoading(true);
-  try {
-    if (isBulkDelete) {
-      await Promise.all(selectedIds.map((id) => apiHelper.delete(`/model/${id}`)));
-      toast.success(`${selectedIds.length} models deleted successfully!`);
-      await getModels();
-      setSelectedIds([]);
-      setCurrentPage(1);
-      setConfirmState("success");
-    } else {
-      if (deleteTargetId === null) return;
-      await apiHelper.delete(`/model/${deleteTargetId}`);
-      toast.success("Model deleted successfully!");
-      await getModels();
-      setDeleteTargetId(null);
-      setConfirmState("success");
+  const performDelete = async () => {
+    setConfirmLoading(true);
+    try {
+      if (isBulkDelete) {
+        await Promise.all(
+          selectedIds.map((id) => apiHelper.delete(`/model/${id}`)),
+        );
+        toast.success(`${selectedIds.length} models deleted successfully!`);
+        await getModels();
+        setSelectedIds([]);
+        setCurrentPage(1);
+        setConfirmState("success");
+      } else {
+        if (deleteTargetId === null) return;
+        await apiHelper.delete(`/model/${deleteTargetId}`);
+        toast.success("Model deleted successfully!");
+        await getModels();
+        setDeleteTargetId(null);
+        setConfirmState("success");
+      }
+      setTimeout(() => setShowConfirmModal(false), 1500);
+    } catch (error: any) {
+      console.error("Delete failed:", error);
+      setConfirmState("error");
+      toast.error(
+        error.response?.data?.message || "Failed to delete. Please try again.",
+      );
+    } finally {
+      setConfirmLoading(false);
     }
-    setTimeout(() => setShowConfirmModal(false), 1500);
-  } catch (error: any) {
-    console.error("Delete failed:", error);
-    setConfirmState("error");
-    toast.error(error.response?.data?.message || "Failed to delete. Please try again.");
-  } finally {
-    setConfirmLoading(false);
-  }
-};
+  };
 
   const handleToggleTableStatus = async (id: number) => {
     const model = models.find((item) => item.id === id);
@@ -347,49 +378,52 @@ const performDelete = async () => {
   };
 
   const onFormSubmit = async (data: FormValues) => {
-  try {
-    const hasNewImage = data.image && data.image.startsWith("data:");
-    if (hasNewImage) {
-      const formData = new FormData();
-      formData.append("modelName", data.modelName);
-      formData.append("categoryId", String(data.categoryId));
-      formData.append("brandId", String(data.brandId));
-      formData.append("status", data.status);
-      const response = await fetch(data.image);
-      const blob = await response.blob();
-      formData.append("image", blob, "model-image.jpg");
-      if (editId !== null) {
-        await apiHelper.put(`/model/${editId}`, formData);
-        toast.success("Model updated successfully!");
+    try {
+      const hasNewImage = data.image && data.image.startsWith("data:");
+      if (hasNewImage) {
+        const formData = new FormData();
+        formData.append("modelName", data.modelName);
+        formData.append("categoryId", String(data.categoryId));
+        formData.append("brandId", String(data.brandId));
+        formData.append("status", data.status);
+        const response = await fetch(data.image);
+        const blob = await response.blob();
+        formData.append("image", blob, "model-image.jpg");
+        if (editId !== null) {
+          await apiHelper.put(`/model/${editId}`, formData);
+          toast.success("Model updated successfully!");
+        } else {
+          await apiHelper.post("/model", formData);
+          toast.success("Model created successfully!");
+        }
       } else {
-        await apiHelper.post("/model", formData);
-        toast.success("Model created successfully!");
+        const payload: any = {
+          modelName: data.modelName,
+          categoryId: Number(data.categoryId),
+          brandId: Number(data.brandId),
+          status: data.status,
+        };
+        if (data.image && !data.image.startsWith("data:"))
+          payload.image = data.image;
+        if (editId !== null) {
+          await apiHelper.put(`/model/${editId}`, payload);
+          toast.success("Model updated successfully!");
+        } else {
+          await apiHelper.post("/model", payload);
+          toast.success("Model created successfully!");
+        }
       }
-    } else {
-      const payload: any = {
-        modelName: data.modelName,
-        categoryId: Number(data.categoryId),
-        brandId: Number(data.brandId),
-        status: data.status,
-      };
-      if (data.image && !data.image.startsWith("data:"))
-        payload.image = data.image;
-      if (editId !== null) {
-        await apiHelper.put(`/model/${editId}`, payload);
-        toast.success("Model updated successfully!");
-      } else {
-        await apiHelper.post("/model", payload);
-        toast.success("Model created successfully!");
-      }
+      await getModels();
+      setShowDrawer(false);
+      reset();
+    } catch (error: any) {
+      console.error(error);
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to save model. Please try again.",
+      );
     }
-    await getModels();
-    setShowDrawer(false);
-    reset();
-  } catch (error: any) {
-    console.error(error);
-    toast.error(error.response?.data?.message || "Failed to save model. Please try again.");
-  }
-};
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -476,44 +510,46 @@ const performDelete = async () => {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setShowFilterBar(!showFilterBar)}
-            className={`inline-flex items-center gap-1.5 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
-              showFilterBar
-                ? "bg-primary-50 border-primary-200 text-primary-600 dark:bg-dark-600 dark:border-dark-500 dark:text-white"
-                : "dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
-            }`}
-          >
-            <FunnelIcon className="size-4.5" />
-            Filter
-          </button>
+       <div className="flex flex-wrap items-center justify-between gap-2 md:flex-nowrap">
+  {/* Left side - Filter and icons */}
+  <div className="flex items-center gap-2">
+    <button
+      type="button"
+      onClick={() => setShowFilterBar(!showFilterBar)}
+      className={`inline-flex items-center gap-1.5 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
+        showFilterBar
+          ? "bg-primary-50 border-primary-200 text-primary-600 dark:bg-dark-600 dark:border-dark-500 dark:text-white"
+          : "dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+      }`}
+    >
+      <FunnelIcon className="size-4.5" />
+      <span className="hidden sm:inline">Filter</span>
+    </button>
 
-          <button
-            type="button"
-            className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
-          >
-            <DocumentArrowDownIcon className="size-4.5 text-gray-400" />
-            Excel
-          </button>
+    <button
+      type="button"
+      className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+    >
+      <RiFileExcel2Fill className="text-lg text-green-500" />
+    </button>
 
-          <button
-            type="button"
-            className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
-          >
-            <DocumentArrowDownIcon className="size-4.5 text-gray-400" />
-            PDF
-          </button>
+    <button
+      type="button"
+      className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+    >
+      <RiFilePdfFill className="text-lg text-red-500" />
+    </button>
+  </div>
 
-          <Button
-            color="primary"
-            onClick={handleOpenAddDrawer}
-            className="w-full sm:w-auto"
-          >
-            Add Model
-          </Button>
-        </div>
+  {/* Right side - Add Model button */}
+  <Button
+    color="primary"
+    onClick={handleOpenAddDrawer}
+    className="whitespace-nowrap"
+  >
+    Add Model
+  </Button>
+</div>
       </div>
 
       {/* Global Context Search Box */}
@@ -536,22 +572,24 @@ const performDelete = async () => {
         <div className="dark:bg-dark-700 dark:border-dark-500 animate-in fade-in slide-in-from-top-2 rounded-xl border border-gray-200 bg-white p-4 transition-all duration-150">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
             {/* Filter 1: Model Name */}
+            {/* Filter 1: Model Name */}
             <div className="flex flex-col gap-1">
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
                 Model Name
               </span>
-              <Listbox
+              <Combobox
                 data={nameFilterOptions}
+                displayField="name"
                 value={
                   nameFilterOptions.find((o) => o.id === selectedNameFilter) ||
                   nameFilterOptions[0]
                 }
-                placeholder="All Models"
                 onChange={(opt: any) => {
-                  setSelectedNameFilter(opt.id);
+                  setSelectedNameFilter(opt?.id || "All");
                   setCurrentPage(1);
                 }}
-                displayField="name"
+                placeholder="Search or select model..."
+                searchFields={["name"]}
               />
             </div>
 
@@ -560,41 +598,42 @@ const performDelete = async () => {
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
                 Brand
               </span>
-              <Listbox
+              <Combobox
                 data={brandFilterOptions}
+                displayField="name"
                 value={
                   brandFilterOptions.find(
                     (o) => o.id === selectedBrandFilter,
                   ) || brandFilterOptions[0]
                 }
-                placeholder="All Brands"
                 onChange={(opt: any) => {
-                  setSelectedBrandFilter(opt.id);
+                  setSelectedBrandFilter(opt?.id || "All");
                   setCurrentPage(1);
                 }}
-                displayField="name"
+                placeholder="Search or select brand..."
+                searchFields={["name"]}
               />
             </div>
 
             {/* Filter 3: Category */}
-            {/* Filter 3: Category - use filter state, NOT form values */}
             <div className="flex flex-col gap-1">
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
                 Category
               </span>
-              <Listbox
+              <Combobox
                 data={categoryFilterOptions}
+                displayField="name"
                 value={
                   categoryFilterOptions.find(
                     (o) => o.id === selectedCategoryFilter,
                   ) || categoryFilterOptions[0]
                 }
-                placeholder="All Categories"
                 onChange={(opt: any) => {
-                  setSelectedCategoryFilter(opt.id);
+                  setSelectedCategoryFilter(opt?.id || "All");
                   setCurrentPage(1);
                 }}
-                displayField="name"
+                placeholder="Search or select category..."
+                searchFields={["name"]}
               />
             </div>
 
@@ -1018,27 +1057,49 @@ const performDelete = async () => {
                     <span className="mb-2 block text-sm font-medium">
                       Category
                     </span>
-                    {/* Category dropdown in DRAWER */}
-                    <Listbox
+                    <Combobox
                       data={categoryOptions}
+                      displayField="name"
                       value={
                         categoryOptions.find(
-                          (opt) => opt.name === formCategoryValue,
-                        ) || categoryOptions[0]
+                          (option) =>
+                            String(option.id) === String(formCategoryId),
+                        ) || null
                       }
                       placeholder="Select Category"
-                      onChange={(selectedOpt: any) => {
-                        setValue("category", selectedOpt.name);
-                        setValue("categoryId", selectedOpt.id);
-                        setValue("brand", ""); // ✅ Reset brand when category changes
-                        setValue("brandId", ""); // ✅ Reset brandId
+                      onChange={(selectedOption: any) => {
+                        const selectedCategoryId = Number(selectedOption.id);
 
-                        // ✅ Filter brands by selected category
-                        const catId = Number(selectedOpt.id);
-                        const filtered = brands.filter((b) => b.id === catId);
-                        setFilteredBrands(filtered.length > 0 ? filtered : []);
+                        setValue("category", selectedOption.name, {
+                          shouldValidate: true,
+                        });
+
+                        setValue("categoryId", selectedOption.id, {
+                          shouldValidate: true,
+                        });
+
+                        // Clear old brand after category changes
+                        setValue("brand", "");
+
+                        setValue("brandId", "");
+
+                        // Filter using categoryId
+                        const categoryBrands = brands.filter(
+                          (brand) =>
+                            Number(brand.categoryId) === selectedCategoryId,
+                        );
+
+                        console.log(
+                          "Selected Category ID:",
+                          selectedCategoryId,
+                        );
+
+                        console.log("Category Brands:", categoryBrands);
+
+                        setFilteredBrands(categoryBrands);
                       }}
-                      displayField="name"
+                      placeholder="Search or select category..."
+                      searchFields={["name"]}
                     />
                   </div>
 
@@ -1046,22 +1107,38 @@ const performDelete = async () => {
                     <span className="mb-2 block text-sm font-medium">
                       Brand
                     </span>
-                    <Listbox
+                    <Combobox
                       data={brandOptions}
+                      displayField="name"
                       value={
                         brandOptions.find(
-                          (opt) => opt.name === formBrandValue,
-                        ) || brandOptions[0]
+                          (option) => String(option.id) === String(formBrandId),
+                        ) || null
                       }
-                      placeholder="Select Brand"
+<<<<<<< HEAD
                       onChange={(selectedOpt: any) => {
-                        setValue("brand", selectedOpt.name);
-                        setValue("brandId", selectedOpt.id);
+                        setValue("brand", selectedOpt?.name || "");
+                        setValue("brandId", selectedOpt?.id || "");
+=======
+                      placeholder={
+                        formCategoryId
+                          ? "Select Brand"
+                          : "First select category"
+                      }
+                      onChange={(selectedOption: any) => {
+                        setValue("brand", selectedOption.name, {
+                          shouldValidate: true,
+                        });
+
+                        setValue("brandId", selectedOption.id, {
+                          shouldValidate: true,
+                        });
+>>>>>>> c2d2dad (order,showroomvariant,lead,purchase,trctorinvantory)
                       }}
-                      displayField="name"
+                      placeholder="Search or select brand..."
+                      searchFields={["name"]}
                     />
                   </div>
-
                   <div>
                     <label className="mb-2 block text-sm font-medium">
                       Model Name
@@ -1134,39 +1211,39 @@ const performDelete = async () => {
         </Dialog>
       </Transition>
       {/* Confirmation Modal */}
-<ConfirmModal
-  show={showConfirmModal}
-  onClose={() => {
-    setShowConfirmModal(false);
-    setDeleteTargetId(null);
-    setConfirmState("pending");
-  }}
-  onOk={performDelete}
-  confirmLoading={confirmLoading}
-  state={confirmState}
-  messages={{
-    pending: {
-      Icon: ExclamationTriangleIcon,
-      title: isBulkDelete ? "Delete Selected Models?" : "Are you sure?",
-      description: isBulkDelete 
-        ? `Are you sure you want to delete ${selectedIds.length} selected models? This action cannot be undone.`
-        : "Are you sure you want to delete this model? Once deleted, it cannot be restored.",
-      actionText: isBulkDelete ? "Delete All" : "Delete",
-    },
-    success: {
-      title: "Deleted Successfully",
-      description: isBulkDelete 
-        ? `${selectedIds.length} models have been deleted.`
-        : "The model has been deleted.",
-      actionText: "Done",
-    },
-    error: {
-      title: "Delete Failed",
-      description: "Failed to delete. Please try again.",
-      actionText: "Try Again",
-    },
-  }}
-/>
+      <ConfirmModal
+        show={showConfirmModal}
+        onClose={() => {
+          setShowConfirmModal(false);
+          setDeleteTargetId(null);
+          setConfirmState("pending");
+        }}
+        onOk={performDelete}
+        confirmLoading={confirmLoading}
+        state={confirmState}
+        messages={{
+          pending: {
+            Icon: ExclamationTriangleIcon,
+            title: isBulkDelete ? "Delete Selected Models?" : "Are you sure?",
+            description: isBulkDelete
+              ? `Are you sure you want to delete ${selectedIds.length} selected models? This action cannot be undone.`
+              : "Are you sure you want to delete this model? Once deleted, it cannot be restored.",
+            actionText: isBulkDelete ? "Delete All" : "Delete",
+          },
+          success: {
+            title: "Deleted Successfully",
+            description: isBulkDelete
+              ? `${selectedIds.length} models have been deleted.`
+              : "The model has been deleted.",
+            actionText: "Done",
+          },
+          error: {
+            title: "Delete Failed",
+            description: "Failed to delete. Please try again.",
+            actionText: "Try Again",
+          },
+        }}
+      />
     </div>
   );
 }

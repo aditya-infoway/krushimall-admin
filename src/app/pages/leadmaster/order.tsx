@@ -18,7 +18,8 @@ import { Combobox } from "@/components/shared/form/Combobox";
 import { Checkbox } from "@/components/ui/Form/Checkbox";
 import { FiEdit2 } from "react-icons/fi";
 import Select from "react-select";
-import type { OptionProps } from "react-select";
+// import type { OptionProps } from "react-select";
+import { toast } from "sonner";
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
@@ -339,13 +340,50 @@ const Order: React.FC = () => {
   const [financeOptions, setFinanceOptions] = useState<any[]>([]);
   const [vehicleOptions, setVehicleOptions] = useState<any[]>([]);
   const [cashAccountOptions, setCashAccountOptions] = useState<any[]>([]);
+  const [companyId, setCompanyId] = useState<number | null>(null);
 
+  const [financialYearId, setFinancialYearId] = useState<number | null>(null);
   const [bankAccountOptions, setBankAccountOptions] = useState<any[]>([]);
   type BankerOption = {
     id: number;
     banker: string;
     status: string;
   };
+const getCompany = () => {
+  const savedCompanyId =
+    sessionStorage.getItem("companyId") ||
+    localStorage.getItem("companyId");
+
+  const savedFinancialYearId =
+    sessionStorage.getItem(
+      "financialYearId",
+    ) ||
+    localStorage.getItem(
+      "financialYearId",
+    );
+
+  console.log(
+    "SAVED COMPANY ID:",
+    savedCompanyId,
+  );
+
+  console.log(
+    "SAVED FINANCIAL YEAR ID:",
+    savedFinancialYearId,
+  );
+
+  if (savedCompanyId) {
+    setCompanyId(
+      Number(savedCompanyId),
+    );
+  }
+
+  if (savedFinancialYearId) {
+    setFinancialYearId(
+      Number(savedFinancialYearId),
+    );
+  }
+};
   const fetchPaymentAccounts = async () => {
     try {
       const response = await apiHelper.get("/accounts");
@@ -414,51 +452,93 @@ const Order: React.FC = () => {
     }
   };
   useEffect(() => {
+    getCompany();
     getBankers();
     fetchPaymentAccounts();
   }, []);
   const fetchVehicleInventory = async () => {
-    try {
-      const res = await apiHelper.get("/purchases/tractor-inventory");
+  try {
+    const res = await apiHelper.get(
+      "/purchases/tractor-inventory",
+    );
 
-      console.log("TRACTOR INVENTORY RESPONSE:", res.data);
+    const data = Array.isArray(res.data?.data)
+      ? res.data.data
+      : Array.isArray(res.data)
+        ? res.data
+        : [];
 
-      const data = Array.isArray(res.data?.data)
-        ? res.data.data
-        : Array.isArray(res.data)
-          ? res.data
-          : [];
+    const mappedVehicles = data
+      // Remove already booked chassis
+      .filter(
+        (item: any) =>
+          String(item.status ?? "")
+            .trim()
+            .toLowerCase() !== "booked",
+      )
+      .map((item: any) => ({
+        id: String(
+          item.id ??
+            item.tractorId ??
+            item.purchaseItemId,
+        ),
 
-      const mappedVehicles = data.map((item: any) => ({
-        id: String(item.id ?? item.tractorId ?? item.purchaseItemId),
+        chassisNo:
+          item.chassisNo ?? "",
 
-        chassisNo: item.chassisNo ?? "",
+        batteryNo:
+          item.batteryNo ?? "",
 
-        batteryNo: item.batteryNo ?? "",
+        keyNo:
+          item.keyNo ??
+          item.keyNumber ??
+          "",
 
-        keyNo: item.keyNo ?? item.keyNumber ?? "",
+        engineNo:
+          item.engineNo ??
+          item.motorNo ??
+          "",
 
-        engineNo: item.engineNo ?? item.motorNo ?? "",
+        inwardDate:
+          item.inwardDate ??
+          item.inWardDate ??
+          "",
 
-        inwardDate: item.inwardDate ?? item.inWardDate ?? "",
+        ageDay:
+          item.ageDay ??
+          item.ageday ??
+          null,
 
-        // Already calculated by backend
-        ageDay: item.ageDay ?? item.ageday ?? null,
+        model:
+          item.model ??
+          item.modelName ??
+          "",
 
-        model: item.model ?? item.modelName ?? "",
+        variant:
+          item.variant ??
+          item.variantName ??
+          "",
 
-        variant: item.variant ?? item.variantName ?? "",
+        colour:
+          item.colour ??
+          item.color ??
+          "",
 
-        colour: item.colour ?? item.color ?? "",
+        // Keep inventory status
+        status:
+          item.status ?? "",
       }));
 
-      console.log("MAPPED VEHICLES:", mappedVehicles);
-
-      setVehicleOptions(mappedVehicles);
-    } catch (error) {
-      console.error("GET TRACTOR INVENTORY ERROR:", error);
-    }
-  };
+    setVehicleOptions(
+      mappedVehicles,
+    );
+  } catch (error) {
+    console.error(
+      "GET TRACTOR INVENTORY ERROR:",
+      error,
+    );
+  }
+};
   const totalValue = 0;
   const fetchFinances = async () => {
     try {
@@ -729,11 +809,11 @@ const Order: React.FC = () => {
     { id: "broker3", name: "Broker C" },
   ];
 
-  const employeeOptions = [
-    { id: "emp1", name: "Employee 1" },
-    { id: "emp2", name: "Employee 2" },
-    { id: "emp3", name: "Employee 3" },
-  ];
+  // const employeeOptions = [
+  //   { id: "emp1", name: "Employee 1" },
+  //   { id: "emp2", name: "Employee 2" },
+  //   { id: "emp3", name: "Employee 3" },
+  // ];
 
   const relationOptions = [
     { id: "father", name: "Father" },
@@ -744,11 +824,11 @@ const Order: React.FC = () => {
     { id: "other", name: "Other" },
   ];
 
-  const financeDoneByOptions = [
-    { id: "self", name: "Self" },
-    { id: "dealer", name: "Dealer" },
-    { id: "dsa", name: "DSA" },
-  ];
+  // const financeDoneByOptions = [
+  //   { id: "self", name: "Self" },
+  //   { id: "dealer", name: "Dealer" },
+  //   { id: "dsa", name: "DSA" },
+  // ];
   const matchingVehicleOptions = vehicleOptions.filter((vehicle: any) => {
     const vehicleModel = String(vehicle.model ?? "")
       .trim()
@@ -811,6 +891,228 @@ const Order: React.FC = () => {
       pendingAmount: String(total),
     }));
   }, [exchange.companyShare, exchange.dealerShares, payment.invoiceAmount]);
+  const handleCreateOrder = async () => {
+  try {
+    // =====================================
+    // BASIC VALIDATION
+    // =====================================
+
+    if (!id) {
+      toast.error("Lead ID is missing");
+      return;
+    }
+
+    if (!companyId) {
+      toast.error("Company ID not found");
+      return;
+    }
+
+    if (!financialYearId) {
+      toast.error(
+        "Financial Year ID not found",
+      );
+      return;
+    }
+
+    if (!allotment.chassisNo) {mappedVehicles 
+      toast.error(
+        "Please select chassis number",
+      );
+      return;
+    }
+
+    // =====================================
+    // PAYMENT AMOUNTS
+    // =====================================
+
+    const marginAmount =
+      Number(
+        hypothecation.marginMoney,
+      ) || 0;
+
+    const cashAmount =
+      Number(
+        hypothecation.cashAmount,
+      ) || 0;
+
+    const bankAmount =
+      Number(
+        hypothecation.bankAmount,
+      ) || 0;
+
+    // =====================================
+    // PAYMENT VALIDATION
+    // =====================================
+
+    if (
+      hypothecation.paymentStatus ===
+      "received"
+    ) {
+      if (
+        cashAmount + bankAmount !==
+        marginAmount
+      ) {
+        toast.error(
+          "Cash Amount + Bank Amount must be equal to Margin Money",
+        );
+
+        return;
+      }
+
+      // Cash Account validation
+      if (
+        cashAmount > 0 &&
+        !hypothecation.cashAccountId
+      ) {
+        toast.error(
+          "Please select Cash Account",
+        );
+
+        return;
+      }
+
+      // Bank Account validation
+      if (
+        bankAmount > 0 &&
+        !hypothecation.bankAccountId
+      ) {
+        toast.error(
+          "Please select Bank Account",
+        );
+
+        return;
+      }
+
+      // Payment Mode validation
+      if (
+        bankAmount > 0 &&
+        !hypothecation.paymentMode
+      ) {
+        toast.error(
+          "Please select Payment Mode",
+        );
+
+        return;
+      }
+
+      // Cheque validation
+      if (
+        bankAmount > 0 &&
+        hypothecation.paymentMode ===
+          "CHEQUE"
+      ) {
+        if (
+          !hypothecation.chequeNo
+        ) {
+          toast.error(
+            "Please enter Cheque Number",
+          );
+
+          return;
+        }
+
+        if (
+          !hypothecation.chequeDate
+        ) {
+          toast.error(
+            "Please select Cheque Date",
+          );
+
+          return;
+        }
+      }
+    }
+
+    // Start loading only after
+    // all validations are successful
+    setLoading(true);
+
+    // =====================================
+    // CREATE PAYLOAD
+    // =====================================
+
+    const payload = {
+      companyId:
+        Number(companyId),
+
+      financialYearId:
+        Number(
+          financialYearId,
+        ),
+
+      leadId:
+        Number(id),
+
+      vehicleCharges,
+
+      allotment,
+
+      hypothecation: {
+        ...hypothecation,
+
+        cashAmount:
+          String(cashAmount),
+
+        bankAmount:
+          String(bankAmount),
+      },
+
+      exchange,
+
+      payment,
+
+      broker,
+
+      delivery,
+    };
+
+    console.log(
+      "CREATE ORDER PAYLOAD:",
+      payload,
+    );
+
+    // =====================================
+    // CREATE ORDER API
+    // =====================================
+
+    const response =
+      await apiHelper.post(
+        "/orders",
+        payload,
+      );
+
+    console.log(
+      "CREATE ORDER RESPONSE:",
+      response.data,
+    );
+
+    // Success toaster
+    toast.success(
+      response.data?.message ||
+        "Order created successfully",
+    );
+
+    // Give toaster some time
+    // before changing the page
+    setTimeout(() => {
+      navigate(-1);
+    }, 800);
+  } catch (error: any) {
+    console.error(
+      "CREATE ORDER ERROR:",
+      error,
+    );
+
+    // Backend error toaster
+    toast.error(
+      error.response?.data
+        ?.message ||
+        "Unable to create order",
+    );
+  } finally {
+    setLoading(false);
+  }
+};
   return (
     <div className="dark:bg-dark-900 min-h-screen bg-gray-50 p-4">
       {/* Title row */}
@@ -2128,8 +2430,13 @@ const Order: React.FC = () => {
 
       {/* Submit Button - Bottom Center */}
       <div className="mt-8 flex justify-center">
-        <button className="rounded-lg bg-[#003399] px-8 py-2.5 text-sm font-medium text-white shadow-md transition-all duration-200 hover:bg-[#002277] hover:shadow-lg">
-          Create Order
+        <button
+          type="button"
+          onClick={handleCreateOrder}
+          disabled={loading}
+          className="rounded-lg bg-[#003399] px-8 py-2.5 text-sm font-medium text-white shadow-md transition-all duration-200 hover:bg-[#002277] hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {loading ? "Creating..." : "Create Order"}
         </button>
       </div>
     </div>

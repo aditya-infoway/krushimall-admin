@@ -1049,6 +1049,7 @@ const handleInwardSubmit = async () => {
                     </label>
                     <DatePicker
                       placeholder="Select MFG Date"
+                      options={{ disableMobile: true }}
                       disabled={isView}
                       value={inwardData.mfgDate}
                       onChange={(selectedDates: Date[]) => {
@@ -1250,6 +1251,7 @@ const handleInwardSubmit = async () => {
                     <DatePicker
                       placeholder="Select GRN Date"
                       disabled={isView}
+                      options={{ disableMobile: true }}
                       value={inwardData.grnDate}
                       onChange={(selectedDates: Date[]) => {
                         if (selectedDates && selectedDates.length > 0) {
@@ -1278,6 +1280,7 @@ const handleInwardSubmit = async () => {
                     </label>
                     <DatePicker
                       placeholder="Select GRN Record Date"
+                      options={{ disableMobile: true }}
                       value={inwardData.grnRecordDate}
                       disabled={isView}
                       onChange={(selectedDates: Date[]) => {

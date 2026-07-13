@@ -16,6 +16,7 @@ import {
   ArrowDownCircleIcon,
 } from "@heroicons/react/24/outline";
 import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/Table";
+import { RiFileExcel2Fill, RiFilePdfFill } from "react-icons/ri";
 import { Button, Checkbox, Input } from "@/components/ui";
 import { Listbox } from "@/components/shared/form/StyledListbox";
 import { toast } from "sonner";
@@ -300,24 +301,34 @@ const TractorPurchaseRegister: React.FC<TractorPurchaseRegisterProps> = ({
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
-          >
-            <DocumentArrowDownIcon className="size-4.5 text-gray-400" />
-            Excel
-          </button>
+       <div className="flex flex-wrap items-center justify-between gap-2 md:flex-nowrap">
+  {/* Left side - Excel and PDF icons */}
+  <div className="flex items-center gap-2">
+    <button
+      type="button"
+      className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+    >
+      <RiFileExcel2Fill className="text-lg text-green-500" />
+    </button>
 
-          <Button
-            color="primary"
-            onClick={handleAddPurchase}
-            className="w-full sm:w-auto"
-          >
-            <PlusIcon className="mr-1.5 size-4.5" />
-            Add Purchase
-          </Button>
-        </div>
+    <button
+      type="button"
+      className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+    >
+      <RiFilePdfFill className="text-lg text-red-500" />
+    </button>
+  </div>
+
+  {/* Right side - Add Purchase button */}
+  <Button
+    color="primary"
+    onClick={handleAddPurchase}
+    className="whitespace-nowrap"
+  >
+    <PlusIcon className="mr-1.5 size-4.5" />
+    Add Purchase
+  </Button>
+</div>
       </div>
 
       {/* Search and Filter */}
