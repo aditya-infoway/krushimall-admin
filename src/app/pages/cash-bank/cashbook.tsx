@@ -488,6 +488,7 @@ const CashBook: React.FC = () => {
           <div>
             <DatePicker
               placeholder="From Date"
+              options={{ disableMobile: true }}
               value={fromDate ? new Date(fromDate + "T00:00:00") : undefined}
               onChange={(dates) => {
                 if (dates && dates.length > 0) {
@@ -509,6 +510,7 @@ const CashBook: React.FC = () => {
             <DatePicker
               placeholder="To Date"
               value={toDate ? new Date(toDate + "T00:00:00") : undefined}
+              options={{ disableMobile: true }}
               onChange={(dates) => {
                 if (dates && dates.length > 0) {
                   const date = dates[0];

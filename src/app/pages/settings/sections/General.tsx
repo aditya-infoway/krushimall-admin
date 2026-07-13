@@ -294,7 +294,7 @@ const fetchCompany = async () => {
     }),
   };
   return (
-    <div className="w-full max-w-3xl 2xl:max-w-5xl">
+    <div className="w-full">
       <div className="flex items-center justify-between">
         <h5 className="dark:text-dark-50 read-only: text-lg font-medium text-gray-800">
           {company?.companyName || "Company Name"}

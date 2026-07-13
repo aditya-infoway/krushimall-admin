@@ -186,17 +186,16 @@ const protectedRoutes: RouteObject = {
                       .default,
                   }),
                 },
-                
               ],
             },
-             {
-     path: "quotation/edit/:id",
-      lazy: async () => ({
-        Component: (
-          await import("@/app/pages/leadmaster/quotationEdit")
-        ).default,
-      }),
-    },
+            {
+              path: "quotation/edit/:id",
+              lazy: async () => ({
+                Component: (
+                  await import("@/app/pages/leadmaster/quotationEdit")
+                ).default,
+              }),
+            },
           ],
         },
         {
@@ -421,14 +420,14 @@ const protectedRoutes: RouteObject = {
                     ).default,
                   }),
                 },
-                  {
-          path: "view/:id",
-          lazy: async () => ({
-            Component: (
-            await import("@/app/pages/stocktransfer/ViewVehicleStock")
-            ).default,
-          }),
-        },
+                {
+                  path: "view/:id",
+                  lazy: async () => ({
+                    Component: (
+                      await import("@/app/pages/stocktransfer/ViewVehicleStock")
+                    ).default,
+                  }),
+                },
               ],
             },
           ],
@@ -622,51 +621,36 @@ const protectedRoutes: RouteObject = {
             },
           ],
         },
-      ],
-    },
-
-    {
-      path: "accessories",
-      children: [
-        {
-          index: true,
-          lazy: async () => ({
-            Component: (await import("@/app/pages/purchase/accessories"))
-              .default,
-          }),
-        },
 
         {
-          path: "add",
-          lazy: async () => ({
-            Component: (await import("@/app/pages/purchase/puraccessories"))
-              .default,
-          }),
+          path: "accessories",
+          children: [
+            {
+              index: true,
+              lazy: async () => ({
+                Component: (await import("@/app/pages/purchase/accessories"))
+                  .default,
+              }),
+            },
+
+            {
+              path: "add",
+              lazy: async () => ({
+                Component: (await import("@/app/pages/purchase/puraccessories"))
+                  .default,
+              }),
+            },
+
+            {
+              path: "add/:id",
+              lazy: async () => ({
+                Component: (await import("@/app/pages/purchase/puraccessories"))
+                  .default,
+              }),
+            },
+          ],
         },
 
-        {
-          path: "add/:id",
-          lazy: async () => ({
-            Component: (await import("@/app/pages/purchase/puraccessories"))
-              .default,
-          }),
-        },
-
-        // {
-        //   path: ":id",
-        //   lazy: async () => ({
-        //     Component: (
-        //       await import("@/app/pages/purchase/accessories/edit")
-        //     ).default,
-        //   }),
-        // },
-      ],
-    },
-
-    // The app layout supports only the main layout. Avoid using it for other layouts.
-    {
-      Component: AppLayout,
-      children: [
         {
           path: "settings",
           lazy: async () => ({
@@ -675,7 +659,7 @@ const protectedRoutes: RouteObject = {
           children: [
             {
               index: true,
-              element: <Navigate to="/settings/general" />,
+              element: <Navigate to="general" replace />,
             },
             {
               path: "general",

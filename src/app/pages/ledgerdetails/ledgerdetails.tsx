@@ -254,6 +254,7 @@ const LedgerDetails: React.FC = () => {
                 placeholder="From Date"
                 value={fromDate}
                 onChange={setFromDate}
+                options={{ disableMobile: true }}
               />
             </div>
           </div>
@@ -266,6 +267,7 @@ const LedgerDetails: React.FC = () => {
                 placeholder="To Date"
                 value={toDate}
                 onChange={setToDate}
+                options={{ disableMobile: true }}
               />
             </div>
           </div>

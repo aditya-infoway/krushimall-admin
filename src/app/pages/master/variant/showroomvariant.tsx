@@ -10,6 +10,7 @@ import {
   MenuItem,
 } from "@headlessui/react";
 import { Fragment, useState, useEffect, useRef } from "react";
+import { RiFileExcel2Fill, RiFilePdfFill } from "react-icons/ri";
 import { useForm, useWatch } from "react-hook-form";
 import {
   XMarkIcon,

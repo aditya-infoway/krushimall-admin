@@ -1389,10 +1389,12 @@ function ReviewLeadSummaryStep({
           </label>
           <DatePicker
             value={form.dmsEnquiryDate}
+          
             onChange={(val) => handleChange("dmsEnquiryDate", val)}
             placeholder="DD-MM-YYYY"
             options={{
-              dateFormat: "d-m-Y", // ← Fix here too
+              dateFormat: "d-m-Y", 
+              disableMobile: true,
             }}
           />
         </div>

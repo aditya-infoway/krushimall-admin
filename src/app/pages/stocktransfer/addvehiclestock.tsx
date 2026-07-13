@@ -853,6 +853,7 @@ const handleSave = async () => {
           <DatePicker
             label="Date *"
             placeholder="Select Date"
+            options={{ disableMobile: true }}
             value={watch("date") ? [new Date(watch("date"))] : []}
             onChange={(val: Date[]) => {
               if (val && val[0]) {

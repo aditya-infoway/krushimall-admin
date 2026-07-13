@@ -11,6 +11,7 @@ import {
 } from "@headlessui/react";
 import { Fragment, useState, useEffect } from "react";
 import { useForm, useWatch } from "react-hook-form";
+import { RiFileExcel2Fill, RiFilePdfFill } from "react-icons/ri";
 import {
   XMarkIcon,
   PencilSquareIcon,
@@ -31,6 +32,7 @@ import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 import { Button, Checkbox, Input } from "@/components/ui";
 import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/Table";
 import { Listbox } from "@/components/shared/form/StyledListbox";
+import { Combobox } from "@/components/shared/form/Combobox";
 
 type Brand = {
   id: number;
@@ -226,8 +228,8 @@ export default function Brand() {
     const firstCategory = categories[0] || { id: "", name: "" };
     reset({
       name: "",
-      category: firstCategory.name,
-      categoryId: firstCategory.id,
+      category: "",
+      categoryId: "",
       status: "ACTIVE",
       image: "",
     });
@@ -468,44 +470,46 @@ export default function Brand() {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setShowFilterBar(!showFilterBar)}
-            className={`inline-flex items-center gap-1.5 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
-              showFilterBar
-                ? "bg-primary-50 border-primary-200 text-primary-600 dark:bg-dark-600 dark:border-dark-500 dark:text-white"
-                : "dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
-            }`}
-          >
-            <FunnelIcon className="size-4.5" />
-            Filter
-          </button>
+       <div className="flex flex-wrap items-center justify-between gap-2 md:flex-nowrap">
+  {/* Left side - Filter and icons */}
+  <div className="flex items-center gap-2">
+    <button
+      type="button"
+      onClick={() => setShowFilterBar(!showFilterBar)}
+      className={`inline-flex items-center gap-1.5 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
+        showFilterBar
+          ? "bg-primary-50 border-primary-200 text-primary-600 dark:bg-dark-600 dark:border-dark-500 dark:text-white"
+          : "dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+      }`}
+    >
+      <FunnelIcon className="size-4.5" />
+      <span className="hidden sm:inline">Filter</span>
+    </button>
 
-          <button
-            type="button"
-            className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
-          >
-            <DocumentArrowDownIcon className="size-4.5 text-gray-400" />
-            Excel
-          </button>
+    <button
+      type="button"
+      className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+    >
+      <RiFileExcel2Fill className="text-lg text-green-500" />
+    </button>
 
-          <button
-            type="button"
-            className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
-          >
-            <DocumentArrowDownIcon className="size-4.5 text-gray-400" />
-            PDF
-          </button>
+    <button
+      type="button"
+      className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+    >
+      <RiFilePdfFill className="text-lg text-red-500" />
+    </button>
+  </div>
 
-          <Button
-            color="primary"
-            onClick={handleOpenAddDrawer}
-            className="w-full sm:w-auto"
-          >
-            Add Brand
-          </Button>
-        </div>
+  {/* Right side - Add Brand button */}
+  <Button
+    color="primary"
+    onClick={handleOpenAddDrawer}
+    className="whitespace-nowrap"
+  >
+    Add Brand
+  </Button>
+</div>
       </div>
 
       {/* Global Context Search Box */}
@@ -532,7 +536,7 @@ export default function Brand() {
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
                 Brand Name
               </span>
-              <Listbox
+              <Combobox
                 data={nameFilterOptions}
                 value={
                   nameFilterOptions.find((o) => o.id === selectedNameFilter) ||
@@ -544,6 +548,7 @@ export default function Brand() {
                   setCurrentPage(1);
                 }}
                 displayField="name"
+                searchFields={["name"]}
               />
             </div>
 
@@ -552,7 +557,7 @@ export default function Brand() {
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
                 Brand Category
               </span>
-              <Listbox
+              <Combobox
                 data={categoryFilterOptions}
                 value={
                   categoryFilterOptions.find(
@@ -565,6 +570,7 @@ export default function Brand() {
                   setCurrentPage(1);
                 }}
                 displayField="name"
+                searchFields={["name"]}
               />
             </div>
 
@@ -986,25 +992,24 @@ export default function Brand() {
 
                 {/* Content Input Fields Body */}
                 <div className="grow space-y-5 overflow-y-auto p-5">
-                  <div>
-                    <span className="mb-2 block text-sm font-medium">
-                      Category
-                    </span>
-                    <Listbox
-                      data={categoryOptions}
-                      value={
-                        categoryOptions.find(
-                          (opt) => opt.id === Number(formCategoryValue),
-                        ) || categoryOptions[0]
-                      }
-                      placeholder="Select Category"
-                      onChange={(selectedOpt: any) => {
-                        setValue("category", selectedOpt.name); // For display
-                        setValue("categoryId", selectedOpt.id); // For API
-                      }}
-                      displayField="name"
-                    />
-                  </div>
+                  <label className="mb-2 block text-sm font-medium">
+                    Category Name
+                  </label>
+                  <Combobox
+                    data={categoryOptions}
+                    value={
+                      categoryOptions.find(
+                        (opt) => opt.id === Number(formCategoryValue),
+                      ) || categoryOptions[0]
+                    }
+                    placeholder="Select Category"
+                    onChange={(selectedOpt: any) => {
+                      setValue("category", selectedOpt.name); // For display
+                      setValue("categoryId", selectedOpt.id); // For API
+                    }}
+                    displayField="name"
+                    searchFields={["name"]}
+                  />
 
                   <div>
                     <label className="mb-2 block text-sm font-medium">

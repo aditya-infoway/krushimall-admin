@@ -13,6 +13,7 @@ import {
   EllipsisHorizontalIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
+import { RiFileExcel2Fill, RiFilePdfFill } from "react-icons/ri";
 import {
   Menu,
   MenuButton,
@@ -76,36 +77,40 @@ const VehicleStock = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [selectedBranchFilter, setSelectedBranchFilter] = useState("All");
   const [selectedChassisFilter, setSelectedChassisFilter] = useState("All");
-  const [selectedVehicle, setSelectedVehicle] = useState<VehicleStock | null>(null);
+  const [selectedVehicle, setSelectedVehicle] = useState<VehicleStock | null>(
+    null,
+  );
   const [showDetails, setShowDetails] = useState(false);
 
-const getVehicleStocks = async () => {
-  try {
-    const response = await apiHelper.get("/vehicle-stock-transfer");
+  const getVehicleStocks = async () => {
+    try {
+      const response = await apiHelper.get("/vehicle-stock-transfer");
 
-   console.log("Response Data:", response.data);
+      console.log("Response Data:", response.data);
 
-setVehicleStocks(response.data);
-  } catch (error) {
-    console.log("API Error:", error);
-  }
-};
+      setVehicleStocks(response.data);
+    } catch (error) {
+      console.log("API Error:", error);
+    }
+  };
 
   useEffect(() => {
     getVehicleStocks();
   }, []);
 
-const handleAdd = () => {
-  navigate("/stocktransfer/vehiclestock/add");
-};
+  const handleAdd = () => {
+    navigate("/stocktransfer/vehiclestock/add");
+  };
 
-const handleEdit = (item: VehicleStock) => {
-  navigate(`/stocktransfer/vehiclestock/edit/${item.id}`);
-};
+  const handleEdit = (item: VehicleStock) => {
+    navigate(`/stocktransfer/vehiclestock/edit/${item.id}`);
+  };
 
   const handleDelete = async (id: number) => {
     try {
-      if (window.confirm("Are you sure you want to delete this vehicle stock?")) {
+      if (
+        window.confirm("Are you sure you want to delete this vehicle stock?")
+      ) {
         await apiHelper.delete(`/vehicle-stocks/${id}`);
         getVehicleStocks();
       }
@@ -117,10 +122,12 @@ const handleEdit = (item: VehicleStock) => {
   const handleBulkDelete = async () => {
     try {
       if (
-        window.confirm("Are you sure you want to delete selected vehicle stocks?")
+        window.confirm(
+          "Are you sure you want to delete selected vehicle stocks?",
+        )
       ) {
         await Promise.all(
-          selectedIds.map((id) => apiHelper.delete(`/vehicle-stocks/${id}`))
+          selectedIds.map((id) => apiHelper.delete(`/vehicle-stocks/${id}`)),
         );
         setSelectedIds([]);
         getVehicleStocks();
@@ -130,39 +137,39 @@ const handleEdit = (item: VehicleStock) => {
     }
   };
 
-const handleViewDetails = (item: VehicleStock) => {
- navigate(`/stocktransfer/vehiclestock/view/${item.id}`);
-};
+  const handleViewDetails = (item: VehicleStock) => {
+    navigate(`/stocktransfer/vehiclestock/view/${item.id}`);
+  };
 
   const branchFilterOptions = [
     { id: "All", name: "All Branches" },
-    ...branchOptions.map(b => ({ id: b.value, name: b.label })),
+    ...branchOptions.map((b) => ({ id: b.value, name: b.label })),
   ];
 
   const chassisFilterOptions = [
     { id: "All", name: "All Chassis" },
-    ...vehicleStocks.map(v => ({ id: v.chassisNo, name: v.chassisNo })),
+    ...vehicleStocks.map((v) => ({ id: v.chassisNo, name: v.chassisNo })),
   ];
 
- const filteredData = vehicleStocks.filter((item: any) => {
-  const matchesSearch =
-    (item.transferNo ?? "").toLowerCase().includes(search.toLowerCase()) ||
-    (item.chassisNo ?? "").toLowerCase().includes(search.toLowerCase()) ||
-    (item.modelName ?? "").toLowerCase().includes(search.toLowerCase()) ||
-    (item.branch?.branchName ?? "")
-      .toLowerCase()
-      .includes(search.toLowerCase());
+  const filteredData = vehicleStocks.filter((item: any) => {
+    const matchesSearch =
+      (item.transferNo ?? "").toLowerCase().includes(search.toLowerCase()) ||
+      (item.chassisNo ?? "").toLowerCase().includes(search.toLowerCase()) ||
+      (item.modelName ?? "").toLowerCase().includes(search.toLowerCase()) ||
+      (item.branch?.branchName ?? "")
+        .toLowerCase()
+        .includes(search.toLowerCase());
 
-  const matchesBranch =
-    selectedBranchFilter === "All" ||
-    item.branch?.branchName === selectedBranchFilter;
+    const matchesBranch =
+      selectedBranchFilter === "All" ||
+      item.branch?.branchName === selectedBranchFilter;
 
-  const matchesChassis =
-    selectedChassisFilter === "All" ||
-    item.chassisNo === selectedChassisFilter;
+    const matchesChassis =
+      selectedChassisFilter === "All" ||
+      item.chassisNo === selectedChassisFilter;
 
-  return matchesSearch && matchesBranch && matchesChassis;
-});
+    return matchesSearch && matchesBranch && matchesChassis;
+  });
 
   const totalItems = filteredData.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
@@ -188,7 +195,7 @@ const handleViewDetails = (item: VehicleStock) => {
     setSelectedIds((prev) =>
       prev.includes(id)
         ? prev.filter((selectedId) => selectedId !== id)
-        : [...prev, id]
+        : [...prev, id],
     );
   };
 
@@ -204,38 +211,47 @@ const handleViewDetails = (item: VehicleStock) => {
             Manage all vehicle stocks from here
           </p>
         </div>
+        <div className="flex flex-wrap items-center justify-between gap-2 md:flex-nowrap">
+          {/* Left side - Filter and icons */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowFilterBar(!showFilterBar)}
+              className={`inline-flex items-center gap-1.5 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
+                showFilterBar
+                  ? "bg-primary-50 border-primary-200 text-primary-600 dark:bg-dark-600 dark:border-dark-500 dark:text-white"
+                  : "dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              <FunnelIcon className="size-4.5" />
+              <span className="hidden sm:inline">Filter</span>
+            </button>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setShowFilterBar(!showFilterBar)}
-            className={`inline-flex items-center gap-1.5 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
-              showFilterBar
-                ? "bg-primary-50 border-primary-200 text-primary-600 dark:bg-dark-600 dark:border-dark-500 dark:text-white"
-                : "dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
-            }`}
-          >
-            <FunnelIcon className="size-4.5" />
-            Filter
-          </button>
+            <button
+              type="button"
+              className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            >
+              <RiFileExcel2Fill className="text-lg text-green-500" />
+            </button>
 
-          <button
-            type="button"
-            className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
-          >
-            <DocumentArrowDownIcon className="size-4.5 text-gray-400" />
-            Excel
-          </button>
+            <button
+              type="button"
+              className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            >
+              <RiFilePdfFill className="text-lg text-red-500" />
+            </button>
+          </div>
 
+          {/* Right side - Add Vehicle Stock button */}
           <Button
             color="primary"
             onClick={handleAdd}
-            className="w-full sm:w-auto"
+            className="whitespace-nowrap"
           >
             <PlusIcon className="mr-1.5 size-4.5" />
             Add Vehicle Stock
           </Button>
-        </div>
+        </div>{" "}
       </div>
 
       {/* Search */}
@@ -265,7 +281,7 @@ const handleViewDetails = (item: VehicleStock) => {
                 data={branchFilterOptions}
                 value={
                   branchFilterOptions.find(
-                    (o) => o.id === selectedBranchFilter
+                    (o) => o.id === selectedBranchFilter,
                   ) || branchFilterOptions[0]
                 }
                 placeholder="All Branches"
@@ -284,7 +300,7 @@ const handleViewDetails = (item: VehicleStock) => {
                 data={chassisFilterOptions}
                 value={
                   chassisFilterOptions.find(
-                    (o) => o.id === selectedChassisFilter
+                    (o) => o.id === selectedChassisFilter,
                   ) || chassisFilterOptions[0]
                 }
                 placeholder="All Chassis"
@@ -369,22 +385,25 @@ const handleViewDetails = (item: VehicleStock) => {
                       {item.transferNo}
                     </Td>
                     <Td className="dark:text-dark-200 py-4 text-gray-600">
-                    {new Date(item.transferDate).toLocaleDateString("en-IN")}
+                      {new Date(item.transferDate).toLocaleDateString("en-IN")}
                     </Td>
                     <Td className="dark:text-dark-200 py-4 text-gray-600">
-                    {item.branch?.branchName}
+                      {item.branch?.branchName}
                     </Td>
                     <Td className="py-4 font-mono text-sm text-gray-600 dark:text-gray-400">
                       {item.chassisNo}
                     </Td>
                     <Td className="dark:text-dark-200 py-4 text-gray-600">
-                     {item.modelName}
+                      {item.modelName}
                     </Td>
                     <Td className="dark:text-dark-200 py-4 text-gray-600">
                       {item.variantName}
                     </Td>
                     <Td className="dark:text-dark-200 py-4 text-gray-600">
-                      <span className="inline-flex h-4 w-4 rounded-full border border-gray-300" style={{ backgroundColor: item.colour.toLowerCase() }}></span>
+                      <span
+                        className="inline-flex h-4 w-4 rounded-full border border-gray-300"
+                        style={{ backgroundColor: item.colour.toLowerCase() }}
+                      ></span>
                       <span className="ml-2">{item.colour}</span>
                     </Td>
                     <Td className="py-4 text-center">
@@ -586,7 +605,7 @@ const handleViewDetails = (item: VehicleStock) => {
                     >
                       {page}
                     </button>
-                  )
+                  ),
                 )}
 
                 <button
@@ -621,7 +640,7 @@ const handleViewDetails = (item: VehicleStock) => {
             </h3>
             <button
               onClick={() => setShowDetails(false)}
-              className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-dark-600"
+              className="dark:hover:bg-dark-600 rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
             >
               <XMarkIcon className="size-5" />
             </button>
@@ -646,7 +665,9 @@ const handleViewDetails = (item: VehicleStock) => {
                 </Tr>
                 <Tr>
                   <Td className="py-3 font-medium">Date</Td>
-                  <Td className="py-3">{new Date(selectedVehicle.date).toLocaleDateString("en-IN")}</Td>
+                  <Td className="py-3">
+                    {new Date(selectedVehicle.date).toLocaleDateString("en-IN")}
+                  </Td>
                 </Tr>
                 <Tr>
                   <Td className="py-3 font-medium">Branch</Td>

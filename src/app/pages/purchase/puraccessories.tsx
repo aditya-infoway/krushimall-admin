@@ -1343,6 +1343,7 @@ const parseLocalDate = (dateStr: string): Date | undefined => {
             </label>
             <DatePicker
               value={date}
+              options={{ disableMobile: true }}
               onChange={(selectedDates: Date[]) => {
                 const val = selectedDates[0];
                 setDate(

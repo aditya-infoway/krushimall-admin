@@ -414,7 +414,6 @@ const DynamicReport: React.FC = () => {
   return (
     <div className="dark:bg-dark-800 min-h-screen bg-gray-50 p-4 md:p-6">
       {/* Header */}
-      {/* Header */}
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -427,9 +426,17 @@ const DynamicReport: React.FC = () => {
         <div className="mt-3 flex flex-wrap items-center gap-2 sm:mt-0">
           {/* Date Picker */}
           <div className="flex items-center gap-2">
-            <DatePicker placeholder="From Date" className="w-36" />
+            <DatePicker
+              placeholder="From Date"
+              className="w-36"
+              options={{ disableMobile: true }}
+            />
             <span className="text-gray-400">to</span>
-            <DatePicker placeholder="To Date" className="w-36" />
+            <DatePicker
+              placeholder="To Date"
+              className="w-36"
+              options={{ disableMobile: true }}
+            />
           </div>
 
           {/* Action Buttons Group */}
@@ -655,7 +662,6 @@ const DynamicReport: React.FC = () => {
             ))}
           </div>
         </div>
-   
 
         {/* Right - Model Wise Analysis */}
         <div className="dark:bg-dark-700 dark:border-dark-600 flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow lg:col-span-1">
