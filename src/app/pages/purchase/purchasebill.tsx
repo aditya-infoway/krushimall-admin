@@ -7,6 +7,7 @@ import {
   CheckIcon,
   MagnifyingGlassIcon,
   BuildingOffice2Icon,
+  ArrowLeftIcon,
 } from "@heroicons/react/24/outline";
 import { Input } from "@/components/ui";
 import { Listbox } from "@/components/shared/form/StyledListbox";
@@ -128,7 +129,6 @@ const paymentModeOptions: { label: string; value: PaymentMode }[] = [
   { label: "CARD", value: "CARD" },
 ];
 
-
 const termsOptions = [
   { label: "Credit", value: "Credit" },
   { label: "Cash", value: "Cash" },
@@ -213,7 +213,7 @@ const customSelectStyles = {
   }),
   input: (provided: any) => ({
     ...provided,
-    color: "var(--color-dark-100)",
+    color: "var(--color-gray-100)",
   }),
   placeholder: (provided: any) => ({
     ...provided,
@@ -302,17 +302,29 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
     useState<BankDetailsData>(emptyBankDetails);
   const [bankDetailsTouched, setBankDetailsTouched] = useState(false);
   const [vehicleOptions, setVehicleOptions] = useState<VehicleOption[]>([]);
-  const [companyId, setCompanyId] = useState<number | null>(null);
-const [financialYearId, setFinancialYearId] = useState<number | null>(null);
+ const companyId = Number(
+  sessionStorage.getItem("companyId"),
+);
+
+const financialYearId = Number(
+  sessionStorage.getItem("financialYearId"),
+);
   const updateBankDetails = (key: keyof BankDetailsData, value: string) =>
     setBankDetails((b) => ({ ...b, [key]: value }));
   const [accountErrors, setAccountErrors] = useState<
     Partial<Record<keyof NewAccountData, string>>
   >({});
   const selectedGroup = accountForm.group;
+  const isCreditorGroup =
+  accountForm.group === "Sundry Creditors" ||
+   accountForm.group === "Sundry Creditor (Internal)";
   const groupOptions = [
     { label: "Supplier", value: "Supplier" },
-    { label: "Sundry Creditor", value: "Sundry Creditor" },
+    { label: "Sundry Creditors", value: "Sundry Creditors" },
+    {
+    label: "Sundry Creditor (Internal)",
+    value: "Sundry Creditor (Internal)",
+  },
   ];
 
   const drCrOptions = [
@@ -325,19 +337,27 @@ const getCompany = async () => {
   try {
     const res = await apiHelper.get("/company");
 
-    const company = Array.isArray(res.data)
-      ? res.data[0]
-      : res.data;
+    const companies = Array.isArray(res.data?.data)
+      ? res.data.data
+      : Array.isArray(res.data)
+        ? res.data
+        : [];
 
-    setCompany(company);
+    const selectedCompany = companies.find(
+      (item: any) =>
+        Number(item.id) === Number(companyId),
+    );
 
-    setCompanyId(company.id);
-
-    if (company.financialYears?.length > 0) {
-      setFinancialYearId(company.financialYears[0].id);
+    if (!selectedCompany) {
+      toast.error(
+        "Selected company was not found",
+      );
+      return;
     }
-  } catch (err) {
-    console.log(err);
+
+    setCompany(selectedCompany);
+  } catch (error) {
+    console.error(error);
   }
 };
   const getTractors = async () => {
@@ -627,62 +647,62 @@ const getCompany = async () => {
     setVehicleSearch("");
   };
   const saveDraftRow = () => {
-  // Validate all required fields
-  if (!draft.item.trim()) {
-    toast.warning("Please select or enter an Item Name");
-    return;
-  }
-  if (!draft.itemCode.trim()) {
-    toast.warning("Please enter Item Code");
-    return;
-  }
-  if (!draft.color.trim()) {
-    toast.warning("Please enter Color");
-    return;
-  }
-  // Duplicate Chassis No in current purchase
-  const chassisExists = rows.some(
-    (r) =>
-      r.chassisNo.trim().toLowerCase() ===
-      draft.chassisNo.trim().toLowerCase(),
-  );
+    // Validate all required fields
+    if (!draft.item.trim()) {
+      toast.warning("Please select or enter an Item Name");
+      return;
+    }
+    if (!draft.itemCode.trim()) {
+      toast.warning("Please enter Item Code");
+      return;
+    }
+    if (!draft.color.trim()) {
+      toast.warning("Please enter Color");
+      return;
+    }
+    // Duplicate Chassis No in current purchase
+    const chassisExists = rows.some(
+      (r) =>
+        r.chassisNo.trim().toLowerCase() ===
+        draft.chassisNo.trim().toLowerCase(),
+    );
 
-  if (chassisExists) {
-    toast.warning("Chassis No already added.");
-    return;
-  }
+    if (chassisExists) {
+      toast.warning("Chassis No already added.");
+      return;
+    }
 
-  // Duplicate Engine No in current purchase
-  const engineExists = rows.some(
-    (r) =>
-      r.engineNo.trim().toLowerCase() === draft.engineNo.trim().toLowerCase(),
-  );
-  if (engineExists) {
-    toast.warning("Engine No already added.");
-    return;
-  }
-  if (!draft.qty || draft.qty < 1) {
-    toast.warning("Please enter a valid Quantity (minimum 1)");
-    return;
-  }
-  if (!draft.ratePer.trim()) {
-    toast.warning("Please enter Rate Per");
-    return;
-  }
-  if (!draft.gstPercent.trim()) {
-    toast.warning("Please enter GST %");
-    return;
-  }
-  if (!draft.amount.trim()) {
-    toast.warning("Please enter Amount");
-    return;
-  }
+    // Duplicate Engine No in current purchase
+    const engineExists = rows.some(
+      (r) =>
+        r.engineNo.trim().toLowerCase() === draft.engineNo.trim().toLowerCase(),
+    );
+    if (engineExists) {
+      toast.warning("Engine No already added.");
+      return;
+    }
+    if (!draft.qty || draft.qty < 1) {
+      toast.warning("Please enter a valid Quantity (minimum 1)");
+      return;
+    }
+    if (!draft.ratePer.trim()) {
+      toast.warning("Please enter Rate Per");
+      return;
+    }
+    if (!draft.gstPercent.trim()) {
+      toast.warning("Please enter GST %");
+      return;
+    }
+    if (!draft.amount.trim()) {
+      toast.warning("Please enter Amount");
+      return;
+    }
 
-  // All validations passed, save the row
-  setRows((r) => [...r, { ...draft, saved: true }]);
-  setDraft(emptyDraft());
-  toast.success("Item added successfully!");
-};
+    // All validations passed, save the row
+    setRows((r) => [...r, { ...draft, saved: true }]);
+    setDraft(emptyDraft());
+    toast.success("Item added successfully!");
+  };
   const removeRow = (id: string) =>
     setRows((r) => r.filter((row) => row.id !== id));
   const getAccountError = (field: keyof NewAccountData) => {
@@ -697,17 +717,15 @@ const getCompany = async () => {
       case "group":
         return !accountForm.group ? "Group is required" : "";
 
-      case "openingBalance":
-        return accountForm.group === "Sundry Creditor" &&
-          !accountForm.openingBalance.trim()
-          ? "Opening Balance is required"
-          : "";
+   case "openingBalance":
+  return isCreditorGroup && !accountForm.openingBalance.trim()
+    ? "Opening Balance is required"
+    : "";
 
-      case "drCr":
-        return accountForm.group === "Sundry Creditor" && !accountForm.drCr
-          ? "Dr / Cr is required"
-          : "";
-
+case "drCr":
+  return isCreditorGroup && !accountForm.drCr
+    ? "Dr / Cr is required"
+    : "";
       case "mobile":
         if (!accountForm.mobile.trim()) return "Mobile is required";
         if (!/^[0-9]{10}$/.test(accountForm.mobile))
@@ -766,116 +784,127 @@ const getCompany = async () => {
     }));
   };
 
- const handleCreateAccount = async () => {
-  try {
-    const required: (keyof NewAccountData)[] = [
-      "accountName",
-      "mobile",
-      "countryCode",
-      "stateCode",
-      "district",
-      "city",
-      "address",
-      "panCard",
-      "aadharCard",
-      "group",
-    ];
+  const handleCreateAccount = async () => {
+    try {
+          console.log("1️⃣ Selected Group:", accountForm.group);
+      const required: (keyof NewAccountData)[] = [
+        "accountName",
+        "mobile",
+        "countryCode",
+        "stateCode",
+        "district",
+        "city",
+        "address",
+        "panCard",
+        "aadharCard",
+        "group",
+      ];
 
-    const missing = required.filter((k) => !String(accountForm[k]).trim());
+      const missing = required.filter((k) => !String(accountForm[k]).trim());
 
-    if (accountForm.group === "Sundry Creditor") {
-      if (!accountForm.openingBalance.trim()) {
-        missing.push("openingBalance");
-      }
-    }
-
-    if (accountForm.group === "Sundry Creditor") {
-      if (!accountForm.drCr.trim()) {
-        missing.push("drCr");
-      }
-    }
-
-    setAccountTouched(true);
-
-    if (missing.length > 0) return;
-
-    const res = await apiHelper.post("/accounts", {
-      accountName: accountForm.accountName,
-      printName: accountForm.accountName,
-      mobile: accountForm.mobile,
-      country: accountForm.country,
-      countryCode: accountForm.countryCode,
-      state: accountForm.state,
-      stateCode: accountForm.stateCode,
-      district: accountForm.district,
-      city: accountForm.city,
-      address1: accountForm.address,
-      panCard: accountForm.panCard,
-      aadharNo: accountForm.aadharCard,
-      group: accountForm.group,
-      openingBalance:
-        accountForm.group === "Sundry Creditor"
-          ? Number(accountForm.openingBalance)
-          : 0,
-      drCr:
-        accountForm.group === "Supplier"
-          ? "Cr"
-          : accountForm.group === "Sundry Creditor"
-          ? accountForm.drCr
-          : null,
-    });
-
-    const account = res.data;
-
-    if (!account?.id) {
-      toast.error("Failed to create account. Invalid response.");
-      return;
-    }
-
-    const newParty = {
-      id: account.id,
-      name: account.accountName,
-      mobile: Number(accountForm.mobile),
-      stateCode: accountForm.stateCode,
-      openingBalance: accountForm.group === "Sundry Creditor" 
-        ? Number(accountForm.openingBalance) 
-        : 0,
-    };
-
-    setParties((prev) => [...prev, newParty]);
-    setPartyId(account.id);
-    toast.success("Account created successfully!");
-    setAccountModalOpen(false);
-    setAccountForm(emptyAccount);
-    setAccountTouched(false);
-  } catch (error: any) {
-    console.error(error);
-    toast.error(error.response?.data?.message || "Failed to create account");
+     if (isCreditorGroup) {
+  if (!accountForm.openingBalance.trim()) {
+    missing.push("openingBalance");
   }
-};
 
-  const getParties = async () => {
+  if (!accountForm.drCr.trim()) {
+    missing.push("drCr");
+  }
+}
+
+      setAccountTouched(true);
+
+      if (missing.length > 0) return;
+
+      const res = await apiHelper.post("/accounts", {
+        accountName: accountForm.accountName,
+        printName: accountForm.accountName,
+        mobile: accountForm.mobile,
+        country: accountForm.country,
+        countryCode: accountForm.countryCode,
+        state: accountForm.state,
+        stateCode: accountForm.stateCode,
+        district: accountForm.district,
+        city: accountForm.city,
+        address1: accountForm.address,
+        panCard: accountForm.panCard,
+        aadharNo: accountForm.aadharCard,
+        group: accountForm.group,
+       openingBalance: isCreditorGroup
+    ? Number(accountForm.openingBalance)
+    : 0,
+
+  drCr:
+    accountForm.group === "Supplier"
+      ? "Cr"
+      : isCreditorGroup
+        ? accountForm.drCr
+        : null,
+      });
+console.log("2️⃣ Created Account Response:", res.data);
+      const account = res.data;
+
+      if (!account?.id) {
+        toast.error("Failed to create account. Invalid response.");
+        return;
+      }
+
+      const newParty = {
+        id: account.id,
+        name: account.accountName,
+        mobile: Number(accountForm.mobile),
+        stateCode: accountForm.stateCode,
+        openingBalance: isCreditorGroup
+    ? Number(accountForm.openingBalance)
+    : 0,
+      };
+
+      setParties((prev) => [...prev, newParty]);
+      setPartyId(account.id);
+      toast.success("Account created successfully!");
+      setAccountModalOpen(false);
+      setAccountForm(emptyAccount);
+      setAccountTouched(false);
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error.response?.data?.message || "Failed to create account");
+    }
+  };
+
+ const getParties = async () => {
+  try {
     const res = await apiHelper.get("/accounts");
 
-    const accounts = Array.isArray(res.data?.data) ? res.data.data : res.data;
-
+    const accounts = Array.isArray(res.data?.data)
+      ? res.data.data
+      : Array.isArray(res.data)
+        ? res.data
+        : [];
+ console.log("3️⃣ All Accounts:", accounts);
     const list = accounts
       .filter(
         (acc: any) =>
-          acc.group === "Supplier" || acc.group === "Sundry Creditor",
+          acc.group === "Supplier" ||
+          acc.group === "Sundry Creditors" ||
+            acc.group === "Sundry Creditor (Internal)",
       )
       .map((acc: any) => ({
         id: String(acc.id),
         name: acc.accountName,
         mobile: acc.mobile,
         stateCode: acc.stateCode,
-        openingBalance: acc.openingBalance,
+        openingBalance: Number(acc.openingBalance) || 0,
       }));
 
     setParties(list);
 
     return list;
-  };
+  } catch (error) {
+    console.error("Failed to fetch parties:", error);
+    setParties([]);
+    return [];
+  }
+};
 
   useEffect(() => {
     const load = async () => {
@@ -968,69 +997,94 @@ const getCompany = async () => {
   };
 
   const handleSave = async () => {
-  try {
-    const payload = {
-      companyId,
-      financialYearId,
-      accountId: partyId,
-      purchaseDate: purchaseDate || date,
-      purchaseBillNo,
-      purchaseLocation,
-      dueDate,
-      terms,
-      narration,
-      bankAccountId: bankAccount,
-      cashAccountId: cashAccount,
-      paymentMode: bankDetails.paymentMode,
-      chequeNo: bankDetails.chequeNo,
-      chequeDate: bankDetails.chequeDate,
-      clearDate: bankDetails.clearDate,
-      bankNarration: bankDetails.narration,
-      freightCharge,
-      insurance,
-      otherCharge,
-      roundAmount,
-      totalQty: totalQuantity,
-      totalAmount,
-      grandTotal,
-      cgst: totalCgst,
-      sgst: totalSgst,
-      igst: totalIgst,
-      items: rows,
-    };
+      if (!companyId || !financialYearId) {
+    toast.error(
+      "Company or financial year is not selected",
+    );
+    return;
+  }
+  if (!partyId) {
+  toast.error("Please select Party Name");
+  return;
+}
 
-    if (isEdit) {
-      await apiHelper.put(`/purchases/${id}`, payload);
-      toast.success("Purchase Updated Successfully");
-    } else {
-      await apiHelper.post("/purchases", payload);
-      toast.success("Purchase Saved Successfully");
+if (rows.length === 0) {
+  toast.error("Please add at least one tractor");
+  return;
+}
+
+if (terms === "Cash" && !cashAccount) {
+  toast.error("Please select Cash Account");
+  return;
+}
+
+if (terms === "Bank" && !bankAccount) {
+  toast.error("Please select Bank Account");
+  return;
+}
+    try {
+      const payload = {
+        companyId,
+        financialYearId,
+        accountId: partyId,
+        purchaseDate: purchaseDate || date,
+        purchaseBillNo,
+        purchaseLocation,
+        dueDate,
+        terms,
+        narration,
+        bankAccountId: bankAccount,
+        cashAccountId: cashAccount,
+        paymentMode: bankDetails.paymentMode,
+        chequeNo: bankDetails.chequeNo,
+        chequeDate: bankDetails.chequeDate,
+        clearDate: bankDetails.clearDate,
+        bankNarration: bankDetails.narration,
+        freightCharge,
+        insurance,
+        otherCharge,
+        roundAmount,
+        totalQty: totalQuantity,
+        totalAmount,
+        grandTotal,
+        cgst: totalCgst,
+        sgst: totalSgst,
+        igst: totalIgst,
+        items: rows,
+      };
+
+      if (isEdit) {
+        await apiHelper.put(`/purchases/${id}`, payload);
+        toast.success("Purchase Updated Successfully");
+      } else {
+        await apiHelper.post("/purchases", payload);
+        toast.success("Purchase Saved Successfully");
+      }
+
+      navigate("/purchase/tractor");
+      await getBillNo();
+      setRows([]);
+      setPurchaseBillNo("");
+      setNarration("");
+      setFreightCharge("");
+      setInsurance("");
+      setOtherCharge("");
+      setRoundAmount("");
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error.response?.data?.message || "Failed to save purchase");
     }
-
-    navigate("/purchase/tractor");
-    await getBillNo();
-    setRows([]);
-    setPurchaseBillNo("");
-    setNarration("");
-    setFreightCharge("");
-    setInsurance("");
-    setOtherCharge("");
-    setRoundAmount("");
-  } catch (error: any) {
-    console.error(error);
-    toast.error(error.response?.data?.message || "Failed to save purchase");
-  }
-};
- const handleVerify = async () => {
-  try {
-    await apiHelper.put(`/purchases/${id}/verify`, null);
-    setBillVerify("verify");
-    toast.success("Purchase Verified Successfully");
-  } catch (error: any) {
-    console.error(error);
-    toast.error(error.response?.data?.message || "Failed to verify purchase");
-  }
-};
+  };
+  const handleVerify = async () => {
+    try {
+      await apiHelper.put(`/purchases/${id}/verify`, null);
+      setBillVerify("verify");
+      toast.success("Purchase Verified Successfully");
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error.response?.data?.message || "Failed to verify purchase");
+    }
+  };
 
   const handleBack = () => {
     if (onBack) {
@@ -1058,9 +1112,10 @@ const getCompany = async () => {
           </h1>
           <button
             onClick={handleBack}
-            className="bg-primary-500 hover:bg-primary-500 w-full rounded-lg px-4 py-2 text-sm font-semibold text-white transition-colors sm:w-auto sm:px-5"
+            className="bg-primary-500 hover:bg-primary-600 inline-flex w-full items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold text-white transition-colors sm:w-auto sm:px-5"
           >
-            ← Back
+            <ArrowLeftIcon className="mr-1.5 size-4" />
+            Back
           </button>
         </div>
 
@@ -1072,6 +1127,7 @@ const getCompany = async () => {
             </label>
             <DatePicker
               value={date}
+              options={{ disableMobile: true }}
               onChange={(selectedDates: Date[]) => {
                 const val = selectedDates[0];
                 setDate(
@@ -1211,7 +1267,7 @@ const getCompany = async () => {
 
           <div className={terms === "Credit" ? "col-span-2" : "col-span-2"}>
             <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Party Name
+              Supplier Name
             </label>
             <div className="flex w-full gap-2">
               <div className="min-w-0 flex-1">
@@ -1379,7 +1435,7 @@ const getCompany = async () => {
                 <tbody>
                   {/* Draft row */}
 
-                  <tr className="sticky top-9 z-10 ">
+                  <tr className="sticky top-9 z-10">
                     <td className="border border-gray-500 px-2 py-1.5 text-center dark:border-gray-500">
                       <button
                         onClick={() => setVehicleModalOpen(true)}
@@ -1844,7 +1900,7 @@ const getCompany = async () => {
                       {filteredVehicles.map((v) => (
                         <tr
                           key={v.id}
-                          className="border-t border-gray-200 dark:border-gray-700"
+                          className="border-t border-gray-200 whitespace-nowrap dark:border-gray-700"
                         >
                           <td className="p-2 text-center">
                             <button
@@ -2112,7 +2168,8 @@ const getCompany = async () => {
                     )}
                   </div>
 
-                  {accountForm.group === "Sundry Creditor" && (
+                 {isCreditorGroup && (
+
                     <>
                       <div>
                         <label className="mb-1 block text-xs font-medium">

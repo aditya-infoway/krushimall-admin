@@ -412,6 +412,7 @@ const downloadExcel = async () => {
                     </label>
                     <DatePicker
                       placeholder="From Date"
+                      options={{ disableMobile: true }}
                       value={filterData.fromDate}
                       onChange={(date: any) =>
                         setFilterData({ ...filterData, fromDate: date })
@@ -425,6 +426,7 @@ const downloadExcel = async () => {
                     </label>
                     <DatePicker
                       placeholder="To Date"
+                      options={{ disableMobile: true }}
                       value={filterData.toDate}
                       onChange={(date: any) =>
                         setFilterData({ ...filterData, toDate: date })
