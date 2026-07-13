@@ -9,6 +9,8 @@ interface Company {
   id: number;
   companyName: string;
   financialYears: {
+        id: number;
+financialYear: string;
     fyStartDate: string;
     fyEndDate: string;
   }[];
@@ -273,7 +275,38 @@ accountNumber: !formData.accountNumber
     display: "none",
   }),
 };
+const handleSelectCompany = (company: Company) => {
+  const financialYear = company.financialYears?.[0];
 
+  if (!financialYear) {
+    alert("Financial year not found");
+    return;
+  }
+
+  // Save selected company in current browser session
+  sessionStorage.setItem(
+    "companyId",
+    String(company.id),
+  );
+
+  sessionStorage.setItem(
+    "companyName",
+    company.companyName,
+  );
+
+  // Save selected financial year
+  sessionStorage.setItem(
+    "financialYearId",
+    String(financialYear.id),
+  );
+
+  sessionStorage.setItem(
+    "financialYear",
+    financialYear.financialYear,
+  );
+
+  navigate("/dashboards/dashboard");
+};
   return (
     <div className="dark:bg-dark-900 flex h-screen bg-gray-100">
       {/* Left Side */}
@@ -309,11 +342,11 @@ accountNumber: !formData.accountNumber
                 <tbody>
                   {companies.length > 0 ? (
                     companies.map((company) => (
-                      <tr
-                        key={company.id}
-                        onClick={() => navigate("/dashboards/dashboard")}
-                        className="cursor-pointer border-t hover:bg-gray-50"
-                      >
+                     <tr
+  key={company.id}
+  onClick={() => handleSelectCompany(company)}
+  className="cursor-pointer border-t hover:bg-gray-50"
+>
                         <td className="p-3">{company.companyName}</td>
 
                         <td className="p-3">

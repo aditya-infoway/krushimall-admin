@@ -77,15 +77,20 @@ export default function Model() {
   const [categories, setCategories] = useState<{ id: number; name: string }[]>(
     [],
   );
-  const [brands, setBrands] = useState<{ id: number; name: string }[]>([]);
+  type BrandOption = {
+    id: number;
+    name: string;
+    categoryId: number;
+  };
+
+  const [brands, setBrands] = useState<BrandOption[]>([]);
+
+  const [filteredBrands, setFilteredBrands] = useState<BrandOption[]>([]);
   const [loading, setLoading] = useState(false);
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [filteredBrands, setFilteredBrands] = useState<
-    { id: number; name: string }[]
-  >([]);
 
   // Change from id: number to id: string
   const categoryOptions = categories.map((cat) => ({
@@ -176,22 +181,33 @@ export default function Model() {
       setCategories([]);
     }
   };
-
   const getBrands = async () => {
     try {
       const response = await apiHelper.get("/brand");
+
       const data = response?.data || response;
-      const list = (Array.isArray(data) ? data : []).map((item: any) => ({
-        id: item.id || item._id,
-        name: item.brandName || item.name,
-        categoryId:
-          typeof item.category === "object"
-            ? item.category?.id
-            : item.categoryId, // ✅ Include categoryId
-      }));
+
+      const list: BrandOption[] = (Array.isArray(data) ? data : []).map(
+        (item: any) => ({
+          id: Number(item.id || item._id),
+
+          name: item.brandName || item.name || "",
+
+          categoryId: Number(
+            typeof item.category === "object"
+              ? item.category?.id
+              : item.categoryId,
+          ),
+        }),
+      );
+
+      console.log("All Brands:", list);
+
       setBrands(list);
-      setFilteredBrands(list); // Initially show all brands
+      setFilteredBrands([]);
     } catch (error) {
+      console.error("Failed to fetch brands:", error);
+
       setBrands([]);
       setFilteredBrands([]);
     }
@@ -218,8 +234,15 @@ export default function Model() {
   });
 
   const formStatusValue = useWatch({ control, name: "status" });
-  const formCategoryValue = useWatch({ control, name: "category" });
-  const formBrandValue = useWatch({ control, name: "brand" });
+  const formCategoryId = useWatch({
+    control,
+    name: "categoryId",
+  });
+
+  const formBrandId = useWatch({
+    control,
+    name: "brandId",
+  });
   const formImageValue = useWatch({ control, name: "image" });
 
   const formValidationRules = {
@@ -256,18 +279,19 @@ export default function Model() {
 
   const handleOpenAddDrawer = () => {
     setEditId(null);
-    setFilteredBrands(brands); // Reset to all brands
-    const firstCategory = categories[0] || { id: "", name: "" };
-    const firstBrand = brands[0] || { id: "", name: "" };
+
     reset({
-      category: firstCategory.name,
-      categoryId: firstCategory.id,
-      brand: firstBrand.name,
-      brandId: firstBrand.id,
+      category: "",
+      categoryId: "",
+      brand: "",
+      brandId: "",
       modelName: "",
       status: "ACTIVE",
       image: "",
     });
+
+    setFilteredBrands([]);
+
     setShowDrawer(true);
   };
 
@@ -1038,19 +1062,41 @@ export default function Model() {
                       displayField="name"
                       value={
                         categoryOptions.find(
-                          (opt) => opt.name === formCategoryValue,
-                        ) || categoryOptions[0]
+                          (option) =>
+                            String(option.id) === String(formCategoryId),
+                        ) || null
                       }
-                      onChange={(selectedOpt: any) => {
-                        setValue("category", selectedOpt?.name || "");
-                        setValue("categoryId", selectedOpt?.id || "");
+                      placeholder="Select Category"
+                      onChange={(selectedOption: any) => {
+                        const selectedCategoryId = Number(selectedOption.id);
+
+                        setValue("category", selectedOption.name, {
+                          shouldValidate: true,
+                        });
+
+                        setValue("categoryId", selectedOption.id, {
+                          shouldValidate: true,
+                        });
+
+                        // Clear old brand after category changes
                         setValue("brand", "");
+
                         setValue("brandId", "");
-                        const catId = Number(selectedOpt?.id);
-                        const filtered = brands.filter(
-                          (b: any) => b.categoryId === catId,
+
+                        // Filter using categoryId
+                        const categoryBrands = brands.filter(
+                          (brand) =>
+                            Number(brand.categoryId) === selectedCategoryId,
                         );
-                        setFilteredBrands(filtered.length > 0 ? filtered : []);
+
+                        console.log(
+                          "Selected Category ID:",
+                          selectedCategoryId,
+                        );
+
+                        console.log("Category Brands:", categoryBrands);
+
+                        setFilteredBrands(categoryBrands);
                       }}
                       placeholder="Search or select category..."
                       searchFields={["name"]}
@@ -1066,12 +1112,28 @@ export default function Model() {
                       displayField="name"
                       value={
                         brandOptions.find(
-                          (opt) => opt.name === formBrandValue,
-                        ) || brandOptions[0]
+                          (option) => String(option.id) === String(formBrandId),
+                        ) || null
                       }
+<<<<<<< HEAD
                       onChange={(selectedOpt: any) => {
                         setValue("brand", selectedOpt?.name || "");
                         setValue("brandId", selectedOpt?.id || "");
+=======
+                      placeholder={
+                        formCategoryId
+                          ? "Select Brand"
+                          : "First select category"
+                      }
+                      onChange={(selectedOption: any) => {
+                        setValue("brand", selectedOption.name, {
+                          shouldValidate: true,
+                        });
+
+                        setValue("brandId", selectedOption.id, {
+                          shouldValidate: true,
+                        });
+>>>>>>> c2d2dad (order,showroomvariant,lead,purchase,trctorinvantory)
                       }}
                       placeholder="Search or select brand..."
                       searchFields={["name"]}

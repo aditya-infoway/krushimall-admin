@@ -164,8 +164,13 @@ export default function CashReceipt() {
     const matchesType = filterType === "All" || r.type === filterType;
     return matchesSearch && matchesType;
   });
-  const [companyId, setCompanyId] = useState<number | null>(null);
-  const [financialYearId, setFinancialYearId] = useState<number | null>(null);
+ const companyId = Number(
+  sessionStorage.getItem("companyId"),
+);
+
+const financialYearId = Number(
+  sessionStorage.getItem("financialYearId"),
+);
   const totalItems = filteredRows.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -176,14 +181,15 @@ export default function CashReceipt() {
     const newErrors: Record<string, string> = {};
 
     // Company validation
-    if (!companyId) {
-      newErrors.companyId = "Company is required";
-    }
+ if (!companyId) {
+  newErrors.companyId =
+    "Company is not selected";
+}
 
-    // Financial year validation
-    if (!financialYearId) {
-      newErrors.financialYearId = "Financial year is required";
-    }
+if (!financialYearId) {
+  newErrors.financialYearId =
+    "Financial year is not selected";
+}
 
     // Voucher validation
     if (!form.voucherNo?.trim()) {
@@ -263,28 +269,7 @@ export default function CashReceipt() {
   useEffect(() => {
     getLeads();
   }, []);
-  const getCompany = async () => {
-    try {
-      const res = await apiHelper.get("/company");
-
-      if (!res.data || res.data.length === 0) {
-        return;
-      }
-
-      const company = res.data[0];
-
-      setCompanyId(company.id);
-
-      if (company.financialYears?.length > 0) {
-        setFinancialYearId(company.financialYears[0].id);
-      }
-    } catch (err) {
-      console.log(err);
-    }
-  };
-  useEffect(() => {
-    getCompany();
-  }, []);
+ 
   const getCashReceipts = async () => {
     try {
       const res = await apiHelper.get("/cash-receipt");
@@ -470,7 +455,12 @@ export default function CashReceipt() {
 
   const handleSubmit = async () => {
     if (!validateForm()) return;
-
+  if (!companyId || !financialYearId) {
+    toast.error(
+      "Company or financial year is not selected",
+    );
+    return;
+  }
     try {
       const payload = {
         companyId,
@@ -484,7 +474,10 @@ export default function CashReceipt() {
         amount: Number(form.amount),
         narration: form.narration,
       };
-
+ console.log(
+      "CASH RECEIPT PAYLOAD:",
+      payload,
+    );
       if (editId) {
         await apiHelper.put(`/cash-receipt/${editId}`, payload);
         toast.success("Cash receipt updated successfully!");

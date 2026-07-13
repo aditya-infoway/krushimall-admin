@@ -1978,26 +1978,15 @@ export function LeadDetailsModal({
   const [customers, setCustomers] = useState<OptionType[]>([]);
 
   const [executives, setExecutives] = useState<OptionType[]>([]);
-  const [companyId, setCompanyId] = useState<number | null>(null);
-  const [company, setCompany] = useState<any>(null);
-  const [financialYearId, setFinancialYearId] = useState<number | null>(null);
-  const getCompany = async () => {
-    try {
-      const res = await apiHelper.get("/company");
+ const companyId = Number(
+  sessionStorage.getItem("companyId"),
+);
 
-      const company = Array.isArray(res.data) ? res.data[0] : res.data;
-
-      setCompany(company);
-
-      setCompanyId(company.id);
-
-      if (company.financialYears?.length > 0) {
-        setFinancialYearId(company.financialYears[0].id);
-      }
-    } catch (err) {
-      console.log(err);
-    }
-  };
+const financialYearId = Number(
+  sessionStorage.getItem(
+    "financialYearId",
+  ),
+);
   const fetchExecutives = async () => {
     try {
       const res = await apiHelper.get("/employees");
@@ -2024,7 +2013,7 @@ export function LeadDetailsModal({
 
   useEffect(() => {
     fetchExecutives();
-    getCompany();
+   
   }, []);
   const [financeData, setFinanceData] = useState<FinanceType>({
     wantsFinance: false,
@@ -2141,7 +2130,15 @@ const totalSteps = isFinancePurchase ? 5 : 4;
 
   const handleSubmit = async () => {
     console.log("SUBMIT CLICKED");
-
+  if (
+    !companyId ||
+    !financialYearId
+  ) {
+    toast.error(
+      "Company or financial year is not selected",
+    );
+    return;
+  }
     if (reviewSummaryValidateRef.current) {
       const isValid = reviewSummaryValidateRef.current();
       console.log("VALID:", isValid);

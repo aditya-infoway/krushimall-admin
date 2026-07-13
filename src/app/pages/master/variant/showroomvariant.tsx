@@ -29,7 +29,7 @@ import { toast } from "sonner";
 import { ConfirmModal } from "@/components/shared/ConfirmModal";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 
-
+import { Combobox } from "@/components/shared/form/Combobox";
 // Local UI Imports
 import { Button, Checkbox, Input } from "@/components/ui";
 import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/Table";
@@ -48,6 +48,8 @@ type Accessory = {
 type FormValues = {
   modelId: number | string;
   modelName: string;
+   variantId: number | string;
+
   variantName: string;
   purPrice: string;
   purTaxPercent: string;
@@ -238,13 +240,43 @@ const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
 const [isBulkDelete, setIsBulkDelete] = useState(false);
 
   const modelOptions = models.map((m) => ({ id: String(m.id), name: m.name }));
-
+const [variantOptions, setVariantOptions] = useState<
+  {
+    id: number;
+    name: string;
+    modelId: number;
+  }[]
+>([]);
   useEffect(() => {
     getVariants();
+      getCreateVariants();
     getModels();
       getAccessories();
   }, []);
+const getCreateVariants = async () => {
+  try {
+    const response = await apiHelper.get("/variant");
 
+    const data = response?.data || response;
+
+    const activeVariants = (
+      Array.isArray(data) ? data : []
+    )
+      .filter(
+        (item: any) =>
+          item.status === "ACTIVE",
+      )
+      .map((item: any) => ({
+        id: Number(item.id),
+        name: item.variantName,
+        modelId: Number(item.modelId),
+      }));
+
+    setVariantOptions(activeVariants);
+  } catch (error) {
+    setVariantOptions([]);
+  }
+};
   const getVariants = async () => {
     try {
       setLoading(true);
@@ -352,7 +384,8 @@ const getAccessories = async () => {
     defaultValues: {
       modelId: "",
       modelName: "",
-      variantName: "",
+     variantId: "",
+variantName: "",
       purPrice: "",
       purTaxPercent: "18",
       exShowroomPrice: "",
@@ -367,9 +400,20 @@ const getAccessories = async () => {
     },
     mode: "onChange",
   });
-
+const formVariantValue = useWatch({
+  control,
+  name: "variantName",
+});
+const selectedVariantId = useWatch({
+  control,
+  name: "variantId",
+});
   // All useWatch hooks at the top level
   const formModelValue = useWatch({ control, name: "modelName" });
+  const selectedModelId = useWatch({
+  control,
+  name: "modelId",
+});
   const formRtoTaxType = useWatch({ control, name: "rtoTaxType" });
   const formStatus = useWatch({ control, name: "status" });
   const purPrice = useWatch({ control, name: "purPrice" });
@@ -432,7 +476,16 @@ const getAccessories = async () => {
     accessories,
     setValue,
   ]);
-
+const filteredVariantOptions = variantOptions
+  .filter(
+    (variant) =>
+      Number(variant.modelId) ===
+      Number(selectedModelId),
+  )
+  .map((variant) => ({
+    id: String(variant.id),
+    name: variant.name,
+  }));
   const handleRtoTaxTypeChange = (type: string) => {
     setValue("rtoTaxType", type);
     setValue("rtoTaxPercent", RTO_TAX_MAP[type] ?? "1");
@@ -459,9 +512,10 @@ const getAccessories = async () => {
   setAccessoryErrors({});
 
   reset({
-    modelId: firstModel.id,
-    modelName: firstModel.name,
-    variantName: "",
+    modelId: "",
+    modelName:"",
+   variantId: "",
+variantName: "",
     purPrice: "",
     purTaxPercent: "18",
     exShowroomPrice: "",
@@ -502,7 +556,11 @@ totalPrice: Number(acc.totalPrice) || 0,
   reset({
     modelId: item.modelId,
     modelName: item.model || "",
-    variantName: item.variantName,
+ variantId:
+  item.variantId || "",
+
+variantName:
+  item.variantName || "",
     purPrice: String(item.purPrice || ""),
     purTaxPercent: String(item.purTaxPercent || "18"),
     exShowroomPrice: String(item.exShowroomPrice || ""),
@@ -659,7 +717,11 @@ const updateAccessory = (
   try {
     const payload = {
       modelId: Number(data.modelId),
-      variantName: data.variantName,
+      variantId:
+    Number(data.variantId),
+
+  variantName:
+    data.variantName,
       purPrice: Number(data.purPrice),
       purTaxPercent: Number(data.purTaxPercent),
       exShowroomPrice: Number(data.exShowroomPrice),
@@ -1041,20 +1103,45 @@ const updateAccessory = (
                       Model
                     </span>
                     <div className="w-full">
-                      <Listbox
-                        data={modelOptions}
-                        value={
-                          modelOptions.find((o) => o.name === formModelValue) ||
-                          modelOptions[0]
-                        }
-                        onChange={(opt: any) => {
-                          setValue("modelId", opt.id);
-                          setValue("modelName", opt.name);
-                          trigger("modelId");
-                        }}
-                        displayField="name"
-                        className="w-full"
-                      />
+                 <Combobox
+  data={modelOptions}
+  value={
+    modelOptions.find(
+      (option) =>
+        option.id ===
+        String(selectedModelId),
+    ) || null
+  }
+  onChange={(option: any) => {
+    if (!option) return;
+
+    setValue(
+      "modelId",
+      Number(option.id),
+      {
+        shouldValidate: true,
+      },
+    );
+
+    setValue(
+      "modelName",
+      option.name,
+    );
+
+    // Clear previous model's variant
+    setValue(
+      "variantId",
+      "",
+    );
+
+    setValue(
+      "variantName",
+      "",
+    );
+  }}
+  displayField="name"
+  placeholder="Search or select model"
+/>
                       {errors.modelId && (
                         <p className="mt-1 text-xs text-red-500">
                           {errors.modelId.message}
@@ -1064,18 +1151,55 @@ const updateAccessory = (
                   </div>
 
                   {/* Variant Name */}
-                  <div>
-                    <label className="mb-2 block text-sm font-medium">
-                      Variant Name
-                    </label>
-                    <Input
-                      type="text"
-                      placeholder="e.g. EX, LX, VX"
-                      {...register("variantName", validationRules.variantName)}
-                      error={errors?.variantName?.message}
-                    />
-                  </div>
+                 <div>
+  <label className="mb-1.5 block text-sm font-medium">
+    Variant Name
+    <span className="ml-1 text-red-500">
+      *
+    </span>
+  </label>
 
+<Combobox
+  data={filteredVariantOptions}
+  value={
+    filteredVariantOptions.find(
+      (option) =>
+        option.id ===
+        String(selectedVariantId),
+    ) || null
+  }
+  onChange={(option: any) => {
+    if (!option) return;
+
+    setValue(
+      "variantId",
+      Number(option.id),
+      {
+        shouldValidate: true,
+      },
+    );
+
+    setValue(
+      "variantName",
+      option.name,
+      {
+        shouldValidate: true,
+      },
+    );
+  }}
+  displayField="name"
+  placeholder={
+    selectedModelId
+      ? "Search or select variant"
+      : "Select model first"
+  }
+/>
+  {errors.variantName && (
+    <p className="mt-1 text-xs text-red-500">
+      {errors.variantName.message}
+    </p>
+  )}
+</div>
                   {/* Pur Price + Tax */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>

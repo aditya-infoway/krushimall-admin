@@ -156,11 +156,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return false;
     }
   };
-  const logout = async () => {
-    setSession(null);
-    dispatch({ type: "LOGOUT" });
-  };
+ const logout = async () => {
+  setSession(null);
 
+  // Remove selected company/session values if required
+  sessionStorage.removeItem("companyId");
+  sessionStorage.removeItem("financialYearId");
+
+  dispatch({ type: "LOGOUT" });
+};
   if (!children) {
     return null;
   }

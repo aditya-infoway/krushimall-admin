@@ -171,12 +171,25 @@ export default function BankReceipt() {
   const currentItems = filteredRows.slice(indexOfFirstItem, indexOfLastItem);
   const [bankAccounts, setBankAccounts] = useState<any[]>([]);
   const [oppAccounts, setOppAccounts] = useState<any[]>([]);
-  const [companyId, setCompanyId] = useState<number | null>(null);
-  const [financialYearId, setFinancialYearId] = useState<number | null>(null);
+ const companyId = Number(
+  sessionStorage.getItem("companyId"),
+);
+
+const financialYearId = Number(
+  sessionStorage.getItem("financialYearId"),
+);
   const [leadOptions, setLeadOptions] = useState([]);
  const validateForm = () => {
   const newErrors: Record<string, string> = {};
+if (!companyId) {
+  newErrors.companyId =
+    "Company is not selected";
+}
 
+if (!financialYearId) {
+  newErrors.financialYearId =
+    "Financial year is not selected";
+}
   // Bank Account
   if (!form.bankAccount?.value) {
     newErrors.bankAccount =
@@ -295,28 +308,7 @@ export default function BankReceipt() {
   useEffect(() => {
     getLeads();
   }, []);
-  const getCompany = async () => {
-    try {
-      const res = await apiHelper.get("/company");
 
-      if (!res.data || res.data.length === 0) {
-        return;
-      }
-
-      const company = res.data[0];
-
-      setCompanyId(company.id);
-
-      if (company.financialYears?.length > 0) {
-        setFinancialYearId(company.financialYears[0].id);
-      }
-    } catch (err) {
-      console.log(err);
-    }
-  };
-  useEffect(() => {
-    getCompany();
-  }, []);
   const getAccounts = async () => {
     try {
       const res = await apiHelper.get("/accounts");
@@ -461,7 +453,12 @@ export default function BankReceipt() {
 
   const handleSubmit = async () => {
     if (!validateForm()) return;
-
+  if (!companyId || !financialYearId) {
+    toast.error(
+      "Company or financial year is not selected",
+    );
+    return;
+  }
     try {
       const payload = {
         companyId,
@@ -482,7 +479,10 @@ export default function BankReceipt() {
         chequeClearDate: form.chequeClearDate,
         narration: form.narration,
       };
-
+console.log(
+      "bank RECEIPT PAYLOAD:",
+      payload,
+    );
       if (editId) {
         await apiHelper.put(`/bank-receipt/${editId}`, payload);
         toast.success("Bank receipt updated successfully!");

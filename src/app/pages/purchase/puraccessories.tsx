@@ -1487,7 +1487,7 @@ const parseLocalDate = (dateStr: string): Date | undefined => {
 
           <div className={terms === "Credit" ? "col-span-2" : "col-span-1"}>
             <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Party Name
+              Supplier  Name
             </label>
             <div className="flex w-full gap-2">
               <div className="min-w-0 flex-1">

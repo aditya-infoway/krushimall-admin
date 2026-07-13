@@ -172,32 +172,13 @@ export default function BankPayment() {
   const currentItems = filteredRows.slice(indexOfFirstItem, indexOfLastItem);
   const [bankAccounts, setBankAccounts] = useState<any[]>([]);
   const [oppAccounts, setOppAccounts] = useState<any[]>([]);
-  const [companyId, setCompanyId] = useState<number | null>(null);
-  const [financialYearId, setFinancialYearId] = useState<number | null>(null);
-  const getCompany = async () => {
-    try {
-      const res = await apiHelper.get("/company");
+ const companyId = Number(
+  sessionStorage.getItem("companyId"),
+);
 
-      if (!res.data || res.data.length === 0) {
-        console.log("No companies found");
-        return;
-      }
-
-      const company = res.data[0];
-
-      setCompanyId(company.id);
-
-      if (company.financialYears?.length > 0) {
-        setFinancialYearId(company.financialYears[0].id);
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  useEffect(() => {
-    getCompany();
-  }, []);
+const financialYearId = Number(
+  sessionStorage.getItem("financialYearId"),
+);
   const getPurchaseBills = async () => {
     try {
       const res = await apiHelper.get("/purchases");
@@ -305,7 +286,15 @@ export default function BankPayment() {
   const purchaseBillOptions = purchaseBills;
  const validateForm = () => {
   const newErrors: Record<string, string> = {};
+if (!companyId) {
+  newErrors.companyId =
+    "Company is not selected";
+}
 
+if (!financialYearId) {
+  newErrors.financialYearId =
+    "Financial year is not selected";
+}
   // Bank Account
   if (!form.bankAccount?.value) {
     newErrors.bankAccount = "Bank Account is required";
@@ -446,7 +435,12 @@ export default function BankPayment() {
 
   const handleSubmit = async () => {
   if (!validateForm()) return;
-
+  if (!companyId || !financialYearId) {
+    toast.error(
+      "Company or financial year is not selected",
+    );
+    return;
+  }
   try {
     const payload = {
       companyId,

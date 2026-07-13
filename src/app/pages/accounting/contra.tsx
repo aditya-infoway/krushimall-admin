@@ -92,30 +92,13 @@ const [loading, setLoading] = useState(false);
   const [filterDateFrom, setFilterDateFrom] = useState<any>(null);
   const [filterDateTo, setFilterDateTo] = useState<any>(null);
   const [accounts, setAccounts] = useState<any[]>([]);
-  const [companyId, setCompanyId] = useState<number | null>(null);
-const [financialYearId, setFinancialYearId] = useState<number | null>(null);
+const companyId = Number(
+  sessionStorage.getItem("companyId"),
+);
 
-const getCompany = async () => {
-  try {
-    const res = await apiHelper.get("/company");
-
-    if (!res.data || res.data.length === 0) return;
-
-    const company = res.data[0];
-
-    setCompanyId(company.id);
-
-    if (company.financialYears?.length > 0) {
-      setFinancialYearId(company.financialYears[0].id);
-    }
-  } catch (err) {
-    console.log(err);
-  }
-};
-
-useEffect(() => {
-  getCompany();
-}, []);
+const financialYearId = Number(
+  sessionStorage.getItem("financialYearId"),
+);
   useEffect(() => {
      fetchContras();
     const fetchAccounts = async () => {
@@ -229,7 +212,15 @@ const getVoucher = async () => {
 
 const validateForm = () => {
   const newErrors: Record<string, string> = {};
+if (!companyId) {
+  newErrors.companyId =
+    "Company is not selected";
+}
 
+if (!financialYearId) {
+  newErrors.financialYearId =
+    "Financial year is not selected";
+}
   // Cash/Bank Account
   if (!cashBankAccount?.value) {
     newErrors.cashBankAccount =
@@ -286,7 +277,12 @@ const validateForm = () => {
 
  const handleSubmit = async () => {
   if (!validateForm()) return;
-
+ if (!companyId || !financialYearId) {
+    toast.error(
+      "Company or financial year is not selected",
+    );
+    return;
+  }
   try {
     await apiHelper.post("/contra", {
       companyId,

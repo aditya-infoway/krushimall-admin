@@ -174,32 +174,13 @@ export default function CashPayment() {
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredRows.slice(indexOfFirstItem, indexOfLastItem);
-  const [companyId, setCompanyId] = useState<number | null>(null);
-  const [financialYearId, setFinancialYearId] = useState<number | null>(null);
-  const getCompany = async () => {
-    try {
-      const res = await apiHelper.get("/company");
+ const companyId = Number(
+  sessionStorage.getItem("companyId"),
+);
 
-      if (!res.data || res.data.length === 0) {
-        console.log("No companies found");
-        return;
-      }
-
-      const company = res.data[0];
-
-      setCompanyId(company.id);
-
-      if (company.financialYears?.length > 0) {
-        setFinancialYearId(company.financialYears[0].id);
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  useEffect(() => {
-    getCompany();
-  }, []);
+const financialYearId = Number(
+  sessionStorage.getItem("financialYearId"),
+);
   const getPurchaseBills = async () => {
     try {
       const res = await apiHelper.get("/purchases");
@@ -430,6 +411,14 @@ export default function CashPayment() {
 
  const handleSubmit = async () => {
   if (!validateForm()) return;
+
+ 
+  if (!companyId || !financialYearId) {
+    toast.error(
+      "Company or financial year is not selected",
+    );
+    return;
+  }
 
   try {
     const payload = {

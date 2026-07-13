@@ -444,23 +444,75 @@ useEffect(() => {
     getTransferById();
   }
 }, [id, vehicleOptions, branchOptions]);
- const getCompany = async () => {
+const getCompany = async () => {
   try {
-    const res = await apiHelper.get("/company");
+    // Get selected IDs only from sessionStorage
+    const savedCompanyId =
+      sessionStorage.getItem("companyId");
 
-    const company = res?.data?.[0];
+    const savedFinancialYearId =
+      sessionStorage.getItem(
+        "financialYearId",
+      );
 
-    if (!company) return;
+    
 
-    setCompanyId(company.id);
-
-    if (company.financialYears?.length > 0) {
-      setFinancialYearId(company.financialYears[0].id);
+    if (!savedCompanyId) {
+      console.error(
+        "Company ID not found in sessionStorage",
+      );
+      return;
     }
 
-    setCompanyStateCode(company.stateCode || "");
-  } catch (err) {
-    console.log(err);
+    if (!savedFinancialYearId) {
+      console.error(
+        "Financial Year ID not found in sessionStorage",
+      );
+      return;
+    }
+
+    // Set IDs
+    setCompanyId(
+      Number(savedCompanyId),
+    );
+
+    setFinancialYearId(
+      Number(savedFinancialYearId),
+    );
+
+    // Get company data only for state code
+    const res =
+      await apiHelper.get("/company");
+
+    const companies = Array.isArray(
+      res.data,
+    )
+      ? res.data
+      : Array.isArray(res.data?.data)
+        ? res.data.data
+        : [];
+
+    // Find currently selected company
+    const selectedCompany =
+      companies.find(
+        (item: any) =>
+          Number(item.id) ===
+          Number(savedCompanyId),
+      );
+
+    console.log(
+      "SELECTED COMPANY:",
+      selectedCompany,
+    );
+
+    setCompanyStateCode(
+      selectedCompany?.stateCode || "",
+    );
+  } catch (error) {
+    console.error(
+      "GET COMPANY ERROR:",
+      error,
+    );
   }
 };
 
