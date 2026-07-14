@@ -3,14 +3,14 @@ import { useNavigate, useLocation } from "react-router-dom";
 import apiHelper from "@/utils/apiHelper";
 import { useForm, useWatch, Controller } from "react-hook-form";
 import { Input } from "@/components/ui";
-import { Combobox } from "@/components/shared/form/StyledCombobox";
+import { Combobox } from "@/components/shared/form/Combobox";
 import { DatePicker } from "@/components/shared/form/Datepicker";
 import { ArrowLeftIcon,  TrashIcon, } from "@heroicons/react/24/outline";
 import Select from "react-select";
 import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/Table";
 import { Checkbox } from "@/components/ui";
 import { useParams } from "react-router-dom";
-
+import { toast } from "sonner";
 type FormValues = {
   id?: number;
   date: string;
@@ -734,12 +734,12 @@ useEffect(() => {
 const handleSave = async () => {
   try {
     if (!watch("branch")) {
-      alert("Please select branch");
+    toast.warning("Please select branch");
       return;
     }
 
     if (selectedVehicles.length === 0) {
-      alert("Please add at least one vehicle");
+     toast.warning("Please add at least one vehicle");
       return;
     }
 
@@ -787,7 +787,7 @@ const handleSave = async () => {
         payload
       );
 
-      alert("Vehicle Stock Transfer Updated Successfully");
+     toast.success("Vehicle Stock Transfer updated successfully");
     } else {
       // Create
       res = await apiHelper.post(
@@ -795,7 +795,7 @@ const handleSave = async () => {
         payload
       );
 
-      alert("Vehicle Stock Transfer Created Successfully");
+    toast.success("Vehicle Stock Transfer created successfully");
     }
 
     console.log(res);
@@ -812,62 +812,107 @@ const handleSave = async () => {
   // Handle action checkbox click - Only works once!
   // Handle action checkbox click - Auto-uncheck after saving
   const handleActionCheckboxChange = (checked: boolean) => {
-    // If checkbox is being checked and we have pending data
-    if (checked && pendingVehicle) {
-      // Save data to table
-      const exists = selectedVehicles.some((v) => v.id === pendingVehicle.id);
-      if (!exists) {
-        setSelectedVehicles([...selectedVehicles, pendingVehicle]);
-        setSelectedIds([...selectedIds, pendingVehicle.id]);
-      }
+  if (checked && pendingVehicle) {
+    const exists = selectedVehicles.some(
+      (vehicle) => vehicle.id === pendingVehicle.id,
+    );
 
-      // Clear ALL fields EXCEPT date and stockTransferId
-      reset({
-        date: watch("date"),
-        stockTransferId: watch("stockTransferId"),
-        branch: "",
-        branchManagerName: "",
-        contactNo: "",
-        chassisNo: "",
-        vehicleSrNo: "",
-        model: "",
-        variant: "",
-        colour: "",
-        itemName: "",
-        itemCode: "",
-        engineNo: "",
-        mfgDate: "",
-        keyNo: "",
-        batteryNo: "",
-        batteryMake: "",
-        f1TyresNo: "",
-        f2TyresNo: "",
-        s1TyresNo: "",
-        s2TyresNo: "",
-        location: "",
-        grnNumber: "",
-        grnDate: "",
-        grnRecordDate: "",
-      });
-
-      // Manually reset branch dropdown using setValue
-      setValue("branch", "");
-      setValue("branchManagerName", "");
-      setValue("contactNo", "");
-
-      setPendingVehicle(null);
-      setIsSaved(true);
-
-      // Auto-uncheck the checkbox
+    if (exists) {
+      toast.warning("This vehicle is already added");
       setIsActionChecked(false);
-
-      // Re-enable chassis selection for the next vehicle
-      setTimeout(() => setIsSaved(false), 0);
-    } else if (!checked) {
-      // Just toggle state if unchecked manually
-      setIsActionChecked(false);
+      return;
     }
-  };
+
+    // Save currently selected header values
+    const selectedDate = watch("date");
+    const selectedTransferId = watch("stockTransferId");
+
+    // Keep selected branch details
+    const selectedBranch = watch("branch");
+    const selectedManager = watch("branchManagerName");
+    const selectedContact = watch("contactNo");
+
+    // Add selected vehicle
+    setSelectedVehicles((previousVehicles) => [
+      ...previousVehicles,
+      pendingVehicle,
+    ]);
+
+    setSelectedIds((previousIds) => [
+      ...previousIds,
+      pendingVehicle.id,
+    ]);
+
+    // Reset only vehicle fields
+    // Branch remains selected
+    reset({
+      date: selectedDate,
+
+      stockTransferId: selectedTransferId,
+
+      branch: selectedBranch,
+
+      branchManagerName: selectedManager,
+
+      contactNo: selectedContact,
+
+      chassisNo: "",
+
+      vehicleSrNo: "",
+
+      model: "",
+
+      variant: "",
+
+      colour: "",
+
+      itemName: "",
+
+      itemCode: "",
+
+      engineNo: "",
+
+      mfgDate: "",
+
+      keyNo: "",
+
+      batteryNo: "",
+
+      batteryMake: "",
+
+      f1TyresNo: "",
+
+      f2TyresNo: "",
+
+      s1TyresNo: "",
+
+      s2TyresNo: "",
+
+      location: "",
+
+      grnNumber: "",
+
+      grnDate: "",
+
+      grnRecordDate: "",
+    });
+
+    setPendingVehicle(null);
+
+    setIsSaved(true);
+
+    setIsActionChecked(false);
+
+    toast.success("Vehicle added successfully");
+
+    // Enable vehicle selection for next item
+    setTimeout(() => {
+      setIsSaved(false);
+    }, 0);
+  } else {
+    setIsActionChecked(false);
+  }
+};
   const formatDate = (date: string) => {
     if (!date) return "";
 
@@ -933,24 +978,39 @@ const handleSave = async () => {
         Balance : ₹{Number(branchOpeningBalance).toLocaleString("en-IN")}
       </span>
     </div>
-
-    <Combobox
-      placeholder="Select Branch"
-      data={branchOptions}
+<div className="relative">
+  <Combobox
+    placeholder="Select Branch"
+    data={branchOptions}
     value={
-  branchOptions.find(
-    (item) => Number(item.value) === Number(watch("branch"))
-  ) || null
-}
-     onChange={(val: any) => {
-  setValue("branch", val?.value || "");
-  setValue("branchManagerName", val?.manager || "");
-  setValue("contactNo", val?.contact || "");
+      branchOptions.find(
+        (item) =>
+          Number(item.value) === Number(watch("branch")),
+      ) || null
+    }
+    onChange={(val: any) => {
+      setValue("branch", val?.value || "");
 
-  setBranchStateCode(val?.stateCode || "");
-  setBranchOpeningBalance(Number(val?.closingBalance || 0));
-}}
-    />
+      setValue(
+        "branchManagerName",
+        val?.manager || "",
+      );
+
+      setValue(
+        "contactNo",
+        val?.contact || "",
+      );
+
+      setBranchStateCode(
+        val?.stateCode || "",
+      );
+
+      setBranchOpeningBalance(
+        Number(val?.closingBalance || 0),
+      );
+    }}
+  />
+</div>
   </div>
       </div>
 
