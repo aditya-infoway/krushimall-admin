@@ -181,84 +181,123 @@ function CreateAccountModal({
   const countryCode = watch("countryCode");
   const stateCode = watch("stateCode");
 
+
+const isDark = () => {
+  if (typeof document === "undefined") return false;
+  return document.documentElement.classList.contains("dark");
+};
+
+
   // ─── react-select custom styles ──────────────────────────────────────────
   const customSelectStyles = {
-    control: (provided: any, state: any) => ({
-      ...provided,
-      backgroundColor: "transparent",
-      borderColor: state.isFocused
-        ? "var(--color-primary-600)"
-        : "var(--color-gray-700)",
-      boxShadow: state.isFocused
-        ? "0 0 0 1px var(--color-primary-600)"
-        : "none",
-      minHeight: "42px",
-
-      "&:hover": {
-        borderColor: "var(--color-primary-500)",
-      },
-    }),
-
-    valueContainer: (provided: any) => ({
-      ...provided,
-      color: "var(--color-dark-100)",
-    }),
-
-    singleValue: (provided: any) => ({
-      ...provided,
-      color: "var(--color-dark-100)",
-    }),
-
-    input: (provided: any) => ({
-      ...provided,
-      color: "var(--color-dark-100)",
-    }),
-
-    placeholder: (provided: any) => ({
-      ...provided,
-      color: "var(--color-gray-400)",
-    }),
-
-    menu: (provided: any) => ({
-      ...provided,
-      backgroundColor: "var(--color-dark-700)",
-      border: "1px solid var(--color-primary-600)",
-      borderRadius: "12px",
-      overflow: "hidden",
-    }),
-
-    menuList: (provided: any) => ({
-      ...provided,
-      padding: 0,
-    }),
-
-    option: (provided: any, state: any) => ({
-      ...provided,
-      backgroundColor: state.isSelected
-        ? "var(--color-primary-600)"
-        : state.isFocused
+  control: (provided: any, state: any) => ({
+    ...provided,
+    backgroundColor: "transparent",
+    borderColor: state.isFocused
+      ? "var(--color-primary-600)"
+      : isDark() 
+        ? "var(--color-dark-500)"  // Dark mode
+        : "var(--color-gray-300)", 
+    boxShadow: state.isFocused ? "0 0 0 1px var(--color-primary-600)" : "none",
+    minHeight: "42px",
+    "&:hover": {
+      borderColor: "var(--color-primary-500)",
+    },
+  }),
+  
+  valueContainer: (provided: any) => ({
+    ...provided,
+    color: isDark() ? "var(--color-dark-100)" : "var(--color-gray-800)",
+  }),
+  
+  singleValue: (provided: any) => ({
+    ...provided,
+    color: isDark() ? "var(--color-dark-100)" : "var(--color-gray-800)",
+  }),
+  
+  input: (provided: any) => ({
+    ...provided,
+    color: isDark() ? "var(--color-dark-100)" : "var(--color-gray-800)",
+  }),
+  
+  placeholder: (provided: any) => ({
+    ...provided,
+    color: "var(--color-gray-400)",
+  }),
+  
+  menu: (provided: any) => ({
+    ...provided,
+    backgroundColor: isDark() ? "var(--color-dark-700)" : "#ffffff",
+    border: isDark() 
+      ? "1px solid var(--color-primary-600)" 
+      : "1px solid var(--color-gray-300)",
+    borderRadius: "12px",
+    overflow: "hidden",
+  }),
+  
+  menuList: (provided: any) => ({
+    ...provided,
+    padding: 0,
+    // Custom scrollbar styles
+    "::-webkit-scrollbar": {
+      width: "6px",
+    },
+    "::-webkit-scrollbar-track": {
+      background: isDark() ? "var(--color-dark-600)" : "#f3f4f6",
+    },
+    "::-webkit-scrollbar-thumb": {
+      background: isDark() ? "var(--color-primary-600)" : "#d1d5db",
+      borderRadius: "10px",
+    },
+    "::-webkit-scrollbar-thumb:hover": {
+      background: isDark() ? "var(--color-primary-500)" : "#9ca3af",
+    },
+    scrollbarWidth: "thin",
+    scrollbarColor: isDark() 
+      ? "var(--color-primary-600) var(--color-dark-600)" 
+      : "#d1d5db #f3f4f6",
+  }),
+  
+  option: (provided: any, state: any) => ({
+    ...provided,
+    backgroundColor: state.isSelected
+      ? "var(--color-primary-600)"
+      : state.isFocused
+        ? isDark()
           ? "var(--color-primary-500)"
-          : "var(--color-dark-700)",
-      color: "#fff",
-      cursor: "pointer",
-    }),
+          : "var(--color-gray-100)"
+        : isDark()
+          ? "var(--color-dark-700)"
+          : "#ffffff",
+    color: state.isSelected
+      ? "#ffffff"
+      : isDark()
+        ? "#ffffff"
+        : "var(--color-gray-800)",
+    cursor: "pointer",
+  }),
+  
+  dropdownIndicator: (provided: any, state: any) => ({
+    ...provided,
+    color: state.isFocused
+      ? "var(--color-primary-600)"
+      : isDark() 
+        ? "var(--color-gray-400)" 
+        : "var(--color-gray-500)",
+  }),
+  
+  clearIndicator: (provided: any) => ({
+    ...provided,
+    color: isDark() 
+      ? "var(--color-gray-400)" 
+      : "var(--color-gray-500)",
+  }),
+  
+  indicatorSeparator: () => ({
+    display: "none",
+  }),
+};
 
-    dropdownIndicator: (provided: any, state: any) => ({
-      ...provided,
-      color: state.isFocused
-        ? "var(--color-primary-600)"
-        : "var(--color-gray-400)",
-    }),
-
-    clearIndicator: (provided: any) => ({
-      ...provided,
-      color: "var(--color-gray-400)",
-    }),
-
-    indicatorSeparator: () => ({
-      display: "none",
-    }),
-  };
 
   // ─── Country, State, City Data ──────────────────────────────────────────
   const countryOptions = useMemo(() => {
@@ -1389,11 +1428,10 @@ function ReviewLeadSummaryStep({
           </label>
           <DatePicker
             value={form.dmsEnquiryDate}
-          
             onChange={(val) => handleChange("dmsEnquiryDate", val)}
             placeholder="DD-MM-YYYY"
             options={{
-              dateFormat: "d-m-Y", 
+              dateFormat: "d-m-Y",
               disableMobile: true,
             }}
           />
@@ -1736,16 +1774,11 @@ function FinanceDetailsStep({
 }: {
   financeDetails: FinanceDetailsType;
 
-  setFinanceDetails: React.Dispatch<
-    React.SetStateAction<FinanceDetailsType>
-  >;
+  setFinanceDetails: React.Dispatch<React.SetStateAction<FinanceDetailsType>>;
 
   financeOptions: any[];
 }) {
-  const handleChange = (
-    field: keyof FinanceDetailsType,
-    value: string,
-  ) => {
+  const handleChange = (field: keyof FinanceDetailsType, value: string) => {
     setFinanceDetails((prev) => ({
       ...prev,
       [field]: value,
@@ -1770,42 +1803,33 @@ function FinanceDetailsStep({
             Finance Done By
           </label>
 
-    <Combobox
-  data={financeOptions}
-  value={
-    financeOptions.find(
-      (item: any) =>
-        String(item.id) ===
-        String(financeDetails.financeDoneBy),
-    ) || null
-  }
-  onChange={(item: any) => {
-    handleChange(
-      "financeDoneBy",
-      item?.id
-        ? String(item.id)
-        : "",
-    );
-  }}
-  displayField="name"
-  placeholder="Select Finance"
-  searchFields={[
-    "name",
-    "employeeName",
-  ]}
-  columns={[
-    {
-      header: "Finance Name",
-      field: "name",
-      width: "2fr",
-    },
-    {
-      header: "Employee Name",
-      field: "employeeName",
-      width: "1.5fr",
-    },
-  ]}
-/>
+          <Combobox
+            data={financeOptions}
+            value={
+              financeOptions.find(
+                (item: any) =>
+                  String(item.id) === String(financeDetails.financeDoneBy),
+              ) || null
+            }
+            onChange={(item: any) => {
+              handleChange("financeDoneBy", item?.id ? String(item.id) : "");
+            }}
+            displayField="name"
+            placeholder="Select Finance"
+            searchFields={["name", "employeeName"]}
+            columns={[
+              {
+                header: "Finance Name",
+                field: "name",
+                width: "2fr",
+              },
+              {
+                header: "Employee Name",
+                field: "employeeName",
+                width: "1.5fr",
+              },
+            ]}
+          />
         </div>
 
         {/* Finance Amount */}
@@ -1819,30 +1843,21 @@ function FinanceDetailsStep({
             min="0"
             placeholder="0"
             value={financeDetails.financeAmount}
-            onChange={(e) =>
-              handleChange(
-                "financeAmount",
-                e.target.value,
-              )
-            }
+            onChange={(e) => handleChange("financeAmount", e.target.value)}
             className={inputClass}
           />
         </div>
 
         {/* EMI */}
         <div className="flex flex-col gap-1">
-          <label className="dark:text-dark-200 text-sm font-medium">
-            EMI
-          </label>
+          <label className="dark:text-dark-200 text-sm font-medium">EMI</label>
 
           <input
             type="number"
             min="0"
             placeholder="0"
             value={financeDetails.emi}
-            onChange={(e) =>
-              handleChange("emi", e.target.value)
-            }
+            onChange={(e) => handleChange("emi", e.target.value)}
             className={inputClass}
           />
         </div>
@@ -1858,12 +1873,7 @@ function FinanceDetailsStep({
             min="0"
             placeholder="0"
             value={financeDetails.tenureMonths}
-            onChange={(e) =>
-              handleChange(
-                "tenureMonths",
-                e.target.value,
-              )
-            }
+            onChange={(e) => handleChange("tenureMonths", e.target.value)}
             className={inputClass}
           />
         </div>
@@ -1878,15 +1888,8 @@ function FinanceDetailsStep({
             type="number"
             min="0"
             placeholder="0"
-            value={
-              financeDetails.processingCharge
-            }
-            onChange={(e) =>
-              handleChange(
-                "processingCharge",
-                e.target.value,
-              )
-            }
+            value={financeDetails.processingCharge}
+            onChange={(e) => handleChange("processingCharge", e.target.value)}
             className={inputClass}
           />
         </div>
@@ -1903,12 +1906,7 @@ function FinanceDetailsStep({
             step="0.01"
             placeholder="0"
             value={financeDetails.loanROI}
-            onChange={(e) =>
-              handleChange(
-                "loanROI",
-                e.target.value,
-              )
-            }
+            onChange={(e) => handleChange("loanROI", e.target.value)}
             className={inputClass}
           />
         </div>
@@ -1924,12 +1922,7 @@ function FinanceDetailsStep({
             min="0"
             placeholder="0"
             value={financeDetails.marginMoney}
-            onChange={(e) =>
-              handleChange(
-                "marginMoney",
-                e.target.value,
-              )
-            }
+            onChange={(e) => handleChange("marginMoney", e.target.value)}
             className={inputClass}
           />
         </div>
@@ -1968,7 +1961,6 @@ export function LeadDetailsModal({
   const leadInfoValidateRef = useRef<(() => boolean) | null>(null);
   const reviewSummaryValidateRef = useRef<(() => boolean) | null>(null);
 
-
   const [models, setModels] = useState([]);
   // const [variants, setVariants] = useState([]);
   const [colors, setColors] = useState([]);
@@ -1978,15 +1970,9 @@ export function LeadDetailsModal({
   const [customers, setCustomers] = useState<OptionType[]>([]);
 
   const [executives, setExecutives] = useState<OptionType[]>([]);
- const companyId = Number(
-  sessionStorage.getItem("companyId"),
-);
+  const companyId = Number(sessionStorage.getItem("companyId"));
 
-const financialYearId = Number(
-  sessionStorage.getItem(
-    "financialYearId",
-  ),
-);
+  const financialYearId = Number(sessionStorage.getItem("financialYearId"));
   const fetchExecutives = async () => {
     try {
       const res = await apiHelper.get("/employees");
@@ -2013,7 +1999,6 @@ const financialYearId = Number(
 
   useEffect(() => {
     fetchExecutives();
-   
   }, []);
   const [financeData, setFinanceData] = useState<FinanceType>({
     wantsFinance: false,
@@ -2061,8 +2046,7 @@ const financialYearId = Number(
     chequeDate: "",
     chequeClearDate: "",
   });
-  const [financeDetails, setFinanceDetails] =
-  useState<FinanceDetailsType>({
+  const [financeDetails, setFinanceDetails] = useState<FinanceDetailsType>({
     financeDoneBy: "",
     financeAmount: "",
     emi: "",
@@ -2071,11 +2055,9 @@ const financialYearId = Number(
     loanROI: "",
     marginMoney: "",
   });
-  const isFinancePurchase =
-  reviewData.purchaseType === "Finance";
-const [financeOptions, setFinanceOptions] =
-  useState<any[]>([]);
-const totalSteps = isFinancePurchase ? 5 : 4;
+  const isFinancePurchase = reviewData.purchaseType === "Finance";
+  const [financeOptions, setFinanceOptions] = useState<any[]>([]);
+  const totalSteps = isFinancePurchase ? 5 : 4;
   const validateStep1And2 = (currentStep: number) => {
     const newErrors: Record<string, string> = {};
     if (currentStep === 1) {
@@ -2093,36 +2075,28 @@ const totalSteps = isFinancePurchase ? 5 : 4;
     return Object.keys(newErrors).length === 0;
   };
 
- const handleNext = () => {
-  if (step === 1 || step === 2) {
-    if (!validateStep1And2(step)) return;
-  }
+  const handleNext = () => {
+    if (step === 1 || step === 2) {
+      if (!validateStep1And2(step)) return;
+    }
 
-  if (
-    step === 3 &&
-    leadInfoValidateRef.current
-  ) {
-    const isValid =
-      leadInfoValidateRef.current();
+    if (step === 3 && leadInfoValidateRef.current) {
+      const isValid = leadInfoValidateRef.current();
 
-    if (!isValid) return;
-  }
+      if (!isValid) return;
+    }
 
-  // Step 4 validation
-  if (
-    step === 4 &&
-    reviewSummaryValidateRef.current
-  ) {
-    const isValid =
-      reviewSummaryValidateRef.current();
+    // Step 4 validation
+    if (step === 4 && reviewSummaryValidateRef.current) {
+      const isValid = reviewSummaryValidateRef.current();
 
-    if (!isValid) return;
-  }
+      if (!isValid) return;
+    }
 
-  if (step < totalSteps) {
-    setStep((prev) => prev + 1);
-  }
-};
+    if (step < totalSteps) {
+      setStep((prev) => prev + 1);
+    }
+  };
 
   const handlePrevious = () => {
     if (step > 1) setStep(step - 1);
@@ -2130,15 +2104,10 @@ const totalSteps = isFinancePurchase ? 5 : 4;
 
   const handleSubmit = async () => {
     console.log("SUBMIT CLICKED");
-  if (
-    !companyId ||
-    !financialYearId
-  ) {
-    toast.error(
-      "Company or financial year is not selected",
-    );
-    return;
-  }
+    if (!companyId || !financialYearId) {
+      toast.error("Company or financial year is not selected");
+      return;
+    }
     if (reviewSummaryValidateRef.current) {
       const isValid = reviewSummaryValidateRef.current();
       console.log("VALID:", isValid);
@@ -2182,38 +2151,27 @@ const totalSteps = isFinancePurchase ? 5 : 4;
         chequeNo: reviewData.chequeNo,
         chequeDate: reviewData.chequeDate?.[0] || null,
         chequeClearDate: reviewData.chequeClearDate?.[0] || null,
-        financeDoneBy:
-  financeDetails.financeDoneBy || null,
+        financeDoneBy: financeDetails.financeDoneBy || null,
 
-financeAmount:
-  financeDetails.financeAmount
-    ? Number(financeDetails.financeAmount)
-    : null,
+        financeAmount: financeDetails.financeAmount
+          ? Number(financeDetails.financeAmount)
+          : null,
 
-emi:
-  financeDetails.emi
-    ? Number(financeDetails.emi)
-    : null,
+        emi: financeDetails.emi ? Number(financeDetails.emi) : null,
 
-tenureMonths:
-  financeDetails.tenureMonths
-    ? Number(financeDetails.tenureMonths)
-    : null,
+        tenureMonths: financeDetails.tenureMonths
+          ? Number(financeDetails.tenureMonths)
+          : null,
 
-processingCharge:
-  financeDetails.processingCharge
-    ? Number(financeDetails.processingCharge)
-    : null,
+        processingCharge: financeDetails.processingCharge
+          ? Number(financeDetails.processingCharge)
+          : null,
 
-loanROI:
-  financeDetails.loanROI
-    ? Number(financeDetails.loanROI)
-    : null,
+        loanROI: financeDetails.loanROI ? Number(financeDetails.loanROI) : null,
 
-marginMoney:
-  financeDetails.marginMoney
-    ? Number(financeDetails.marginMoney)
-    : null,
+        marginMoney: financeDetails.marginMoney
+          ? Number(financeDetails.marginMoney)
+          : null,
       };
 
       console.log("PAYLOAD", payload);
@@ -2303,34 +2261,34 @@ marginMoney:
       })),
     );
   };
-const fetchFinances = async () => {
-  try {
-    const res = await apiHelper.get("/finances");
+  const fetchFinances = async () => {
+    try {
+      const res = await apiHelper.get("/finances");
 
-    const data = Array.isArray(res.data)
-      ? res.data
-      : Array.isArray(res.data?.data)
-        ? res.data.data
-        : [];
+      const data = Array.isArray(res.data)
+        ? res.data
+        : Array.isArray(res.data?.data)
+          ? res.data.data
+          : [];
 
-    const activeFinances = data
-      .filter((item: any) => item.status === "ACTIVE")
-      .map((item: any) => ({
-        id: item.id,
+      const activeFinances = data
+        .filter((item: any) => item.status === "ACTIVE")
+        .map((item: any) => ({
+          id: item.id,
 
-        // Finance company/account name
-        name: item.account?.accountName || "",
+          // Finance company/account name
+          name: item.account?.accountName || "",
 
-        // Employee/person handling finance
-        employeeName: item.employeeName || "",
-      }));
+          // Employee/person handling finance
+          employeeName: item.employeeName || "",
+        }));
 
-    setFinanceOptions(activeFinances);
-  } catch (error) {
-    console.error("Failed to fetch finances:", error);
-    setFinanceOptions([]);
-  }
-};
+      setFinanceOptions(activeFinances);
+    } catch (error) {
+      console.error("Failed to fetch finances:", error);
+      setFinanceOptions([]);
+    }
+  };
   const fetchShowroomVariants = async () => {
     try {
       const res = await apiHelper.get("/showroom-variant");
@@ -2365,7 +2323,7 @@ const fetchFinances = async () => {
     fetchShowroomVariants();
     fetchColors();
     fetchCustomers();
-      fetchFinances();
+    fetchFinances();
   }, []);
   const handleModelChange = (model: any) => {
     setSelectedModel(model);
@@ -2412,27 +2370,27 @@ const fetchFinances = async () => {
     }
   };
 
- const getStepTitle = () => {
-  switch (step) {
-    case 1:
-      return "Vehicle Selection";
+  const getStepTitle = () => {
+    switch (step) {
+      case 1:
+        return "Vehicle Selection";
 
-    case 2:
-      return "Customer Detail";
+      case 2:
+        return "Customer Detail";
 
-    case 3:
-      return "Lead Info";
+      case 3:
+        return "Lead Info";
 
-    case 4:
-      return "Review Lead Summary";
+      case 4:
+        return "Review Lead Summary";
 
-    case 5:
-      return "Finance Details";
+      case 5:
+        return "Finance Details";
 
-    default:
-      return "";
-  }
-};
+      default:
+        return "";
+    }
+  };
 
   return (
     <>
@@ -2657,12 +2615,12 @@ const fetchFinances = async () => {
                 />
               )}
               {step === 5 && (
-  <FinanceDetailsStep
-    financeDetails={financeDetails}
-    setFinanceDetails={setFinanceDetails}
-      financeOptions={financeOptions}
-  />
-)}
+                <FinanceDetailsStep
+                  financeDetails={financeDetails}
+                  setFinanceDetails={setFinanceDetails}
+                  financeOptions={financeOptions}
+                />
+              )}
             </div>
 
             {/* Footer */}
@@ -2674,51 +2632,49 @@ const fetchFinances = async () => {
               >
                 Previous
               </button>
-             {/* Step 1, 2 and 3 */}
-{step < 4 && (
-  <button
-    type="button"
-    onClick={handleNext}
-    className="rounded-lg bg-blue-600 px-6 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-  >
-    Next
-  </button>
-)}
+              {/* Step 1, 2 and 3 */}
+              {step < 4 && (
+                <button
+                  type="button"
+                  onClick={handleNext}
+                  className="rounded-lg bg-blue-600 px-6 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+                >
+                  Next
+                </button>
+              )}
 
-{/* Step 4 + Finance = Next */}
-{step === 4 &&
-  reviewData.purchaseType === "Finance" && (
-    <button
-      type="button"
-      onClick={handleNext}
-      className="rounded-lg bg-blue-600 px-6 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-    >
-      Next
-    </button>
-  )}
+              {/* Step 4 + Finance = Next */}
+              {step === 4 && reviewData.purchaseType === "Finance" && (
+                <button
+                  type="button"
+                  onClick={handleNext}
+                  className="rounded-lg bg-blue-600 px-6 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+                >
+                  Next
+                </button>
+              )}
 
-{/* Step 4 + Cash/Bank = Submit */}
-{step === 4 &&
-  reviewData.purchaseType !== "Finance" && (
-    <button
-      type="button"
-      onClick={handleSubmit}
-      className="rounded-lg bg-blue-600 px-6 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-    >
-      Submit
-    </button>
-  )}
+              {/* Step 4 + Cash/Bank = Submit */}
+              {step === 4 && reviewData.purchaseType !== "Finance" && (
+                <button
+                  type="button"
+                  onClick={handleSubmit}
+                  className="rounded-lg bg-blue-600 px-6 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+                >
+                  Submit
+                </button>
+              )}
 
-{/* Step 5 Finance Details = Submit */}
-{step === 5 && (
-  <button
-    type="button"
-    onClick={handleSubmit}
-    className="rounded-lg bg-blue-600 px-6 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-  >
-    Submit
-  </button>
-)}
+              {/* Step 5 Finance Details = Submit */}
+              {step === 5 && (
+                <button
+                  type="button"
+                  onClick={handleSubmit}
+                  className="rounded-lg bg-blue-600 px-6 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+                >
+                  Submit
+                </button>
+              )}
             </div>
           </DialogPanel>
         </div>

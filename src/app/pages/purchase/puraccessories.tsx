@@ -7,6 +7,7 @@ import {
   MagnifyingGlassIcon,
   PlusIcon,
   BuildingOffice2Icon,
+  ArrowLeftIcon
 } from "@heroicons/react/24/outline";
 import { Button, Input } from "@/components/ui";
 import { Listbox } from "@/components/shared/form/StyledListbox";
@@ -285,6 +286,11 @@ const emptyTractor: TractorData = {
   status: "Active",
 };
 
+const isDark = () => {
+  if (typeof document === "undefined") return false;
+  return document.documentElement.classList.contains("dark");
+};
+
 // ─── react-select custom styles ────────────────────────────────────────
 const customSelectStyles = {
   control: (provided: any, state: any) => ({
@@ -292,65 +298,104 @@ const customSelectStyles = {
     backgroundColor: "transparent",
     borderColor: state.isFocused
       ? "var(--color-primary-600)"
-      : "var(--color-gray-300)",
+      : isDark()
+        ? "var(--color-dark-400)"
+        : "var(--color-gray-300)",
     boxShadow: state.isFocused ? "0 0 0 1px var(--color-primary-600)" : "none",
     minHeight: "42px",
     "&:hover": {
       borderColor: "var(--color-primary-500)",
     },
   }),
+
   valueContainer: (provided: any) => ({
     ...provided,
-    color: "var(--color-dark-100)",
+    color: isDark() ? "var(--color-dark-100)" : "var(--color-gray-800)",
   }),
+
   singleValue: (provided: any) => ({
     ...provided,
-    color: "var(--color-dark-100)",
+    color: isDark() ? "var(--color-dark-100)" : "var(--color-gray-800)",
   }),
+
   input: (provided: any) => ({
     ...provided,
-    color: "var(--color-dark-100)",
+    color: isDark() ? "var(--color-dark-100)" : "var(--color-gray-800)",
   }),
+
   placeholder: (provided: any) => ({
     ...provided,
     color: "var(--color-gray-400)",
   }),
+
   menu: (provided: any) => ({
     ...provided,
-    backgroundColor: "var(--color-dark-700)",
-    border: "1px solid var(--color-primary-600)",
+    backgroundColor: isDark() ? "var(--color-dark-700)" : "#ffffff",
+    border: isDark()
+      ? "1px solid var(--color-primary-600)"
+      : "1px solid var(--color-gray-300)",
     borderRadius: "12px",
     overflow: "hidden",
   }),
+
   menuList: (provided: any) => ({
     ...provided,
     padding: 0,
+    // Custom scrollbar
+    "::-webkit-scrollbar": {
+      width: "6px",
+    },
+    "::-webkit-scrollbar-track": {
+      background: isDark() ? "var(--color-dark-600)" : "#f3f4f6",
+    },
+    "::-webkit-scrollbar-thumb": {
+      background: isDark() ? "var(--color-primary-600)" : "#d1d5db",
+      borderRadius: "10px",
+    },
+    "::-webkit-scrollbar-thumb:hover": {
+      background: isDark() ? "var(--color-primary-500)" : "#9ca3af",
+    },
+    scrollbarWidth: "thin",
+    scrollbarColor: isDark()
+      ? "var(--color-primary-600) var(--color-dark-600)"
+      : "#d1d5db #f3f4f6",
   }),
+
   option: (provided: any, state: any) => ({
     ...provided,
     backgroundColor: state.isSelected
       ? "var(--color-primary-600)"
       : state.isFocused
-        ? "var(--color-primary-500)"
-        : "var(--color-dark-700)",
-    color: "#fff",
+        ? isDark()
+          ? "var(--color-primary-500)"
+          : "var(--color-gray-100)"
+        : isDark()
+          ? "var(--color-dark-700)"
+          : "#ffffff",
+    color: state.isSelected
+      ? "#ffffff"
+      : isDark()
+        ? "#ffffff"
+        : "var(--color-gray-800)",
     cursor: "pointer",
   }),
+
   dropdownIndicator: (provided: any, state: any) => ({
     ...provided,
     color: state.isFocused
       ? "var(--color-primary-600)"
       : "var(--color-gray-400)",
   }),
+
   clearIndicator: (provided: any) => ({
     ...provided,
     color: "var(--color-gray-400)",
   }),
+
   indicatorSeparator: () => ({
     display: "none",
   }),
 };
-
 // ---------- Main component ----------
 
 const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
@@ -433,18 +478,18 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
   const [bankDetails, setBankDetails] =
     useState<BankDetailsData>(emptyBankDetails);
   const [bankDetailsTouched, setBankDetailsTouched] = useState(false);
-const formatLocalDate = (date: Date | null): string => { 
-  if (!date) return ""; 
-  const year = date.getFullYear(); 
-  const month = String(date.getMonth() + 1).padStart(2, '0'); 
-  const day = String(date.getDate()).padStart(2, '0'); 
-  return `${year}-${month}-${day}`; 
-}; 
- 
-const parseLocalDate = (dateStr: string): Date | undefined => { 
-  if (!dateStr) return undefined; 
-  return new Date(dateStr + "T00:00:00"); 
-};
+  const formatLocalDate = (date: Date | null): string => {
+    if (!date) return "";
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
+  const parseLocalDate = (dateStr: string): Date | undefined => {
+    if (!dateStr) return undefined;
+    return new Date(dateStr + "T00:00:00");
+  };
   // ── Create Account drawer state ──────────────────────────────────────
   const [accountModalOpen, setAccountModalOpen] = useState(false);
   const [accountForm, setAccountForm] = useState<NewAccountData>(emptyAccount);
@@ -740,40 +785,43 @@ const parseLocalDate = (dateStr: string): Date | undefined => {
   };
 
   const handleSaveAccessoryItem = async () => {
-  setAccessoryFormTouched(true);
-  if (!validateAccessoryForm()) return;
+    setAccessoryFormTouched(true);
+    if (!validateAccessoryForm()) return;
 
-  try {
-    const payload = {
-      type: accessoryForm.type,
-      itemName: accessoryForm.itemName,
-      codeNo: accessoryForm.codeNo,
-      shortName: accessoryForm.shortName,
-      hsnCode: accessoryForm.hsnCode,
-      unit: accessoryForm.unit,
-      taxSlab: accessoryForm.taxSlab,
-      group: accessoryForm.group,
-      purchasePrice: accessoryForm.purchasePrice,
-      salesPrice: accessoryForm.salesPrice,
-      mrp: accessoryForm.mrp,
-      opStock: accessoryForm.opStock,
-      showroomVariants: selectedVariants.map((v: any) => ({
-        id: v.value,
-        variantName: v.variantName,
-        model: v.model,
-      })),
-      status: accessoryForm.status,
-    };
+    try {
+      const payload = {
+        type: accessoryForm.type,
+        itemName: accessoryForm.itemName,
+        codeNo: accessoryForm.codeNo,
+        shortName: accessoryForm.shortName,
+        hsnCode: accessoryForm.hsnCode,
+        unit: accessoryForm.unit,
+        taxSlab: accessoryForm.taxSlab,
+        group: accessoryForm.group,
+        purchasePrice: accessoryForm.purchasePrice,
+        salesPrice: accessoryForm.salesPrice,
+        mrp: accessoryForm.mrp,
+        opStock: accessoryForm.opStock,
+        showroomVariants: selectedVariants.map((v: any) => ({
+          id: v.value,
+          variantName: v.variantName,
+          model: v.model,
+        })),
+        status: accessoryForm.status,
+      };
 
-    await apiHelper.post("/accessories", payload);
-    toast.success("Accessory item created successfully!");
-    setAddAccessoryModalOpen(false);
-    resetAccessoryForm();
-  } catch (error: any) {
-    console.error("Failed to save accessory:", error);
-    toast.error(error.response?.data?.message || "Failed to save accessory item. Please try again.");
-  }
-};
+      await apiHelper.post("/accessories", payload);
+      toast.success("Accessory item created successfully!");
+      setAddAccessoryModalOpen(false);
+      resetAccessoryForm();
+    } catch (error: any) {
+      console.error("Failed to save accessory:", error);
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to save accessory item. Please try again.",
+      );
+    }
+  };
 
   const resetAccessoryForm = () => {
     setAccessoryForm({
@@ -817,9 +865,8 @@ const parseLocalDate = (dateStr: string): Date | undefined => {
 
   const handleCancelBankDetails = () => {
     setBankDetailsModalOpen(false);
-  
+
     setBankDetailsTouched(false);
-   
   };
 
   // ── Create Account Handlers ─────────────────────────────────────────
@@ -906,90 +953,90 @@ const parseLocalDate = (dateStr: string): Date | undefined => {
       [field]: error,
     }));
   };
- const handleCreateAccount = async () => {
-  try {
-    const required: (keyof NewAccountData)[] = [
-      "accountName",
-      "mobile",
-      "countryCode",
-      "stateCode",
-      "district",
-      "city",
-      "address",
-      "panCard",
-      "aadharCard",
-      "group",
-    ];
+  const handleCreateAccount = async () => {
+    try {
+      const required: (keyof NewAccountData)[] = [
+        "accountName",
+        "mobile",
+        "countryCode",
+        "stateCode",
+        "district",
+        "city",
+        "address",
+        "panCard",
+        "aadharCard",
+        "group",
+      ];
 
-    const missing = required.filter((k) => !String(accountForm[k]).trim());
+      const missing = required.filter((k) => !String(accountForm[k]).trim());
 
-    if (accountForm.group === "Sundry Creditor") {
-      if (!accountForm.openingBalance.trim()) {
-        missing.push("openingBalance");
+      if (accountForm.group === "Sundry Creditor") {
+        if (!accountForm.openingBalance.trim()) {
+          missing.push("openingBalance");
+        }
       }
-    }
 
-    if (accountForm.group === "Sundry Creditor") {
-      if (!accountForm.drCr.trim()) {
-        missing.push("drCr");
+      if (accountForm.group === "Sundry Creditor") {
+        if (!accountForm.drCr.trim()) {
+          missing.push("drCr");
+        }
       }
+
+      setAccountTouched(true);
+
+      if (missing.length > 0) return;
+
+      const res = await apiHelper.post("/accounts", {
+        accountName: accountForm.accountName,
+        printName: accountForm.accountName,
+        mobile: accountForm.mobile,
+        country: accountForm.country,
+        countryCode: accountForm.countryCode,
+        state: accountForm.state,
+        stateCode: accountForm.stateCode,
+        district: accountForm.district,
+        city: accountForm.city,
+        address1: accountForm.address,
+        panCard: accountForm.panCard,
+        aadharNo: accountForm.aadharCard,
+        group: accountForm.group,
+        openingBalance:
+          accountForm.group === "Sundry Creditor"
+            ? Number(accountForm.openingBalance)
+            : 0,
+        drCr:
+          accountForm.group === "Supplier"
+            ? "Cr"
+            : accountForm.group === "Sundry Creditor"
+              ? accountForm.drCr
+              : null,
+      });
+
+      const account = res.data;
+
+      if (!account?.id) {
+        toast.error("Failed to create account. Invalid response.");
+        return;
+      }
+
+      const newParty = {
+        id: account.id,
+        name: account.accountName,
+        mobile: Number(accountForm.mobile),
+        stateCode: accountForm.stateCode,
+      };
+
+      setParties((prev) => [...prev, newParty]);
+      setPartyId(account.id);
+      toast.success("Account created successfully!");
+      setAccountModalOpen(false);
+      setAccountForm(emptyAccount);
+      setAccountTouched(false);
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error.response?.data?.message || "Failed to create account");
     }
-
-    setAccountTouched(true);
-
-    if (missing.length > 0) return;
-
-    const res = await apiHelper.post("/accounts", {
-      accountName: accountForm.accountName,
-      printName: accountForm.accountName,
-      mobile: accountForm.mobile,
-      country: accountForm.country,
-      countryCode: accountForm.countryCode,
-      state: accountForm.state,
-      stateCode: accountForm.stateCode,
-      district: accountForm.district,
-      city: accountForm.city,
-      address1: accountForm.address,
-      panCard: accountForm.panCard,
-      aadharNo: accountForm.aadharCard,
-      group: accountForm.group,
-      openingBalance:
-        accountForm.group === "Sundry Creditor"
-          ? Number(accountForm.openingBalance)
-          : 0,
-      drCr:
-        accountForm.group === "Supplier"
-          ? "Cr"
-          : accountForm.group === "Sundry Creditor"
-          ? accountForm.drCr
-          : null,
-    });
-
-    const account = res.data;
-
-    if (!account?.id) {
-      toast.error("Failed to create account. Invalid response.");
-      return;
-    }
-
-    const newParty = {
-      id: account.id,
-      name: account.accountName,
-      mobile: Number(accountForm.mobile),
-      stateCode: accountForm.stateCode,
-    };
-
-    setParties((prev) => [...prev, newParty]);
-    setPartyId(account.id);
-    toast.success("Account created successfully!");
-    setAccountModalOpen(false);
-    setAccountForm(emptyAccount);
-    setAccountTouched(false);
-  } catch (error: any) {
-    console.error(error);
-    toast.error(error.response?.data?.message || "Failed to create account");
-  }
-};
+  };
 
   // ── Tractor handlers ──────────────────────────────────────────────────
   const updateTractorForm = (key: keyof TractorData, value: string) => {
@@ -997,27 +1044,27 @@ const parseLocalDate = (dateStr: string): Date | undefined => {
   };
 
   const handleSaveTractor = () => {
-  const required: (keyof TractorData)[] = [
-    "selectModel",
-    "selectVariant",
-    "selectColour",
-    "itemName",
-    "codeNo",
-    "purchasePriceWithoutGST",
-    "purchasePriceTaxable",
-  ];
-  const missing = required.filter((k) => !tractorForm[k]?.trim());
-  setTractorTouched(true);
-  if (missing.length > 0) {
-    toast.warning("Please fill all required fields");
-    return;
-  }
-  console.log("Tractor saved:", tractorForm);
-  setAddTractorModalOpen(false);
-  setTractorForm(emptyTractor);
-  setTractorTouched(false);
-  toast.success("Tractor saved successfully!");
-};
+    const required: (keyof TractorData)[] = [
+      "selectModel",
+      "selectVariant",
+      "selectColour",
+      "itemName",
+      "codeNo",
+      "purchasePriceWithoutGST",
+      "purchasePriceTaxable",
+    ];
+    const missing = required.filter((k) => !tractorForm[k]?.trim());
+    setTractorTouched(true);
+    if (missing.length > 0) {
+      toast.warning("Please fill all required fields");
+      return;
+    }
+    console.log("Tractor saved:", tractorForm);
+    setAddTractorModalOpen(false);
+    setTractorForm(emptyTractor);
+    setTractorTouched(false);
+    toast.success("Tractor saved successfully!");
+  };
   // ── Dynamic Location Data ────────────────────────────────────────────
   const countryOptions = useMemo(() => {
     return Country.getAllCountries().map((c) => ({
@@ -1109,66 +1156,66 @@ const parseLocalDate = (dateStr: string): Date | undefined => {
     setAccessorySearch("");
   };
 
- const saveDraftRow = () => {
-  if (!draft.item.trim()) {
-    toast.warning("Please select or enter an Item Name");
-    return;
-  }
-  if (!draft.itemCode.trim()) {
-    toast.warning("Please enter Item Code");
-    return;
-  }
-  if (!draft.hsn.trim()) {
-    toast.warning("Please enter HSN");
-    return;
-  }
-  if (!draft.unit.trim()) {
-    toast.warning("Please enter Unit");
-    return;
-  }
-  if (!draft.qty || draft.qty < 1) {
-    toast.warning("Please enter a valid Quantity (minimum 1)");
-    return;
-  }
-  if (!draft.pPrice.trim()) {
-    toast.warning("Please enter Purchase Price");
-    return;
-  }
-  if (!draft.gstPercent.trim()) {
-    toast.warning("Please enter GST %");
-    return;
-  }
-  if (!draft.netAmount.trim()) {
-    toast.warning("Please enter Net Amount");
-    return;
-  }
-
-  setRows((prev) => {
-    const index = prev.findIndex((row) => row.itemCode === draft.itemCode);
-
-    if (index !== -1) {
-      const updated = [...prev];
-      const oldQty = Number(updated[index].qty);
-      const newQty = oldQty + Number(draft.qty);
-      updated[index] = {
-        ...updated[index],
-        qty: newQty,
-        netAmount: calculateNetAmount(
-          newQty,
-          Number(updated[index].pPrice),
-          Number(updated[index].gstPercent),
-        ),
-        status: "Pending",
-      };
-      return updated;
+  const saveDraftRow = () => {
+    if (!draft.item.trim()) {
+      toast.warning("Please select or enter an Item Name");
+      return;
+    }
+    if (!draft.itemCode.trim()) {
+      toast.warning("Please enter Item Code");
+      return;
+    }
+    if (!draft.hsn.trim()) {
+      toast.warning("Please enter HSN");
+      return;
+    }
+    if (!draft.unit.trim()) {
+      toast.warning("Please enter Unit");
+      return;
+    }
+    if (!draft.qty || draft.qty < 1) {
+      toast.warning("Please enter a valid Quantity (minimum 1)");
+      return;
+    }
+    if (!draft.pPrice.trim()) {
+      toast.warning("Please enter Purchase Price");
+      return;
+    }
+    if (!draft.gstPercent.trim()) {
+      toast.warning("Please enter GST %");
+      return;
+    }
+    if (!draft.netAmount.trim()) {
+      toast.warning("Please enter Net Amount");
+      return;
     }
 
-    return [...prev, draft];
-  });
+    setRows((prev) => {
+      const index = prev.findIndex((row) => row.itemCode === draft.itemCode);
 
-  setDraft(emptyDraft());
-  toast.success("Item added successfully!");
-};
+      if (index !== -1) {
+        const updated = [...prev];
+        const oldQty = Number(updated[index].qty);
+        const newQty = oldQty + Number(draft.qty);
+        updated[index] = {
+          ...updated[index],
+          qty: newQty,
+          netAmount: calculateNetAmount(
+            newQty,
+            Number(updated[index].pPrice),
+            Number(updated[index].gstPercent),
+          ),
+          status: "Pending",
+        };
+        return updated;
+      }
+
+      return [...prev, draft];
+    });
+
+    setDraft(emptyDraft());
+    toast.success("Item added successfully!");
+  };
 
   const removeRow = (id: string) =>
     setRows((r) => r.filter((row) => row.id !== id));
@@ -1242,82 +1289,85 @@ const parseLocalDate = (dateStr: string): Date | undefined => {
     }
   };
 
- const handleSave = async () => {
-  try {
-    const payload = {
-      accountId: partyId,
-      purchaseDate: purchaseDate || date,
-      purchaseBillNo,
-      purchaseLocation,
-      dueDate,
-      terms,
-      narration,
-      cashAccountId: terms === "Cash" ? cashAccount : null,
-      bankAccountId: terms === "Bank" ? bankAccount : null,
-      paymentMode: bankDetails.paymentMode,
-      chequeNo: bankDetails.chequeNo,
-      chequeDate: bankDetails.chequeDate,
-      clearDate: bankDetails.clearDate,
-      bankNarration: bankDetails.narration,
-      freightCharge,
-      insurance,
-      otherCharge,
-      roundAmount,
-      taxableValue: newTaxableValue,
-      totalQty: totalQuantity,
-      totalAmount: totalNetAmount,
-      cgst: totalCgst,
-      sgst: totalSgst,
-      igst: totalIgst,
-      grandTotal,
-      verifyStatus: billVerify,
-      items: rows.map((row: any) => ({
-        accessoryId: row.accessoryId || null,
-        item: row.item,
-        itemCode: row.itemCode,
-        hsn: row.hsn,
-        unit: row.unit,
-        modelName: row.modelName,
-        variantName: row.variantName,
-        qty: Number(row.qty),
-        groupName: row.groupName,
-        stock: Number(row.qty),
-        pPrice: Number(row.pPrice),
-        gstPercent: Number(row.gstPercent),
-        gstAmount: (Number(row.qty) * Number(row.pPrice) * Number(row.gstPercent)) / 100,
-        netAmount: Number(row.netAmount),
-      })),
-    };
-    
-    if (isEdit) {
-      await apiHelper.put(`/accessories-purchase/${id}`, payload);
-      toast.success("Purchase Updated Successfully");
-    } else {
-      await apiHelper.post("/accessories-purchase", payload);
-      toast.success("Purchase Saved Successfully");
+  const handleSave = async () => {
+    try {
+      const payload = {
+        accountId: partyId,
+        purchaseDate: purchaseDate || date,
+        purchaseBillNo,
+        purchaseLocation,
+        dueDate,
+        terms,
+        narration,
+        cashAccountId: terms === "Cash" ? cashAccount : null,
+        bankAccountId: terms === "Bank" ? bankAccount : null,
+        paymentMode: bankDetails.paymentMode,
+        chequeNo: bankDetails.chequeNo,
+        chequeDate: bankDetails.chequeDate,
+        clearDate: bankDetails.clearDate,
+        bankNarration: bankDetails.narration,
+        freightCharge,
+        insurance,
+        otherCharge,
+        roundAmount,
+        taxableValue: newTaxableValue,
+        totalQty: totalQuantity,
+        totalAmount: totalNetAmount,
+        cgst: totalCgst,
+        sgst: totalSgst,
+        igst: totalIgst,
+        grandTotal,
+        verifyStatus: billVerify,
+        items: rows.map((row: any) => ({
+          accessoryId: row.accessoryId || null,
+          item: row.item,
+          itemCode: row.itemCode,
+          hsn: row.hsn,
+          unit: row.unit,
+          modelName: row.modelName,
+          variantName: row.variantName,
+          qty: Number(row.qty),
+          groupName: row.groupName,
+          stock: Number(row.qty),
+          pPrice: Number(row.pPrice),
+          gstPercent: Number(row.gstPercent),
+          gstAmount:
+            (Number(row.qty) * Number(row.pPrice) * Number(row.gstPercent)) /
+            100,
+          netAmount: Number(row.netAmount),
+        })),
+      };
+
+      if (isEdit) {
+        await apiHelper.put(`/accessories-purchase/${id}`, payload);
+        toast.success("Purchase Updated Successfully");
+      } else {
+        await apiHelper.post("/accessories-purchase", payload);
+        toast.success("Purchase Saved Successfully");
+      }
+
+      navigate("/purchase/accessories");
+    } catch (error: any) {
+      console.error("Failed to save purchase:", error);
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to save purchase. Please try again.",
+      );
     }
+  };
 
-    navigate("/purchase/accessories");
-  } catch (error: any) {
-    console.error("Failed to save purchase:", error);
-    toast.error(error.response?.data?.message || "Failed to save purchase. Please try again.");
-  }
-};
+  const handleVerify = async () => {
+    if (!id) return;
 
-
- const handleVerify = async () => {
-  if (!id) return;
-
-  try {
-    await apiHelper.put(`/accessories-purchase/verify/${id}`, {});
-    setBillVerify("verify");
-    toast.success("Purchase Verified Successfully");
-  } catch (error: any) {
-    console.error(error);
-    toast.error(error.response?.data?.message || "Failed to verify purchase");
-  }
-};
-
+    try {
+      await apiHelper.put(`/accessories-purchase/verify/${id}`, {});
+      setBillVerify("verify");
+      toast.success("Purchase Verified Successfully");
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error.response?.data?.message || "Failed to verify purchase");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -1327,12 +1377,13 @@ const parseLocalDate = (dateStr: string): Date | undefined => {
           <h1 className="text-lg font-bold text-blue-600 underline sm:text-xl dark:text-blue-400">
             Accessories Purchase Bill
           </h1>
-          <button
-            onClick={handleBack}
-            className="bg-primary-500 hover:bg-primary-500 w-full rounded-lg px-4 py-2 text-sm font-semibold text-white transition-colors sm:w-auto sm:px-5"
-          >
-            ← Back
-          </button>
+         <button
+  onClick={handleBack}
+  className="bg-primary-500 hover:bg-primary-600 cursor-pointer flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white transition-colors sm:w-auto sm:px-5"
+>
+  <ArrowLeftIcon className="h-4 w-4" />
+  <span>Back</span>
+</button>
         </div>
 
         {/* Top fields */}
@@ -1354,7 +1405,6 @@ const parseLocalDate = (dateStr: string): Date | undefined => {
               }}
               placeholder="Select date..."
               className="w-full"
-
             />
           </div>
 
@@ -1426,68 +1476,65 @@ const parseLocalDate = (dateStr: string): Date | undefined => {
               <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Bank Account
               </label>
- <div className="flex w-full items-end gap-2">
-  <div className="min-w-0 flex-1">
-    <Combobox
-      data={bankAccounts.map((acc) => ({
-        label: acc.accountName,
-        value: acc.id,
-        mobile: acc.mobile,
-        openingBalance: acc.openingBalance,
-      }))}
-      value={
-        (() => {
-          const selected = bankAccounts.find(
-            (acc) => Number(acc.id) === Number(bankAccount)
-          );
+              <div className="flex w-full items-end gap-2">
+                <div className="min-w-0 flex-1">
+                  <Combobox
+                    data={bankAccounts.map((acc) => ({
+                      label: acc.accountName,
+                      value: acc.id,
+                      mobile: acc.mobile,
+                      openingBalance: acc.openingBalance,
+                    }))}
+                    value={(() => {
+                      const selected = bankAccounts.find(
+                        (acc) => Number(acc.id) === Number(bankAccount),
+                      );
 
-          return selected
-            ? {
-                label: selected.accountName,
-                value: selected.id,
-                mobile: selected.mobile,
-                openingBalance: selected.openingBalance,
-              }
-            : null;
-        })()
-      }
-      onChange={(val: any) => {
-        setBankAccount(val.value);
-       
-      }}
-      displayField="label"
-      placeholder="Search Bank Account"
-      searchFields={["label", "mobile"]}
-      columns={[
-        {
-          header: "Account",
-          field: "label",
-          width: "2fr",
-        },
-        {
-          header: "Opening",
-          field: "openingBalance",
-          width: "1fr",
-        },
-      ]}
-    />
-  </div>
+                      return selected
+                        ? {
+                            label: selected.accountName,
+                            value: selected.id,
+                            mobile: selected.mobile,
+                            openingBalance: selected.openingBalance,
+                          }
+                        : null;
+                    })()}
+                    onChange={(val: any) => {
+                      setBankAccount(val.value);
+                    }}
+                    displayField="label"
+                    placeholder="Search Bank Account"
+                    searchFields={["label", "mobile"]}
+                    columns={[
+                      {
+                        header: "Account",
+                        field: "label",
+                        width: "2fr",
+                      },
+                      {
+                        header: "Opening",
+                        field: "openingBalance",
+                        width: "1fr",
+                      },
+                    ]}
+                  />
+                </div>
 
-  <button
-    type="button"
-    onClick={() => setBankDetailsModalOpen(true)}
-    className="flex h-9.5 w-9.5 shrink-0 items-center justify-center rounded-lg border border-gray-300 text-blue-600 hover:bg-gray-50 dark:border-gray-600 dark:text-blue-400 dark:hover:bg-gray-700"
-    title="Add Bank Details"
-  >
-    <BuildingOffice2Icon className="h-5 w-5" />
-  </button>
-</div>
+                <button
+                  type="button"
+                  onClick={() => setBankDetailsModalOpen(true)}
+                  className="flex h-9.5 w-9.5 shrink-0 items-center justify-center rounded-lg border border-gray-300 text-blue-600 hover:bg-gray-50 dark:border-gray-600 dark:text-blue-400 dark:hover:bg-gray-700"
+                  title="Add Bank Details"
+                >
+                  <BuildingOffice2Icon className="h-5 w-5" />
+                </button>
+              </div>
             </div>
           )}
 
           <div className={terms === "Credit" ? "col-span-2" : "col-span-1"}>
             <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Supplier  Name
+              Supplier Name
             </label>
             <div className="flex w-full gap-2">
               <div className="min-w-0 flex-1">
@@ -1514,9 +1561,9 @@ const parseLocalDate = (dateStr: string): Date | undefined => {
               </div>
               <button
                 onClick={() => setAccountModalOpen(true)}
-                className="flex h-[38px] w-[38px] flex-shrink-0 items-center justify-center rounded-lg border border-gray-300 text-xl text-blue-600 hover:bg-gray-50 dark:border-gray-600 dark:text-blue-400 dark:hover:bg-gray-700"
+                className="flex h-[38px] w-[38px] flex-shrink-0 cursor-pointer items-center justify-center rounded-lg border border-gray-300 text-xl text-blue-600 hover:bg-gray-50 dark:border-gray-600 dark:text-blue-400 dark:hover:bg-gray-700"
               >
-                +
+                <PlusIcon className="h-5 w-5" />
               </button>
             </div>
           </div>
@@ -1552,17 +1599,17 @@ const parseLocalDate = (dateStr: string): Date | undefined => {
               Purchase Date
             </label>
             <DatePicker
-            value={purchaseDate ? parseLocalDate(purchaseDate) : undefined}
-            onChange={(selectedDates: Date[]) => {
-              const val = selectedDates[0];
-              if (val instanceof Date && !isNaN(val.getTime())) {
-                setPurchaseDate(formatLocalDate(val));
-              }
-            }}
-            placeholder="Select date..."
-            className="w-full"
-            options={{ disableMobile: true }}
-          />
+              value={purchaseDate ? parseLocalDate(purchaseDate) : undefined}
+              onChange={(selectedDates: Date[]) => {
+                const val = selectedDates[0];
+                if (val instanceof Date && !isNaN(val.getTime())) {
+                  setPurchaseDate(formatLocalDate(val));
+                }
+              }}
+              placeholder="Select date..."
+              className="w-full"
+              options={{ disableMobile: true }}
+            />
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -1583,19 +1630,19 @@ const parseLocalDate = (dateStr: string): Date | undefined => {
             <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
               Due Date
             </label>
-             <DatePicker
-             value={dueDate ? parseLocalDate(dueDate) : undefined}
-             onChange={(selectedDates: Date[]) => {
-               const val = selectedDates[0];
-           
-               if (val instanceof Date && !isNaN(val.getTime())) {
-                 setDueDate(formatLocalDate(val));
-               }
-             }}
-             placeholder="Select date..."
-             className="w-full"
-             options={{ disableMobile: true }}
-           />
+            <DatePicker
+              value={dueDate ? parseLocalDate(dueDate) : undefined}
+              onChange={(selectedDates: Date[]) => {
+                const val = selectedDates[0];
+
+                if (val instanceof Date && !isNaN(val.getTime())) {
+                  setDueDate(formatLocalDate(val));
+                }
+              }}
+              placeholder="Select date..."
+              className="w-full"
+              options={{ disableMobile: true }}
+            />
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -1785,7 +1832,7 @@ const parseLocalDate = (dateStr: string): Date | undefined => {
                         ₹{r.netAmount}
                       </td>
                       <td className="border border-gray-500 px-3 py-2.5 text-center">
-                       {!r.status || r.status.toLowerCase() === "pending" ? (
+                        {!r.status || r.status.toLowerCase() === "pending" ? (
                           <button
                             onClick={() => removeRow(r.id)}
                             className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400"
@@ -2968,47 +3015,47 @@ const parseLocalDate = (dateStr: string): Date | undefined => {
                       <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                         Cheque Date <span className="text-red-500">*</span>
                       </label>
-                     <DatePicker
-  value={
-    bankDetails.chequeDate
-      ? parseLocalDate(bankDetails.chequeDate)
-      : undefined
-  }
-  options={{ disableMobile: true }}
-  onChange={(selectedDates: Date[]) => {
-    updateBankDetails(
-      "chequeDate",
-      formatLocalDate(selectedDates[0] || null)
-    );
-  }}
-  placeholder="Select date..."
-  className={`w-full ${
-    bankDetailsTouched && !bankDetails.chequeDate.trim()
-      ? "border-red-500"
-      : ""
-  }`}
-/>
+                      <DatePicker
+                        value={
+                          bankDetails.chequeDate
+                            ? parseLocalDate(bankDetails.chequeDate)
+                            : undefined
+                        }
+                        options={{ disableMobile: true }}
+                        onChange={(selectedDates: Date[]) => {
+                          updateBankDetails(
+                            "chequeDate",
+                            formatLocalDate(selectedDates[0] || null),
+                          );
+                        }}
+                        placeholder="Select date..."
+                        className={`w-full ${
+                          bankDetailsTouched && !bankDetails.chequeDate.trim()
+                            ? "border-red-500"
+                            : ""
+                        }`}
+                      />
                     </div>
                     <div className="sm:col-span-2">
                       <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                         Clear Date
                       </label>
-                  <DatePicker
-  value={
-    bankDetails.clearDate
-      ? parseLocalDate(bankDetails.clearDate)
-      : undefined
-  }
-  options={{ disableMobile: true }}
-  onChange={(selectedDates: Date[]) => {
-    updateBankDetails(
-      "clearDate",
-      formatLocalDate(selectedDates[0] || null)
-    );
-  }}
-  placeholder="Select date..."
-  className="w-full"
-/>
+                      <DatePicker
+                        value={
+                          bankDetails.clearDate
+                            ? parseLocalDate(bankDetails.clearDate)
+                            : undefined
+                        }
+                        options={{ disableMobile: true }}
+                        onChange={(selectedDates: Date[]) => {
+                          updateBankDetails(
+                            "clearDate",
+                            formatLocalDate(selectedDates[0] || null),
+                          );
+                        }}
+                        placeholder="Select date..."
+                        className="w-full"
+                      />
                     </div>
                   </div>
                 )}

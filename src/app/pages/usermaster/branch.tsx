@@ -116,71 +116,121 @@ const branchTypeOptions = [
   { label: "Both", value: "Both" },
 ];
 
+
+const isDark = () => {
+  if (typeof document === "undefined") return false;
+  return document.documentElement.classList.contains("dark");
+};
+
+
 const customSelectStyles = {
   control: (provided: any, state: any) => ({
     ...provided,
     backgroundColor: "transparent",
     borderColor: state.isFocused
       ? "var(--color-primary-600)"
-      : "var(--color-gray-700)",
+      : isDark() 
+        ? "var(--color-dark-500)"  // Dark mode
+        : "var(--color-gray-300)", 
     boxShadow: state.isFocused ? "0 0 0 1px var(--color-primary-600)" : "none",
     minHeight: "42px",
     "&:hover": {
       borderColor: "var(--color-primary-500)",
     },
   }),
+  
   valueContainer: (provided: any) => ({
     ...provided,
-    color: "var(--color-dark-100)",
+    color: isDark() ? "var(--color-dark-100)" : "var(--color-gray-800)",
   }),
+  
   singleValue: (provided: any) => ({
     ...provided,
-    color: "var(--color-dark-100)",
+    color: isDark() ? "var(--color-dark-100)" : "var(--color-gray-800)",
   }),
+  
   input: (provided: any) => ({
     ...provided,
-    color: "var(--color-dark-100)",
+    color: isDark() ? "var(--color-dark-100)" : "var(--color-gray-800)",
   }),
+  
   placeholder: (provided: any) => ({
     ...provided,
     color: "var(--color-gray-400)",
   }),
+  
   menu: (provided: any) => ({
     ...provided,
-    backgroundColor: "var(--color-dark-700)",
-    border: "1px solid var(--color-primary-600)",
+    backgroundColor: isDark() ? "var(--color-dark-700)" : "#ffffff",
+    border: isDark() 
+      ? "1px solid var(--color-primary-600)" 
+      : "1px solid var(--color-gray-300)",
     borderRadius: "12px",
     overflow: "hidden",
   }),
+  
   menuList: (provided: any) => ({
     ...provided,
     padding: 0,
+    // Custom scrollbar styles
+    "::-webkit-scrollbar": {
+      width: "6px",
+    },
+    "::-webkit-scrollbar-track": {
+      background: isDark() ? "var(--color-dark-600)" : "#f3f4f6",
+    },
+    "::-webkit-scrollbar-thumb": {
+      background: isDark() ? "var(--color-primary-600)" : "#d1d5db",
+      borderRadius: "10px",
+    },
+    "::-webkit-scrollbar-thumb:hover": {
+      background: isDark() ? "var(--color-primary-500)" : "#9ca3af",
+    },
+    scrollbarWidth: "thin",
+    scrollbarColor: isDark() 
+      ? "var(--color-primary-600) var(--color-dark-600)" 
+      : "#d1d5db #f3f4f6",
   }),
+  
   option: (provided: any, state: any) => ({
     ...provided,
     backgroundColor: state.isSelected
       ? "var(--color-primary-600)"
       : state.isFocused
-        ? "var(--color-primary-500)"
-        : "var(--color-dark-700)",
-    color: "#fff",
+        ? isDark()
+          ? "var(--color-primary-500)"
+          : "var(--color-gray-100)"
+        : isDark()
+          ? "var(--color-dark-700)"
+          : "#ffffff",
+    color: state.isSelected
+      ? "#ffffff"
+      : isDark()
+        ? "#ffffff"
+        : "var(--color-gray-800)",
     cursor: "pointer",
   }),
+  
   dropdownIndicator: (provided: any, state: any) => ({
     ...provided,
     color: state.isFocused
       ? "var(--color-primary-600)"
-      : "var(--color-gray-400)",
+      : isDark() 
+        ? "var(--color-gray-400)" 
+        : "var(--color-gray-500)",
   }),
+  
   clearIndicator: (provided: any) => ({
     ...provided,
-    color: "var(--color-gray-400)",
+    color: isDark() 
+      ? "var(--color-gray-400)" 
+      : "var(--color-gray-500)",
   }),
+  
   indicatorSeparator: () => ({
     display: "none",
   }),
 };
-
 const CreateBranch = () => {
   // const navigate = useNavigate();
   const [showDrawer, setShowDrawer] = useState(false);
@@ -854,9 +904,7 @@ const CreateBranch = () => {
                         )}
                       </div>
                     </Td>
-                    <Td className="py-4 font-mono text-sm font-medium text-gray-900 dark:text-gray-400">
-                      {item.branchCode}
-                    </Td>
+                   
                     <Td className="py-4 font-mono text-sm font-medium text-gray-900 dark:text-gray-400">
                       {item.branchCode}
                     </Td>

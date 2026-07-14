@@ -170,18 +170,24 @@
 }
 
 .react-select__single-value {
+  color: var(--color-gray-800) !important;
+}
+
+.dark .react-select__single-value {
   color: var(--color-dark-100) !important;
 }
 
 .react-select__input-container {
+  color: var(--color-gray-800) !important;
+}
+
+.dark .react-select__input-container {
   color: var(--color-dark-100) !important;
 }
 
 .react-select__placeholder {
   color: var(--color-gray-400) !important;
 }
-
-
 
 
 /* Custom Scrollbar Styles */

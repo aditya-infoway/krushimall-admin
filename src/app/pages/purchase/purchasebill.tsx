@@ -189,6 +189,11 @@ const emptyAccount: NewAccountData = {
   drCr: "",
 };
 
+const isDark = () => {
+  if (typeof document === "undefined") return false;
+  return document.documentElement.classList.contains("dark");
+};
+
 // ─── react-select custom styles ──────────────────────────────────────────
 const customSelectStyles = {
   control: (provided: any, state: any) => ({
@@ -196,65 +201,104 @@ const customSelectStyles = {
     backgroundColor: "transparent",
     borderColor: state.isFocused
       ? "var(--color-primary-600)"
-      : "var(--color-gray-300)",
+      : isDark()
+        ? "var(--color-dark-400)"
+        : "var(--color-gray-300)",
     boxShadow: state.isFocused ? "0 0 0 1px var(--color-primary-600)" : "none",
     minHeight: "42px",
     "&:hover": {
       borderColor: "var(--color-primary-500)",
     },
   }),
+
   valueContainer: (provided: any) => ({
     ...provided,
     color: "var(--color-dark-100)",
   }),
+
   singleValue: (provided: any) => ({
     ...provided,
     color: "var(--color-dark-100)",
   }),
+
   input: (provided: any) => ({
     ...provided,
     color: "var(--color-gray-100)",
   }),
+
   placeholder: (provided: any) => ({
     ...provided,
     color: "var(--color-gray-400)",
   }),
+
   menu: (provided: any) => ({
     ...provided,
-    backgroundColor: "var(--color-dark-700)",
-    border: "1px solid var(--color-primary-600)",
+    backgroundColor: isDark() ? "var(--color-dark-700)" : "#ffffff",
+    border: isDark()
+      ? "1px solid var(--color-primary-600)"
+      : "1px solid var(--color-gray-300)",
     borderRadius: "12px",
     overflow: "hidden",
   }),
+
   menuList: (provided: any) => ({
     ...provided,
     padding: 0,
+    // Custom scrollbar
+    "::-webkit-scrollbar": {
+      width: "6px",
+    },
+    "::-webkit-scrollbar-track": {
+      background: isDark() ? "var(--color-dark-600)" : "#f3f4f6",
+    },
+    "::-webkit-scrollbar-thumb": {
+      background: isDark() ? "var(--color-primary-600)" : "#d1d5db",
+      borderRadius: "10px",
+    },
+    "::-webkit-scrollbar-thumb:hover": {
+      background: isDark() ? "var(--color-primary-500)" : "#9ca3af",
+    },
+    scrollbarWidth: "thin",
+    scrollbarColor: isDark()
+      ? "var(--color-primary-600) var(--color-dark-600)"
+      : "#d1d5db #f3f4f6",
   }),
+
   option: (provided: any, state: any) => ({
     ...provided,
     backgroundColor: state.isSelected
       ? "var(--color-primary-600)"
       : state.isFocused
-        ? "var(--color-primary-500)"
-        : "var(--color-dark-700)",
-    color: "#fff",
+        ? isDark()
+          ? "var(--color-primary-500)"
+          : "var(--color-gray-100)"
+        : isDark()
+          ? "var(--color-dark-700)"
+          : "#ffffff",
+    color: state.isSelected
+      ? "#ffffff"
+      : isDark()
+        ? "#ffffff"
+        : "var(--color-gray-800)",
     cursor: "pointer",
   }),
+
   dropdownIndicator: (provided: any, state: any) => ({
     ...provided,
     color: state.isFocused
       ? "var(--color-primary-600)"
       : "var(--color-gray-400)",
   }),
+
   clearIndicator: (provided: any) => ({
     ...provided,
     color: "var(--color-gray-400)",
   }),
+
   indicatorSeparator: () => ({
     display: "none",
   }),
 };
-
 const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
   onBack,
   // onSaved,
@@ -302,13 +346,9 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
     useState<BankDetailsData>(emptyBankDetails);
   const [bankDetailsTouched, setBankDetailsTouched] = useState(false);
   const [vehicleOptions, setVehicleOptions] = useState<VehicleOption[]>([]);
- const companyId = Number(
-  sessionStorage.getItem("companyId"),
-);
+  const companyId = Number(sessionStorage.getItem("companyId"));
 
-const financialYearId = Number(
-  sessionStorage.getItem("financialYearId"),
-);
+  const financialYearId = Number(sessionStorage.getItem("financialYearId"));
   const updateBankDetails = (key: keyof BankDetailsData, value: string) =>
     setBankDetails((b) => ({ ...b, [key]: value }));
   const [accountErrors, setAccountErrors] = useState<
@@ -316,15 +356,15 @@ const financialYearId = Number(
   >({});
   const selectedGroup = accountForm.group;
   const isCreditorGroup =
-  accountForm.group === "Sundry Creditors" ||
-   accountForm.group === "Sundry Creditor (Internal)";
+    accountForm.group === "Sundry Creditors" ||
+    accountForm.group === "Sundry Creditor (Internal)";
   const groupOptions = [
     { label: "Supplier", value: "Supplier" },
     { label: "Sundry Creditors", value: "Sundry Creditors" },
     {
-    label: "Sundry Creditor (Internal)",
-    value: "Sundry Creditor (Internal)",
-  },
+      label: "Sundry Creditor (Internal)",
+      value: "Sundry Creditor (Internal)",
+    },
   ];
 
   const drCrOptions = [
@@ -333,33 +373,30 @@ const financialYearId = Number(
   ];
   const [company, setCompany] = useState<any>(null);
 
-const getCompany = async () => {
-  try {
-    const res = await apiHelper.get("/company");
+  const getCompany = async () => {
+    try {
+      const res = await apiHelper.get("/company");
 
-    const companies = Array.isArray(res.data?.data)
-      ? res.data.data
-      : Array.isArray(res.data)
-        ? res.data
-        : [];
+      const companies = Array.isArray(res.data?.data)
+        ? res.data.data
+        : Array.isArray(res.data)
+          ? res.data
+          : [];
 
-    const selectedCompany = companies.find(
-      (item: any) =>
-        Number(item.id) === Number(companyId),
-    );
-
-    if (!selectedCompany) {
-      toast.error(
-        "Selected company was not found",
+      const selectedCompany = companies.find(
+        (item: any) => Number(item.id) === Number(companyId),
       );
-      return;
-    }
 
-    setCompany(selectedCompany);
-  } catch (error) {
-    console.error(error);
-  }
-};
+      if (!selectedCompany) {
+        toast.error("Selected company was not found");
+        return;
+      }
+
+      setCompany(selectedCompany);
+    } catch (error) {
+      console.error(error);
+    }
+  };
   const getTractors = async () => {
     try {
       const res = await apiHelper.get("/tractors");
@@ -717,15 +754,15 @@ const getCompany = async () => {
       case "group":
         return !accountForm.group ? "Group is required" : "";
 
-   case "openingBalance":
-  return isCreditorGroup && !accountForm.openingBalance.trim()
-    ? "Opening Balance is required"
-    : "";
+      case "openingBalance":
+        return isCreditorGroup && !accountForm.openingBalance.trim()
+          ? "Opening Balance is required"
+          : "";
 
-case "drCr":
-  return isCreditorGroup && !accountForm.drCr
-    ? "Dr / Cr is required"
-    : "";
+      case "drCr":
+        return isCreditorGroup && !accountForm.drCr
+          ? "Dr / Cr is required"
+          : "";
       case "mobile":
         if (!accountForm.mobile.trim()) return "Mobile is required";
         if (!/^[0-9]{10}$/.test(accountForm.mobile))
@@ -786,7 +823,7 @@ case "drCr":
 
   const handleCreateAccount = async () => {
     try {
-          console.log("1️⃣ Selected Group:", accountForm.group);
+      console.log("1️⃣ Selected Group:", accountForm.group);
       const required: (keyof NewAccountData)[] = [
         "accountName",
         "mobile",
@@ -802,15 +839,15 @@ case "drCr":
 
       const missing = required.filter((k) => !String(accountForm[k]).trim());
 
-     if (isCreditorGroup) {
-  if (!accountForm.openingBalance.trim()) {
-    missing.push("openingBalance");
-  }
+      if (isCreditorGroup) {
+        if (!accountForm.openingBalance.trim()) {
+          missing.push("openingBalance");
+        }
 
-  if (!accountForm.drCr.trim()) {
-    missing.push("drCr");
-  }
-}
+        if (!accountForm.drCr.trim()) {
+          missing.push("drCr");
+        }
+      }
 
       setAccountTouched(true);
 
@@ -830,18 +867,18 @@ case "drCr":
         panCard: accountForm.panCard,
         aadharNo: accountForm.aadharCard,
         group: accountForm.group,
-       openingBalance: isCreditorGroup
-    ? Number(accountForm.openingBalance)
-    : 0,
+        openingBalance: isCreditorGroup
+          ? Number(accountForm.openingBalance)
+          : 0,
 
-  drCr:
-    accountForm.group === "Supplier"
-      ? "Cr"
-      : isCreditorGroup
-        ? accountForm.drCr
-        : null,
+        drCr:
+          accountForm.group === "Supplier"
+            ? "Cr"
+            : isCreditorGroup
+              ? accountForm.drCr
+              : null,
       });
-console.log("2️⃣ Created Account Response:", res.data);
+      console.log("2️⃣ Created Account Response:", res.data);
       const account = res.data;
 
       if (!account?.id) {
@@ -855,8 +892,8 @@ console.log("2️⃣ Created Account Response:", res.data);
         mobile: Number(accountForm.mobile),
         stateCode: accountForm.stateCode,
         openingBalance: isCreditorGroup
-    ? Number(accountForm.openingBalance)
-    : 0,
+          ? Number(accountForm.openingBalance)
+          : 0,
       };
 
       setParties((prev) => [...prev, newParty]);
@@ -871,40 +908,40 @@ console.log("2️⃣ Created Account Response:", res.data);
     }
   };
 
- const getParties = async () => {
-  try {
-    const res = await apiHelper.get("/accounts");
+  const getParties = async () => {
+    try {
+      const res = await apiHelper.get("/accounts");
 
-    const accounts = Array.isArray(res.data?.data)
-      ? res.data.data
-      : Array.isArray(res.data)
-        ? res.data
-        : [];
- console.log("3️⃣ All Accounts:", accounts);
-    const list = accounts
-      .filter(
-        (acc: any) =>
-          acc.group === "Supplier" ||
-          acc.group === "Sundry Creditors" ||
+      const accounts = Array.isArray(res.data?.data)
+        ? res.data.data
+        : Array.isArray(res.data)
+          ? res.data
+          : [];
+      console.log("3️⃣ All Accounts:", accounts);
+      const list = accounts
+        .filter(
+          (acc: any) =>
+            acc.group === "Supplier" ||
+            acc.group === "Sundry Creditors" ||
             acc.group === "Sundry Creditor (Internal)",
-      )
-      .map((acc: any) => ({
-        id: String(acc.id),
-        name: acc.accountName,
-        mobile: acc.mobile,
-        stateCode: acc.stateCode,
-        openingBalance: Number(acc.openingBalance) || 0,
-      }));
+        )
+        .map((acc: any) => ({
+          id: String(acc.id),
+          name: acc.accountName,
+          mobile: acc.mobile,
+          stateCode: acc.stateCode,
+          openingBalance: Number(acc.openingBalance) || 0,
+        }));
 
-    setParties(list);
+      setParties(list);
 
-    return list;
-  } catch (error) {
-    console.error("Failed to fetch parties:", error);
-    setParties([]);
-    return [];
-  }
-};
+      return list;
+    } catch (error) {
+      console.error("Failed to fetch parties:", error);
+      setParties([]);
+      return [];
+    }
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -997,31 +1034,29 @@ console.log("2️⃣ Created Account Response:", res.data);
   };
 
   const handleSave = async () => {
-      if (!companyId || !financialYearId) {
-    toast.error(
-      "Company or financial year is not selected",
-    );
-    return;
-  }
-  if (!partyId) {
-  toast.error("Please select Party Name");
-  return;
-}
+    if (!companyId || !financialYearId) {
+      toast.error("Company or financial year is not selected");
+      return;
+    }
+    if (!partyId) {
+      toast.error("Please select Party Name");
+      return;
+    }
 
-if (rows.length === 0) {
-  toast.error("Please add at least one tractor");
-  return;
-}
+    if (rows.length === 0) {
+      toast.error("Please add at least one tractor");
+      return;
+    }
 
-if (terms === "Cash" && !cashAccount) {
-  toast.error("Please select Cash Account");
-  return;
-}
+    if (terms === "Cash" && !cashAccount) {
+      toast.error("Please select Cash Account");
+      return;
+    }
 
-if (terms === "Bank" && !bankAccount) {
-  toast.error("Please select Bank Account");
-  return;
-}
+    if (terms === "Bank" && !bankAccount) {
+      toast.error("Please select Bank Account");
+      return;
+    }
     try {
       const payload = {
         companyId,
@@ -1112,10 +1147,10 @@ if (terms === "Bank" && !bankAccount) {
           </h1>
           <button
             onClick={handleBack}
-            className="bg-primary-500 hover:bg-primary-600 inline-flex w-full items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold text-white transition-colors sm:w-auto sm:px-5"
+            className="bg-primary-500 hover:bg-primary-600 flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white transition-colors sm:w-auto sm:px-5"
           >
-            <ArrowLeftIcon className="mr-1.5 size-4" />
-            Back
+            <ArrowLeftIcon className="h-4 w-4" />
+            <span>Back</span>
           </button>
         </div>
 
@@ -1294,9 +1329,9 @@ if (terms === "Bank" && !bankAccount) {
               </div>
               <button
                 onClick={() => setAccountModalOpen(true)}
-                className="flex h-9.5 w-9.5 shrink-0 items-center justify-center rounded-lg border border-gray-300 text-xl text-blue-600 hover:bg-gray-50 dark:border-gray-600 dark:text-blue-400 dark:hover:bg-gray-700"
+                className="flex h-9.5 w-9.5 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-gray-300 text-xl text-blue-600 hover:bg-gray-50 dark:border-gray-600 dark:text-blue-400 dark:hover:bg-gray-700"
               >
-                +
+                <PlusIcon className="h-5 w-5" />
               </button>
             </div>
           </div>
@@ -1660,7 +1695,6 @@ if (terms === "Bank" && !bankAccount) {
           </div>
         </div>
 
-        {/* Charges and summary */}
         {/* Charges and summary */}
         <div className="grid grid-cols-1 gap-4 px-3 pb-4 sm:px-4 sm:pb-6 md:px-6 lg:grid-cols-5">
           {/* Charges Section - takes 3 columns */}
@@ -2168,8 +2202,7 @@ if (terms === "Bank" && !bankAccount) {
                     )}
                   </div>
 
-                 {isCreditorGroup && (
-
+                  {isCreditorGroup && (
                     <>
                       <div>
                         <label className="mb-1 block text-xs font-medium">

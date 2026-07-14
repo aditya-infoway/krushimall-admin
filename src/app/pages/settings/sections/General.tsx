@@ -27,9 +27,7 @@ export default function General() {
   const [prefixes, setPrefixes] = useState<any[]>([]);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [savingTerms, setSavingTerms] = useState(false);
-  const [termsValue, setTermsValue] = useState(
-  new Delta(),
-);
+  const [termsValue, setTermsValue] = useState(new Delta());
   const [newPrefix, setNewPrefix] = useState({
     prefixFor: "",
     prefix: "",
@@ -48,36 +46,36 @@ export default function General() {
     label: city.name,
   }));
   const prefixForOptions = [
-  { value: "CUSTOMER", label: "CUSTOMER" },
-  { value: "CASH_RECEIPT", label: "CASH_RECEIPT" },
-  { value: "VEHICLE_STOCK_TRANSFER", label: "VEHICLE_STOCK_TRANSFER" },
-  { value: "BANK_RECEIPT", label: "BANK_RECEIPT" },
-   { value: "CONTRA", label: "CONTRA" },
-  { value: "ACCESSORIES_PURCHASE", label: "ACCESSORIES_PURCHASE" },
-   { value: "BANK_PAYMENT", label: "BANK_PAYMENT" },
-  { value: "CASH_PAYMENT", label: "CASH_PAYMENT" },
-  { value: "PURCHASE", label: "PURCHASE" },
-  { value: "VEHICLE", label: "VEHICLE" },
-  { value: "QUOTATION", label: "QUOTATION" },
-  { value: "LEAD", label: "LEAD" },
-  { value: "JOBCARD", label: "JOB CARD" },
-  { value: "INVOICE", label: "INVOICE" },
-];
-// const prefixForOptions = [
-//   "CUSTOMER",
-//   "PURCHASE",
-//   "VEHICLE",
-//   "QUOTATION",
-//   "LEAD",
-//   "JOBCARD",
-//   "INVOICE",
-// ].map((item) => ({
-//   value: item,
-//   label: item,
-//   isDisabled: prefixes.some(
-//     (p) => p.prefixFor === item && p.id !== editingId
-//   ),
-// }));
+    { value: "CUSTOMER", label: "CUSTOMER" },
+    { value: "CASH_RECEIPT", label: "CASH_RECEIPT" },
+    { value: "VEHICLE_STOCK_TRANSFER", label: "VEHICLE_STOCK_TRANSFER" },
+    { value: "BANK_RECEIPT", label: "BANK_RECEIPT" },
+    { value: "CONTRA", label: "CONTRA" },
+    { value: "ACCESSORIES_PURCHASE", label: "ACCESSORIES_PURCHASE" },
+    { value: "BANK_PAYMENT", label: "BANK_PAYMENT" },
+    { value: "CASH_PAYMENT", label: "CASH_PAYMENT" },
+    { value: "PURCHASE", label: "PURCHASE" },
+    { value: "VEHICLE", label: "VEHICLE" },
+    { value: "QUOTATION", label: "QUOTATION" },
+    { value: "LEAD", label: "LEAD" },
+    { value: "JOBCARD", label: "JOB CARD" },
+    { value: "INVOICE", label: "INVOICE" },
+  ];
+  // const prefixForOptions = [
+  //   "CUSTOMER",
+  //   "PURCHASE",
+  //   "VEHICLE",
+  //   "QUOTATION",
+  //   "LEAD",
+  //   "JOBCARD",
+  //   "INVOICE",
+  // ].map((item) => ({
+  //   value: item,
+  //   label: item,
+  //   isDisabled: prefixes.some(
+  //     (p) => p.prefixFor === item && p.id !== editingId
+  //   ),
+  // }));
   useEffect(() => {
     fetchCompany();
     fetchPrefixes();
@@ -91,81 +89,54 @@ export default function General() {
       console.error(error);
     }
   };
-const fetchCompany = async () => {
-  try {
-    const response = await axios.get(
-      "/company",
-    );
+  const fetchCompany = async () => {
+    try {
+      const response = await axios.get("/company");
 
-    const data =
-      response.data.data[0];
+      const data = response.data.data[0];
 
-    console.log(
-      "Company:",
-      data,
-    );
+      console.log("Company:", data);
 
-    console.log(
-      "Saved quotation terms:",
-      data?.quotationTerms,
-    );
+      console.log("Saved quotation terms:", data?.quotationTerms);
 
-    setCompany(data);
+      setCompany(data);
 
-    setCountry(data.country || "");
-    setState(data.state || "");
-    setCity(data.city || "");
-    setDistrict(
-      data.district || "",
-    );
-    setStateCode(
-      data.stateCode || "",
-    );
-  } catch (error) {
-    console.error(error);
-  }
-};
+      setCountry(data.country || "");
+      setState(data.state || "");
+      setCity(data.city || "");
+      setDistrict(data.district || "");
+      setStateCode(data.stateCode || "");
+    } catch (error) {
+      console.error(error);
+    }
+  };
   const handleSaveTerms = async () => {
-  try {
-    if (!company?.id) return;
+    try {
+      if (!company?.id) return;
 
-    setSavingTerms(true);
+      setSavingTerms(true);
 
-    const formData = new FormData();
+      const formData = new FormData();
 
-    formData.append(
-      "quotationTerms",
-      company?.quotationTerms || "",
-    );
+      formData.append("quotationTerms", company?.quotationTerms || "");
 
-    await axios.put(
-      `/company/${company.id}`,
-      formData,
-      {
+      await axios.put(`/company/${company.id}`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
-      },
-    );
+      });
 
-    await fetchCompany();
+      await fetchCompany();
 
-    alert(
-      "Quotation terms saved successfully",
-    );
-  } catch (error) {
-    console.error(
-      "Save quotation terms error:",
-      error,
-    );
+      alert("Quotation terms saved successfully");
+    } catch (error) {
+      console.error("Save quotation terms error:", error);
 
-    alert(
-      "Failed to save quotation terms",
-    );
-  } finally {
-    setSavingTerms(false);
-  }
-};
+      alert("Failed to save quotation terms");
+    } finally {
+      setSavingTerms(false);
+    }
+  };
   const handleSavePrefix = async () => {
     try {
       if (editingId) {
@@ -194,15 +165,7 @@ const fetchCompany = async () => {
       prefix: item.prefix,
     });
   };
-  // const handleDeletePrefix = async (id: number) => {
-  //   try {
-  //     await axios.delete(`/profile-prefix/${id}`);
 
-  //     fetchPrefixes();
-  //   } catch (error) {
-  //     console.error(error);
-  //   }
-  // };
   const handleSave = async () => {
     try {
       const formData = new FormData();
@@ -233,33 +196,54 @@ const fetchCompany = async () => {
       console.error(error);
     }
   };
+
+  const isDark = () =>
+    typeof document !== "undefined" &&
+    document.documentElement.classList.contains("dark");
+
   const customSelectStyles = {
     control: (provided: any, state: any) => ({
       ...provided,
       backgroundColor: "transparent",
-
       borderColor: state.isFocused
         ? "var(--color-primary-600)"
-        : "var(--color-dark-450)",
-
-      boxShadow: "none",
+        : isDark()
+          ? "var(--color-dark-450)"
+          : "var(--color-gray-300)",
+      boxShadow: state.isFocused
+        ? "0 0 0 1px var(--color-primary-600)"
+        : "none",
       minHeight: "42px",
-
+      opacity: 1,
       "&:hover": {
         borderColor: state.isFocused
           ? "var(--color-primary-600)"
-          : "var(--color-dark-400)",
+          : isDark()
+            ? "var(--color-dark-400)"
+            : "var(--color-gray-400)",
       },
     }),
 
-    singleValue: (provided: any) => ({
+    valueContainer: (provided: any) => ({
       ...provided,
-      color: "var(--color-dark-100)",
+      color: isDark() ? "var(--color-dark-100)" : "var(--color-gray-800)",
+    }),
+
+    singleValue: (provided: any, state: any) => ({
+      ...provided,
+      color: state.isDisabled
+        ? isDark()
+          ? "var(--color-dark-100)"
+          : "var(--color-gray-800)"
+        : isDark()
+          ? "var(--color-dark-100)"
+          : "var(--color-gray-800)",
+      opacity: 1,
     }),
 
     input: (provided: any) => ({
       ...provided,
-      color: "var(--color-dark-100)",
+      color: isDark() ? "var(--color-dark-100)" : "var(--color-gray-800)",
     }),
 
     placeholder: (provided: any) => ({
@@ -269,9 +253,35 @@ const fetchCompany = async () => {
 
     menu: (provided: any) => ({
       ...provided,
-      backgroundColor: "var(--color-dark-700)",
-      border: "1px solid var(--color-dark-450)",
+      backgroundColor: isDark() ? "var(--color-dark-700)" : "#ffffff",
+      border: isDark()
+        ? "1px solid var(--color-dark-450)"
+        : "1px solid var(--color-gray-300)",
       borderRadius: "0.75rem",
+      overflow: "hidden",
+    }),
+
+    menuList: (provided: any) => ({
+      ...provided,
+      padding: 0,
+      // Custom scrollbar styles
+      "::-webkit-scrollbar": {
+        width: "6px",
+      },
+      "::-webkit-scrollbar-track": {
+        background: isDark() ? "var(--color-dark-600)" : "#f3f4f6",
+      },
+      "::-webkit-scrollbar-thumb": {
+        background: isDark() ? "var(--color-primary-600)" : "#d1d5db",
+        borderRadius: "10px",
+      },
+      "::-webkit-scrollbar-thumb:hover": {
+        background: isDark() ? "var(--color-primary-500)" : "#9ca3af",
+      },
+      scrollbarWidth: "thin",
+      scrollbarColor: isDark()
+        ? "var(--color-primary-600) var(--color-dark-600)"
+        : "#d1d5db #f3f4f6",
     }),
 
     option: (provided: any, state: any) => ({
@@ -279,14 +289,28 @@ const fetchCompany = async () => {
       backgroundColor: state.isSelected
         ? "var(--color-primary-600)"
         : state.isFocused
-          ? "var(--color-dark-600)"
-          : "var(--color-dark-700)",
-      color: "#fff",
+          ? isDark()
+            ? "var(--color-dark-600)"
+            : "var(--color-gray-100)"
+          : isDark()
+            ? "var(--color-dark-700)"
+            : "#ffffff",
+      color: state.isSelected
+        ? "#ffffff"
+        : isDark()
+          ? "#ffffff"
+          : "var(--color-gray-800)",
+      cursor: "pointer",
     }),
 
     dropdownIndicator: (provided: any) => ({
       ...provided,
-      color: "var(--color-gray-400)",
+      color: isDark() ? "var(--color-gray-400)" : "var(--color-gray-500)",
+    }),
+
+    clearIndicator: (provided: any) => ({
+      ...provided,
+      color: isDark() ? "var(--color-gray-400)" : "var(--color-gray-500)",
     }),
 
     indicatorSeparator: () => ({
@@ -391,20 +415,20 @@ const fetchCompany = async () => {
           className="rounded-xl"
           prefix={<PhoneIcon className="size-4.5" />}
         />
-<Input
-  label="Email"
-  type="email"
-  value={company?.email || ""}
-  readOnly={!isEditing}
-  onChange={(e) =>
-    setCompany({
-      ...company,
-      email: e.target.value,
-    })
-  }
-  className="rounded-xl"
-  prefix={<EnvelopeIcon className="size-4.5" />}
-/>
+        <Input
+          label="Email"
+          type="email"
+          value={company?.email || ""}
+          readOnly={!isEditing}
+          onChange={(e) =>
+            setCompany({
+              ...company,
+              email: e.target.value,
+            })
+          }
+          className="rounded-xl"
+          prefix={<EnvelopeIcon className="size-4.5" />}
+        />
         <Input
           label="GST Number"
           value={company?.gstNumber || ""}
@@ -433,45 +457,78 @@ const fetchCompany = async () => {
 
         <div>
           <label className="mb-1 inline-block">Country</label>
-          <Select
-            isDisabled={!isEditing}
-            classNamePrefix="react-select"
-            options={countryOptions}
-            styles={customSelectStyles}
-            value={countryOptions.find((c) => c.value === company?.country)}
-            onChange={(selected: any) => {
-              setCountry(selected?.value || "");
-
-              setCompany({
-                ...company,
-                country: selected?.value || "",
-                state: "",
-                district: "",
-                city: "",
-              });
-            }}
-          />
+          {isEditing ? (
+            <Select
+              classNamePrefix="react-select"
+              options={countryOptions}
+              styles={customSelectStyles}
+              value={countryOptions.find((c) => c.value === company?.country)}
+              onChange={(selected: any) => {
+                setCountry(selected?.value || "");
+                setCompany({
+                  ...company,
+                  country: selected?.value || "",
+                  state: "",
+                  district: "",
+                  city: "",
+                });
+              }}
+            />
+          ) : (
+            <div
+              className="flex h-[42px] items-center rounded-xl px-3"
+              style={{
+                border: isDark()
+                  ? "1px solid var(--color-dark-500)"
+                  : "1px solid var(--color-gray-300)",
+                backgroundColor: "transparent",
+                color: isDark()
+                  ? "var(--color-dark-100)"
+                  : "var(--color-gray-800)",
+              }}
+            >
+              {countryOptions.find((c) => c.value === company?.country)
+                ?.label || "-"}
+            </div>
+          )}
         </div>
 
         <div>
           <label className="mb-1 inline-block">State</label>
-          <Select
-            isDisabled={!isEditing}
-            classNamePrefix="react-select"
-            options={stateOptions}
-            styles={customSelectStyles}
-            value={stateOptions.find((s) => s.value === company?.state)}
-            onChange={(selected: any) => {
-              setState(selected?.value || "");
-              setStateCode(selected?.state?.isoCode || "");
+          {isEditing ? (
+            <Select
+              classNamePrefix="react-select"
+              options={stateOptions}
+              styles={customSelectStyles}
+              value={stateOptions.find((s) => s.value === company?.state)}
+              onChange={(selected: any) => {
+                setState(selected?.value || "");
+                setStateCode(selected?.state?.isoCode || "");
 
-              setCompany({
-                ...company,
-                state: selected?.value || "",
-                stateCode: selected?.state?.isoCode || "",
-              });
-            }}
-          />
+                setCompany({
+                  ...company,
+                  state: selected?.value || "",
+                  stateCode: selected?.state?.isoCode || "",
+                });
+              }}
+            />
+          ) : (
+            <div
+              className="flex h-[42px] items-center rounded-xl px-3"
+              style={{
+                border: isDark()
+                  ? "1px solid var(--color-dark-500)"
+                  : "1px solid var(--color-gray-300)",
+                backgroundColor: "transparent",
+                color: isDark()
+                  ? "var(--color-dark-100)"
+                  : "var(--color-gray-800)",
+              }}
+            >
+              {stateOptions.find((s) => s.value === company?.state)?.label ||
+                "-"}
+            </div>
+          )}
         </div>
 
         <Input
@@ -483,40 +540,73 @@ const fetchCompany = async () => {
 
         <div>
           <label className="mb-1 inline-block">District</label>
-          <Select
-            isDisabled={!isEditing}
-            classNamePrefix="react-select"
-            options={cityOptions}
-            styles={customSelectStyles}
-            value={cityOptions.find((d) => d.value === company?.district)}
-            onChange={(selected: any) => {
-              setDistrict(selected?.value || "");
+          {isEditing ? (
+            <Select
+              classNamePrefix="react-select"
+              options={cityOptions}
+              styles={customSelectStyles}
+              value={cityOptions.find((d) => d.value === company?.district)}
+              onChange={(selected: any) => {
+                setDistrict(selected?.value || "");
 
-              setCompany({
-                ...company,
-                district: selected?.value || "",
-              });
-            }}
-          />
+                setCompany({
+                  ...company,
+                  district: selected?.value || "",
+                });
+              }}
+            />
+          ) : (
+            <div
+              className="flex h-[42px] items-center rounded-xl px-3"
+              style={{
+                border: isDark()
+                  ? "1px solid var(--color-dark-500)"
+                  : "1px solid var(--color-gray-300)",
+                backgroundColor: "transparent",
+                color: isDark()
+                  ? "var(--color-dark-100)"
+                  : "var(--color-gray-800)",
+              }}
+            >
+              {cityOptions.find((d) => d.value === company?.district)?.label ||
+                "-"}
+            </div>
+          )}
         </div>
 
         <div>
           <label className="mb-1 inline-block">City</label>
-          <Select
-            isDisabled={!isEditing}
-            classNamePrefix="react-select"
-            options={cityOptions}
-            styles={customSelectStyles}
-            value={cityOptions.find((c) => c.value === company?.city)}
-            onChange={(selected: any) => {
-              setCity(selected?.value || "");
+          {isEditing ? (
+            <Select
+              classNamePrefix="react-select"
+              options={cityOptions}
+              styles={customSelectStyles}
+              value={cityOptions.find((c) => c.value === company?.city)}
+              onChange={(selected: any) => {
+                setCity(selected?.value || "");
 
-              setCompany({
-                ...company,
-                city: selected?.value || "",
-              });
-            }}
-          />
+                setCompany({
+                  ...company,
+                  city: selected?.value || "",
+                });
+              }}
+            />
+          ) : (
+            <div
+              className="flex h-[42px] items-center rounded-xl px-3"
+              style={{
+                border: isDark()
+                  ? "1px solid var(--color-dark-500)"
+                  : "1px solid var(--color-gray-300)",
+                backgroundColor: "transparent",
+                color: isDark()
+                  ? "var(--color-dark-100)"
+                  : "var(--color-gray-800)",
+              }}
+            >
+              {cityOptions.find((c) => c.value === company?.city)?.label || "-"}
+            </div>
+          )}
         </div>
         <Input
           label="Pincode"
@@ -582,22 +672,22 @@ const fetchCompany = async () => {
           }
           className="rounded-xl"
         />
-<Input
-  label="Account Number"
-  type="text"
-  inputMode="numeric"
-  value={company?.accountNumber || ""}
-  readOnly={!isEditing}
-  onChange={(e) => {
-    const value = e.target.value.replace(/\D/g, "");
+        <Input
+          label="Account Number"
+          type="text"
+          inputMode="numeric"
+          value={company?.accountNumber || ""}
+          readOnly={!isEditing}
+          onChange={(e) => {
+            const value = e.target.value.replace(/\D/g, "");
 
-    setCompany({
-      ...company,
-      accountNumber: value,
-    });
-  }}
-  className="rounded-xl"
-/>
+            setCompany({
+              ...company,
+              accountNumber: value,
+            });
+          }}
+          className="rounded-xl"
+        />
         <Input
           label="IFSC Code"
           value={company?.ifscCode || ""}
@@ -645,7 +735,7 @@ const fetchCompany = async () => {
       <div className="mt-8 flex justify-end gap-3">
         {!isEditing ? (
           <Button color="primary" onClick={() => setIsEditing(true)}>
-           <PencilSquareIcon className="size-4" />
+            <PencilSquareIcon className="size-4" />
           </Button>
         ) : (
           <>
@@ -681,26 +771,24 @@ const fetchCompany = async () => {
             placeholder="CUSTOMER"
           /> */}
           <div>
-  <label className="mb-1 inline-block">
-    Prefix For
-  </label>
+            <label className="mb-1 inline-block">Prefix For</label>
 
-  <Select
-    classNamePrefix="react-select"
-    styles={customSelectStyles}
-    options={prefixForOptions}
-    value={prefixForOptions.find(
-      (item) => item.value === newPrefix.prefixFor
-    )}
-    onChange={(selected: any) =>
-      setNewPrefix({
-        ...newPrefix,
-        prefixFor: selected?.value || "",
-      })
-    }
-    placeholder="Select Prefix"
-  />
-</div>
+            <Select
+              classNamePrefix="react-select"
+              styles={customSelectStyles}
+              options={prefixForOptions}
+              value={prefixForOptions.find(
+                (item) => item.value === newPrefix.prefixFor,
+              )}
+              onChange={(selected: any) =>
+                setNewPrefix({
+                  ...newPrefix,
+                  prefixFor: selected?.value || "",
+                })
+              }
+              placeholder="Select Prefix"
+            />
+          </div>
 
           <Input
             label="Prefix"
@@ -721,88 +809,74 @@ const fetchCompany = async () => {
           </div>
         </div>
       </div>
-    <div className="mt-6 max-h-[500px] overflow-auto rounded-lg border border-gray-700">
-  <table className="w-full border-collapse">
-    <thead className="sticky top-0 z-10 bg-white dark:bg-gray-900">
-      <tr>
-        <th className="sticky top-0 border border-gray-700 bg-white dark:bg-gray-900 p-3 text-left">
-          Prefix For
-        </th>
+      <div className="mt-6 max-h-[500px] overflow-auto rounded-lg border border-gray-700">
+        <table className="w-full border-collapse">
+          <thead className="sticky top-0 z-10 bg-white dark:bg-gray-900">
+            <tr>
+              <th className="sticky top-0 border border-gray-700 bg-white p-3 text-left dark:bg-gray-900">
+                Prefix For
+              </th>
 
-        <th className="sticky top-0 border border-gray-700 bg-white dark:bg-gray-900 p-3 text-left">
-          Prefix
-        </th>
+              <th className="sticky top-0 border border-gray-700 bg-white p-3 text-left dark:bg-gray-900">
+                Prefix
+              </th>
 
-        <th className="sticky top-0 border border-gray-700 bg-white dark:bg-gray-900 p-3 text-center">
-          Action
-        </th>
-      </tr>
-    </thead>
+              <th className="sticky top-0 border border-gray-700 bg-white p-3 text-center dark:bg-gray-900">
+                Action
+              </th>
+            </tr>
+          </thead>
 
-    <tbody>
-      {prefixes.map((item) => (
-        <tr key={item.id}>
-          <td className="border border-gray-700 p-3">
-            {item.prefixFor}
-          </td>
+          <tbody>
+            {prefixes.map((item) => (
+              <tr key={item.id}>
+                <td className="border border-gray-700 p-3">{item.prefixFor}</td>
 
-          <td className="border border-gray-700 p-3">
-            {item.prefix}
-          </td>
+                <td className="border border-gray-700 p-3">{item.prefix}</td>
 
-          <td className="border border-gray-700 p-3 text-center">
-            <Button
-              isIcon
-              color="primary"
-              onClick={() => handleEditPrefix(item)}
-              className="size-8 rounded-lg"
-            >
-              <PencilSquareIcon className="size-4" />
-            </Button>
-          </td>
-        </tr>
-      ))}
-    </tbody>
-  </table>
- 
-
+                <td className="border border-gray-700 p-3 text-center">
+                  <Button
+                    isIcon
+                    color="primary"
+                    onClick={() => handleEditPrefix(item)}
+                    className="size-8 rounded-lg"
+                  >
+                    <PencilSquareIcon className="size-4" />
+                  </Button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
-     <div className="mt-8">
-  <h3 className="mb-4 text-lg font-semibold">
-    Quotation Terms & Conditions
-  </h3>
+      <div className="mt-8">
+        <h3 className="mb-4 text-lg font-semibold">
+          Quotation Terms & Conditions
+        </h3>
 
- <TextEditor
-  value={
-    company?.quotationTerms || ""
-  }
-  onChange={(html) => {
-    console.log(
-      "Updated terms:",
-      html,
-    );
+        <TextEditor
+          value={company?.quotationTerms || ""}
+          onChange={(html) => {
+            console.log("Updated terms:", html);
 
-    setCompany((prev: any) => ({
-      ...prev,
-      quotationTerms: html,
-    }));
-  }}
-/>
+            setCompany((prev: any) => ({
+              ...prev,
+              quotationTerms: html,
+            }));
+          }}
+        />
 
-  <div className="mt-4 flex justify-end">
-    <Button
-      color="primary"
-      onClick={handleSaveTerms}
-      disabled={savingTerms}
-    >
-      {savingTerms
-        ? "Saving..."
-        : "Save Terms & Conditions"}
-    </Button>
-  </div>
-</div>
+        <div className="mt-4 flex justify-end">
+          <Button
+            color="primary"
+            onClick={handleSaveTerms}
+            disabled={savingTerms}
+          >
+            {savingTerms ? "Saving..." : "Save Terms & Conditions"}
+          </Button>
+        </div>
+      </div>
     </div>
-    
   );
 }
 {
