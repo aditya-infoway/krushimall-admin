@@ -13,6 +13,7 @@ import Select from "react-select";
 import { Country, State, City } from "country-state-city";
 import TextEditor from "@/components/shared/TextEditor";
 import Quill from "quill";
+import { toast } from "sonner";
 
 const Delta = Quill.import("delta");
 export default function General() {
@@ -27,9 +28,7 @@ export default function General() {
   const [prefixes, setPrefixes] = useState<any[]>([]);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [savingTerms, setSavingTerms] = useState(false);
-  const [termsValue, setTermsValue] = useState(
-  new Delta(),
-);
+  const [termsValue, setTermsValue] = useState(new Delta());
   const [newPrefix, setNewPrefix] = useState({
     prefixFor: "",
     prefix: "",
@@ -48,36 +47,22 @@ export default function General() {
     label: city.name,
   }));
   const prefixForOptions = [
-  { value: "CUSTOMER", label: "CUSTOMER" },
-  { value: "CASH_RECEIPT", label: "CASH_RECEIPT" },
-  { value: "VEHICLE_STOCK_TRANSFER", label: "VEHICLE_STOCK_TRANSFER" },
-  { value: "BANK_RECEIPT", label: "BANK_RECEIPT" },
-   { value: "CONTRA", label: "CONTRA" },
-  { value: "ACCESSORIES_PURCHASE", label: "ACCESSORIES_PURCHASE" },
-   { value: "BANK_PAYMENT", label: "BANK_PAYMENT" },
-  { value: "CASH_PAYMENT", label: "CASH_PAYMENT" },
-  { value: "PURCHASE", label: "PURCHASE" },
-  { value: "VEHICLE", label: "VEHICLE" },
-  { value: "QUOTATION", label: "QUOTATION" },
-  { value: "LEAD", label: "LEAD" },
-  { value: "JOBCARD", label: "JOB CARD" },
-  { value: "INVOICE", label: "INVOICE" },
-];
-// const prefixForOptions = [
-//   "CUSTOMER",
-//   "PURCHASE",
-//   "VEHICLE",
-//   "QUOTATION",
-//   "LEAD",
-//   "JOBCARD",
-//   "INVOICE",
-// ].map((item) => ({
-//   value: item,
-//   label: item,
-//   isDisabled: prefixes.some(
-//     (p) => p.prefixFor === item && p.id !== editingId
-//   ),
-// }));
+    { value: "CUSTOMER", label: "CUSTOMER" },
+    { value: "CASH_RECEIPT", label: "CASH_RECEIPT" },
+    { value: "VEHICLE_STOCK_TRANSFER", label: "VEHICLE_STOCK_TRANSFER" },
+    { value: "BANK_RECEIPT", label: "BANK_RECEIPT" },
+    { value: "CONTRA", label: "CONTRA" },
+    { value: "ACCESSORIES_PURCHASE", label: "ACCESSORIES_PURCHASE" },
+    { value: "BANK_PAYMENT", label: "BANK_PAYMENT" },
+    { value: "CASH_PAYMENT", label: "CASH_PAYMENT" },
+    { value: "PURCHASE", label: "PURCHASE" },
+    { value: "VEHICLE", label: "VEHICLE" },
+    { value: "QUOTATION", label: "QUOTATION" },
+    { value: "LEAD", label: "LEAD" },
+    { value: "JOBCARD", label: "JOB CARD" },
+    { value: "INVOICE", label: "INVOICE" },
+  ];
+
   useEffect(() => {
     fetchCompany();
     fetchPrefixes();
@@ -91,87 +76,61 @@ export default function General() {
       console.error(error);
     }
   };
-const fetchCompany = async () => {
-  try {
-    const response = await axios.get(
-      "/company",
-    );
+  const fetchCompany = async () => {
+    try {
+      const response = await axios.get("/company");
 
-    const data =
-      response.data.data[0];
+      const data = response.data.data[0];
 
-    console.log(
-      "Company:",
-      data,
-    );
+      console.log("Company:", data);
 
-    console.log(
-      "Saved quotation terms:",
-      data?.quotationTerms,
-    );
+      console.log("Saved quotation terms:", data?.quotationTerms);
 
-    setCompany(data);
+      setCompany(data);
 
-    setCountry(data.country || "");
-    setState(data.state || "");
-    setCity(data.city || "");
-    setDistrict(
-      data.district || "",
-    );
-    setStateCode(
-      data.stateCode || "",
-    );
-  } catch (error) {
-    console.error(error);
-  }
-};
+      setCountry(data.country || "");
+      setState(data.state || "");
+      setCity(data.city || "");
+      setDistrict(data.district || "");
+      setStateCode(data.stateCode || "");
+    } catch (error) {
+      console.error(error);
+    }
+  };
   const handleSaveTerms = async () => {
-  try {
-    if (!company?.id) return;
+    try {
+      if (!company?.id) return;
 
-    setSavingTerms(true);
+      setSavingTerms(true);
 
-    const formData = new FormData();
+      const formData = new FormData();
 
-    formData.append(
-      "quotationTerms",
-      company?.quotationTerms || "",
-    );
+      formData.append("quotationTerms", company?.quotationTerms || "");
 
-    await axios.put(
-      `/company/${company.id}`,
-      formData,
-      {
+      await axios.put(`/company/${company.id}`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
-      },
-    );
+      });
 
-    await fetchCompany();
+      await fetchCompany();
+      toast.success("Quotation terms saved successfully");
+    } catch (error) {
+      console.error("Save quotation terms error:", error);
+      toast.error("Failed to save quotation terms");
+    } finally {
+      setSavingTerms(false);
+    }
+  };
 
-    alert(
-      "Quotation terms saved successfully",
-    );
-  } catch (error) {
-    console.error(
-      "Save quotation terms error:",
-      error,
-    );
-
-    alert(
-      "Failed to save quotation terms",
-    );
-  } finally {
-    setSavingTerms(false);
-  }
-};
   const handleSavePrefix = async () => {
     try {
       if (editingId) {
         await axios.put(`/profile-prefix/${editingId}`, newPrefix);
+        toast.success("Prefix updated successfully");
       } else {
         await axios.post("/profile-prefix", newPrefix);
+        toast.success("Prefix added successfully");
       }
 
       setNewPrefix({
@@ -184,25 +143,19 @@ const fetchCompany = async () => {
       fetchPrefixes();
     } catch (error) {
       console.error(error);
+      toast.error("Failed to save prefix");
     }
   };
+
   const handleEditPrefix = (item: any) => {
     setEditingId(item.id);
-
     setNewPrefix({
       prefixFor: item.prefixFor,
       prefix: item.prefix,
     });
+    toast.info(`Editing prefix for ${item.prefixFor}`);
   };
-  // const handleDeletePrefix = async (id: number) => {
-  //   try {
-  //     await axios.delete(`/profile-prefix/${id}`);
 
-  //     fetchPrefixes();
-  //   } catch (error) {
-  //     console.error(error);
-  //   }
-  // };
   const handleSave = async () => {
     try {
       const formData = new FormData();
@@ -227,12 +180,13 @@ const fetchCompany = async () => {
       setAvatar(null);
 
       fetchCompany();
-
-      alert("Company updated successfully");
+      toast.success("Company updated successfully");
     } catch (error) {
       console.error(error);
+      toast.error("Failed to update company");
     }
   };
+
   const customSelectStyles = {
     control: (provided: any, state: any) => ({
       ...provided,
@@ -391,20 +345,20 @@ const fetchCompany = async () => {
           className="rounded-xl"
           prefix={<PhoneIcon className="size-4.5" />}
         />
-<Input
-  label="Email"
-  type="email"
-  value={company?.email || ""}
-  readOnly={!isEditing}
-  onChange={(e) =>
-    setCompany({
-      ...company,
-      email: e.target.value,
-    })
-  }
-  className="rounded-xl"
-  prefix={<EnvelopeIcon className="size-4.5" />}
-/>
+        <Input
+          label="Email"
+          type="email"
+          value={company?.email || ""}
+          readOnly={!isEditing}
+          onChange={(e) =>
+            setCompany({
+              ...company,
+              email: e.target.value,
+            })
+          }
+          className="rounded-xl"
+          prefix={<EnvelopeIcon className="size-4.5" />}
+        />
         <Input
           label="GST Number"
           value={company?.gstNumber || ""}
@@ -582,22 +536,22 @@ const fetchCompany = async () => {
           }
           className="rounded-xl"
         />
-<Input
-  label="Account Number"
-  type="text"
-  inputMode="numeric"
-  value={company?.accountNumber || ""}
-  readOnly={!isEditing}
-  onChange={(e) => {
-    const value = e.target.value.replace(/\D/g, "");
+        <Input
+          label="Account Number"
+          type="text"
+          inputMode="numeric"
+          value={company?.accountNumber || ""}
+          readOnly={!isEditing}
+          onChange={(e) => {
+            const value = e.target.value.replace(/\D/g, "");
 
-    setCompany({
-      ...company,
-      accountNumber: value,
-    });
-  }}
-  className="rounded-xl"
-/>
+            setCompany({
+              ...company,
+              accountNumber: value,
+            });
+          }}
+          className="rounded-xl"
+        />
         <Input
           label="IFSC Code"
           value={company?.ifscCode || ""}
@@ -645,7 +599,7 @@ const fetchCompany = async () => {
       <div className="mt-8 flex justify-end gap-3">
         {!isEditing ? (
           <Button color="primary" onClick={() => setIsEditing(true)}>
-           <PencilSquareIcon className="size-4" />
+            <PencilSquareIcon className="size-4" />
           </Button>
         ) : (
           <>
@@ -681,26 +635,24 @@ const fetchCompany = async () => {
             placeholder="CUSTOMER"
           /> */}
           <div>
-  <label className="mb-1 inline-block">
-    Prefix For
-  </label>
+            <label className="mb-1 inline-block">Prefix For</label>
 
-  <Select
-    classNamePrefix="react-select"
-    styles={customSelectStyles}
-    options={prefixForOptions}
-    value={prefixForOptions.find(
-      (item) => item.value === newPrefix.prefixFor
-    )}
-    onChange={(selected: any) =>
-      setNewPrefix({
-        ...newPrefix,
-        prefixFor: selected?.value || "",
-      })
-    }
-    placeholder="Select Prefix"
-  />
-</div>
+            <Select
+              classNamePrefix="react-select"
+              styles={customSelectStyles}
+              options={prefixForOptions}
+              value={prefixForOptions.find(
+                (item) => item.value === newPrefix.prefixFor,
+              )}
+              onChange={(selected: any) =>
+                setNewPrefix({
+                  ...newPrefix,
+                  prefixFor: selected?.value || "",
+                })
+              }
+              placeholder="Select Prefix"
+            />
+          </div>
 
           <Input
             label="Prefix"
@@ -721,88 +673,74 @@ const fetchCompany = async () => {
           </div>
         </div>
       </div>
-    <div className="mt-6 max-h-[500px] overflow-auto rounded-lg border border-gray-700">
-  <table className="w-full border-collapse">
-    <thead className="sticky top-0 z-10 bg-white dark:bg-gray-900">
-      <tr>
-        <th className="sticky top-0 border border-gray-700 bg-white dark:bg-gray-900 p-3 text-left">
-          Prefix For
-        </th>
+      <div className="mt-6 max-h-[500px] overflow-auto rounded-lg border border-gray-700">
+        <table className="w-full border-collapse">
+          <thead className="sticky top-0 z-10 bg-white dark:bg-gray-900">
+            <tr>
+              <th className="sticky top-0 border border-gray-700 bg-white p-3 text-left dark:bg-gray-900">
+                Prefix For
+              </th>
 
-        <th className="sticky top-0 border border-gray-700 bg-white dark:bg-gray-900 p-3 text-left">
-          Prefix
-        </th>
+              <th className="sticky top-0 border border-gray-700 bg-white p-3 text-left dark:bg-gray-900">
+                Prefix
+              </th>
 
-        <th className="sticky top-0 border border-gray-700 bg-white dark:bg-gray-900 p-3 text-center">
-          Action
-        </th>
-      </tr>
-    </thead>
+              <th className="sticky top-0 border border-gray-700 bg-white p-3 text-center dark:bg-gray-900">
+                Action
+              </th>
+            </tr>
+          </thead>
 
-    <tbody>
-      {prefixes.map((item) => (
-        <tr key={item.id}>
-          <td className="border border-gray-700 p-3">
-            {item.prefixFor}
-          </td>
+          <tbody>
+            {prefixes.map((item) => (
+              <tr key={item.id}>
+                <td className="border border-gray-700 p-3">{item.prefixFor}</td>
 
-          <td className="border border-gray-700 p-3">
-            {item.prefix}
-          </td>
+                <td className="border border-gray-700 p-3">{item.prefix}</td>
 
-          <td className="border border-gray-700 p-3 text-center">
-            <Button
-              isIcon
-              color="primary"
-              onClick={() => handleEditPrefix(item)}
-              className="size-8 rounded-lg"
-            >
-              <PencilSquareIcon className="size-4" />
-            </Button>
-          </td>
-        </tr>
-      ))}
-    </tbody>
-  </table>
- 
-
+                <td className="border border-gray-700 p-3 text-center">
+                  <Button
+                    isIcon
+                    color="primary"
+                    onClick={() => handleEditPrefix(item)}
+                    className="size-8 rounded-lg"
+                  >
+                    <PencilSquareIcon className="size-4" />
+                  </Button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
-     <div className="mt-8">
-  <h3 className="mb-4 text-lg font-semibold">
-    Quotation Terms & Conditions
-  </h3>
+      <div className="mt-8">
+        <h3 className="mb-4 text-lg font-semibold">
+          Quotation Terms & Conditions
+        </h3>
 
- <TextEditor
-  value={
-    company?.quotationTerms || ""
-  }
-  onChange={(html) => {
-    console.log(
-      "Updated terms:",
-      html,
-    );
+        <TextEditor
+          value={company?.quotationTerms || ""}
+          onChange={(html) => {
+            console.log("Updated terms:", html);
 
-    setCompany((prev: any) => ({
-      ...prev,
-      quotationTerms: html,
-    }));
-  }}
-/>
+            setCompany((prev: any) => ({
+              ...prev,
+              quotationTerms: html,
+            }));
+          }}
+        />
 
-  <div className="mt-4 flex justify-end">
-    <Button
-      color="primary"
-      onClick={handleSaveTerms}
-      disabled={savingTerms}
-    >
-      {savingTerms
-        ? "Saving..."
-        : "Save Terms & Conditions"}
-    </Button>
-  </div>
-</div>
+        <div className="mt-4 flex justify-end">
+          <Button
+            color="primary"
+            onClick={handleSaveTerms}
+            disabled={savingTerms}
+          >
+            {savingTerms ? "Saving..." : "Save Terms & Conditions"}
+          </Button>
+        </div>
+      </div>
     </div>
-    
   );
 }
 {
