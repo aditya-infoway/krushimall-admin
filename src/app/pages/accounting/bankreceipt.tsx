@@ -5,7 +5,7 @@ import {
   ChevronDown,
   X,
   Plus,
-  Download,
+  Printer,
   Trash2,
   Edit,
   ChevronsUpDown,
@@ -27,7 +27,7 @@ import { Fragment } from "react";
 import { DatePicker } from "@/components/shared/form/Datepicker";
 import { toast } from "sonner";
 // import { Combobox } from "@/components/shared/form/StyledCombobox";
-import { Input, Radio, Textarea } from "@/components/ui";
+import { Input, Radio, Textarea, Checkbox } from "@/components/ui";
 import { RiFileExcel2Fill, RiFilePdfFill } from "react-icons/ri";
 import apiHelper from "@/utils/apiHelper";
 type EntryType = "Manual" | "Lead Cancel" | "Job Card";
@@ -524,6 +524,19 @@ console.log(
     );
   };
 
+
+  const handlePrint = async (item: BankReceipt) => {
+  try {
+    const blob = await apiHelper.getBlob(`/bank-receipt/${item.id}/print`);
+    const url = window.URL.createObjectURL(blob);
+    window.open(url, "_blank");
+    setTimeout(() => window.URL.revokeObjectURL(url), 60000);
+  } catch (err) {
+    console.log(err);
+    toast.error("Failed to generate receipt PDF");
+  }
+};
+
   const JOB_CARDS = [
     {
       id: 1,
@@ -725,14 +738,13 @@ console.log(
           <table className="w-full min-w-[1400px] text-left [&_.table-th]:font-semibold">
             <thead className="dark:bg-dark-700/60 dark:border-dark-600 border-b border-gray-200 bg-gray-100">
               <tr>
-                <th className="w-10 px-2 py-3.5 text-center">
-                  <input
-                    type="checkbox"
-                    className="size-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
-                    checked={isAllPageSelected}
-                    onChange={(e) => handleSelectAll(e.target.checked)}
-                  />
-                </th>
+               <th className="w-10 px-2 py-3.5 text-center">
+  <Checkbox
+    checked={isAllPageSelected}
+    onChange={(e: any) => handleSelectAll(e.target.checked)}
+    className="size-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+  />
+</th>
                 <th className="w-12 px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
                   S.No
                 </th>
@@ -789,14 +801,13 @@ console.log(
                     key={item.id}
                     className={`${isRowSelected ? "dark:bg-dark-600/30 bg-gray-50/50" : ""} dark:hover:bg-dark-700/40 transition-colors hover:bg-gray-50/30`}
                   >
-                    <td className="px-2 py-3 text-center">
-                      <input
-                        type="checkbox"
-                        className="size-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
-                        checked={isRowSelected}
-                        onChange={() => handleSelectRow(item.id)}
-                      />
-                    </td>
+                   <td className="px-2 py-3 text-center">
+  <Checkbox
+    checked={isRowSelected}
+    onChange={() => handleSelectRow(item.id)}
+    className="size-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+  />
+</td>
                     <td className="px-3 py-3 text-sm font-medium whitespace-nowrap text-gray-500">
                       {indexOfFirstItem + index + 1}
                     </td>
@@ -862,62 +873,15 @@ console.log(
                     <td className="px-3 py-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
                       {item.createdBy}
                     </td>
-                    <td className="px-3 py-3 text-center whitespace-nowrap">
-                      <Menu
-                        as="div"
-                        className="relative inline-block text-left"
+                    <td className="py-3 text-center whitespace-nowrap">
+                      <button
+                        type="button"
+                        onClick={() => handlePrint(item)}
+                        className="dark:hover:bg-dark-600 dark:text-dark-200 text-primary-500 hover:bg-primary-600 cursor-pointer inline-flex size-8 items-center justify-center rounded-lg transition-colors hover:text-white"
+                        title="Print Receipt"
                       >
-                        <MenuButton className="dark:hover:bg-dark-600 dark:text-dark-200 inline-flex size-8 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-100">
-                          <ChevronsUpDown className="size-4" />
-                        </MenuButton>
-                        <Transition
-                          as={Fragment}
-                          enter="transition ease-out duration-100"
-                          enterFrom="transform opacity-0 scale-95"
-                          enterTo="transform opacity-100 scale-100"
-                          leave="transition ease-in duration-75"
-                          leaveFrom="transform opacity-100 scale-100"
-                          leaveTo="transform opacity-0 scale-95"
-                        >
-                          <MenuItems
-                            anchor="bottom end"
-                            className="dark:bg-dark-800 dark:ring-dark-500 dark:border-dark-500 z-[100] w-36 rounded-lg border border-gray-100 bg-white p-1 shadow-lg ring-1 ring-black/5 [--anchor-gap:4px] focus:outline-none"
-                          >
-                            <MenuItem>
-                              {({ active }) => (
-                                <button
-                                  type="button"
-                                  onClick={() => handleEdit(item)}
-                                  className={`${
-                                    active
-                                      ? "dark:bg-dark-600 bg-gray-50 text-blue-600 dark:text-white"
-                                      : "dark:text-dark-200 text-gray-700"
-                                  } flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium`}
-                                >
-                                  <Edit className="size-4" />
-                                  Edit
-                                </button>
-                              )}
-                            </MenuItem>
-                            <MenuItem>
-                              {({ active }) => (
-                                <button
-                                  type="button"
-                                  onClick={() => handleDelete(item.id)}
-                                  className={`${
-                                    active
-                                      ? "bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-400"
-                                      : "dark:text-dark-200 text-gray-700"
-                                  } flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium`}
-                                >
-                                  <Trash2 className="size-4" />
-                                  Delete
-                                </button>
-                              )}
-                            </MenuItem>
-                          </MenuItems>
-                        </Transition>
-                      </Menu>
+                        <Printer className="size-4" />
+                      </button>
                     </td>
                   </tr>
                 );
@@ -1491,14 +1455,14 @@ console.log(
                     setShowDrawer(false);
                     setErrors({});
                   }}
-                  className="dark:bg-dark-600 dark:hover:bg-dark-500 rounded-lg bg-gray-200 px-6 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-300 dark:text-gray-300"
+                  className="dark:bg-dark-600 dark:hover:bg-dark-500 cursor-pointer rounded-lg bg-gray-200 px-6 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-300 dark:text-gray-300"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
                   onClick={handleSubmit}
-                  className="bg-primary-600 hover:bg-primary-700 rounded-lg px-6 py-2.5 text-sm font-semibold text-white"
+                  className="bg-primary-600 hover:bg-primary-700 cursor-pointer rounded-lg px-6 py-2.5 text-sm font-semibold text-white"
                 >
                   {editId !== null ? "Update" : "Add"} Bank Receipt
                 </button>

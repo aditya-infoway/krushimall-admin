@@ -1098,7 +1098,7 @@ export default function Model() {
 
                         setFilteredBrands(categoryBrands);
                       }}
-                      placeholder="Search or select category..."
+                     
                       searchFields={["name"]}
                     />
                   </div>
@@ -1115,11 +1115,6 @@ export default function Model() {
                           (option) => String(option.id) === String(formBrandId),
                         ) || null
                       }
-<<<<<<< HEAD
-                      onChange={(selectedOpt: any) => {
-                        setValue("brand", selectedOpt?.name || "");
-                        setValue("brandId", selectedOpt?.id || "");
-=======
                       placeholder={
                         formCategoryId
                           ? "Select Brand"
@@ -1133,9 +1128,8 @@ export default function Model() {
                         setValue("brandId", selectedOption.id, {
                           shouldValidate: true,
                         });
->>>>>>> c2d2dad (order,showroomvariant,lead,purchase,trctorinvantory)
                       }}
-                      placeholder="Search or select brand..."
+                     
                       searchFields={["name"]}
                     />
                   </div>

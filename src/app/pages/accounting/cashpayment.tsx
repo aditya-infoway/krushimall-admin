@@ -1,34 +1,12 @@
 import { useState, useEffect } from "react";
 import {
-  // Tractor,
-  // MapPin,
-  // Heart,
-  // Star,
-  // Fuel,
-  // Gauge,
-  // Calendar,
   ChevronLeft,
   ChevronRight,
-  // Sparkles,
-  // ArrowRight,
-  // BadgeCheck,
-  // Shield,
-  // Clock,
-  // Phone,
-  // Users,
-  // ShoppingBag,
-  // Package,
   Search,
   // SlidersHorizontal,
   Check,
   Filter,
   ChevronDown,
-  // User,
-  // Mail,
-  // MessageSquare,
-  // Send,
-  // HelpCircle,
-  // MessageCircle,
   X,
   Plus,
   Download,
@@ -36,7 +14,6 @@ import {
   Trash2,
   // Eye,
   Edit,
-  // ChevronUp,
   ChevronsUpDown,
 } from "lucide-react";
 import {
@@ -53,10 +30,9 @@ import { Fragment } from "react";
 import { DatePicker } from "@/components/shared/form/Datepicker";
 // import { Combobox } from "@/components/shared/form/StyledCombobox";
 import { Combobox } from "@/components/shared/form/Combobox";
-import { Input, Radio, Textarea } from "@/components/ui";
+import { Input, Radio, Textarea, Checkbox } from "@/components/ui";
 import apiHelper from "@/utils/apiHelper";
 import { toast } from "sonner";
-
 
 type EntryType = "Manual" | "Purchase" | "Lead Cancel";
 import { RiFileExcel2Fill, RiFilePdfFill } from "react-icons/ri";
@@ -174,13 +150,9 @@ export default function CashPayment() {
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredRows.slice(indexOfFirstItem, indexOfLastItem);
- const companyId = Number(
-  sessionStorage.getItem("companyId"),
-);
+  const companyId = Number(sessionStorage.getItem("companyId"));
 
-const financialYearId = Number(
-  sessionStorage.getItem("financialYearId"),
-);
+  const financialYearId = Number(sessionStorage.getItem("financialYearId"));
   const getPurchaseBills = async () => {
     try {
       const res = await apiHelper.get("/purchases");
@@ -276,67 +248,62 @@ const financialYearId = Number(
     getCashPayments();
   }, []);
   const purchaseBillOptions = purchaseBills;
- const validateForm = () => {
-  const newErrors: Record<string, string> = {};
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
 
-  // Cash Account
-  if (!form.cashAccount?.value) {
-    newErrors.cashAccount = "Cash Account is required";
-  }
+    // Cash Account
+    if (!form.cashAccount?.value) {
+      newErrors.cashAccount = "Cash Account is required";
+    }
 
-  // Purchase Bill
-  if (form.type === "Purchase" && !purchaseBill?.value) {
-    newErrors.purchaseBill = "Purchase Bill is required";
-  }
+    // Purchase Bill
+    if (form.type === "Purchase" && !purchaseBill?.value) {
+      newErrors.purchaseBill = "Purchase Bill is required";
+    }
 
-  // Lead
-  if (form.type === "Lead Cancel" && !form.leadNo?.id) {
-    newErrors.leadNo = "Lead is required";
-  }
+    // Lead
+    if (form.type === "Lead Cancel" && !form.leadNo?.id) {
+      newErrors.leadNo = "Lead is required";
+    }
 
-  // Opp. Account
-  if (!form.oppAccount?.value) {
-    newErrors.oppAccount = "Opp. Account is required";
-  }
+    // Opp. Account
+    if (!form.oppAccount?.value) {
+      newErrors.oppAccount = "Opp. Account is required";
+    }
 
-  // Cash and Opp. account cannot be same
-  if (
-    form.cashAccount?.value &&
-    form.oppAccount?.value &&
-    Number(form.cashAccount.value) ===
-      Number(form.oppAccount.value)
-  ) {
-    newErrors.oppAccount =
-      "Cash Account and Opp. Account cannot be the same";
-  }
+    // Cash and Opp. account cannot be same
+    if (
+      form.cashAccount?.value &&
+      form.oppAccount?.value &&
+      Number(form.cashAccount.value) === Number(form.oppAccount.value)
+    ) {
+      newErrors.oppAccount = "Cash Account and Opp. Account cannot be the same";
+    }
 
-  // Date
-  if (
-    !form.date ||
-    (Array.isArray(form.date) && form.date.length === 0)
-  ) {
-    newErrors.date = "Date is required";
-  }
+    // Date
+    if (!form.date || (Array.isArray(form.date) && form.date.length === 0)) {
+      newErrors.date = "Date is required";
+    }
 
-  // Amount
-  const amount = Number(form.amount);
+    // Amount
+    const amount = Number(form.amount);
 
-  if (
-    form.amount === "" ||
-    form.amount === null ||
-    form.amount === undefined
-  ) {
-    newErrors.amount = "Amount is required";
-  } else if (isNaN(amount)) {
-    newErrors.amount = "Enter a valid amount";
-  } else if (amount <= 0) {
-    newErrors.amount = "Amount must be greater than 0";
-  }
+    if (
+      form.amount === "" ||
+      form.amount === null ||
+      form.amount === undefined
+    ) {
+      newErrors.amount = "Amount is required";
+    } else if (isNaN(amount)) {
+      newErrors.amount = "Enter a valid amount";
+    } else if (amount <= 0) {
+      newErrors.amount = "Amount must be greater than 0";
+    }
 
-  setErrors(newErrors);
+    setErrors(newErrors);
 
-  return Object.keys(newErrors).length === 0;
-};
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleAdd = async () => {
     setEditId(null);
@@ -344,7 +311,7 @@ const financialYearId = Number(
 
     setForm({
       ...initialForm,
-       date: [new Date()],
+      date: [new Date()],
     });
 
     await getVoucherNo();
@@ -409,47 +376,49 @@ const financialYearId = Number(
     setSelectedIds([]);
   };
 
- const handleSubmit = async () => {
-  if (!validateForm()) return;
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
 
- 
-  if (!companyId || !financialYearId) {
-    toast.error(
-      "Company or financial year is not selected",
-    );
-    return;
-  }
-
-  try {
-    const payload = {
-      companyId,
-      financialYearId,
-      date: form.date || new Date(),
-      cashAccountId: form.cashAccount.value,
-      oppAccountId: form.oppAccount.value,
-      purchaseId: form.type === "Purchase" && purchaseBill ? purchaseBill.value : null,
-      leadId: form.type === "Lead Cancel" && form.leadNo ? form.leadNo.id : null,
-      amount: Number(form.amount),
-      narration: form.narration,
-    };
-    console.log(payload);
-    
-    if (editId !== null) {
-      await apiHelper.put(`/cash-payment/${editId}`, payload);
-      toast.success("Cash payment updated successfully!");
-    } else {
-      await apiHelper.post("/cash-payment", payload);
-      toast.success("Cash payment added successfully!");
+    if (!companyId || !financialYearId) {
+      toast.error("Company or financial year is not selected");
+      return;
     }
 
-    setShowDrawer(false);
-    await getCashPayments();
-    await getVoucherNo();
-  } catch (error: any) {
-    console.log(error);
-    toast.error(error.response?.data?.message || "Failed to save cash payment. Please try again.");
-  }
-};
+    try {
+      const payload = {
+        companyId,
+        financialYearId,
+        date: form.date || new Date(),
+        cashAccountId: form.cashAccount.value,
+        oppAccountId: form.oppAccount.value,
+        purchaseId:
+          form.type === "Purchase" && purchaseBill ? purchaseBill.value : null,
+        leadId:
+          form.type === "Lead Cancel" && form.leadNo ? form.leadNo.id : null,
+        amount: Number(form.amount),
+        narration: form.narration,
+      };
+      console.log(payload);
+
+      if (editId !== null) {
+        await apiHelper.put(`/cash-payment/${editId}`, payload);
+        toast.success("Cash payment updated successfully!");
+      } else {
+        await apiHelper.post("/cash-payment", payload);
+        toast.success("Cash payment added successfully!");
+      }
+
+      setShowDrawer(false);
+      await getCashPayments();
+      await getVoucherNo();
+    } catch (error: any) {
+      console.log(error);
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to save cash payment. Please try again.",
+      );
+    }
+  };
   const isAllPageSelected =
     currentItems.length > 0 &&
     currentItems.every((item) => selectedIds.includes(item.id));
@@ -476,25 +445,25 @@ const financialYearId = Number(
   useEffect(() => {
     setCurrentPage(1);
   }, [filterType, filterDateFrom, filterDateTo, search]);
-const handleExportExcel = async () => {
-  try {
-    const blob = await apiHelper.getBlob("/cash-payment/export/excel");
+  const handleExportExcel = async () => {
+    try {
+      const blob = await apiHelper.getBlob("/cash-payment/export/excel");
 
-    const url = window.URL.createObjectURL(blob);
+      const url = window.URL.createObjectURL(blob);
 
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "CashPaymentRegister.xlsx";
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "CashPaymentRegister.xlsx";
 
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
 
-    window.URL.revokeObjectURL(url);
-  } catch (err) {
-    console.log(err);
-  }
-};
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.log(err);
+    }
+  };
   return (
     <div className="relative min-h-screen space-y-6 p-4 pb-28 text-gray-900 md:p-6 dark:text-gray-100">
       {/* Upper Actions Control Toolbar Layout */}
@@ -508,48 +477,48 @@ const handleExportExcel = async () => {
           </p>
         </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-2 md:flex-nowrap">
-  {/* Left side - Filter and icons */}
-  <div className="flex items-center gap-2">
-    <button
-      type="button"
-      onClick={() => setShowFilterBar(!showFilterBar)}
-      className={`inline-flex items-center gap-1.5 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
-        showFilterBar
-          ? "dark:bg-dark-600 dark:border-dark-500 border-red-200 bg-red-50 text-red-600 dark:text-white"
-          : "dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
-      }`}
-    >
-      <Filter className="size-4.5" />
-      <span className="hidden sm:inline">Filter</span>
-    </button>
+        <div className="flex flex-wrap items-center justify-between gap-2 md:flex-nowrap">
+          {/* Left side - Filter and icons */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowFilterBar(!showFilterBar)}
+              className={`inline-flex items-center gap-1.5 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
+                showFilterBar
+                  ? "dark:bg-dark-600 dark:border-dark-500 border-red-200 bg-red-50 text-red-600 dark:text-white"
+                  : "dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              <Filter className="size-4.5" />
+              <span className="hidden sm:inline">Filter</span>
+            </button>
 
-    <button
-      type="button"
-      onClick={handleExportExcel}
-      className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
-    >
-      <RiFileExcel2Fill className="text-lg text-green-500" />
-    </button>
+            <button
+              type="button"
+              onClick={handleExportExcel}
+              className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            >
+              <RiFileExcel2Fill className="text-lg text-green-500" />
+            </button>
 
-    <button
-      type="button"
-      className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
-    >
-      <RiFilePdfFill className="text-lg text-red-500" />
-    </button>
-  </div>
+            <button
+              type="button"
+              className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            >
+              <RiFilePdfFill className="text-lg text-red-500" />
+            </button>
+          </div>
 
-  {/* Right side - Add Cash Payment button */}
-  <button
-    type="button"
-    onClick={handleAdd}
-    className="bg-primary-600 hover:bg-primary-700 inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-medium text-white transition-colors whitespace-nowrap"
-  >
-    <Plus className="size-4.5" />
-    Add Cash Payment
-  </button>
-</div>
+          {/* Right side - Add Cash Payment button */}
+          <button
+            type="button"
+            onClick={handleAdd}
+            className="bg-primary-600 hover:bg-primary-700 inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-medium whitespace-nowrap text-white transition-colors"
+          >
+            <Plus className="size-4.5" />
+            Add Cash Payment
+          </button>
+        </div>
       </div>
 
       {/* Search */}
@@ -614,45 +583,44 @@ const handleExportExcel = async () => {
           <table className="w-full min-w-250 text-left [&_.table-th]:font-semibold">
             <thead className="dark:bg-dark-700/60 dark:border-dark-600 border-b border-gray-200 bg-gray-100">
               <tr>
-                <th className="w-10 py-3.5 text-center">
-                  <input
-                    type="checkbox"
-                    className="size-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                <th className="w-10 px-3 py-3.5 text-center">
+                  <Checkbox
                     checked={isAllPageSelected}
-                    onChange={(e) => handleSelectAll(e.target.checked)}
+                    onChange={(e: any) => handleSelectAll(e.target.checked)}
+                    className="size-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
                   />
                 </th>
-                <th className="w-12 py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                <th className="w-12 px-3 py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   S.No
                 </th>
-                <th className="py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
                   Date
                 </th>
-                <th className="py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
                   Voucher No.
                 </th>
-                <th className="py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
                   Type
                 </th>
-                <th className="py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
                   Cash Account
                 </th>
-                <th className="py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
                   Opp. Account
                 </th>
-                <th className="py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
                   Amount
                 </th>
-                <th className="py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
                   Narration
                 </th>
-                <th className="py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
                   Created Type
                 </th>
-                <th className="py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
                   Created By
                 </th>
-                <th className="w-16 py-3.5 text-center text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                <th className="w-16 px-3 py-3.5 text-center text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
                   Actions
                 </th>
               </tr>
@@ -666,50 +634,49 @@ const handleExportExcel = async () => {
                     key={item.id}
                     className={`${isRowSelected ? "dark:bg-dark-600/30 bg-gray-50/50" : ""} dark:hover:bg-dark-700/40 transition-colors hover:bg-gray-50/30`}
                   >
-                    <td className="py-3 text-center">
-                      <input
-                        type="checkbox"
-                        className="size-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                    <td className="px-3 py-3 text-center">
+                      <Checkbox
                         checked={isRowSelected}
                         onChange={() => handleSelectRow(item.id)}
+                        className="size-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
                       />
                     </td>
-                    <td className="py-3 text-sm font-medium text-gray-500">
+                    <td className="px-3 py-3 text-sm font-medium text-gray-500">
                       {indexOfFirstItem + index + 1}
                     </td>
-                    <td className="py-3 text-sm whitespace-nowrap text-gray-900 dark:text-gray-400">
+                    <td className="px-3 py-3 text-sm whitespace-nowrap text-gray-900 dark:text-gray-400">
                       {new Date(item.date).toLocaleDateString("en-GB")}
                     </td>
-                    <td className="py-3 text-sm font-medium whitespace-nowrap text-gray-900 dark:text-gray-400">
+                    <td className="px-3 py-3 text-sm font-medium whitespace-nowrap text-gray-900 dark:text-gray-400">
                       {item.voucherNo}
                     </td>
-                    <td className="py-3 whitespace-nowrap">
+                    <td className="px-3 py-3 whitespace-nowrap">
                       <span className="bg-primary-500 inline-flex rounded-full px-2 py-0.5 text-xs font-semibold text-white">
                         {item.type}
                       </span>
                     </td>
-                    <td className="py-3 text-sm whitespace-nowrap text-gray-600 dark:text-gray-400">
+                    <td className="px-3 py-3 text-sm whitespace-nowrap text-gray-600 dark:text-gray-400">
                       {item.cashAccount}
                     </td>
-                    <td className="py-3 text-sm whitespace-nowrap text-gray-600 dark:text-gray-400">
+                    <td className="px-3 py-3 text-sm whitespace-nowrap text-gray-600 dark:text-gray-400">
                       {item.oppAccount}
                     </td>
-                    <td className="py-3 text-sm font-semibold whitespace-nowrap text-gray-900 dark:text-gray-400">
+                    <td className="px-3 py-3 text-sm font-semibold whitespace-nowrap text-gray-900 dark:text-gray-400">
                       ₹
                       {item.amount.toLocaleString("en-IN", {
                         minimumFractionDigits: 2,
                       })}
                     </td>
-                    <td className="py-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
+                    <td className="px-3 py-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
                       {item.narration}
                     </td>
-                    <td className="py-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
+                    <td className="px-3 py-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
                       {item.createdType}
                     </td>
-                    <td className="py-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
+                    <td className="px-3 py-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
                       {item.createdBy}
                     </td>
-                    <td className="py-3 text-center whitespace-nowrap">
+                    <td className="px-3 py-3 text-center whitespace-nowrap">
                       <Menu
                         as="div"
                         className="relative inline-block text-left"
@@ -960,7 +927,6 @@ const handleExportExcel = async () => {
               </div>
 
               <div className="grow space-y-5 overflow-y-auto p-5">
-
                 {/* Radio Buttons + Lead No inline */}
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex flex-wrap items-center gap-4 sm:gap-6">
@@ -997,7 +963,7 @@ const handleExportExcel = async () => {
                         displayField="label"
                         value={purchaseBill}
                         placeholder="Search Purchase Bill No..."
-                          error={errors.purchaseBill}
+                        error={errors.purchaseBill}
                         searchFields={["label", "party"]}
                         columns={[
                           {
@@ -1065,7 +1031,7 @@ const handleExportExcel = async () => {
                       }}
                       placeholder="Search Cash Account"
                       searchFields={["label", "mobile"]}
-                        error={errors.cashAccount}
+                      error={errors.cashAccount}
                       columns={[
                         {
                           header: "Account",
@@ -1084,7 +1050,6 @@ const handleExportExcel = async () => {
                         },
                       ]}
                     />
-                   
                   </div>
                   <div>
                     <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -1134,7 +1099,7 @@ const handleExportExcel = async () => {
                       }}
                       placeholder="Search Opp. Account"
                       searchFields={["label", "mobile"]}
-                       error={errors.oppAccount}
+                      error={errors.oppAccount}
                       columns={[
                         {
                           header: "Account",
@@ -1153,7 +1118,6 @@ const handleExportExcel = async () => {
                         },
                       ]}
                     />
-                   
                   </div>
                   <div>
                     <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -1194,14 +1158,14 @@ const handleExportExcel = async () => {
                     setShowDrawer(false);
                     setErrors({});
                   }}
-                  className="dark:bg-dark-600 dark:hover:bg-dark-500 rounded-lg bg-gray-200 px-6 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-300 dark:text-gray-300"
+                  className="dark:bg-dark-600 dark:hover:bg-dark-500 cursor-pointer rounded-lg bg-gray-200 px-6 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-300 dark:text-gray-300"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
                   onClick={handleSubmit}
-                  className="bg-primary-600 hover:bg-primary-700 rounded-lg px-6 py-2.5 text-sm font-semibold text-white"
+                  className="bg-primary-600 hover:bg-primary-700 cursor-pointer rounded-lg px-6 py-2.5 text-sm font-semibold text-white"
                 >
                   {editId !== null ? "Update" : "Add"} Cash Payment
                 </button>

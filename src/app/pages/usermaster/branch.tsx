@@ -15,6 +15,7 @@ import {
   MenuItem,
 } from "@headlessui/react";
 import { Fragment } from "react";
+import { toast } from "sonner";
 import { RiFileExcel2Fill, RiFilePdfFill } from "react-icons/ri";
 import {
   PlusIcon,
@@ -438,32 +439,37 @@ const CreateBranch = () => {
       console.log(err);
     }
   };
-  const handleDelete = async (id: number) => {
-    try {
-      if (window.confirm("Are you sure you want to delete this branch?")) {
-        await apiHelper.delete(`/branch/${id}`);
-        getBranches();
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  };
 
-  const handleBulkDelete = async () => {
-    try {
-      if (
-        window.confirm("Are you sure you want to delete selected branches?")
-      ) {
-        await Promise.all(
-          selectedIds.map((id) => apiHelper.delete(`/branch/${id}`)),
-        );
-        setSelectedIds([]);
-        getBranches();
-      }
-    } catch (error) {
-      console.log(error);
+  const handleDelete = async (id: number) => {
+  try {
+    if (window.confirm("Are you sure you want to delete this branch?")) {
+      await apiHelper.delete(`/branch/${id}`);
+      toast.success("Branch deleted successfully");
+      getBranches();
     }
-  };
+  } catch (error) {
+    console.log(error);
+    toast.error("Failed to delete branch");
+  }
+};
+
+const handleBulkDelete = async () => {
+  try {
+    if (
+      window.confirm("Are you sure you want to delete selected branches?")
+    ) {
+      await Promise.all(
+        selectedIds.map((id) => apiHelper.delete(`/branch/${id}`)),
+      );
+      setSelectedIds([]);
+      toast.success(`${selectedIds.length} branches deleted successfully`);
+      getBranches();
+    }
+  } catch (error) {
+    console.log(error);
+    toast.error("Failed to delete selected branches");
+  }
+};
 
   const onFormSubmit = async (data: FormValues) => {
     try {
@@ -504,13 +510,15 @@ const CreateBranch = () => {
         formData.append("logo", logoFile);
       }
 
-      if (editId) {
-        await apiHelper.put(`/branch/${editId}`, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-      } else {
-        await apiHelper.upload("/branch", formData);
-      }
+       if (editId) {
+      await apiHelper.put(`/branch/${editId}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      toast.success("Branch updated successfully");
+    } else {
+      await apiHelper.upload("/branch", formData);
+      toast.success("Branch created successfully");
+    }
 
       getBranches();
       setShowDrawer(false);
@@ -539,13 +547,12 @@ const CreateBranch = () => {
         pinCode: "",
       });
     } catch (error: any) {
-      console.log(error);
-
-      alert(
-        error.response?.data?.message ||
-          error.message ||
-          "Something went wrong",
-      );
+    console.log(error);
+    toast.error(
+      error.response?.data?.message ||
+        error.message ||
+        "Something went wrong",
+    );
     }
   };
   const filteredData = branches.filter((item: any) => {
