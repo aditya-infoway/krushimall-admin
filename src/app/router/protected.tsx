@@ -196,6 +196,22 @@ const protectedRoutes: RouteObject = {
                 ).default,
               }),
             },
+            {
+              path: "Quatationhistory",
+              lazy: async () => ({
+                Component: (
+                  await import("@/app/pages/leadmaster/Quatationhistory")
+                ).default,
+              }),
+            },
+            {
+              path: "Quatationhistory/:id",
+              lazy: async () => ({
+                Component: (
+                  await import("@/app/pages/leadmaster/QuotationHistoryDetails")
+                ).default,
+              }),
+            },
           ],
         },
         {
@@ -379,6 +395,14 @@ const protectedRoutes: RouteObject = {
                 },
                 {
                   path: "add",
+                  lazy: async () => ({
+                    Component: (
+                      await import("@/app/pages/purchase/puraccessories")
+                    ).default,
+                  }),
+                },
+                {
+                  path: "add/:id",
                   lazy: async () => ({
                     Component: (
                       await import("@/app/pages/purchase/puraccessories")

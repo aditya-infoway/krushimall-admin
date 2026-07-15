@@ -1107,7 +1107,7 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
           </h1>
           <button
             onClick={handleBack}
-            className="bg-primary-500 hover:bg-primary-600 inline-flex w-full items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold text-white transition-colors sm:w-auto sm:px-5"
+            className="bg-primary-500 hover:bg-primary-600 cursor-pointer inline-flex w-full items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold text-white transition-colors sm:w-auto sm:px-5"
           >
             <ArrowLeftIcon className="mr-1.5 size-4" />
             Back

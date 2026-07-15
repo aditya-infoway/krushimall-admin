@@ -3,13 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import apiHelper from "@/utils/apiHelper";
 import {
   ArrowLeftIcon,
-  // PencilIcon,
-  // TrashIcon,
-  // PlusIcon,
-  // MinusIcon,
   CheckIcon,
-  // XMarkIcon,
-  // WrenchIcon,
   CogIcon,
   SparklesIcon,
 } from "@heroicons/react/24/outline";

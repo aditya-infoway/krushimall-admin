@@ -932,18 +932,18 @@ const handleSave = async () => {
   return (
     <div className="min-h-screen bg-white p-6 transition-colors duration-200 dark:bg-gray-900">
       {/* Header with Back Button */}
-      <div className="mb-6 flex items-center gap-4 border-b border-gray-200 pb-4 dark:border-gray-700">
-        <button
-          onClick={handleBack}
-          className="cursor-pointer rounded-full p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
-        >
-          <ArrowLeftIcon className="h-5 w-5 text-gray-600 dark:text-gray-400" />
-        </button>
-        <h2 className="text-xl font-bold text-gray-800 dark:text-white">
-         {id ? "Edit Vehicle Stock Transfer" : "Add Vehicle Stock Transfer"}
-        </h2>
-      </div>
-
+    <div className="mb-6 flex items-center justify-between border-b border-gray-200 pb-4 dark:border-gray-700">
+  <h2 className="text-xl font-bold text-gray-800 dark:text-white">
+    {id ? "Edit Vehicle Stock Transfer" : "Add Vehicle Stock Transfer"}
+  </h2>
+ <button
+  onClick={handleBack}
+   className="bg-primary-500 hover:bg-primary-600 cursor-pointer inline-flex w-full items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold text-white transition-colors sm:w-auto sm:px-5"
+           >
+             <ArrowLeftIcon className="mr-1.5 size-4" />
+             Back
+           </button>
+</div>
       {/* Row 1: Date, Stock Transfer ID, Branch - 3 columns */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <div>
