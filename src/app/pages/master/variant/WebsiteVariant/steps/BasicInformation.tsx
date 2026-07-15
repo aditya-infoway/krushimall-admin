@@ -47,25 +47,49 @@ const dealerOptions = [
   { label: "Dealer 3", value: "dealer3" },
 ];
 
+interface BasicInformationProps {
+  setCurrentStep: React.Dispatch<
+    React.SetStateAction<number>
+  >;
 
+  websiteVariantId: string | null;
+
+  setWebsiteVariantId: React.Dispatch<
+    React.SetStateAction<string | null>
+  >;
+
+  editData: any;
+
+  setEditData: React.Dispatch<
+    React.SetStateAction<any>
+  >;
+}
 export function BasicInformation({
   setCurrentStep,
-}: {
-  setCurrentStep: React.Dispatch<React.SetStateAction<number>>;
-}) {
+  websiteVariantId,
+  setWebsiteVariantId,
+  editData,
+  setEditData,
+}: BasicInformationProps) {
   const kycFormCtx = useKYCFormContext();
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    control,
-    watch,
-    setValue,
-  } = useForm({
-resolver: yupResolver(BasicInformationSchema) as unknown as Resolver<BasicInformationType>,
-    defaultValues: kycFormCtx.state.formData.BasicInformation,
-  });
+const {
+  register,
+  handleSubmit,
+  formState: { errors },
+  control,
+  watch,
+  setValue,
+  reset,
+} = useForm<BasicInformationType>({
+  resolver:
+    yupResolver(
+      BasicInformationSchema,
+    ) as unknown as Resolver<BasicInformationType>,
+
+  defaultValues:
+    kycFormCtx.state.formData.BasicInformation,
+});
   const [country, setCountry] = useState("");
   const [state, setState] = useState("");
   const [city, setCity] = useState("");
@@ -81,7 +105,150 @@ resolver: yupResolver(BasicInformationSchema) as unknown as Resolver<BasicInform
   const [highlightCount, setHighlightCount] = useState(5);
 
 
+useEffect(() => {
+  if (!editData) return;
 
+  reset({
+    categoryId:
+      editData.categoryId ?? "",
+
+    brandId:
+      editData.brandId ?? "",
+
+    modelId:
+      editData.modelId ?? "",
+
+    modelYearId:
+      editData.modelYearId ?? "",
+
+    variantId:
+      editData.variantId ?? "",
+
+    variantCode:
+      editData.variantCode ?? "",
+
+    productName:
+      editData.productName ?? "",
+
+    productCode:
+      editData.productCode ?? "",
+
+    skuCode:
+      editData.skuCode ?? "",
+
+    launchYear:
+      editData.launchYear
+        ? editData.launchYear
+            .split("T")[0]
+        : "",
+
+    country:
+      editData.country ?? "",
+
+    tractorStatus:
+      editData.tractorStatus ?? "",
+
+    shortDescription:
+      editData.shortDescription ?? "",
+
+    highlights: {
+      highlight1:
+        editData.highlight1 ?? "",
+
+      highlight2:
+        editData.highlight2 ?? "",
+
+      highlight3:
+        editData.highlight3 ?? "",
+
+      highlight4:
+        editData.highlight4 ?? "",
+
+      highlight5:
+        editData.highlight5 ?? "",
+    },
+
+    colors: {
+      red:
+        editData.redColor ?? false,
+
+      blue:
+        editData.blueColor ?? false,
+
+      green:
+        editData.greenColor ?? false,
+
+      orange:
+        editData.orangeColor ??
+        false,
+
+      black:
+        editData.blackColor ??
+        false,
+
+      white:
+        editData.whiteColor ??
+        false,
+
+      custom:
+        editData.customColor ??
+        false,
+    },
+
+    showCustomColor:
+      editData.customColor ?? false,
+
+    customColorName:
+      editData.customColorName ??
+      "",
+
+    customColorCode:
+      editData.customColorCode ??
+      "#000000",
+
+    availableStates:
+      Array.isArray(
+        editData.availableStates,
+      )
+        ? editData.availableStates
+        : [],
+
+    availableDistricts:
+      Array.isArray(
+        editData.availableDistricts,
+      )
+        ? editData.availableDistricts
+        : [],
+
+    availableDealers:
+      Array.isArray(
+        editData.availableDealers,
+      )
+        ? editData.availableDealers
+        : [],
+
+    stockStatus:
+      editData.stockStatus ?? "",
+
+    seoTitle:
+      editData.seoTitle ?? "",
+
+    seoUrl:
+      editData.seoUrl ?? "",
+
+    metaDescription:
+      editData.metaDescription ??
+      "",
+
+    keywords:
+      editData.keywords ?? "",
+  });
+
+  // Required to generate state options
+  setCountry(
+    editData.country ?? "",
+  );
+}, [editData, reset]);
 const onSubmit = async (data: BasicInformationType) => {
   try {
     const payload = {
@@ -103,6 +270,13 @@ const onSubmit = async (data: BasicInformationType) => {
       highlight3: data.highlights?.highlight3,
       highlight4: data.highlights?.highlight4,
       highlight5: data.highlights?.highlight5,
+       redColor: Boolean(data.colors?.red),
+  blueColor: Boolean(data.colors?.blue),
+  greenColor: Boolean(data.colors?.green),
+  orangeColor: Boolean(data.colors?.orange),
+  blackColor: Boolean(data.colors?.black),
+  whiteColor: Boolean(data.colors?.white),
+  customColor: Boolean(data.colors?.custom),
       customColorName: data.customColorName,
       customColorCode: data.customColorCode,
       availableStates: data.availableStates,
@@ -585,7 +759,8 @@ const parseLocalDate = (dateStr: string): Date | undefined => {
               <label key={color.value} className="flex items-center gap-2">
                 <input
                   type="checkbox"
-                  // {...register(`colors.${color.value}`)}
+                      {...register(`colors.${color.value}` as any)}
+
                   className="h-4 w-4 rounded border-gray-300"
                 />
                 <span
