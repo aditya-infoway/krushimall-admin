@@ -18,7 +18,7 @@ import {
   TrashIcon,
   MagnifyingGlassIcon,
   FunnelIcon,
-  DocumentArrowDownIcon,
+  // DocumentArrowDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   EllipsisHorizontalIcon,
@@ -64,6 +64,7 @@ interface AccessoryItem {
   mrp: string;
   opStock: string;
   variant: string;
+  barCode: string;
   status: "ACTIVE" | "INACTIVE";
   createdAt: string;
 }
@@ -81,6 +82,7 @@ interface FormValues {
   salesPrice: string;
   mrp: string;
   opStock: string;
+    barCode: string;
   variant: string;
   status: "ACTIVE" | "INACTIVE";
 }
@@ -213,6 +215,7 @@ const Accessories = () => {
     salesPrice: "",
     mrp: "",
     opStock: "",
+    barCode:"",
     variant: "",
     status: "ACTIVE",
   });
@@ -277,6 +280,7 @@ const Accessories = () => {
       salesPrice: "",
       mrp: "",
       opStock: "",
+        barCode: "",
       variant: "",
       status: "ACTIVE",
     });
@@ -301,7 +305,7 @@ const Accessories = () => {
       salesPrice: String(item.salesPrice ?? ""),
       mrp: String(item.mrp ?? ""),
       opStock: String(item.opStock ?? ""),
-
+  barCode: item.barCode,
       variant: "",
       status: item.status || "ACTIVE",
     });
@@ -416,6 +420,7 @@ const Accessories = () => {
         salesPrice: formData.salesPrice,
         mrp: formData.mrp,
         opStock: formData.opStock,
+        barCode: formData.barCode,
         showroomVariants: selectedVariants.map((v: any) => ({
           id: v.value,
           variantName: v.variantName,
@@ -1345,7 +1350,19 @@ const Accessories = () => {
                         </span>
                       )}
                     </div>
-
+ <div>
+                      <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
+                        Bar Code
+                      </label>
+                      <Input
+                        type="text"
+                        placeholder="Enter Bar Code"
+                        value={formData.barCode}
+                        onChange={(e) =>
+                          handleInputChange("barCode", e.target.value)
+                        }
+                      />
+                    </div>
                     <div>
                       <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
                         Variant <span className="text-red-500">*</span>
