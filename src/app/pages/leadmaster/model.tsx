@@ -2145,7 +2145,7 @@ const totalSteps = isFinancePurchase ? 5 : 4;
       if (!isValid) return;
     }
 
-    console.log("AFTER VALIDATION");
+   
 
     try {
       const payload = {
@@ -2158,6 +2158,7 @@ const totalSteps = isFinancePurchase ? 5 : 4;
         executiveId: selectedExecutive?.id,
         ...financeData,
         ...reviewData,
+        
         customerExpectedPrice: financeData.customerExpectedPrice
           ? Number(financeData.customerExpectedPrice)
           : null,

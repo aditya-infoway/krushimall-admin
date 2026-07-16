@@ -329,6 +329,8 @@ const NewAccount = () => {
     }),
   };
 
+
+  
   return (
     <div className="min-h-screen bg-white p-6 transition-colors duration-200 dark:bg-gray-900">
       {/* Header with Back Button */}
@@ -396,6 +398,7 @@ const NewAccount = () => {
                     }
                     onChange={(val: any) => field.onChange(val?.value || "")}
                     placeholder="Search Group"
+                    
                   />
                 )}
               />

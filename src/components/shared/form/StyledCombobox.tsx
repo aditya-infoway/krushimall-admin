@@ -1,3 +1,4 @@
+
 // Import Dependencies
 import {
   Combobox,
@@ -18,7 +19,6 @@ import {
   SetStateAction,
   ReactElement,
 } from "react";
-
 // Local Imports
 import { Input, InputErrorMsg } from "@/components/ui";
 import { useFuse, useBoxPosition, useBoxSize, mergeRefs } from "@/hooks";
@@ -133,6 +133,8 @@ function CustomCombobox<TValue = DataItem>(
   const handleChange = (newValue: any) => {
     onChange?.(newValue as any);
   };
+
+  
 
   return (
     <div className={clsx("flex flex-col", classNames?.root)} {...rootProps}>
@@ -253,13 +255,15 @@ function CustomCombobox<TValue = DataItem>(
                   leaveTo="opacity-0 translate-y-2"
                   afterLeave={() => setQuery("")}
                 >
+                  
+                  
                   <ComboboxOptions
                     anchor={{ to: "bottom end", gap: 8 }}
                     style={{
-    width: inputWidth,
-  }}
+                      width: inputWidth,
+                    }}
                     className={clsx(
-                      "dark:border-dark-500 dark:bg-dark-750 absolute left-(--left-anchor)! z-10 max-h-60 overflow-x-hidden overflow-y-auto rounded-lg border border-gray-300 bg-white py-1 shadow-lg shadow-gray-200/50 outline-hidden focus-visible:outline-hidden dark:shadow-none",
+                      "dark:border-dark-500 dark:bg-dark-750 z-10 max-h-60 overflow-y-auto rounded-lg border border-gray-300 bg-white py-1 shadow-lg outline-hidden",
                       multiple && "mt-2",
                     )}
                   >
