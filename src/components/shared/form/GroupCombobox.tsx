@@ -254,68 +254,70 @@ function GroupCombobox<TValue = DataItem>(
                   leaveTo="opacity-0 translate-y-2"
                   afterLeave={() => setQuery("")}
                 >
-                  <ComboboxOptions
-                    anchor={{ to: "bottom end", gap: 8 }}
-                    style={{
-                      width: inputWidth,
-                      ["--left-anchor" as string]: `${inputLeft}px`,
-                    }}
-                    className={clsx(
-                      "dark:border-dark-500 dark:bg-dark-750 absolute left-(--left-anchor)! z-10 max-h-60 overflow-x-hidden overflow-y-auto rounded-lg border border-gray-300 bg-white py-1 shadow-lg shadow-gray-200/50 outline-hidden focus-visible:outline-hidden dark:shadow-none",
-                      multiple && "mt-2",
-                    )}
-                  >
+                <ComboboxOptions
+  anchor={{ to: "bottom end", gap: 8 }}
+  style={{
+    width: inputWidth, // Keep this for width synchronization
+  }}
+  className={clsx(
+  "dark:border-dark-500 dark:bg-dark-750 z-50 max-h-96 overflow-y-auto rounded-lg border border-gray-300 bg-white py-1 shadow-lg",
+  multiple && "mt-2"
+)}
+>
                     {filteredData.length === 0 && query !== "" ? (
                       <div className="dark:text-dark-100 relative cursor-default px-4 py-2 text-gray-800 select-none">
                         Nothing found for {query}
                       </div>
-                   ) : (
-  <>
-    {/* Header */}
-    <div className="sticky top-0 z-10 grid grid-cols-[1fr_140px] border-b bg-white px-4 py-2 text-xs font-semibold dark:border-dark-500 dark:bg-dark-750">
-      <span>Group</span>
-      <span className="text-right">Effect</span>
-    </div>
+                    ) : (
+                      <>
+                        {/* Header */}
+                        <div className="dark:border-dark-500 dark:bg-dark-750 sticky top-0 z-10 grid grid-cols-[1fr_140px] border-b bg-white px-4 py-2 text-xs font-semibold">
+                          <span>Group</span>
+                          <span className="text-right">Effect</span>
+                        </div>
+                      
+                        
+                        {filteredData.map(({ item, refIndex }) => (
+                          <ComboboxOption
+                            key={refIndex}
+                            className={({ selected, active }) =>
+                              clsx(
+                                "relative cursor-pointer px-4 py-2 outline-hidden transition-colors select-none",
+                                active &&
+                                  !selected &&
+                                  "dark:bg-dark-600 bg-gray-100",
+                                selected
+                                  ? "bg-primary-600 dark:bg-primary-500 text-white"
+                                  : "dark:text-dark-100 text-gray-800",
+                              )
+                            }
+                            value={item}
+                          >
+                            {({ selected }) => (
+                              <div className="grid grid-cols-[1fr_140px] items-center gap-2">
+                                <span
+                                  className={`truncate ${
+                                    selected ? "font-medium" : "font-normal"
+                                  }`}
+                                >
+                                  {highlight ? (
+                                    <Highlight query={query}>
+                                      {String(item?.label ?? "")}
+                                    </Highlight>
+                                  ) : (
+                                    String(item?.label ?? "")
+                                  )}
+                                </span>
 
-    {filteredData.map(({ item, refIndex }) => (
-      <ComboboxOption
-        key={refIndex}
-        className={({ selected, active }) =>
-          clsx(
-            "relative cursor-pointer px-4 py-2 outline-hidden transition-colors select-none",
-            active && !selected && "dark:bg-dark-600 bg-gray-100",
-            selected
-              ? "bg-primary-600 dark:bg-primary-500 text-white"
-              : "dark:text-dark-100 text-gray-800",
-          )
-        }
-        value={item}
-      >
-        {({ selected }) => (
-          <div className="grid grid-cols-[1fr_140px] items-center gap-2">
-            <span
-              className={`truncate ${
-                selected ? "font-medium" : "font-normal"
-              }`}
-            >
-              {highlight ? (
-                <Highlight query={query}>
-                  {String(item?.label ?? "")}
-                </Highlight>
-              ) : (
-                String(item?.label ?? "")
-              )}
-            </span>
-
-            <span className="truncate text-right text-xs font-semibold text-gray-500 dark:text-gray-300">
-              {String(item?.effect ?? "")}
-            </span>
-          </div>
-        )}
-      </ComboboxOption>
-    ))}
-  </>
-)}
+                                <span className="truncate text-right text-xs font-semibold text-gray-500 dark:text-gray-300">
+                                  {String(item?.effect ?? "")}
+                                </span>
+                              </div>
+                            )}
+                          </ComboboxOption>
+                        ))}
+                      </>
+                    )}
                   </ComboboxOptions>
                 </Transition>
               </div>

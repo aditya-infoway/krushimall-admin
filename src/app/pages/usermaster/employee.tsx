@@ -55,9 +55,11 @@ type Employee = {
 
 type FormValues = {
   id?: number;
+    teamLeadId?: number;
   department: string;
   branch: string;
   role: string;
+  
   employeeName: string;
   mobileNumber: string;
   alternateNumber: string;
@@ -84,13 +86,7 @@ const statusOptions = [
 ];
 
 // Change from { id, name } to { label, value } format for Combobox
-const departmentOptions = [
-  { label: "Sales", value: "Sales" },
-  { label: "Marketing", value: "Marketing" },
-  { label: "HR", value: "HR" },
-  { label: "IT", value: "IT" },
-  { label: "Finance", value: "Finance" },
-];
+
 
 const branchOptions = [
   { label: "Mumbai", value: "Mumbai" },
@@ -100,13 +96,7 @@ const branchOptions = [
   { label: "Pune", value: "Pune" },
 ];
 
-const roleOptions = [
-  { label: "Manager", value: "Manager" },
-  { label: "Executive", value: "Executive" },
-  { label: "Associate", value: "Associate" },
-  { label: "Intern", value: "Intern" },
-  { label: "Team Lead", value: "Team Lead" },
-];
+
 
 const Employee = () => {
   const [showDrawer, setShowDrawer] = useState(false);
@@ -131,7 +121,8 @@ const Employee = () => {
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
   const [isBulkDelete, setIsBulkDelete] = useState(false);
-
+const [departmentOptions, setDepartmentOptions] = useState<any[]>([]);
+const [roleOptions, setRoleOptions] = useState<any[]>([]);
   // Add this after your useForm declaration
   const {
     register,
@@ -143,6 +134,7 @@ const Employee = () => {
   } = useForm<FormValues>({
     defaultValues: {
       department: "",
+          teamLeadId: undefined,
       branch: "",
       role: "",
       employeeName: "",
@@ -160,7 +152,23 @@ const Employee = () => {
   const formBranchValue = useWatch({ control, name: "branch" });
   const formRoleValue = useWatch({ control, name: "role" });
   const formStatusValue = useWatch({ control, name: "status" });
+  const formTeamLeadValue = useWatch({
+  control,
+  name: "teamLeadId",
+});
+const [teamLeadOptions, setTeamLeadOptions] = useState([]);
+const getTeamLeads = async (department: string) => {
+  const res = await apiHelper.get(
+    `/employees/team-leads?department=${department}`
+  );
 
+  setTeamLeadOptions(
+    res.data.map((item: any) => ({
+      label: item.employeeName,
+      value: item.id,
+    }))
+  );
+};
   const formValidationRules = {
     department: { required: "Department is required" },
     branch: { required: "Branch is required" },
@@ -218,6 +226,38 @@ const Employee = () => {
     { id: "ACTIVE", name: "Active" },
     { id: "INACTIVE", name: "Inactive" },
   ];
+const getDepartments = async () => {
+  try {
+    const res = await apiHelper.get("/employees/departments");
+
+    setDepartmentOptions(
+      res.data.map((item: any) => ({
+        label: item.name,
+        value: item.name,      // ✅ Store department name
+        departmentId: item.id, // Keep id separately
+      }))
+    );
+  } catch (err) {
+    console.log(err);
+  }
+};
+const getRoles = async (departmentId: number) => {
+  try {
+    const res = await apiHelper.get(
+      `/employees/roles/department/${departmentId}`
+    );
+
+    setRoleOptions(
+      res.data.map((item: any) => ({
+        label: item.roleName,
+        value: item.roleName, // Store role name
+      }))
+    );
+  } catch (err) {
+    console.log(err);
+  }
+};
+
   const getEmployees = async () => {
     try {
       const response = await apiHelper.get("/employees");
@@ -230,6 +270,8 @@ const Employee = () => {
 
   useEffect(() => {
     getEmployees();
+     getDepartments();
+    
   }, []);
   const handleOpenAddDrawer = () => {
     setEditId(null);
@@ -237,6 +279,7 @@ const Employee = () => {
       department: "",
       branch: "",
       role: "",
+        teamLeadId: undefined,
       employeeName: "",
       mobileNumber: "",
       alternateNumber: "",
@@ -248,32 +291,47 @@ const Employee = () => {
     setShowDrawer(true);
   };
 
-  const handleOpenEditDrawer = async (item: Employee) => {
-    try {
-      const response = await apiHelper.get(`/employees/${item.id}`);
+const handleOpenEditDrawer = async (item: Employee) => {
+  try {
+    const response = await apiHelper.get(`/employees/${item.id}`);
 
-      const employee = response.data;
+    const employee = response.data;
 
-      setEditId(employee.id);
+    setEditId(employee.id);
 
-      reset({
-        department: employee.department,
-        branch: employee.branch,
-        role: employee.role,
-        employeeName: employee.employeeName,
-        mobileNumber: employee.mobileNumber,
-        alternateNumber: employee.alternateNumber || "",
-        email: employee.email,
-        password: "",
-        confirmPassword: "",
-        status: employee.status,
-      });
+    // Load roles for selected department
+    const department = departmentOptions.find(
+      (d) => d.value === employee.department
+    );
 
-      setShowDrawer(true);
-    } catch (error) {
-      console.log(error);
+    if (department) {
+      await getRoles(department.departmentId);
     }
-  };
+
+    // Load Team Leads if role is Sales Executive
+    if (employee.role === "Sales Executive") {
+      await getTeamLeads(employee.department);
+    }
+
+    reset({
+      department: employee.department,
+      branch: employee.branch,
+      role: employee.role,
+    teamLeadId: employee.teamLeadId, 
+      employeeName: employee.employeeName,
+      mobileNumber: employee.mobileNumber,
+      alternateNumber: employee.alternateNumber || "",
+      email: employee.email,
+      password: "",
+      confirmPassword: "",
+      status: employee.status,
+    });
+
+    setShowDrawer(true);
+  } catch (error) {
+    console.log(error);
+  }
+};
   const handleDelete = (id: number) => {
     setDeleteTargetId(id);
     setIsBulkDelete(false);
@@ -332,6 +390,7 @@ const Employee = () => {
       const payload = {
         department: data.department,
         branch: data.branch,
+          teamLeadId: data.teamLeadId,
         role: data.role,
         employeeName: data.employeeName,
         mobileNumber: data.mobileNumber,
@@ -973,9 +1032,16 @@ const Employee = () => {
                           value={departmentOptions.find(
                             (item) => item.value === formDepartmentValue,
                           )}
-                          onChange={(val: any) =>
-                            setValue("department", val?.value || "")
-                          }
+                        onChange={(val: any) => {
+  setValue("department", val?.value || ""); // "Sales"
+  setValue("role", "");
+
+  if (val?.departmentId) {
+    getRoles(val.departmentId); // 1
+  } else {
+    setRoleOptions([]);
+  }
+}}
                           error={
                             errors?.department && errors.department.message
                           }
@@ -989,6 +1055,7 @@ const Employee = () => {
                             Branch <span className="text-red-500">*</span>
                           </span>
                         }
+                         placeholder="Select Branch"
                         data={branchOptions}
                         value={branchOptions.find(
                           (item) => item.value === formBranchValue,
@@ -1002,23 +1069,49 @@ const Employee = () => {
                   </div>
 
                   <div>
-                    <Combobox
-                      label={
-                        <span>
-                          Role <span className="text-red-500">*</span>
-                        </span>
-                      }
-                      data={roleOptions}
-                      value={roleOptions.find(
-                        (item) => item.value === formRoleValue,
-                      )}
-                      onChange={(val: any) =>
-                        setValue("role", val?.value || "")
-                      }
-                      error={errors?.role && errors.role.message}
-                    />
-                  </div>
+                   <Combobox
+  label={
+    <span>
+      Role <span className="text-red-500">*</span>
+    </span>
+  }
+  placeholder="Select Role"
+  data={roleOptions}
+  value={roleOptions.find(
+    (item) => item.value === formRoleValue
+  )}
+  onChange={(val: any) => {
+    setValue("role", val?.value || "");
 
+    if (val?.value === "Sales Executive") {
+      getTeamLeads(formDepartmentValue);
+    } else {
+      setTeamLeadOptions([]);
+      setValue("teamLeadId", undefined);
+    }
+  }}
+  error={errors?.role?.message}
+/>
+                  </div>
+{formRoleValue === "Sales Executive" && (
+  <Combobox
+    label={
+      <span>
+        Team Lead <span className="text-red-500">*</span>
+      </span>
+    }
+    placeholder="Select Team Lead"
+    data={teamLeadOptions}
+   value={
+  teamLeadOptions.find(
+    (item) => item.value === formTeamLeadValue
+  ) || null
+}
+    onChange={(val: any) =>
+      setValue("teamLeadId", val?.value || undefined)
+    }
+  />
+)}
                   <div>
                     <Input
                       label={
