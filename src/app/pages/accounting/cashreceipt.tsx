@@ -437,7 +437,7 @@ export default function CashReceipt() {
         type: form.type,
         cashAccountId: form.cashAccount.value,
         oppAccountId: form.oppAccount.value,
-        leadId: form.type === "Lead" ? Number(form.leadNo) : null,
+         leadId: form.type === "Lead" && form.leadNo ? Number(form.leadNo.value) : null,
         amount: Number(form.amount),
         narration: form.narration,
       };

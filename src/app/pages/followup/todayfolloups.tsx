@@ -557,7 +557,7 @@ useEffect(() => {
       {view === "grid" && (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           {/* Pending Column */}
-          <div className="dark:bg-dark-600 min-h-[400px] rounded-xl bg-gray-100 p-4">
+          <div className="dark:bg-dark-600 min-h-100 rounded-xl bg-gray-100 p-4">
             <div className="dark:bg-dark-700 mb-3 flex items-center justify-between rounded-lg bg-white px-4 py-2 shadow-sm">
               <div className="flex items-center gap-2">
                 <div className="flex h-6 w-6 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/30">

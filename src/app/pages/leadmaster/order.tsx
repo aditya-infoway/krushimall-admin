@@ -573,6 +573,8 @@ const getCompany = () => {
     fetchFinances();
     fetchVehicleInventory();
   }, []);
+  const [grandTotal, setGrandTotal] = useState("0");
+
   useEffect(() => {
     if (!id) return;
 
@@ -585,11 +587,7 @@ const getCompany = () => {
         console.log("CREATE ORDER LEAD RESPONSE:", response.data);
 
         const lead = response.data?.data || response.data;
-        setPayment((prev) => ({
-          ...prev,
-
-          invoiceAmount: String(Number(lead?.quotationGrandTotal) || 0),
-        }));
+       setGrandTotal(String(Number(lead?.quotationGrandTotal) || 0));
         // ==========================================
         // 1. VEHICLE CHARGES
         // ==========================================
@@ -792,6 +790,7 @@ const getCompany = () => {
               : "",
 
           vehicleNo: exchangeDetails?.vehicleNo ?? "",
+          
         }));
       } catch (error) {
         console.error("GET CREATE ORDER LEAD ERROR:", error);
@@ -860,37 +859,57 @@ const getCompany = () => {
       vehicleColour === leadColour
     );
   });
-  useEffect(() => {
+// ─── 1) Add a new state near your other useState declarations ───────────────
+// (place this next to `const [payment, setPayment] = useState<PaymentDetails>({...})`)
+
+
+// ─── 2) Inside the `getLeadDetails` effect, REPLACE this block: ─────────────
+//
+//   setPayment((prev) => ({
+//     ...prev,
+//     invoiceAmount: String(Number(lead?.quotationGrandTotal) || 0),
+//   }));
+//
+// WITH this: ──────────────────────────────────────────────────────────────
+
+
+
+// ─── 3) Replace the payment-calculation useEffect with this: ────────────────
+
+useEffect(() => {
+  // Company Share + Dealer Share
+  const companyShare = Number(exchange.companyShare) || 0;
+
+  const dealerShare = Number(exchange.dealerShares) || 0;
+
+  // Exchange Discount
+  const exchangeDiscount = companyShare + dealerShare;
+
+  // Raw Quotation Grand Total (never changes here)
+  const total = Number(grandTotal) || 0;
+
+  // Invoice Amount = Total - Exchange Discount
+  const invoiceAmount = Math.max(total - exchangeDiscount, 0);
+
+  setPayment((prev) => ({
+    ...prev,
+
     // Company Share + Dealer Share
-    const companyShare = Number(exchange.companyShare) || 0;
+    exchangeDiscount: String(exchangeDiscount),
 
-    const dealerShare = Number(exchange.dealerShares) || 0;
+    // Total = raw Quotation Grand Total
+    total: String(total),
 
-    // Exchange Discount
-    const exchangeDiscount = companyShare + dealerShare;
+    // Invoice Amount = Total - Exchange Discount
+    invoiceAmount: String(invoiceAmount),
 
-    // Invoice Amount
-    const invoiceAmount = Number(payment.invoiceAmount) || 0;
+    // Received Amount = Exchange Discount
+    receivedAmount: String(exchangeDiscount),
 
-    // Invoice Amount - Exchange Discount
-    const total = Math.max(invoiceAmount - exchangeDiscount, 0);
-
-    setPayment((prev) => ({
-      ...prev,
-
-      // Company Share + Dealer Share
-      exchangeDiscount: String(exchangeDiscount),
-
-      // Invoice Amount - Exchange Discount
-      total: String(total),
-
-      // Only show Exchange Discount
-      receivedAmount: String(exchangeDiscount),
-
-      // Received Amount is not deducted
-      pendingAmount: String(total),
-    }));
-  }, [exchange.companyShare, exchange.dealerShares, payment.invoiceAmount]);
+    // Pending Amount = Invoice Amount
+    pendingAmount: String(invoiceAmount),
+  }));
+}, [exchange.companyShare, exchange.dealerShares, grandTotal]);
   const handleCreateOrder = async () => {
   try {
     // =====================================
