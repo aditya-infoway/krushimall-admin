@@ -225,7 +225,7 @@ const FollowupHistory: React.FC = () => {
                           <span className="font-semibold text-gray-700 dark:text-gray-300">
                             Call Discussion:
                           </span>
-                          <span className="break-words text-gray-600 dark:text-gray-400">
+                          <span className="wrap-break-word text-gray-600 dark:text-gray-400">
                             {entry.discussion || "—"}
                           </span>
                         </div>
@@ -247,22 +247,24 @@ const FollowupHistory: React.FC = () => {
                           <span className="font-semibold text-gray-700 dark:text-gray-300">
                             Employee Name:
                           </span>
-                          <span className="text-right break-words text-gray-600 dark:text-gray-400">
+                          <span className="text-right wrap-break-word text-gray-600 dark:text-gray-400">
                             {entry.createdType === "BRANCH"
                               ? lead?.branch?.branchName ||
                                 entry.createdBy ||
                                 "—"
-                              : lead?.company?.companyName ||
-                                entry.createdBy ||
-                                "—"}
+                              : entry.createdType === "SALES_EXECUTIVE"
+                                ? entry.createdBy || "—"
+                                : lead?.company?.companyName ||
+                                  entry.createdBy ||
+                                  "—"}
                           </span>
                         </div>
-                        <div className=" flex flex-wrap items-center justify-end gap-1.5 text-xs sm:gap-2 sm:text-sm">
+                        <div className="flex flex-wrap items-center justify-end gap-1.5 text-xs sm:gap-2 sm:text-sm">
                           <CalendarDaysIcon className="text-primary-500 h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
                           <span className="font-semibold text-gray-700 dark:text-gray-300">
                             Created Date & Time:
                           </span>
-                          <span className="text-right break-words text-gray-600 dark:text-gray-400">
+                          <span className="text-right wrap-break-word text-gray-600 dark:text-gray-400">
                             {formatDateTime(entry.createdAt)}
                           </span>
                         </div>
