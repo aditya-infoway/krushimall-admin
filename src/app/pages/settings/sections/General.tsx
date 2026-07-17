@@ -673,9 +673,9 @@ export default function General() {
           </div>
         </div>
       </div>
-      <div className="mt-6 max-h-[500px] overflow-auto rounded-lg border border-gray-700">
+      <div className="mt-6 max-h-125 overflow-auto rounded-lg border border-gray-700">
         <table className="w-full border-collapse">
-          <thead className="sticky top-0 z-10 bg-white dark:bg-gray-900">
+          <thead className="sticky top-0 z-0 bg-white dark:bg-gray-900">
             <tr>
               <th className="sticky top-0 border border-gray-700 bg-white p-3 text-left dark:bg-gray-900">
                 Prefix For

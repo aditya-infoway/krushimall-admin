@@ -933,12 +933,10 @@ useEffect(() => {
       return;
     }
 
-    if (!allotment.chassisNo) {mappedVehicles 
-      toast.error(
-        "Please select chassis number",
-      );
-      return;
-    }
+ if (!allotment.chassisNo) {
+  toast.error("Please select chassis number");
+  return;
+}
 
     // =====================================
     // PAYMENT AMOUNTS
