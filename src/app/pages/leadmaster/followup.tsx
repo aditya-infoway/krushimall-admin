@@ -161,7 +161,7 @@ export default function Followup() {
       : followups;
   const fetchFollowups = async () => {
     try {
-      const res = await apiHelper.get(`/followup/lead/${id}`);
+      const res = await apiHelper.get(`/followup/lead/${id}/latest`);
 
       setFollowups(res.data || []);
     } catch (error) {

@@ -183,46 +183,46 @@ const Account = () => {
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-2 md:flex-nowrap">
-  {/* Left side - Filter and icons */}
-  <div className="flex items-center gap-2">
-    <button
-      type="button"
-      onClick={() => setShowFilterBar(!showFilterBar)}
-      className={`inline-flex items-center gap-1.5 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
-        showFilterBar
-          ? "bg-primary-50 border-primary-200 text-primary-600 dark:bg-dark-600 dark:border-dark-500 dark:text-white"
-          : "dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
-      }`}
-    >
-      <FunnelIcon className="size-4.5" />
-      <span className="hidden sm:inline">Filter</span>
-    </button>
+          {/* Left side - Filter and icons */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowFilterBar(!showFilterBar)}
+              className={`inline-flex items-center gap-1.5 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
+                showFilterBar
+                  ? "bg-primary-50 border-primary-200 text-primary-600 dark:bg-dark-600 dark:border-dark-500 dark:text-white"
+                  : "dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              <FunnelIcon className="size-4.5" />
+              <span className="hidden sm:inline">Filter</span>
+            </button>
 
-    <button
-      type="button"
-      className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
-    >
-      <RiFileExcel2Fill className="text-lg text-green-500" />
-    </button>
+            <button
+              type="button"
+              className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            >
+              <RiFileExcel2Fill className="text-lg text-green-500" />
+            </button>
 
-    <button
-      type="button"
-      className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
-    >
-      <RiFilePdfFill className="text-lg text-red-500" />
-    </button>
-  </div>
+            <button
+              type="button"
+              className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            >
+              <RiFilePdfFill className="text-lg text-red-500" />
+            </button>
+          </div>
 
-  {/* Right side - Add Account button */}
-  <Button
-    color="primary"
-    onClick={handleAdd}
-    className="whitespace-nowrap"
-  >
-    <PlusIcon className="mr-1.5 size-4.5" />
-    Add Account
-  </Button>
-</div>
+          {/* Right side - Add Account button */}
+          <Button
+            color="primary"
+            onClick={handleAdd}
+            className="whitespace-nowrap"
+          >
+            <PlusIcon className="mr-1.5 size-4.5" />
+            Add Account
+          </Button>
+        </div>
       </div>
 
       {/* Search */}
@@ -375,7 +375,10 @@ const Account = () => {
                       {item.state}
                     </Td>
                     <Td className="dark:text-dark-200 py-4 text-gray-600">
-                      {item.createdBy}
+                      {item.employee?.employeeName ||
+                        item.createdByBranch?.branchName ||
+                        item.createdBy ||
+                        "-"}
                     </Td>
                     <Td className="dark:text-dark-200 py-4 text-gray-600">
                       {item.createdType}

@@ -162,7 +162,7 @@ export default function Followup() {
       : followups;
   const fetchFollowups = async () => {
     try {
-      const res = await apiHelper.get(`/followup/lead/${id}`);
+      const res = await apiHelper.get(`/followup/lead/${id}/latest`);
 
       setFollowups(res.data || []);
     } catch (error) {
@@ -301,7 +301,7 @@ export default function Followup() {
                     className="dark:bg-dark-600/50 dark:border-dark-600 mt-3 rounded-lg border border-gray-200 bg-gray-50 p-3 shadow-sm"
                   >
                     <div className="text-primary-500 dark:text-primary-400 mb-2 text-sm font-semibold">
-                      Created By : Admin
+                      Created By : {item.createdBy || "N/A"}
                     </div>
 
                     <div className="dark:text-dark-200 mb-1 text-sm text-gray-600">
