@@ -250,6 +250,7 @@ useEffect(() => {
   );
 }, [editData, reset]);
 const onSubmit = async (data: BasicInformationType) => {
+  
   try {
     const payload = {
       categoryId: data.categoryId ? Number(data.categoryId) : null,
@@ -290,10 +291,18 @@ const onSubmit = async (data: BasicInformationType) => {
       currentStep: 0,
     };
 
-    const res = await apiHelper.post("/website-variants", payload);
-    const websiteVariantId = res.data.id;
-
-    localStorage.setItem("websiteVariantId", websiteVariantId.toString());
+   if (websiteVariantId) {
+      // UPDATE — existing record (edit mode ya already-created record)
+      await apiHelper.put(
+        `/website-variants/${websiteVariantId}/save-step`,
+        payload,
+      );
+    } else {
+      // CREATE — sirf tab jab genuinely naya record ban raha ho
+      const res = await apiHelper.post("/website-variants", payload);
+      const newVariantId = res.data.id;
+      setWebsiteVariantId(String(newVariantId));
+    }
 
     kycFormCtx.dispatch({
       type: "SET_FORM_DATA",
@@ -753,36 +762,48 @@ const parseLocalDate = (dateStr: string): Date | undefined => {
           <p className="mb-4 text-sm text-gray-500">
             Select available colors for this tractor
           </p>
+<div className="flex flex-wrap gap-3">
+  {colorOptions.map((color) => (
+    <label key={color.value} className="flex items-center gap-2">
+      <Controller
+        name={`colors.${color.value}` as any}
+        control={control}
+        render={({ field }) => (
+          <input
+            type="checkbox"
+            checked={!!field.value}
+            onChange={(e) => field.onChange(e.target.checked)}
+            className="h-4 w-4 rounded border-gray-300"
+          />
+        )}
+      />
+      <span
+        className="flex h-6 w-6 rounded-full"
+        style={{ backgroundColor: color.value }}
+      />
+      <span>{color.label}</span>
+    </label>
+  ))}
 
-          <div className="flex flex-wrap gap-3">
-            {colorOptions.map((color) => (
-              <label key={color.value} className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                      {...register(`colors.${color.value}` as any)}
-
-                  className="h-4 w-4 rounded border-gray-300"
-                />
-                <span
-                  className="flex h-6 w-6 rounded-full"
-                  style={{ backgroundColor: color.value }}
-                />
-                <span>{color.label}</span>
-              </label>
-            ))}
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                {...register("colors.custom")}
-                onChange={(e) => {
-                  setValue("showCustomColor", e.target.checked);
-                  register("colors.custom").onChange(e);
-                }}
-                className="h-4 w-4 rounded border-gray-300"
-              />
-              <span>Custom</span>
-            </label>
-          </div>
+  <label className="flex items-center gap-2">
+    <Controller
+      name="colors.custom"
+      control={control}
+      render={({ field }) => (
+        <input
+          type="checkbox"
+          checked={!!field.value}
+          onChange={(e) => {
+            field.onChange(e.target.checked);
+            setValue("showCustomColor", e.target.checked);
+          }}
+          className="h-4 w-4 rounded border-gray-300"
+        />
+      )}
+    />
+    <span>Custom</span>
+  </label>
+</div>
 
           {showCustomColorInput && (
             <div className="mt-4 grid gap-4 md:grid-cols-2">
@@ -1040,11 +1061,11 @@ const parseLocalDate = (dateStr: string): Date | undefined => {
       </div>
 
       <div className="mt-8 flex justify-end space-x-3">
-        <Button type="button" className="min-w-[7rem]">
+        <Button type="button" className="min-w-28">
           Cancel
         </Button>
-        <Button type="submit" className="min-w-[7rem]" color="primary">
-          Save & Next
+        <Button type="submit" className="min-w-28" color="primary">
+          {websiteVariantId ? "Update & Next" : "Save & Next"}
         </Button>
       </div>
     </form>

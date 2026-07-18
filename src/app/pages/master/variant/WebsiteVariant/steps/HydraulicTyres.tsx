@@ -17,7 +17,7 @@ import {
 // ----------------------------------------------------------------------
 import { Listbox } from "@/components/shared/form/StyledListbox";
 import { toast } from "sonner";
-
+import { useEffect } from "react";
 
 // Options for select fields
 const hydraulicTypeOptions = [
@@ -103,28 +103,58 @@ const draftSensitivityOptions = [
 ];
 export function HydraulicTyres({
   setCurrentStep,
+  websiteVariantId,   
+  editData, 
 }: {
   setCurrentStep: React.Dispatch<React.SetStateAction<number>>;
+  websiteVariantId?: string | null;
+  editData?: any;
 }) {
   const kycFormCtx = useKYCFormContext();
   const [loading, setLoading] = useState(false);
 
-  const {
+   const {
     register,
     handleSubmit,
     formState: { errors },
     control,
     watch,
+    reset,             // ✅
   } = useForm<HydraulicTyresType>({
     resolver: yupResolver(HydraulicTyresSchema) as Resolver<HydraulicTyresType>,
     defaultValues: kycFormCtx.state.formData.HydraulicTyres,
   });
+ useEffect(() => {
+    if (!editData) return;
 
+    reset({
+      liftingCapacity: editData.liftingCapacity ?? "",
+      liftingCapacityAt610mm: editData.liftingCapacityAt610mm ?? "",
+      hydraulicType: editData.hydraulicType ?? "",
+      controlType: editData.controlType ?? "",
+      remoteValveType: editData.remoteValveType ?? "",
+      numberOfRemoteValves: editData.numberOfRemoteValves ?? "",
+      threePointLinkage: editData.threePointLinkage ?? "",
+      linkageCategory: editData.linkageCategory ?? "",
+      topLink: editData.topLink ?? "",
+      draftSensitivity: editData.draftSensitivity ?? "",
+      features: {
+        externalHydraulicCylinder: editData.externalHydraulicCylinder ?? false,
+        selfLevelling: editData.selfLevelling ?? false,
+        quickHitch: editData.quickHitch ?? false,
+        downPositionControl: editData.downPositionControl ?? false,
+        loadSensing: editData.loadSensing ?? false,
+        flowControl: editData.flowControl ?? false,
+        returnToDepth: editData.returnToDepth ?? false,
+        transportLock: editData.transportLock ?? false,
+      },
+    });
+  }, [editData, reset]);
  const onSubmit = async (data: HydraulicTyresType) => {
   try {
     setLoading(true);
 
-    const websiteVariantId = localStorage.getItem("websiteVariantId");
+    
 
     if (!websiteVariantId) {
       toast.warning("No website variant found. Please save basic information first.");
@@ -580,18 +610,18 @@ export function HydraulicTyres({
         <Button
           type="button"
           // variant="outline"
-          className="min-w-[7rem]"
+          className="min-w-28"
           onClick={() => setCurrentStep(2)}
         >
           Previous
         </Button>
         <Button
           type="submit"
-          className="min-w-[7rem]"
+          className="min-w-28"
           color="primary"
           disabled={loading}
         >
-          {loading ? "Saving..." : "Save & Next"}
+              {websiteVariantId ? "Update & Next" : "Save & Next"}
         </Button>
       </div>
     </form>

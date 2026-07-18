@@ -24,6 +24,7 @@ import { toast } from "sonner";
 export function PreviewSubmit({
   setCurrentStep,
   setFinished,
+   websiteVariantId
 }: {
   setCurrentStep: React.Dispatch<React.SetStateAction<number>>;
   setFinished: React.Dispatch<React.SetStateAction<boolean>>;
@@ -82,17 +83,14 @@ export function PreviewSubmit({
     tractorData?.warrantyCard,
     tractorData?.others,
   ].filter(Boolean);
-  useEffect(() => {
-    loadData();
-  }, []);
+
 
   const loadData = async () => {
     try {
-      const id = localStorage.getItem("websiteVariantId");
+   
+        if (!websiteVariantId) return;
 
-      if (!id) return;
-
-      const res = await apiHelper.get(`/website-variants/${id}`);
+      const res = await apiHelper.get(`/website-variants/${websiteVariantId}`);
 
       console.log("Full API Response =>", res.data);
       console.log("Variant Data =>", res.data.data);
@@ -102,13 +100,15 @@ export function PreviewSubmit({
       console.error(error);
     }
   };
-
+ useEffect(() => {
+    loadData();
+  }, [websiteVariantId]);
 
  const handleSubmit = async () => {
   try {
     setLoading(true);
 
-    const websiteVariantId = localStorage.getItem("websiteVariantId");
+  
 
     if (!websiteVariantId) {
       toast.warning("Website Variant ID not found");
@@ -121,7 +121,7 @@ export function PreviewSubmit({
 
     toast.success("Tractor submitted successfully for review!");
     setFinished(true);
-    localStorage.removeItem("websiteVariantId");
+  
   } catch (error: any) {
     console.error("Submit Error:", error);
     toast.error(error.response?.data?.message || "Failed to submit. Please try again.");

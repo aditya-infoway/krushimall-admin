@@ -274,6 +274,10 @@ export default function Createvariant() {
   const formBrandValue = useWatch({ control, name: "brand" });
   const formModelValue = useWatch({ control, name: "model" });
   const formImageValue = useWatch({ control, name: "image" });
+  const formModelYearId = useWatch({
+  control,
+  name: "modelYearId",
+});
   // const formValidationRules = {
   //   category: { required: "Category is required" },
   //   brand: { required: "Brand is required" },
@@ -1221,15 +1225,20 @@ export default function Createvariant() {
                     <label className="mb-2 block text-sm font-medium">
                       Year
                     </label>
-                    <Listbox
-                      data={modelYearOptions}
-                      placeholder="Select Model Year"
-                      onChange={(opt: any) => {
-                        setValue("modelYear", opt.name);
-                        setValue("modelYearId", opt.id);
-                      }}
-                      displayField="name"
-                    />
+                 <Combobox
+  data={modelYearOptions}
+  value={
+    modelYearOptions.find(
+      (opt) => Number(opt.id) === Number(formModelYearId)
+    ) || null
+  }
+  placeholder="Select Model Year"
+  onChange={(opt: any) => {
+    setValue("modelYear", opt.name);
+    setValue("modelYearId", Number(opt.id));
+  }}
+  displayField="name"
+/>
                   </div>
                   <div>
                     <label className="mb-2 block text-sm font-medium">
