@@ -1,7 +1,7 @@
 // Import Dependencies
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Controller, Resolver, useForm } from "react-hook-form";
-import { useState } from "react";
+import { useState,useEffect } from "react";
 // Local Imports
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import L from "leaflet";
@@ -57,8 +57,12 @@ function LocationMarker({
 }
 export function PriceLocation({
   setCurrentStep,
+    websiteVariantId,  
+  editData,  
 }: {
   setCurrentStep: React.Dispatch<React.SetStateAction<number>>;
+   websiteVariantId?: string | null;
+  editData?: any;
 }) {
   const kycFormCtx = useKYCFormContext();
   const [position, setPosition] = useState<[number, number]>([
@@ -70,6 +74,7 @@ export function PriceLocation({
     formState: { errors },
     control,
     watch,
+      reset,   
   } = useForm<PriceLocationType>({
     resolver: yupResolver(PriceLocationSchema) as Resolver<PriceLocationType>,
     defaultValues: kycFormCtx.state.formData.PriceLocation,
@@ -82,7 +87,39 @@ export function PriceLocation({
   const [city, setCity] = useState("");
   const [district, setDistrict] = useState("");
   const [stateCode, setStateCode] = useState("");
+  useEffect(() => {
+    if (!editData) return;
 
+    reset({
+      exShowroomPrice: editData.exShowroomPrice ?? "",
+      onRoadPrice: editData.onRoadPrice ?? "",
+      currency: editData.currency ?? "",
+      gst: editData.gst ?? "",
+      tcsApplicable: editData.tcsApplicable ?? "",
+      tcsPercentage: editData.tcsPercentage ?? "",
+      financeAvailable: editData.financeAvailable ?? "",
+      emiAvailable: editData.emiAvailable ?? "",
+      downPayment: editData.downPayment ?? "",
+      exchangeOffer: editData.exchangeOffer ?? "",
+      offerPrice: editData.offerPrice ?? "",
+      negotiable: editData.negotiable ?? "",
+      country: editData.country ?? "",
+      state: editData.state ?? "",
+      district: editData.district ?? "",
+      taluka: editData.taluka ?? "",
+      city: editData.city ?? "",
+      pincode: editData.pincode ?? "",
+      landmark: editData.landmark ?? "",
+      fullAddress: editData.fullAddress ?? "",
+    });
+
+    setCountry(editData.country ?? "");
+    setState(editData.state ?? "");
+
+    if (editData.latitude && editData.longitude) {
+      setPosition([editData.latitude, editData.longitude]);
+    }
+  }, [editData, reset]);
 
 
 
@@ -92,7 +129,7 @@ export function PriceLocation({
 
  const onSubmit = async (data: PriceLocationType) => {
   try {
-    const websiteVariantId = localStorage.getItem("websiteVariantId");
+   
 
     if (!websiteVariantId) {
       toast.warning("No website variant found. Please save basic information first.");
@@ -797,13 +834,13 @@ export function PriceLocation({
         <Button
           type="button"
           variant="outlined"
-          className="min-w-[7rem]"
+          className="min-w-28"
           onClick={() => setCurrentStep(3)}
         >
           Previous
         </Button>
-        <Button type="submit" className="min-w-[7rem]" color="primary">
-          Save & Next
+        <Button type="submit" className="min-w-28" color="primary">
+             {websiteVariantId ? "Update & Next" : "Save & Next"}
         </Button>
       </div>
     </form>

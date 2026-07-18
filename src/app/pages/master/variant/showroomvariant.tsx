@@ -48,7 +48,7 @@ type Accessory = {
 type FormValues = {
   modelId: number | string;
   modelName: string;
-   variantId: number | string;
+  variantId: number | string;
 
   variantName: string;
   purPrice: string;
@@ -126,12 +126,9 @@ const AccessoryCombobox = ({
 }) => {
   const [inputValue, setInputValue] = useState(value);
   const [showDropdown, setShowDropdown] = useState(false);
-const [filteredOptions, setFilteredOptions] =
-  useState<any[]>([]);
+  const [filteredOptions, setFilteredOptions] = useState<any[]>([]);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  
 
   useEffect(() => {
     setInputValue(value);
@@ -156,9 +153,9 @@ const [filteredOptions, setFilteredOptions] =
     onChange(val);
 
     if (val.trim()) {
-     const filtered = options.filter((opt) =>
-  opt.itemName.toLowerCase().includes(val.toLowerCase())
-);
+      const filtered = options.filter((opt) =>
+        opt.itemName.toLowerCase().includes(val.toLowerCase()),
+      );
       setFilteredOptions(filtered);
       setShowDropdown(true);
     } else {
@@ -174,10 +171,10 @@ const [filteredOptions, setFilteredOptions] =
     inputRef.current?.focus();
   };
 
-const handleFocus = () => {
-  setFilteredOptions(options);
-  setShowDropdown(true);
-};
+  const handleFocus = () => {
+    setFilteredOptions(options);
+    setShowDropdown(true);
+  };
 
   return (
     <div ref={wrapperRef} className="relative w-full">
@@ -199,7 +196,7 @@ const handleFocus = () => {
         <div className="dark:border-dark-500 dark:bg-dark-700 absolute z-50 mt-1 max-h-48 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg">
           {filteredOptions.map((option) => (
             <div
-               key={option.id}
+              key={option.id}
               className="dark:hover:bg-dark-600 cursor-pointer px-3 py-2 text-sm transition-colors hover:bg-gray-100"
               onClick={() => handleOptionSelect(option.itemName)}
             >
@@ -225,58 +222,55 @@ export default function ShowroomVariantPage() {
   const [showFilterBar, setShowFilterBar] = useState(false);
   const [selectedModelFilter, setSelectedModelFilter] = useState("All");
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
-const [accessoryOptions, setAccessoryOptions] = useState<any[]>([]);
+  const [accessoryOptions, setAccessoryOptions] = useState<any[]>([]);
   const [accessories, setAccessories] = useState<Accessory[]>([
-    { name: "",   qty: 0, price: 0, taxPercent: 0, totalPrice: 0 },
+    { name: "", qty: 0, price: 0, taxPercent: 0, totalPrice: 0 },
   ]);
   const [accessoryErrors, setAccessoryErrors] = useState<{
     [key: number]: string;
   }>({});
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-const [confirmState, setConfirmState] = useState<"pending" | "success" | "error">("pending");
-const [confirmLoading, setConfirmLoading] = useState(false);
-const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
-const [isBulkDelete, setIsBulkDelete] = useState(false);
+  const [confirmState, setConfirmState] = useState<
+    "pending" | "success" | "error"
+  >("pending");
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+  const [isBulkDelete, setIsBulkDelete] = useState(false);
 
   const modelOptions = models.map((m) => ({ id: String(m.id), name: m.name }));
-const [variantOptions, setVariantOptions] = useState<
-  {
-    id: number;
-    name: string;
-    modelId: number;
-  }[]
->([]);
+  const [variantOptions, setVariantOptions] = useState<
+    {
+      id: number;
+      name: string;
+      modelId: number;
+    }[]
+  >([]);
   useEffect(() => {
     getVariants();
-      getCreateVariants();
+    getCreateVariants();
     getModels();
-      getAccessories();
+    getAccessories();
   }, []);
-const getCreateVariants = async () => {
-  try {
-    const response = await apiHelper.get("/variant");
+  const getCreateVariants = async () => {
+    try {
+      const response = await apiHelper.get("/variant");
 
-    const data = response?.data || response;
+      const data = response?.data || response;
 
-    const activeVariants = (
-      Array.isArray(data) ? data : []
-    )
-      .filter(
-        (item: any) =>
-          item.status === "ACTIVE",
-      )
-      .map((item: any) => ({
-        id: Number(item.id),
-        name: item.variantName,
-        modelId: Number(item.modelId),
-      }));
+      const activeVariants = (Array.isArray(data) ? data : [])
+        .filter((item: any) => item.status === "ACTIVE")
+        .map((item: any) => ({
+          id: Number(item.id),
+          name: item.variantName,
+          modelId: Number(item.modelId),
+        }));
 
-    setVariantOptions(activeVariants);
-  } catch (error) {
-    setVariantOptions([]);
-  }
-};
+      setVariantOptions(activeVariants);
+    } catch (error) {
+      setVariantOptions([]);
+    }
+  };
   const getVariants = async () => {
     try {
       setLoading(true);
@@ -284,8 +278,8 @@ const getCreateVariants = async () => {
       let data = response?.data || response;
       if (!Array.isArray(data)) data = [];
       setVariants(data);
-       console.log("", data);
-    console.log("Accessories:", accessories);
+      console.log("", data);
+      console.log("Accessories:", accessories);
     } catch (error) {
       console.error(error);
       setVariants([]);
@@ -308,19 +302,19 @@ const getCreateVariants = async () => {
       setModels([]);
     }
   };
-const getAccessories = async () => {
-  try {
-    const res = await apiHelper.get("/accessories");
+  const getAccessories = async () => {
+    try {
+      const res = await apiHelper.get("/accessories");
 
-    const data = res.data || [];
+      const data = res.data || [];
 
-    console.log("Accessories API:", data);
+      console.log("Accessories API:", data);
 
-    setAccessoryOptions(data);
-  } catch (error) {
-    console.error(error);
-  }
-};
+      setAccessoryOptions(data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
   // ─── Validation Rules ──────────────────────────────────────────────
   const validationRules = {
     modelId: {
@@ -384,8 +378,8 @@ const getAccessories = async () => {
     defaultValues: {
       modelId: "",
       modelName: "",
-     variantId: "",
-variantName: "",
+      variantId: "",
+      variantName: "",
       purPrice: "",
       purTaxPercent: "18",
       exShowroomPrice: "",
@@ -400,20 +394,20 @@ variantName: "",
     },
     mode: "onChange",
   });
-const formVariantValue = useWatch({
-  control,
-  name: "variantName",
-});
-const selectedVariantId = useWatch({
-  control,
-  name: "variantId",
-});
+  const formVariantValue = useWatch({
+    control,
+    name: "variantName",
+  });
+  const selectedVariantId = useWatch({
+    control,
+    name: "variantId",
+  });
   // All useWatch hooks at the top level
   const formModelValue = useWatch({ control, name: "modelName" });
   const selectedModelId = useWatch({
-  control,
-  name: "modelId",
-});
+    control,
+    name: "modelId",
+  });
   const formRtoTaxType = useWatch({ control, name: "rtoTaxType" });
   const formStatus = useWatch({ control, name: "status" });
   const purPrice = useWatch({ control, name: "purPrice" });
@@ -476,119 +470,111 @@ const selectedVariantId = useWatch({
     accessories,
     setValue,
   ]);
-const filteredVariantOptions = variantOptions
-  .filter(
-    (variant) =>
-      Number(variant.modelId) ===
-      Number(selectedModelId),
-  )
-  .map((variant) => ({
-    id: String(variant.id),
-    name: variant.name,
-  }));
+  const filteredVariantOptions = variantOptions
+    .filter((variant) => Number(variant.modelId) === Number(selectedModelId))
+    .map((variant) => ({
+      id: String(variant.id),
+      name: variant.name,
+    }));
   const handleRtoTaxTypeChange = (type: string) => {
     setValue("rtoTaxType", type);
     setValue("rtoTaxPercent", RTO_TAX_MAP[type] ?? "1");
   };
 
- const handleOpenAddDrawer = () => {
-  setEditId(null);
+  const handleOpenAddDrawer = () => {
+    setEditId(null);
 
-  const firstModel = models[0] || {
-    id: "",
-    name: "",
+    const firstModel = models[0] || {
+      id: "",
+      name: "",
+    };
+
+    setAccessories([
+      {
+        name: "",
+        qty: 0,
+        price: 0,
+        taxPercent: 0,
+        totalPrice: 0,
+      },
+    ]);
+
+    setAccessoryErrors({});
+
+    reset({
+      modelId: "",
+      modelName: "",
+      variantId: "",
+      variantName: "",
+      purPrice: "",
+      purTaxPercent: "18",
+      exShowroomPrice: "",
+      exShowroomTaxPercent: "18",
+      insurance: "",
+      insuranceTaxPercent: "18",
+      rtoCharge: "",
+      rtoTaxType: "Agriculture",
+      rtoTaxPercent: "1",
+      salesPrice: "",
+      status: "ACTIVE",
+    });
+
+    setShowDrawer(true);
   };
 
-  setAccessories([
-    {
-      name: "",
-      qty:0,
-      price: 0,
-      taxPercent: 0,
-      totalPrice: 0,
-    },
-  ]);
+  const handleOpenEditDrawer = (item: any) => {
+    setEditId(item.id);
 
-  setAccessoryErrors({});
+    setAccessories(
+      item.accessories?.length
+        ? item.accessories.map((acc: any) => ({
+            accessoryId: acc.accessoryId,
+            name: acc.accessory?.itemName || "",
+            qty: Number(acc.qty) || 0,
 
-  reset({
-    modelId: "",
-    modelName:"",
-   variantId: "",
-variantName: "",
-    purPrice: "",
-    purTaxPercent: "18",
-    exShowroomPrice: "",
-    exShowroomTaxPercent: "18",
-    insurance: "",
-    insuranceTaxPercent: "18",
-    rtoCharge: "",
-    rtoTaxType: "Agriculture",
-    rtoTaxPercent: "1",
-    salesPrice: "",
-    status: "ACTIVE",
-  });
+            price: Number(acc.price) || 0,
+            taxPercent: Number(acc.taxPercent) || 0,
+            totalPrice: Number(acc.totalPrice) || 0,
+          }))
+        : [{ name: "", price: 0, taxPercent: 0, totalPrice: 0 }],
+    );
 
-  setShowDrawer(true);
-};
+    setAccessoryErrors({});
 
-const handleOpenEditDrawer = (item: any) => {
-  setEditId(item.id);
+    reset({
+      modelId: item.modelId,
+      modelName: item.model || "",
+      variantId: item.variantId || "",
 
-  setAccessories(
-    item.accessories?.length
-      ? item.accessories.map((acc: any) => ({
-        accessoryId: acc.accessoryId,
+      variantName: item.variantName || "",
+      purPrice: String(item.purPrice || ""),
+      purTaxPercent: String(item.purTaxPercent || "18"),
+      exShowroomPrice: String(item.exShowroomPrice || ""),
+      exShowroomTaxPercent: String(item.exShowroomTaxPercent || "18"),
+      insurance: String(item.insurance || ""),
+      insuranceTaxPercent: String(item.insuranceTaxPercent || "18"),
+      rtoCharge: String(item.rtoCharge || ""),
+      rtoTaxType: item.rtoTaxType || "Agriculture",
+      rtoTaxPercent: String(item.rtoTaxPercent || "1"),
+      salesPrice: String(item.salesPrice || ""),
+      status: item.status,
+    });
 
+    setShowDrawer(true);
+  };
 
+  const handleDelete = (id: number) => {
+    setDeleteTargetId(id);
+    setIsBulkDelete(false);
+    setConfirmState("pending");
+    setShowConfirmModal(true);
+  };
 
-qty: Number(acc.qty) || 0,
-
-price: Number(acc.price) || 0,
-taxPercent: Number(acc.taxPercent) || 0,
-totalPrice: Number(acc.totalPrice) || 0,
-        }))
-      : [{ name: "", price: 0, taxPercent: 0, totalPrice: 0 }]
-  );
-
-  setAccessoryErrors({});
-
-  reset({
-    modelId: item.modelId,
-    modelName: item.model || "",
- variantId:
-  item.variantId || "",
-
-variantName:
-  item.variantName || "",
-    purPrice: String(item.purPrice || ""),
-    purTaxPercent: String(item.purTaxPercent || "18"),
-    exShowroomPrice: String(item.exShowroomPrice || ""),
-    exShowroomTaxPercent: String(item.exShowroomTaxPercent || "18"),
-    insurance: String(item.insurance || ""),
-    insuranceTaxPercent: String(item.insuranceTaxPercent || "18"),
-    rtoCharge: String(item.rtoCharge || ""),
-    rtoTaxType: item.rtoTaxType || "Agriculture",
-    rtoTaxPercent: String(item.rtoTaxPercent || "1"),
-    salesPrice: String(item.salesPrice || ""),
-    status: item.status,
-  });
-
-  setShowDrawer(true);
-};
-
- const handleDelete = (id: number) => {
-  setDeleteTargetId(id);
-  setIsBulkDelete(false);
-  setConfirmState("pending");
-  setShowConfirmModal(true);
-};
-
- const handleBulkDelete = () => {
-  setIsBulkDelete(true);
-  setConfirmState("pending");
-  setShowConfirmModal(true);
-};
+  const handleBulkDelete = () => {
+    setIsBulkDelete(true);
+    setConfirmState("pending");
+    setShowConfirmModal(true);
+  };
 
   const addAccessory = () => {
     setAccessories([
@@ -600,37 +586,45 @@ variantName:
   };
 
   const performDelete = async () => {
-  setConfirmLoading(true);
-  try {
-    if (isBulkDelete) {
-      await Promise.all(selectedIds.map((id) => apiHelper.delete(`/showroom-variant/${id}`)));
-      toast.success(`${selectedIds.length} showroom variants deleted successfully!`);
-      await getVariants();
-      setSelectedIds([]);
-      setCurrentPage(1);
-      setConfirmState("success");
-    } else {
-      if (deleteTargetId === null) return;
-      await apiHelper.delete(`/showroom-variant/${deleteTargetId}`);
-      toast.success("Showroom variant deleted successfully!");
-      await getVariants();
-      setSelectedIds((prev) => prev.filter((id) => id !== deleteTargetId));
-      setDeleteTargetId(null);
-      setConfirmState("success");
+    setConfirmLoading(true);
+    try {
+      if (isBulkDelete) {
+        await Promise.all(
+          selectedIds.map((id) => apiHelper.delete(`/showroom-variant/${id}`)),
+        );
+        toast.success(
+          `${selectedIds.length} showroom variants deleted successfully!`,
+        );
+        await getVariants();
+        setSelectedIds([]);
+        setCurrentPage(1);
+        setConfirmState("success");
+      } else {
+        if (deleteTargetId === null) return;
+        await apiHelper.delete(`/showroom-variant/${deleteTargetId}`);
+        toast.success("Showroom variant deleted successfully!");
+        await getVariants();
+        setSelectedIds((prev) => prev.filter((id) => id !== deleteTargetId));
+        setDeleteTargetId(null);
+        setConfirmState("success");
+      }
+      setTimeout(() => setShowConfirmModal(false), 1500);
+    } catch (error: any) {
+      console.error("Delete failed:", error);
+      setConfirmState("error");
+      toast.error(
+        error.response?.data?.message || "Failed to delete. Please try again.",
+      );
+    } finally {
+      setConfirmLoading(false);
     }
-    setTimeout(() => setShowConfirmModal(false), 1500);
-  } catch (error: any) {
-    console.error("Delete failed:", error);
-    setConfirmState("error");
-    toast.error(error.response?.data?.message || "Failed to delete. Please try again.");
-  } finally {
-    setConfirmLoading(false);
-  }
-};
+  };
 
   const removeAccessory = (index: number) => {
     if (accessories.length === 1) {
-      setAccessories([{ name: "", qty: 0, price: 0, taxPercent: 0, totalPrice: 0 }]);
+      setAccessories([
+        { name: "", qty: 0, price: 0, taxPercent: 0, totalPrice: 0 },
+      ]);
     } else {
       setAccessories(accessories.filter((_, i) => i !== index));
     }
@@ -639,120 +633,121 @@ variantName:
     delete newErrors[index];
     setAccessoryErrors(newErrors);
   };
-const calculateAccessoryTotal = (
-  price: number,
-  qty: number,
-  taxPercent: number
-) => {
-  const subTotal = price * qty;
-  const taxAmount = (subTotal * taxPercent) / 100;
+  const calculateAccessoryTotal = (
+    price: number,
+    qty: number,
+    taxPercent: number,
+  ) => {
+    const subTotal = price * qty;
+    const taxAmount = (subTotal * taxPercent) / 100;
 
-  return subTotal + taxAmount;
-};
-const updateAccessory = (
-  index: number,
-  field: keyof Accessory,
-  value: any
-) => {
-  const updated = [...accessories];
-
-  updated[index] = {
-    ...updated[index],
-    [field]:
-      field === "price" ||
-      field === "taxPercent" ||
-      field === "qty"
-        ? Number(value)
-        : value,
+    return subTotal + taxAmount;
   };
+  const updateAccessory = (
+    index: number,
+    field: keyof Accessory,
+    value: any,
+  ) => {
+    const updated = [...accessories];
 
-  updated[index].totalPrice = calculateAccessoryTotal(
-    Number(updated[index].price || 0),
-    Number(updated[index].qty || 0),
-    Number(updated[index].taxPercent || 0)
-  );
+    updated[index] = {
+      ...updated[index],
+      [field]:
+        field === "price" || field === "taxPercent" || field === "qty"
+          ? Number(value)
+          : value,
+    };
 
-  setAccessories(updated);
-};
+    updated[index].totalPrice = calculateAccessoryTotal(
+      Number(updated[index].price || 0),
+      Number(updated[index].qty || 0),
+      Number(updated[index].taxPercent || 0),
+    );
+
+    setAccessories(updated);
+  };
 
   // ─── Form Submit with Validation ───────────────────────────────────
 
   const onFormSubmit = async (data: FormValues) => {
-  // Validate accessories - make name required if row has any data
-  const accessoryErrors: { [key: number]: string } = {};
-  let hasAccessoryError = false;
+    // Validate accessories - make name required if row has any data
+    const accessoryErrors: { [key: number]: string } = {};
+    let hasAccessoryError = false;
 
-  accessories.forEach((acc, index) => {
-    const hasName = acc.name.trim() !== "";
-    const hasPrice = acc.price > 0;
-    const hasTax = acc.taxPercent > 0;
+    accessories.forEach((acc, index) => {
+      const hasName = acc.name.trim() !== "";
+      const hasPrice = acc.price > 0;
+      const hasTax = acc.taxPercent > 0;
 
-    if (!hasName && (hasPrice || hasTax)) {
-      accessoryErrors[index] = "Accessory name is required";
-      hasAccessoryError = true;
-    }
-  });
+      if (!hasName && (hasPrice || hasTax)) {
+        accessoryErrors[index] = "Accessory name is required";
+        hasAccessoryError = true;
+      }
+    });
 
-  if (hasAccessoryError) {
-    setAccessoryErrors(accessoryErrors);
-  } else {
-    setAccessoryErrors({});
-  }
-
-  const isValid = await trigger();
-
-  if (!isValid || hasAccessoryError) {
     if (hasAccessoryError) {
-      const firstErrorIndex = Object.keys(accessoryErrors)[0];
-      if (firstErrorIndex) {
-        const element = document.getElementById(`accessory-${firstErrorIndex}`);
-        if (element) {
-          element.scrollIntoView({ behavior: "smooth", block: "center" });
+      setAccessoryErrors(accessoryErrors);
+    } else {
+      setAccessoryErrors({});
+    }
+
+    const isValid = await trigger();
+
+    if (!isValid || hasAccessoryError) {
+      if (hasAccessoryError) {
+        const firstErrorIndex = Object.keys(accessoryErrors)[0];
+        if (firstErrorIndex) {
+          const element = document.getElementById(
+            `accessory-${firstErrorIndex}`,
+          );
+          if (element) {
+            element.scrollIntoView({ behavior: "smooth", block: "center" });
+          }
         }
       }
+      return;
     }
-    return;
-  }
 
-  try {
-    const payload = {
-      modelId: Number(data.modelId),
-      variantId:
-    Number(data.variantId),
+    try {
+      const payload = {
+        modelId: Number(data.modelId),
+        variantId: Number(data.variantId),
 
-  variantName:
-    data.variantName,
-      purPrice: Number(data.purPrice),
-      purTaxPercent: Number(data.purTaxPercent),
-      exShowroomPrice: Number(data.exShowroomPrice),
-      exShowroomTaxPercent: Number(data.exShowroomTaxPercent),
-      insurance: Number(data.insurance),
-      insuranceTaxPercent: Number(data.insuranceTaxPercent),
-      rtoCharge: Number(data.rtoCharge),
-      rtoTaxType: data.rtoTaxType,
-      rtoTaxPercent: Number(data.rtoTaxPercent),
-      accessories: accessories.filter((a) => a.name.trim() !== ""),
-      salesPrice: Number(data.salesPrice),
-      status: data.status,
-    };
+        variantName: data.variantName,
+        purPrice: Number(data.purPrice),
+        purTaxPercent: Number(data.purTaxPercent),
+        exShowroomPrice: Number(data.exShowroomPrice),
+        exShowroomTaxPercent: Number(data.exShowroomTaxPercent),
+        insurance: Number(data.insurance),
+        insuranceTaxPercent: Number(data.insuranceTaxPercent),
+        rtoCharge: Number(data.rtoCharge),
+        rtoTaxType: data.rtoTaxType,
+        rtoTaxPercent: Number(data.rtoTaxPercent),
+        accessories: accessories.filter((a) => a.name.trim() !== ""),
+        salesPrice: Number(data.salesPrice),
+        status: data.status,
+      };
 
-    if (editId !== null) {
-      await apiHelper.put(`/showroom-variant/${editId}`, payload);
-      toast.success("Showroom variant updated successfully!");
-    } else {
-      await apiHelper.post("/showroom-variant", payload);
-      toast.success("Showroom variant created successfully!");
+      if (editId !== null) {
+        await apiHelper.put(`/showroom-variant/${editId}`, payload);
+        toast.success("Showroom variant updated successfully!");
+      } else {
+        await apiHelper.post("/showroom-variant", payload);
+        toast.success("Showroom variant created successfully!");
+      }
+
+      await getVariants();
+      setShowDrawer(false);
+      reset();
+      setAccessoryErrors({});
+    } catch (error: any) {
+      console.error(error);
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to save variant. Please try again.",
+      );
     }
-    
-    await getVariants();
-    setShowDrawer(false);
-    reset();
-    setAccessoryErrors({});
-  } catch (error: any) {
-    console.error(error);
-    toast.error(error.response?.data?.message || "Failed to save variant. Please try again.");
-  }
-};
+  };
 
   useEffect(() => {
     console.log(errors);
@@ -1044,7 +1039,7 @@ const updateAccessory = (
               Selected {selectedIds.length} items
             </span>
             <Button variant="filled" color="error" onClick={handleBulkDelete}>
-              <TrashIcon className="mr-1 size-4" /> Delete 
+              <TrashIcon className="mr-1 size-4" /> Delete
             </Button>
           </div>
         </div>
@@ -1103,45 +1098,30 @@ const updateAccessory = (
                       Model
                     </span>
                     <div className="w-full">
-                 <Combobox
-  data={modelOptions}
-  value={
-    modelOptions.find(
-      (option) =>
-        option.id ===
-        String(selectedModelId),
-    ) || null
-  }
-  onChange={(option: any) => {
-    if (!option) return;
+                      <Combobox
+                        data={modelOptions}
+                        value={
+                          modelOptions.find(
+                            (option) => option.id === String(selectedModelId),
+                          ) || null
+                        }
+                        onChange={(option: any) => {
+                          if (!option) return;
 
-    setValue(
-      "modelId",
-      Number(option.id),
-      {
-        shouldValidate: true,
-      },
-    );
+                          setValue("modelId", Number(option.id), {
+                            shouldValidate: true,
+                          });
 
-    setValue(
-      "modelName",
-      option.name,
-    );
+                          setValue("modelName", option.name);
 
-    // Clear previous model's variant
-    setValue(
-      "variantId",
-      "",
-    );
+                          // Clear previous model's variant
+                          setValue("variantId", "");
 
-    setValue(
-      "variantName",
-      "",
-    );
-  }}
-  displayField="name"
-  placeholder="Search or select model"
-/>
+                          setValue("variantName", "");
+                        }}
+                        displayField="name"
+                        placeholder="Search or select model"
+                      />
                       {errors.modelId && (
                         <p className="mt-1 text-xs text-red-500">
                           {errors.modelId.message}
@@ -1151,55 +1131,43 @@ const updateAccessory = (
                   </div>
 
                   {/* Variant Name */}
-                 <div>
-  <label className="mb-1.5 block text-sm font-medium">
-    Variant Name
-    <span className="ml-1 text-red-500">
-      *
-    </span>
-  </label>
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium">
+                      Variant Name
+                      <span className="ml-1 text-red-500">*</span>
+                    </label>
 
-<Combobox
-  data={filteredVariantOptions}
-  value={
-    filteredVariantOptions.find(
-      (option) =>
-        option.id ===
-        String(selectedVariantId),
-    ) || null
-  }
-  onChange={(option: any) => {
-    if (!option) return;
+                    <Combobox
+                      data={filteredVariantOptions}
+                      value={
+                        filteredVariantOptions.find(
+                          (option) => option.id === String(selectedVariantId),
+                        ) || null
+                      }
+                      onChange={(option: any) => {
+                        if (!option) return;
 
-    setValue(
-      "variantId",
-      Number(option.id),
-      {
-        shouldValidate: true,
-      },
-    );
+                        setValue("variantId", Number(option.id), {
+                          shouldValidate: true,
+                        });
 
-    setValue(
-      "variantName",
-      option.name,
-      {
-        shouldValidate: true,
-      },
-    );
-  }}
-  displayField="name"
-  placeholder={
-    selectedModelId
-      ? "Search or select variant"
-      : "Select model first"
-  }
-/>
-  {errors.variantName && (
-    <p className="mt-1 text-xs text-red-500">
-      {errors.variantName.message}
-    </p>
-  )}
-</div>
+                        setValue("variantName", option.name, {
+                          shouldValidate: true,
+                        });
+                      }}
+                      displayField="name"
+                      placeholder={
+                        selectedModelId
+                          ? "Search or select variant"
+                          : "Select model first"
+                      }
+                    />
+                    {errors.variantName && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {errors.variantName.message}
+                      </p>
+                    )}
+                  </div>
                   {/* Pur Price + Tax */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -1375,43 +1343,47 @@ const updateAccessory = (
                       <div key={i} id={`accessory-${i}`}>
                         <div className="mb-2 flex items-center gap-2">
                           <div className="min-w-[200px] flex-1">
-                           <AccessoryCombobox
-  options={accessoryOptions}
-  value={acc.name}
- onChange={(val) => {
-  const selectedAccessory = accessoryOptions.find(
-    (item: any) => item.itemName === val
-  );
+                            <AccessoryCombobox
+                              options={accessoryOptions}
+                              value={acc.name}
+                              onChange={(val) => {
+                                const selectedAccessory = accessoryOptions.find(
+                                  (item: any) => item.itemName === val,
+                                );
 
-  const updatedAccessories = [...accessories];
-updatedAccessories[i] = {
-  ...updatedAccessories[i],
+                                const updatedAccessories = [...accessories];
+                                updatedAccessories[i] = {
+                                  ...updatedAccessories[i],
 
-  accessoryId: selectedAccessory?.id,
+                                  accessoryId: selectedAccessory?.id,
 
-  name: val,
+                                  name: val,
 
-  price: Number(selectedAccessory?.salesPrice || 0),
-  taxPercent: Number(selectedAccessory?.taxSlab || 0),
-};
+                                  price: Number(
+                                    selectedAccessory?.salesPrice || 0,
+                                  ),
+                                  taxPercent: Number(
+                                    selectedAccessory?.taxSlab || 0,
+                                  ),
+                                };
 
-  setAccessories(updatedAccessories);
+                                setAccessories(updatedAccessories);
 
-  console.log(updatedAccessories[i]);
-}}
-  placeholder="Type or select accessory..."
-  error={accessoryErrors[i]}
-/>
+                                console.log(updatedAccessories[i]);
+                              }}
+                              placeholder="Type or select accessory..."
+                              error={accessoryErrors[i]}
+                            />
                           </div>
                           <Input
-  type="number"
-  placeholder="Qty"
-  value={acc.qty || 0}
-  onChange={(e) =>
-    updateAccessory(i, "qty", e.target.value)
-  }
-  className="w-20"
-/>
+                            type="number"
+                            placeholder="Qty"
+                            value={acc.qty || 0}
+                            onChange={(e) =>
+                              updateAccessory(i, "qty", e.target.value)
+                            }
+                            className="w-20"
+                          />
                           <Input
                             type="number"
                             placeholder="Price"
@@ -1513,39 +1485,41 @@ updatedAccessories[i] = {
       </Transition>
 
       {/* Confirmation Modal */}
-<ConfirmModal
-  show={showConfirmModal}
-  onClose={() => {
-    setShowConfirmModal(false);
-    setDeleteTargetId(null);
-    setConfirmState("pending");
-  }}
-  onOk={performDelete}
-  confirmLoading={confirmLoading}
-  state={confirmState}
-  messages={{
-    pending: {
-      Icon: ExclamationTriangleIcon,
-      title: isBulkDelete ? "Delete Selected Showroom Variants?" : "Are you sure?",
-      description: isBulkDelete 
-        ? `Are you sure you want to delete ${selectedIds.length} selected showroom variants? This action cannot be undone.`
-        : "Are you sure you want to delete this showroom variant? Once deleted, it cannot be restored.",
-      actionText: isBulkDelete ? "Delete All" : "Delete",
-    },
-    success: {
-      title: "Deleted Successfully",
-      description: isBulkDelete 
-        ? `${selectedIds.length} showroom variants have been deleted.`
-        : "The showroom variant has been deleted.",
-      actionText: "Done",
-    },
-    error: {
-      title: "Delete Failed",
-      description: "Failed to delete. Please try again.",
-      actionText: "Try Again",
-    },
-  }}
-/>
+      <ConfirmModal
+        show={showConfirmModal}
+        onClose={() => {
+          setShowConfirmModal(false);
+          setDeleteTargetId(null);
+          setConfirmState("pending");
+        }}
+        onOk={performDelete}
+        confirmLoading={confirmLoading}
+        state={confirmState}
+        messages={{
+          pending: {
+            Icon: ExclamationTriangleIcon,
+            title: isBulkDelete
+              ? "Delete Selected Showroom Variants?"
+              : "Are you sure?",
+            description: isBulkDelete
+              ? `Are you sure you want to delete ${selectedIds.length} selected showroom variants? This action cannot be undone.`
+              : "Are you sure you want to delete this showroom variant? Once deleted, it cannot be restored.",
+            actionText: isBulkDelete ? "Delete All" : "Delete",
+          },
+          success: {
+            title: "Deleted Successfully",
+            description: isBulkDelete
+              ? `${selectedIds.length} showroom variants have been deleted.`
+              : "The showroom variant has been deleted.",
+            actionText: "Done",
+          },
+          error: {
+            title: "Delete Failed",
+            description: "Failed to delete. Please try again.",
+            actionText: "Try Again",
+          },
+        }}
+      />
     </div>
   );
 }
