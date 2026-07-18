@@ -116,44 +116,40 @@ const KYCForm = () => {
   }, [urlId]);
 
   // Fetch complete record only one time
-  useEffect(() => {
-    if (!urlId) {
-      setEditData(null);
-      return;
+ // Fetch complete record only one time
+useEffect(() => {
+  if (!urlId) {
+    setEditData(null);
+    return;
+  }
+
+  const fetchWebsiteVariant = async () => {
+    try {
+      setLoading(true);
+
+      const response = await apiHelper.get(`/website-variants/${urlId}`);
+      const variant = response?.data?.data ?? response?.data;
+
+      console.log("Website Variant Edit Data:", variant);
+
+      setEditData(variant);
+
+      // ✅ No localStorage — direct state set
+      setWebsiteVariantId(String(variant?.id ?? urlId));
+
+      // ✅ Resume from the last saved step
+      if (typeof variant?.currentStep === "number") {
+        setCurrentStep(variant.currentStep);
+      }
+    } catch (error) {
+      console.error("Failed to fetch Website Variant:", error);
+    } finally {
+      setLoading(false);
     }
+  };
 
-    const fetchWebsiteVariant =
-      async () => {
-        try {
-          setLoading(true);
-
-          const response =
-            await apiHelper.get(
-              `/website-variants/${urlId}`,
-            );
-
-          const variant =
-            response?.data?.data ??
-            response?.data;
-
-          console.log(
-            "Website Variant Edit Data:",
-            variant,
-          );
-
-          setEditData(variant);
-        } catch (error) {
-          console.error(
-            "Failed to fetch Website Variant:",
-            error,
-          );
-        } finally {
-          setLoading(false);
-        }
-      };
-
-    fetchWebsiteVariant();
-  }, [urlId]);
+  fetchWebsiteVariant();
+}, [urlId]);
 
   const ActiveForm =
     steps[currentStep].component;

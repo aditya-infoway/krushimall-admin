@@ -1,7 +1,7 @@
 // Import Dependencies
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Controller, useForm, Resolver } from "react-hook-form";
-
+import { useEffect } from "react";
 // Local Imports
 import { Button, Input } from "@/components/ui";
 import { useKYCFormContext } from "../KYCFormContext";
@@ -103,25 +103,54 @@ const forwardGearOptions = [
 ];
 export function Transmission({
   setCurrentStep,
+   websiteVariantId,   // ✅
+  editData,
 }: {
   setCurrentStep: (step: number) => void;
+   websiteVariantId?: string | null;
+  editData?: any;
 }) {
   const kycFormCtx = useKYCFormContext();
 
-  const {
+    const {
     register,
     handleSubmit,
     control,
     watch,
+    reset,             // ✅
     formState: { errors },
   } = useForm<TransmissionType>({
     resolver: yupResolver(TransmissionSchema) as Resolver<TransmissionType>,
     defaultValues: kycFormCtx.state.formData.Transmission,
   });
+ useEffect(() => {
+    if (!editData) return;
 
+    reset({
+      clutchType: editData.clutchType ?? "",
+      forwardGears: editData.forwardGears ?? "",
+      reverseGears: editData.reverseGears ?? "",
+      gearType: editData.gearType ?? "",
+      transmissionType: editData.transmissionType ?? "",
+      ptoHp: editData.ptoHp ?? "",
+      ptoRpm: editData.ptoRpm ?? "",
+      ptoType: editData.ptoType ?? "",
+      ptoPosition: editData.ptoPosition ?? "",
+      features: {
+        creeperGears: editData.creeperGears ?? false,
+        shuttleShift: editData.shuttleShift ?? false,
+        sideShiftGear: editData.sideShiftGear ?? false,
+        powerShuttle: editData.powerShuttle ?? false,
+        hiLoGears: editData.hiLoGears ?? false,
+        multiSpeedPto: editData.multiSpeedPto ?? false,
+        reversePto: editData.reversePto ?? false,
+        superReducer: editData.superReducer ?? false,
+      },
+    });
+  }, [editData, reset]);
   const onSubmit = async (data: TransmissionType) => {
     try {
-      const websiteVariantId = localStorage.getItem("websiteVariantId");
+     
 
       if (!websiteVariantId) {
         toast.warning(
@@ -558,13 +587,13 @@ export function Transmission({
         <Button
           type="button"
           variant="outlined"
-          className="min-w-[7rem]"
+          className="min-w-28"
           onClick={() => setCurrentStep(1)}
         >
           Previous
         </Button>
-        <Button type="submit" className="min-w-[7rem]" color="primary">
-          Save & Next
+        <Button type="submit" className="min-w-28" color="primary">
+          {websiteVariantId ? "Update & Next" : "Save & Next"}
         </Button>
       </div>
     </form>

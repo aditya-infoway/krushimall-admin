@@ -1,7 +1,7 @@
 // Import Dependencies
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Resolver, useForm } from "react-hook-form";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 // Local Imports
 import { Button } from "@/components/ui";
@@ -55,8 +55,12 @@ const documentUploads = [
 
 export function MediaDocumnet({
   setCurrentStep,
+  websiteVariantId, // ✅
+  editData,
 }: {
   setCurrentStep: React.Dispatch<React.SetStateAction<number>>;
+  websiteVariantId?: string | null;
+  editData?: any;
 }) {
   const kycFormCtx = useKYCFormContext();
   const [loading, setLoading] = useState(false);
@@ -66,16 +70,62 @@ export function MediaDocumnet({
     {},
   );
   const {
-    // register,
     handleSubmit,
     formState: { errors },
     setValue,
     watch,
   } = useForm<MediaDocumnetType>({
-   resolver: yupResolver(MediaDocumnetSchema) as unknown as Resolver<MediaDocumnetType>,
+    resolver: yupResolver(
+      MediaDocumnetSchema,
+    ) as unknown as Resolver<MediaDocumnetType>,
     defaultValues: kycFormCtx.state.formData.MediaDocumnet,
   });
+  useEffect(() => {
+    if (!editData) return;
 
+    const fileKeys = [
+      "frontView",
+      "leftView",
+      "rightView",
+      "rearView",
+      "chassisNumber",      // ✅ ADD — missing tha
+    "rcBook", 
+      "engineView",
+      "dashboardView",
+      "tyreView",
+      "hydraulicView",
+      "ptoView",
+      "additionalImage1",
+      "additionalImage2",
+      "additionalImage3",
+      "additionalImage4",
+      "additionalImage5",
+    ];
+
+    const newPreviews: Record<string, string> = {};
+  fileKeys.forEach((key) => {
+    if (editData[key]) {
+      newPreviews[key] = apiHelper.getImageUrl(editData[key]);
+
+      // ✅ MAIN FIX — form ki actual value bhi set karo,
+      // taaki Yup validation pass ho jaye
+      setValue(key as any, editData[key]);
+    }
+  });
+  setPreviews((prev) => ({ ...prev, ...newPreviews }));
+
+  const docKeys = ["brochure", "warrantyCard", "insuranceCertificate", "invoice", "others"];
+  const newDocs: Record<string, any> = {};
+  docKeys.forEach((key) => {
+    if (editData[key]) {
+      newDocs[key] = { name: editData[key].split("/").pop() };
+
+      // ✅ MAIN FIX — yahan bhi setValue lagao
+      setValue(key as any, editData[key]);
+    }
+  });
+  setUploadedDocs((prev) => ({ ...prev, ...newDocs }));
+}, [editData, setValue]); 
   const handleFileChange = (key: string, file: File | null) => {
     if (!file) return;
 
@@ -118,69 +168,72 @@ export function MediaDocumnet({
   //   setValue(`${key}Link` as any, link);
   // };
 
- const onSubmit = async (data: MediaDocumnetType) => {
-  try {
-    setLoading(true);
+  const onSubmit = async (data: MediaDocumnetType) => {
+    try {
+      setLoading(true);
 
-    const websiteVariantId = localStorage.getItem("websiteVariantId");
-
-    if (!websiteVariantId) {
-      toast.warning("No website variant found. Please save basic information first.");
-      return;
-    }
-
-    const formData = new FormData();
-
-    Object.entries(data).forEach(([key, value]) => {
-      if (value instanceof File) {
-        formData.append(key, value);
+      if (!websiteVariantId) {
+        toast.warning(
+          "No website variant found. Please save basic information first.",
+        );
+        return;
       }
-    });
 
-    await apiHelper.put(
-      `/website-variants/${websiteVariantId}/save-step`,
-      formData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
+      const formData = new FormData();
+
+      Object.entries(data).forEach(([key, value]) => {
+        if (value instanceof File) {
+          formData.append(key, value);
+        }
+      });
+
+      await apiHelper.put(
+        `/website-variants/${websiteVariantId}/save-step`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
         },
-      }
-    );
+      );
 
+      kycFormCtx.dispatch({
+        type: "SET_FORM_DATA",
+        payload: {
+          MediaDocumnet: data,
+        },
+      });
+
+      kycFormCtx.dispatch({
+        type: "SET_STEP_STATUS",
+        payload: {
+          MediaDocumnet: {
+            isDone: true,
+          },
+        },
+      });
+
+      toast.success("Media and documents saved successfully!");
+      setCurrentStep(6);
+    } catch (error: any) {
+      console.error(error);
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to save media and documents. Please try again.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveDraft = () => {
+    const formData = watch();
     kycFormCtx.dispatch({
       type: "SET_FORM_DATA",
-      payload: {
-        MediaDocumnet: data,
-      },
+      payload: { MediaDocumnet: { ...formData } },
     });
-
-    kycFormCtx.dispatch({
-      type: "SET_STEP_STATUS",
-      payload: {
-        MediaDocumnet: {
-          isDone: true,
-        },
-      },
-    });
-
-    toast.success("Media and documents saved successfully!");
-    setCurrentStep(6);
-  } catch (error: any) {
-    console.error(error);
-    toast.error(error.response?.data?.message || "Failed to save media and documents. Please try again.");
-  } finally {
-    setLoading(false);
-  }
-};
-
-const handleSaveDraft = () => {
-  const formData = watch();
-  kycFormCtx.dispatch({
-    type: "SET_FORM_DATA",
-    payload: { MediaDocumnet: { ...formData } },
-  });
-  toast.success("Draft saved successfully!");
-};
+    toast.success("Draft saved successfully!");
+  };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
@@ -201,43 +254,48 @@ const handleSaveDraft = () => {
                 </label>
 
                 <div className="relative h-50 overflow-hidden rounded-lg border border-dashed border-gray-600">
-                  {previews[image.key] ? (
-                    <>
-                      <img
-                        src={previews[image.key]}
-                        alt={image.label}
-                        className="h-50 w-full object-cover"
-                      />
+                {previews[image.key] ? (
+  <>
+    <label className="block h-50 cursor-pointer">
+      <img
+        src={previews[image.key]}
+        alt={image.label}
+        className="h-50 w-full object-cover"
+      />
 
-                      <button
-                        type="button"
-                        onClick={() => removeImage(image.key)}
-                        className="bg-primary-500 absolute top-2 right-2 rounded p-1 text-white"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </>
-                  ) : (
-                    <label className="flex h-50 cursor-pointer flex-col items-center justify-center">
-                      <Upload className="text-primary-500 h-8 w-8" />
+      <input
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) =>
+          handleFileChange(image.key, e.target.files?.[0] || null)
+        }
+      />
+    </label>
 
-                      <span className="text-primary-500 text-sm">
-                        Upload Image
-                      </span>
+    <button
+      type="button"
+      onClick={() => removeImage(image.key)}
+      className="bg-primary-500 absolute top-2 right-2 rounded p-1 text-white"
+    >
+      <Trash2 size={14} />
+    </button>
+  </>
+) : (
+  <label className="flex h-50 cursor-pointer flex-col items-center justify-center">
+    <Upload className="text-primary-500 h-8 w-8" />
+    <span className="text-primary-500 text-sm">Upload Image</span>
 
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) =>
-                          handleFileChange(
-                            image.key,
-                            e.target.files?.[0] || null,
-                          )
-                        }
-                      />
-                    </label>
-                  )}
+    <input
+      type="file"
+      accept="image/*"
+      className="hidden"
+      onChange={(e) =>
+        handleFileChange(image.key, e.target.files?.[0] || null)
+      }
+    />
+  </label>
+)}
                 </div>
 
                 {errors[image.key as keyof MediaDocumnetType] && (
@@ -294,7 +352,7 @@ const handleSaveDraft = () => {
             Supported formats: MP4, MOV, AVI (Max size: 50MB)
           </p>
         </div> */}
-<div className="mb-8 border-b border-gray-600" />
+        <div className="mb-8 border-b border-gray-600" />
         {/* Documents Uploads Section */}
         <div>
           <h3 className="mb-2 text-lg font-semibold">Documents Uploads</h3>
@@ -311,40 +369,42 @@ const handleSaveDraft = () => {
                 </label>
 
                 <div className="relative rounded-lg border border-dashed border-gray-600">
-                  {documents?.[doc.key] ? (
-                    <div className="flex h-32 flex-col items-center justify-center p-2 text-center">
-                      <FileText className="mb-2 h-8 w-8 text-primary-500" />
+                  <label className="flex h-32 cursor-pointer flex-col items-center justify-center">
+                    {documents?.[doc.key] ? (
+                      <>
+                        <FileText className="text-primary-500 mb-2 h-8 w-8" />
 
-                      <p className="max-w-full truncate text-xs font-medium text-primary-500">
-                        {documents[doc.key]?.name}
-                      </p>
+                        <p className="text-primary-500 max-w-full truncate text-xs font-medium">
+                          {documents[doc.key]?.name}
+                        </p>
 
-                      <p className="mt-1 text-[10px] text-gray-500">
-                        PDF Uploaded
-                      </p>
-                    </div>
-                  ) : (
-                    <label className="flex h-32 cursor-pointer flex-col items-center justify-center">
-                      <FileText className="mb-2 h-8 w-8 text-primary-500" />
+                        <p className="mt-1 text-[10px] text-gray-500">
+                          Click to replace PDF
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <FileText className="text-primary-500 mb-2 h-8 w-8" />
 
-                      <span className="text-sm font-medium text-primary-500">
-                        Upload PDF
-                      </span>
+                        <span className="text-primary-500 text-sm font-medium">
+                          Upload PDF
+                        </span>
 
-                      <span className="mt-1 text-xs text-gray-500">
-                        Max size: 5MB
-                      </span>
+                        <span className="mt-1 text-xs text-gray-500">
+                          Max size: 5MB
+                        </span>
+                      </>
+                    )}
 
-                      <input
-                        type="file"
-                        accept=".pdf"
-                        className="hidden"
-                        onChange={(e) =>
-                          handleFileChange(doc.key, e.target.files?.[0] || null)
-                        }
-                      />
-                    </label>
-                  )}
+                    <input
+                      type="file"
+                      accept=".pdf"
+                      className="hidden"
+                      onChange={(e) =>
+                        handleFileChange(doc.key, e.target.files?.[0] || null)
+                      }
+                    />
+                  </label>
                 </div>
 
                 {errors[doc.key as keyof MediaDocumnetType] && (
@@ -373,7 +433,7 @@ const handleSaveDraft = () => {
         <Button
           type="button"
           variant="outlined"
-          className="min-w-[7rem]"
+          className="min-w-28"
           onClick={() => setCurrentStep(4)}
         >
           Previous
@@ -382,18 +442,18 @@ const handleSaveDraft = () => {
           <Button
             type="button"
             variant="outlined"
-            className="min-w-[7rem]"
+            className="min-w-28"
             onClick={handleSaveDraft}
           >
             Save as Draft
           </Button>
           <Button
             type="submit"
-            className="min-w-[7rem]"
+            className="min-w-28"
             color="primary"
             disabled={loading}
           >
-            {loading ? "Saving..." : "Save & Next"}
+            {websiteVariantId ? "Update & Next" : "Save & Next"}
           </Button>
         </div>
       </div>

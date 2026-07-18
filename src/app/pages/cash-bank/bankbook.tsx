@@ -661,7 +661,7 @@ const BankBook: React.FC = () => {
                   currentItems.map((row, index) => (
                     <tr
                       key={index}
-                      className="dark:hover:bg-dark-600 transition-colors hover:bg-gray-50"
+                      className="dark:hover:bg-dark-600 transition-colors hover:bg-gray-50 "
                     >
                       <td className="px-3 py-2.5 text-gray-500 dark:text-gray-400">
                         {(currentPage - 1) * rowsPerPage + index + 1}
@@ -702,10 +702,10 @@ const BankBook: React.FC = () => {
                       <td className="px-3 py-2.5 text-gray-900 dark:text-white">
                         {row.narration}
                       </td>
-                      <td className="px-3 py-2.5 text-gray-900 dark:text-white">
+                      <td className="px-3 py-2.5 text-gray-900 dark:text-white whitespace-nowrap">
                         {row.createdType}
                       </td>
-                      <td className="px-3 py-2.5 text-gray-900 dark:text-white">
+                      <td className="px-3 py-2.5 text-gray-900 dark:text-white whitespace-nowrap">
                         {row.createdBy}
                       </td>
                     </tr>

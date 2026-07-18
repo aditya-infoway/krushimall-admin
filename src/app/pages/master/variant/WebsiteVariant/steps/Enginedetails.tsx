@@ -1,7 +1,7 @@
 // Import Dependencies
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Controller, useForm, Resolver } from "react-hook-form";
-
+import { useEffect } from "react";
 // Local Imports
 import { Button, Input, } from "@/components/ui";
 import { useKYCFormContext } from "../KYCFormContext";
@@ -96,8 +96,12 @@ const engineConditionOptions = [
 
 export function Enginedetails({
   setCurrentStep,
+   websiteVariantId,   // ✅ prop accept karo
+  editData,
 }: {
   setCurrentStep: React.Dispatch<React.SetStateAction<number>>;
+  websiteVariantId?: string | null;
+  editData?: any;
 }) {
   const kycFormCtx = useKYCFormContext();
 
@@ -107,17 +111,34 @@ export function Enginedetails({
     formState: { errors },
     control,
     watch,
-    // setValue,
+    reset,
   } = useForm<EnginedetailsType>({
-    resolver: yupResolver(
-      EnginedetailsSchema,
-    ) as unknown as Resolver<EnginedetailsType>,
+    resolver: yupResolver(EnginedetailsSchema) as unknown as Resolver<EnginedetailsType>,
     defaultValues: kycFormCtx.state.formData.Enginedetails,
   });
+useEffect(() => {
+    if (!editData) return;
 
+    reset({
+      engineType: editData.engineType ?? "",
+      fuelType: editData.fuelType ?? "",
+      horsePower: editData.horsePower ?? "",
+      numberOfCylinders: editData.numberOfCylinders ?? "",
+      cubicCapacity: editData.cubicCapacity ?? "",
+      ratedRpm: editData.ratedRpm ?? "",
+      aspiratedType: editData.aspiratedType ?? "",
+      emissionNorms: editData.emissionNorms ?? "",
+      coolingSystem: editData.coolingSystem ?? "",
+      airFilterType: editData.airFilterType ?? "",
+      maximumTorque: editData.maximumTorque ?? "",
+      torqueRpm: editData.torqueRpm ?? "",
+      torqueBackup: editData.torqueBackup ?? "",
+      engineCondition: editData.engineCondition ?? "",
+    });
+  }, [editData, reset]);
   const onSubmit = async (data: EnginedetailsType) => {
   try {
-    const websiteVariantId = localStorage.getItem("websiteVariantId");
+  
 
     if (!websiteVariantId) {
       toast.warning("No website variant found. Please save basic information first.");
@@ -488,13 +509,13 @@ export function Enginedetails({
         <Button
           type="button"
           variant="outlined"
-          className="min-w-[7rem]"
+          className="min-w-28"
           onClick={() => setCurrentStep(0)}
         >
           Previous
         </Button>
-        <Button type="submit" className="min-w-[7rem]" color="primary">
-          Save & Next
+        <Button type="submit" className="min-w-28" color="primary">
+           {websiteVariantId ? "Update & Next" : "Save & Next"}
         </Button>
       </div>
     </form>
