@@ -800,10 +800,14 @@ const downloadExcel = async () => {
                       {item.chequeNo || "-"}
                     </td>
                     <td className="px-3 py-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
-                      {item.chequeDate || "-"}
+                       {item.chequeDate
+    ? new Date(item.chequeDate).toLocaleDateString("en-GB")
+    : "-"}
                     </td>
                     <td className="px-3 py-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
-                      {item.chequeClearDate || "-"}
+                      {item.chequeClearDate
+    ? new Date(item.chequeClearDate).toLocaleDateString("en-GB")
+    : "-"}
                     </td>
                     <td className="px-3 py-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
                       {item.narration}

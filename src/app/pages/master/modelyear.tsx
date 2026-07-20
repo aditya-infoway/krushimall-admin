@@ -10,7 +10,7 @@ import {
   MenuItem,
 } from "@headlessui/react";
 import { Fragment, useState, useEffect } from "react";
-import { useForm, useWatch } from "react-hook-form";
+import { useForm, useWatch, Controller } from "react-hook-form";
 import { RiFileExcel2Fill, RiFilePdfFill } from "react-icons/ri";
 import {
   XMarkIcon,
@@ -84,28 +84,43 @@ export default function ModelYear() {
   const [categories, setCategories] = useState<{ id: number; name: string }[]>(
     [],
   );
-  const [brands, setBrands] = useState<{ id: number; name: string }[]>([]);
+ const [brands, setBrands] = useState<BrandOption[]>([]);
+const [filteredBrands, setFilteredBrands] = useState<BrandOption[]>([]);
+const [modelsList, setModelsList] = useState<ModelOption[]>([]);
+const [filteredModels, setFilteredModels] = useState<ModelOption[]>([]);
   const [models, setModels] = useState<{ id: number; name: string }[]>([]);
   const [loading, setLoading] = useState(false);
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-const [confirmState, setConfirmState] = useState<"pending" | "success" | "error">("pending");
-const [confirmLoading, setConfirmLoading] = useState(false);
-const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
-const [isBulkDelete, setIsBulkDelete] = useState(false);
+  const [confirmState, setConfirmState] = useState<
+    "pending" | "success" | "error"
+  >("pending");
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+  const [isBulkDelete, setIsBulkDelete] = useState(false);
+type BrandOption = {
+  id: number;
+  name: string;
+  categoryId: number;
+};
 
-  const categoryOptions = categories.map((cat) => ({
-    id: String(cat.id),
-    name: cat.name,
-  }));
-  const brandOptions = brands.map((br) => ({
-    id: String(br.id),
-    name: br.name,
-  }));
-  const modelOptions = models.map((md) => ({
-    id: String(md.id),
-    name: md.name,
-  }));
+type ModelOption = {
+  id: number;
+  name: string;
+  brandId: number;
+};
+const categoryOptions = categories.map((cat) => ({
+  id: String(cat.id),
+  name: cat.name,
+}));
+const brandOptions = filteredBrands.map((br) => ({
+  id: String(br.id),
+  name: br.name,
+}));
+const modelOptions = filteredModels.map((md) => ({
+  id: String(md.id),
+  name: md.name,
+}));
 
   const [search, setSearch] = useState("");
   const [showFilterBar, setShowFilterBar] = useState(false);
@@ -186,35 +201,45 @@ const [isBulkDelete, setIsBulkDelete] = useState(false);
     }
   };
 
-  const getBrands = async () => {
-    try {
-      const response = await apiHelper.get("/brand");
-      const data = response?.data || response;
-      setBrands(
-        (Array.isArray(data) ? data : []).map((item: any) => ({
-          id: item.id || item._id,
-          name: item.brandName || item.name,
-        })),
-      );
-    } catch (error) {
-      setBrands([]);
-    }
-  };
+const getBrands = async () => {
+  try {
+    const response = await apiHelper.get("/brand");
+    const data = response?.data || response;
+    const list: BrandOption[] = (Array.isArray(data) ? data : []).map(
+      (item: any) => ({
+        id: Number(item.id || item._id),
+        name: item.brandName || item.name || "",
+        categoryId: Number(
+          typeof item.category === "object"
+            ? item.category?.id
+            : item.categoryId,
+        ),
+      }),
+    );
+    setBrands(list);
+  } catch (error) {
+    setBrands([]);
+  }
+};
 
-  const getModels = async () => {
-    try {
-      const response = await apiHelper.get("/model");
-      const data = response?.data || response;
-      setModels(
-        (Array.isArray(data) ? data : []).map((item: any) => ({
-          id: item.id || item._id,
-          name: item.modelName || item.name,
-        })),
-      );
-    } catch (error) {
-      setModels([]);
-    }
-  };
+const getModels = async () => {
+  try {
+    const response = await apiHelper.get("/model");
+    const data = response?.data || response;
+    const list: ModelOption[] = (Array.isArray(data) ? data : []).map(
+      (item: any) => ({
+        id: Number(item.id || item._id),
+        name: item.modelName || item.name || "",
+        brandId: Number(
+          typeof item.brand === "object" ? item.brand?.id : item.brandId,
+        ),
+      }),
+    );
+    setModelsList(list);
+  } catch (error) {
+    setModelsList([]);
+  }
+};
 
   // React Hook Form implementation
   const {
@@ -223,6 +248,7 @@ const [isBulkDelete, setIsBulkDelete] = useState(false);
     setValue,
     control,
     reset,
+    watch,
     formState: { errors },
   } = useForm<FormValues>({
     defaultValues: {
@@ -280,79 +306,88 @@ const [isBulkDelete, setIsBulkDelete] = useState(false);
   ];
 
   const handleOpenAddDrawer = () => {
-    setEditId(null);
-    const firstCategory = categories[0] || { id: "", name: "" };
-    const firstBrand = brands[0] || { id: "", name: "" };
-    const firstModel = models[0] || { id: "", name: "" };
-    reset({
-      category: firstCategory.name,
-      categoryId: firstCategory.id,
-      brand: firstBrand.name,
-      brandId: firstBrand.id,
-      model: firstModel.name,
-      modelId: firstModel.id,
-      year: "",
-      status: "ACTIVE", // ✅ String, not true
-    });
-    setShowDrawer(true);
-  };
+  setEditId(null);
+  reset({
+    category: "",
+    categoryId: "",
+    brand: "",
+    brandId: "",
+    model: "",
+    modelId: "",
+    year: "",
+    status: "ACTIVE",
+  });
+  setFilteredBrands([]);
+  setFilteredModels([]);
+  setShowDrawer(true);
+};
 
-  const handleOpenEditDrawer = (item: YearDataType) => {
-    // ✅ YearDataType
-    setEditId(item.id);
-    reset({
-      category: item.category,
-      categoryId: item.categoryId || "",
-      brand: item.brand,
-      brandId: item.brandId || "",
-      model: item.model,
-      modelId: item.modelId || "",
-      year: item.year.toString(),
-      status: item.status,
-    });
-    setShowDrawer(true);
-  };
+const handleOpenEditDrawer = (item: YearDataType) => {
+  setEditId(item.id);
+  reset({
+    category: item.category,
+    categoryId: item.categoryId || "",
+    brand: item.brand,
+    brandId: item.brandId || "",
+    model: item.model,
+    modelId: item.modelId || "",
+    year: item.year.toString(),
+    status: item.status,
+  });
+  // Pre-fill dependent dropdowns for edit mode
+  setFilteredBrands(
+    brands.filter((b) => Number(b.categoryId) === Number(item.categoryId)),
+  );
+  setFilteredModels(
+    modelsList.filter((m) => Number(m.brandId) === Number(item.brandId)),
+  );
+  setShowDrawer(true);
+};
 
   const handleDelete = (id: number) => {
-  setDeleteTargetId(id);
-  setIsBulkDelete(false);
-  setConfirmState("pending");
-  setShowConfirmModal(true);
-};
+    setDeleteTargetId(id);
+    setIsBulkDelete(false);
+    setConfirmState("pending");
+    setShowConfirmModal(true);
+  };
 
- const handleBulkDelete = () => {
-  setIsBulkDelete(true);
-  setConfirmState("pending");
-  setShowConfirmModal(true);
-};
+  const handleBulkDelete = () => {
+    setIsBulkDelete(true);
+    setConfirmState("pending");
+    setShowConfirmModal(true);
+  };
 
-const performDelete = async () => {
-  setConfirmLoading(true);
-  try {
-    if (isBulkDelete) {
-      await Promise.all(selectedIds.map((id) => apiHelper.delete(`/model-year/${id}`)));
-      toast.success(`${selectedIds.length} years deleted successfully!`);
-      await getYears();
-      setSelectedIds([]);
-      setCurrentPage(1);
-      setConfirmState("success");
-    } else {
-      if (deleteTargetId === null) return;
-      await apiHelper.delete(`/model-year/${deleteTargetId}`);
-      toast.success("Year deleted successfully!");
-      await getYears();
-      setDeleteTargetId(null);
-      setConfirmState("success");
+  const performDelete = async () => {
+    setConfirmLoading(true);
+    try {
+      if (isBulkDelete) {
+        await Promise.all(
+          selectedIds.map((id) => apiHelper.delete(`/model-year/${id}`)),
+        );
+        toast.success(`${selectedIds.length} years deleted successfully!`);
+        await getYears();
+        setSelectedIds([]);
+        setCurrentPage(1);
+        setConfirmState("success");
+      } else {
+        if (deleteTargetId === null) return;
+        await apiHelper.delete(`/model-year/${deleteTargetId}`);
+        toast.success("Year deleted successfully!");
+        await getYears();
+        setDeleteTargetId(null);
+        setConfirmState("success");
+      }
+      setTimeout(() => setShowConfirmModal(false), 1500);
+    } catch (error: any) {
+      console.error("Delete failed:", error);
+      setConfirmState("error");
+      toast.error(
+        error.response?.data?.message || "Failed to delete. Please try again.",
+      );
+    } finally {
+      setConfirmLoading(false);
     }
-    setTimeout(() => setShowConfirmModal(false), 1500);
-  } catch (error: any) {
-    console.error("Delete failed:", error);
-    setConfirmState("error");
-    toast.error(error.response?.data?.message || "Failed to delete. Please try again.");
-  } finally {
-    setConfirmLoading(false);
-  }
-};
+  };
 
   const handleToggleTableStatus = async (id: number) => {
     const item = years.find((y) => y.id === id);
@@ -376,30 +411,33 @@ const performDelete = async () => {
   };
 
   const onFormSubmit = async (data: FormValues) => {
-  try {
-    const payload = {
-      categoryId: Number(data.categoryId),
-      brandId: Number(data.brandId),
-      modelId: Number(data.modelId),
-      modelYear: String(data.year),
-      status: data.status,
-    };
+    try {
+      const payload = {
+        categoryId: Number(data.categoryId),
+        brandId: Number(data.brandId),
+        modelId: Number(data.modelId),
+        modelYear: String(data.year),
+        status: data.status,
+      };
 
-    if (editId !== null) {
-      await apiHelper.put(`/model-year/${editId}`, payload);
-      toast.success("Year updated successfully!");
-    } else {
-      await apiHelper.post("/model-year", payload);
-      toast.success("Year created successfully!");
+      if (editId !== null) {
+        await apiHelper.put(`/model-year/${editId}`, payload);
+        toast.success("Year updated successfully!");
+      } else {
+        await apiHelper.post("/model-year", payload);
+        toast.success("Year created successfully!");
+      }
+      await getYears();
+      setShowDrawer(false);
+      reset();
+    } catch (error: any) {
+      console.error(error);
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to save year. Please try again.",
+      );
     }
-    await getYears();
-    setShowDrawer(false);
-    reset();
-  } catch (error: any) {
-    console.error(error);
-    toast.error(error.response?.data?.message || "Failed to save year. Please try again.");
-  }
-};
+  };
 
   // Filter logic - Added year filter matching
   const filteredData = years.filter((item) => {
@@ -480,46 +518,46 @@ const performDelete = async () => {
           </p>
         </div>
 
-       <div className="flex flex-wrap items-center justify-between gap-2 md:flex-nowrap">
-  {/* Left side - Filter and icons */}
-  <div className="flex items-center gap-2">
-    <button
-      type="button"
-      onClick={() => setShowFilterBar(!showFilterBar)}
-      className={`inline-flex items-center gap-1.5 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
-        showFilterBar
-          ? "bg-primary-50 border-primary-200 text-primary-600 dark:bg-dark-600 dark:border-dark-500 dark:text-white"
-          : "dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
-      }`}
-    >
-      <FunnelIcon className="size-4.5" />
-      <span className="hidden sm:inline">Filter</span>
-    </button>
+        <div className="flex flex-wrap items-center justify-between gap-2 md:flex-nowrap">
+          {/* Left side - Filter and icons */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowFilterBar(!showFilterBar)}
+              className={`inline-flex items-center gap-1.5 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
+                showFilterBar
+                  ? "bg-primary-50 border-primary-200 text-primary-600 dark:bg-dark-600 dark:border-dark-500 dark:text-white"
+                  : "dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              <FunnelIcon className="size-4.5" />
+              <span className="hidden sm:inline">Filter</span>
+            </button>
 
-    <button
-      type="button"
-      className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
-    >
-      <RiFileExcel2Fill className="text-lg text-green-500" />
-    </button>
+            <button
+              type="button"
+              className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            >
+              <RiFileExcel2Fill className="text-lg text-green-500" />
+            </button>
 
-    <button
-      type="button"
-      className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
-    >
-      <RiFilePdfFill className="text-lg text-red-500" />
-    </button>
-  </div>
+            <button
+              type="button"
+              className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            >
+              <RiFilePdfFill className="text-lg text-red-500" />
+            </button>
+          </div>
 
-  {/* Right side - Add Year button */}
-  <Button
-    color="primary"
-    onClick={handleOpenAddDrawer}
-    className="whitespace-nowrap"
-  >
-    Add Year
-  </Button>
-</div>
+          {/* Right side - Add Year button */}
+          <Button
+            color="primary"
+            onClick={handleOpenAddDrawer}
+            className="whitespace-nowrap"
+          >
+            Add Year
+          </Button>
+        </div>
       </div>
 
       {/* Global Context Search Box */}
@@ -541,77 +579,122 @@ const performDelete = async () => {
       {showFilterBar && (
         <div className="dark:bg-dark-700 dark:border-dark-500 animate-in fade-in slide-in-from-top-2 rounded-xl border border-gray-200 bg-white p-4 transition-all duration-150">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
-           <div className="flex flex-col gap-1">
-  <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
-    Category
-  </span>
-  <Combobox
-    data={categoryOptions}
-    displayField="name"
-    value={categoryOptions.find((opt) => opt.name === formCategoryValue) || categoryOptions[0]}
-    onChange={(opt: any) => {
-      setValue("category", opt?.name || "");
-      setValue("categoryId", opt?.id || "");
-    }}
-    placeholder="Search or select category..."
-    searchFields={["name"]}
-  />
-</div>
+            <div className="flex flex-col gap-1">
+              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
+                Category
+              </span>
+              <Controller
+                name="categoryId"
+                control={control}
+                rules={{
+                  validate: (value) =>
+                    (value && Number(value) > 0) || "Category is required",
+                }}
+                render={({ field, fieldState }) => (
+                  <Combobox
+                    data={categoryOptions}
+                    value={
+                      categoryOptions.find(
+                        (opt) => String(opt.id) === String(field.value),
+                      ) || null
+                    }
+                    error={fieldState.error?.message}
+                    displayField="name"
+                    placeholder="Search or select category..."
+                    searchFields={["name"]}
+                    onChange={(opt: any) => {
+                      field.onChange(opt.id);
+                      setValue("category", opt.name);
+                    }}
+                  />
+                )}
+              />
+            </div>
 
-<div className="flex flex-col gap-1">
-  <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
-    Brand
-  </span>
-  <Combobox
-    data={brandOptions}
-    displayField="name"
-    value={brandOptions.find((opt) => opt.name === formBrandValue) || brandOptions[0]}
-    onChange={(opt: any) => {
-      setValue("brand", opt?.name || "");
-      setValue("brandId", opt?.id || "");
-    }}
-    placeholder="Search or select brand..."
-    searchFields={["name"]}
-  />
-</div>
+            <div className="flex flex-col gap-1">
+              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
+                Brand
+              </span>
+              <Controller
+                name="brandId"
+                control={control}
+                rules={{
+                  validate: (value) =>
+                    (value && Number(value) > 0) || "Brand is required",
+                }}
+                render={({ field, fieldState }) => (
+                  <Combobox
+                    data={brandOptions}
+                    value={
+                      brandOptions.find(
+                        (opt) => String(opt.id) === String(field.value),
+                      ) || null
+                    }
+                    error={fieldState.error?.message}
+                    displayField="name"
+                    placeholder="Search or select brand..."
+                    searchFields={["name"]}
+                    onChange={(opt: any) => {
+                      field.onChange(opt.id);
+                      setValue("brand", opt.name);
+                    }}
+                  />
+                )}
+              />
+            </div>
 
-<div className="flex flex-col gap-1">
-  <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
-    Model
-  </span>
-  <Combobox
-    data={modelOptions}
-    displayField="name"
-    value={modelOptions.find((opt) => opt.name === formModelValue) || modelOptions[0]}
-    onChange={(opt: any) => {
-      setValue("model", opt?.name || "");
-      setValue("modelId", opt?.id || "");
-    }}
-    placeholder="Search or select model..."
-    searchFields={["name"]}
-  />
-</div>
+            <div className="flex flex-col gap-1">
+              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
+                Model
+              </span>
+              <Controller
+                name="modelId"
+                control={control}
+                rules={{
+                  validate: (value) =>
+                    (value && Number(value) > 0) || "Model is required",
+                }}
+                render={({ field, fieldState }) => (
+                  <Combobox
+                    data={modelOptions}
+                    value={
+                      modelOptions.find(
+                        (opt) => String(opt.id) === String(field.value),
+                      ) || null
+                    }
+                    error={fieldState.error?.message}
+                    displayField="name"
+                    placeholder="Search or select model..."
+                    searchFields={["name"]}
+                    onChange={(opt: any) => {
+                      field.onChange(opt.id);
+                      setValue("model", opt.name);
+                    }}
+                  />
+                )}
+              />
+            </div>
 
-{/* New Year Filter */}
-<div className="flex flex-col gap-1">
-  <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
-    Year
-  </span>
-  <Combobox
-    data={yearFilterOptions}
-    displayField="name"
-    value={yearFilterOptions.find((o) => o.id === selectedYearFilter) || yearFilterOptions[0]}
-    onChange={(opt: any) => {
-      setSelectedYearFilter(opt?.id || "All");
-      setCurrentPage(1);
-    }}
-    placeholder="Search or select year..."
-    searchFields={["name"]}
-  />
-</div>
-
-
-          
+            {/* New Year Filter */}
+            <div className="flex flex-col gap-1">
+              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
+                Year
+              </span>
+              <Combobox
+                data={yearFilterOptions}
+                displayField="name"
+                value={
+                  yearFilterOptions.find((o) => o.id === selectedYearFilter) ||
+                  yearFilterOptions[0]
+                }
+                onChange={(opt: any) => {
+                  setSelectedYearFilter(opt?.id || "All");
+                  setCurrentPage(1);
+                }}
+                placeholder="Search or select year..."
+                searchFields={["name"]}
+              />
+            </div>
 
             <div className="flex flex-col gap-1">
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
@@ -641,7 +724,7 @@ const performDelete = async () => {
         <div className="overflow-x-auto">
           <Table
             hoverable
-            className="w-full min-w-[800px] text-left [&_.table-th]:font-semibold"
+            className="w-full min-w-200 text-left [&_.table-th]:font-semibold"
           >
             <THead className="dark:bg-dark-700/60 dark:border-dark-600 border-b border-gray-200 bg-gray-100">
               <Tr>
@@ -742,7 +825,7 @@ const performDelete = async () => {
                         >
                           <MenuItems
                             anchor="bottom end"
-                            className="dark:bg-dark-800 dark:ring-dark-500 dark:border-dark-500 z-[100] w-36 rounded-lg border border-gray-100 bg-white p-1 shadow-lg ring-1 ring-black/5 [--anchor-gap:4px] focus:outline-none"
+                            className="dark:bg-dark-800 dark:ring-dark-500 dark:border-dark-500 z-100 w-36 rounded-lg border border-gray-100 bg-white p-1 shadow-lg ring-1 ring-black/5 [--anchor-gap:4px] focus:outline-none"
                           >
                             <MenuItem>
                               {({ active }) => (
@@ -834,7 +917,7 @@ const performDelete = async () => {
                   >
                     <MenuItems
                       anchor="top start"
-                      className="dark:bg-dark-700 dark:border-dark-600 z-[200] w-20 space-y-0.5 rounded-lg border border-gray-200 bg-white p-1 shadow-xl ring-1 ring-black/5 [--anchor-gap:6px] focus:outline-none"
+                      className="dark:bg-dark-700 dark:border-dark-600 z-200 w-20 space-y-0.5 rounded-lg border border-gray-200 bg-white p-1 shadow-xl ring-1 ring-black/5 [--anchor-gap:6px] focus:outline-none"
                     >
                       {entriesOptions.map((opt) => (
                         <MenuItem key={opt.id}>
@@ -963,7 +1046,7 @@ const performDelete = async () => {
       <Transition appear show={showDrawer} as={Fragment}>
         <Dialog
           as="div"
-          className="relative z-[100]"
+          className="relative z-100"
           onClose={() => setShowDrawer(false)}
         >
           <TransitionChild
@@ -1010,55 +1093,126 @@ const performDelete = async () => {
 
                 {/* Content Input Fields */}
                 <div className="grow space-y-5 overflow-y-auto p-5">
-                 <div>
-  <span className="mb-2 block text-sm font-medium">
-    Category
-  </span>
-  <Combobox
-    data={categoryOptions}
-    displayField="name"
-    value={categoryOptions.find((opt) => opt.name === formCategoryValue) || categoryOptions[0]}
-    onChange={(opt: any) => {
-      setValue("category", opt?.name || "");
-      setValue("categoryId", opt?.id || "");
-    }}
-    placeholder="Search or select category..."
-    searchFields={["name"]}
-  />
-</div>
+                  <div>
+                    <span className="mb-2 block text-sm font-medium">
+                      Category
+                    </span>
+                    <Controller
+  name="categoryId"
+  control={control}
+  rules={{
+    validate: (value) =>
+      (value && Number(value) > 0) || "Category is required",
+  }}
+  render={({ field, fieldState }) => (
+    <Combobox
+      data={categoryOptions}
+      value={
+        categoryOptions.find(
+          (option) => String(option.id) === String(field.value),
+        ) || null
+      }
+      error={fieldState.error?.message}
+      displayField="name"
+      searchFields={["name"]}
+      placeholder="Select Category"
+      onChange={(selectedOption: any) => {
+        field.onChange(selectedOption.id);
+        setValue("category", selectedOption.name);
 
-                 <div>
+        // Reset dependent fields
+        setValue("brand", "");
+        setValue("brandId", "");
+        setValue("model", "");
+        setValue("modelId", "");
+
+        const categoryBrands = brands.filter(
+          (b) => Number(b.categoryId) === Number(selectedOption.id),
+        );
+        setFilteredBrands(categoryBrands);
+        setFilteredModels([]); // clear models until brand is picked
+      }}
+    />
+  )}
+/>
+                  </div>
+
+                  <div>
+                   <div>
   <span className="mb-2 block text-sm font-medium">
     Brand
   </span>
-  <Combobox
-    data={brandOptions}
-    displayField="name"
-    value={brandOptions.find((opt) => opt.name === formBrandValue) || brandOptions[0]}
-    onChange={(opt: any) => {
-      setValue("brand", opt?.name || "");
-      setValue("brandId", opt?.id || "");
+  <Controller
+    name="brandId"
+    control={control}
+    rules={{
+      validate: (value) =>
+        (value && Number(value) > 0) || "Brand is required",
     }}
-    placeholder="Search or select brand..."
-    searchFields={["name"]}
+    render={({ field, fieldState }) => (
+      <Combobox
+        data={brandOptions}
+        value={
+          brandOptions.find(
+            (option) => String(option.id) === String(field.value),
+          ) || null
+        }
+        error={fieldState.error?.message}
+        displayField="name"
+        searchFields={["name"]}
+        placeholder={
+          formCategoryValue ? "Select Brand" : "First select category"
+        }
+        onChange={(selectedOption: any) => {
+          field.onChange(selectedOption.id);
+          setValue("brand", selectedOption.name);
+
+          // Reset dependent Model field
+          setValue("model", "");
+          setValue("modelId", "");
+
+          const brandModels = modelsList.filter(
+            (m) => Number(m.brandId) === Number(selectedOption.id),
+          );
+          setFilteredModels(brandModels);
+        }}
+      />
+    )}
   />
 </div>
-                <div>
-  <span className="mb-2 block text-sm font-medium">
-    Model
-  </span>
-  <Combobox
-    data={modelOptions}
-    displayField="name"
-    value={modelOptions.find((opt) => opt.name === formModelValue) || modelOptions[0]}
-    onChange={(opt: any) => {
-      setValue("model", opt?.name || "");
-      setValue("modelId", opt?.id || "");
-    }}
-    placeholder="Search or select model..."
-    searchFields={["name"]}
-  />
-</div>
+                  </div>
+                  <div>
+                    <span className="mb-2 block text-sm font-medium">
+                      Model
+                    </span>
+                    <Controller
+                      name="modelId"
+                      control={control}
+                      rules={{
+                        validate: (value) =>
+                          (value && Number(value) > 0) || "Model is required",
+                      }}
+                      render={({ field, fieldState }) => (
+                        <Combobox
+                          data={modelOptions}
+                          value={
+                            modelOptions.find(
+                              (option) =>
+                                String(option.id) === String(field.value),
+                            ) || null
+                          }
+                          error={fieldState.error?.message}
+                          displayField="name"
+                          searchFields={["name"]}
+                          placeholder="Select Model"
+                          onChange={(selectedOption: any) => {
+                            field.onChange(selectedOption.id);
+                            setValue("model", selectedOption.name);
+                          }}
+                        />
+                      )}
+                    />
+                  </div>
                   <div>
                     <label className="mb-2 block text-sm font-medium">
                       Year
@@ -1113,39 +1267,39 @@ const performDelete = async () => {
       </Transition>
 
       {/* Confirmation Modal */}
-<ConfirmModal
-  show={showConfirmModal}
-  onClose={() => {
-    setShowConfirmModal(false);
-    setDeleteTargetId(null);
-    setConfirmState("pending");
-  }}
-  onOk={performDelete}
-  confirmLoading={confirmLoading}
-  state={confirmState}
-  messages={{
-    pending: {
-      Icon: ExclamationTriangleIcon,
-      title: isBulkDelete ? "Delete Selected Years?" : "Are you sure?",
-      description: isBulkDelete 
-        ? `Are you sure you want to delete ${selectedIds.length} selected years? This action cannot be undone.`
-        : "Are you sure you want to delete this year? Once deleted, it cannot be restored.",
-      actionText: isBulkDelete ? "Delete All" : "Delete",
-    },
-    success: {
-      title: "Deleted Successfully",
-      description: isBulkDelete 
-        ? `${selectedIds.length} years have been deleted.`
-        : "The year has been deleted.",
-      actionText: "Done",
-    },
-    error: {
-      title: "Delete Failed",
-      description: "Failed to delete. Please try again.",
-      actionText: "Try Again",
-    },
-  }}
-/>
+      <ConfirmModal
+        show={showConfirmModal}
+        onClose={() => {
+          setShowConfirmModal(false);
+          setDeleteTargetId(null);
+          setConfirmState("pending");
+        }}
+        onOk={performDelete}
+        confirmLoading={confirmLoading}
+        state={confirmState}
+        messages={{
+          pending: {
+            Icon: ExclamationTriangleIcon,
+            title: isBulkDelete ? "Delete Selected Years?" : "Are you sure?",
+            description: isBulkDelete
+              ? `Are you sure you want to delete ${selectedIds.length} selected years? This action cannot be undone.`
+              : "Are you sure you want to delete this year? Once deleted, it cannot be restored.",
+            actionText: isBulkDelete ? "Delete All" : "Delete",
+          },
+          success: {
+            title: "Deleted Successfully",
+            description: isBulkDelete
+              ? `${selectedIds.length} years have been deleted.`
+              : "The year has been deleted.",
+            actionText: "Done",
+          },
+          error: {
+            title: "Delete Failed",
+            description: "Failed to delete. Please try again.",
+            actionText: "Try Again",
+          },
+        }}
+      />
     </div>
   );
 }

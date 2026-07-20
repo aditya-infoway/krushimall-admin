@@ -105,10 +105,12 @@ export function Transmission({
   setCurrentStep,
    websiteVariantId,   // ✅
   editData,
+    isEditMode,
 }: {
   setCurrentStep: (step: number) => void;
    websiteVariantId?: string | null;
   editData?: any;
+   isEditMode?: boolean;
 }) {
   const kycFormCtx = useKYCFormContext();
 
@@ -593,7 +595,7 @@ export function Transmission({
           Previous
         </Button>
         <Button type="submit" className="min-w-28" color="primary">
-          {websiteVariantId ? "Update & Next" : "Save & Next"}
+          {isEditMode ? "Update & Next" : "Save & Next"}
         </Button>
       </div>
     </form>

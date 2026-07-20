@@ -171,119 +171,90 @@ export default function BankReceipt() {
   const currentItems = filteredRows.slice(indexOfFirstItem, indexOfLastItem);
   const [bankAccounts, setBankAccounts] = useState<any[]>([]);
   const [oppAccounts, setOppAccounts] = useState<any[]>([]);
- const companyId = Number(
-  sessionStorage.getItem("companyId"),
-);
+  const companyId = Number(sessionStorage.getItem("companyId"));
 
-const financialYearId = Number(
-  sessionStorage.getItem("financialYearId"),
-);
+  const financialYearId = Number(sessionStorage.getItem("financialYearId"));
   const [leadOptions, setLeadOptions] = useState([]);
- const validateForm = () => {
-  const newErrors: Record<string, string> = {};
-if (!companyId) {
-  newErrors.companyId =
-    "Company is not selected";
-}
-
-if (!financialYearId) {
-  newErrors.financialYearId =
-    "Financial year is not selected";
-}
-  // Bank Account
-  if (!form.bankAccount?.value) {
-    newErrors.bankAccount =
-      "Bank Account is required";
-  }
-
-  // Opp. Account
-  if (!form.oppAccount?.value) {
-    newErrors.oppAccount =
-      "Opp. Account is required";
-  }
-
-  // Date
-  if (
-    !form.date ||
-    (Array.isArray(form.date) &&
-      form.date.length === 0)
-  ) {
-    newErrors.date = "Date is required";
-  }
-
-  // Amount
-  const amount = Number(form.amount);
-
-  if (
-    form.amount === "" ||
-    form.amount === null ||
-    form.amount === undefined
-  ) {
-    newErrors.amount = "Amount is required";
-  } else if (Number.isNaN(amount)) {
-    newErrors.amount =
-      "Enter a valid amount";
-  } else if (amount <= 0) {
-    newErrors.amount =
-      "Amount must be greater than 0";
-  }
-
-  // Payment Type
-  if (!form.paymentType?.id) {
-    newErrors.paymentType =
-      "Payment Type is required";
-  }
-
-  // Lead validation
-  if (
-    form.type === "Lead Cancel" &&
-    !form.leadNo?.value
-  ) {
-    newErrors.leadNo =
-      "Lead is required";
-  }
-
-  // Job Card validation
-  if (
-    form.type === "Job Card" &&
-    !form.jobCardNo?.value
-  ) {
-    newErrors.jobCardNo =
-      "Job Card is required";
-  }
-
-  // Cheque validation
-  if (form.paymentType?.id === "Cheque") {
-    if (!form.chequeNo?.trim()) {
-      newErrors.chequeNo =
-        "Cheque No. is required";
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+    if (!companyId) {
+      newErrors.companyId = "Company is not selected";
     }
+
+    if (!financialYearId) {
+      newErrors.financialYearId = "Financial year is not selected";
+    }
+    // Bank Account
+    if (!form.bankAccount?.value) {
+      newErrors.bankAccount = "Bank Account is required";
+    }
+
+    // Opp. Account
+    if (!form.oppAccount?.value) {
+      newErrors.oppAccount = "Opp. Account is required";
+    }
+
+    // Date
+    if (!form.date || (Array.isArray(form.date) && form.date.length === 0)) {
+      newErrors.date = "Date is required";
+    }
+
+    // Amount
+    const amount = Number(form.amount);
 
     if (
-      !form.chequeDate ||
-      (Array.isArray(form.chequeDate) &&
-        form.chequeDate.length === 0)
+      form.amount === "" ||
+      form.amount === null ||
+      form.amount === undefined
     ) {
-      newErrors.chequeDate =
-        "Cheque Date is required";
+      newErrors.amount = "Amount is required";
+    } else if (Number.isNaN(amount)) {
+      newErrors.amount = "Enter a valid amount";
+    } else if (amount <= 0) {
+      newErrors.amount = "Amount must be greater than 0";
     }
 
-    if (
-      !form.chequeClearDate ||
-      (Array.isArray(
-        form.chequeClearDate,
-      ) &&
-        form.chequeClearDate.length === 0)
-    ) {
-      newErrors.chequeClearDate =
-        "Cheque Clear Date is required";
+    // Payment Type
+    if (!form.paymentType?.id) {
+      newErrors.paymentType = "Payment Type is required";
     }
-  }
 
-  setErrors(newErrors);
+    // Lead validation
+    if (form.type === "Lead Cancel" && !form.leadNo?.value) {
+      newErrors.leadNo = "Lead is required";
+    }
 
-  return Object.keys(newErrors).length === 0;
-};
+    // Job Card validation
+    if (form.type === "Job Card" && !form.jobCardNo?.value) {
+      newErrors.jobCardNo = "Job Card is required";
+    }
+
+    // Cheque validation
+    if (form.paymentType?.id === "Cheque") {
+      if (!form.chequeNo?.trim()) {
+        newErrors.chequeNo = "Cheque No. is required";
+      }
+
+      if (
+        !form.chequeDate ||
+        (Array.isArray(form.chequeDate) && form.chequeDate.length === 0)
+      ) {
+        newErrors.chequeDate = "Cheque Date is required";
+      }
+
+      if (
+        !form.chequeClearDate ||
+        (Array.isArray(form.chequeClearDate) &&
+          form.chequeClearDate.length === 0)
+      ) {
+        newErrors.chequeClearDate = "Cheque Clear Date is required";
+      }
+    }
+
+    setErrors(newErrors);
+
+    return Object.keys(newErrors).length === 0;
+  };
   const getLeads = async () => {
     try {
       const res = await apiHelper.get("/leads");
@@ -453,12 +424,10 @@ if (!financialYearId) {
 
   const handleSubmit = async () => {
     if (!validateForm()) return;
-  if (!companyId || !financialYearId) {
-    toast.error(
-      "Company or financial year is not selected",
-    );
-    return;
-  }
+    if (!companyId || !financialYearId) {
+      toast.error("Company or financial year is not selected");
+      return;
+    }
     try {
       const payload = {
         companyId,
@@ -479,10 +448,7 @@ if (!financialYearId) {
         chequeClearDate: form.chequeClearDate,
         narration: form.narration,
       };
-console.log(
-      "bank RECEIPT PAYLOAD:",
-      payload,
-    );
+      console.log("bank RECEIPT PAYLOAD:", payload);
       if (editId) {
         await apiHelper.put(`/bank-receipt/${editId}`, payload);
         toast.success("Bank receipt updated successfully!");
@@ -524,18 +490,17 @@ console.log(
     );
   };
 
-
   const handlePrint = async (item: BankReceipt) => {
-  try {
-    const blob = await apiHelper.getBlob(`/bank-receipt/${item.id}/print`);
-    const url = window.URL.createObjectURL(blob);
-    window.open(url, "_blank");
-    setTimeout(() => window.URL.revokeObjectURL(url), 60000);
-  } catch (err) {
-    console.log(err);
-    toast.error("Failed to generate receipt PDF");
-  }
-};
+    try {
+      const blob = await apiHelper.getBlob(`/bank-receipt/${item.id}/print`);
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, "_blank");
+      setTimeout(() => window.URL.revokeObjectURL(url), 60000);
+    } catch (err) {
+      console.log(err);
+      toast.error("Failed to generate receipt PDF");
+    }
+  };
 
   const JOB_CARDS = [
     {
@@ -578,9 +543,6 @@ console.log(
   }));
 
   // Transform OPP_ACCOUNTS to include balance on the right
-  
-
-
 
   // Apply filters automatically when any filter changes
   useEffect(() => {
@@ -738,13 +700,13 @@ console.log(
           <table className="w-full min-w-[1400px] text-left [&_.table-th]:font-semibold">
             <thead className="dark:bg-dark-700/60 dark:border-dark-600 border-b border-gray-200 bg-gray-100">
               <tr>
-               <th className="w-10 px-2 py-3.5 text-center">
-  <Checkbox
-    checked={isAllPageSelected}
-    onChange={(e: any) => handleSelectAll(e.target.checked)}
-    className="size-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
-  />
-</th>
+                <th className="w-10 px-2 py-3.5 text-center">
+                  <Checkbox
+                    checked={isAllPageSelected}
+                    onChange={(e: any) => handleSelectAll(e.target.checked)}
+                    className="size-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                  />
+                </th>
                 <th className="w-12 px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
                   S.No
                 </th>
@@ -801,13 +763,13 @@ console.log(
                     key={item.id}
                     className={`${isRowSelected ? "dark:bg-dark-600/30 bg-gray-50/50" : ""} dark:hover:bg-dark-700/40 transition-colors hover:bg-gray-50/30`}
                   >
-                   <td className="px-2 py-3 text-center">
-  <Checkbox
-    checked={isRowSelected}
-    onChange={() => handleSelectRow(item.id)}
-    className="size-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
-  />
-</td>
+                    <td className="px-2 py-3 text-center">
+                      <Checkbox
+                        checked={isRowSelected}
+                        onChange={() => handleSelectRow(item.id)}
+                        className="size-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                      />
+                    </td>
                     <td className="px-3 py-3 text-sm font-medium whitespace-nowrap text-gray-500">
                       {indexOfFirstItem + index + 1}
                     </td>
@@ -859,10 +821,16 @@ console.log(
                       {item.chequeNo || "-"}
                     </td>
                     <td className="px-3 py-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
-                      {item.chequeDate || "-"}
+                      {item.chequeDate
+                        ? new Date(item.chequeDate).toLocaleDateString("en-GB")
+                        : "-"}
                     </td>
                     <td className="px-3 py-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
-                      {item.chequeClearDate || "-"}
+                      {item.chequeClearDate
+                        ? new Date(item.chequeClearDate).toLocaleDateString(
+                            "en-GB",
+                          )
+                        : "-"}
                     </td>
                     <td className="px-3 py-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
                       {item.narration}
@@ -877,7 +845,7 @@ console.log(
                       <button
                         type="button"
                         onClick={() => handlePrint(item)}
-                        className="dark:hover:bg-dark-600 dark:text-dark-200 text-primary-500 hover:bg-primary-600 cursor-pointer inline-flex size-8 items-center justify-center rounded-lg transition-colors hover:text-white"
+                        className="dark:hover:bg-dark-600 dark:text-dark-200 text-primary-500 hover:bg-primary-600 inline-flex size-8 cursor-pointer items-center justify-center rounded-lg transition-colors hover:text-white"
                         title="Print Receipt"
                       >
                         <Printer className="size-4" />
@@ -1144,7 +1112,7 @@ console.log(
                         }}
                         placeholder="Search Quotation No / Customer"
                         searchFields={["quotationNo", "customerName", "mobile"]}
-                          error={errors.leadNo}
+                        error={errors.leadNo}
                         columns={[
                           {
                             header: "Quotation No",
@@ -1200,7 +1168,7 @@ console.log(
                       }}
                       placeholder="Search Bank Account"
                       searchFields={["label", "mobile"]}
-                        error={errors.bankAccount}
+                      error={errors.bankAccount}
                       columns={[
                         {
                           header: "Account",
@@ -1289,7 +1257,7 @@ console.log(
                       disabled={form.type === "Lead Cancel"}
                       placeholder="Search Opp. Account"
                       searchFields={["label", "mobile"]}
-                        error={errors.oppAccount}
+                      error={errors.oppAccount}
                       columns={[
                         {
                           header: "Account",

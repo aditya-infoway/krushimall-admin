@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import {
   MagnifyingGlassIcon,
   DocumentArrowDownIcon,
@@ -48,25 +48,25 @@ const entriesOptions = [
   { id: 100, name: "100" },
 ];
 
-const groupFilterOptions = [
-  { id: "All", name: "All Groups" },
-  { id: "Engine Parts", name: "Engine Parts" },
-  { id: "Electrical", name: "Electrical" },
-  { id: "Transmission", name: "Transmission" },
-  { id: "Hydraulics", name: "Hydraulics" },
-  { id: "Body Parts", name: "Body Parts" },
-  { id: "Tires", name: "Tires" },
-  { id: "Batteries", name: "Batteries" },
-];
+// const groupFilterOptions = [
+//   { id: "All", name: "All Groups" },
+//   { id: "Engine Parts", name: "Engine Parts" },
+//   { id: "Electrical", name: "Electrical" },
+//   { id: "Transmission", name: "Transmission" },
+//   { id: "Hydraulics", name: "Hydraulics" },
+//   { id: "Body Parts", name: "Body Parts" },
+//   { id: "Tires", name: "Tires" },
+//   { id: "Batteries", name: "Batteries" },
+// ];
 
-const taxFilterOptions = [
-  { id: "All", name: "All Tax Rates" },
-  { id: "0", name: "0%" },
-  { id: "5", name: "5%" },
-  { id: "12", name: "12%" },
-  { id: "18", name: "18%" },
-  { id: "28", name: "28%" },
-];
+// const taxFilterOptions = [
+//   { id: "All", name: "All Tax Rates" },
+//   { id: "0", name: "0%" },
+//   { id: "5", name: "5%" },
+//   { id: "12", name: "12%" },
+//   { id: "18", name: "18%" },
+//   { id: "28", name: "28%" },
+// ];
 
 const fmt = (n: number) =>
   n.toLocaleString("en-IN", {
@@ -95,9 +95,9 @@ const columns = [
 
 const AccessoriesInventory: React.FC<AccessoriesInventoryProps> = ({
   onAddAccessory,
-  onEditRow,
-  onDeleteRow,
-  onViewRow,
+  // onEditRow,
+  // onDeleteRow,
+  // onViewRow,
 }) => {
   const [search, setSearch] = useState("");
   const [rowsPerPage, setRowsPerPage] = useState(15);
@@ -106,12 +106,10 @@ const AccessoriesInventory: React.FC<AccessoriesInventoryProps> = ({
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [rows, setRows] = useState<AccessoriesInventoryRow[]>([]);
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   // Sample data - replace with API call
-  useEffect(() => {
-    fetchInventory();
-  }, []);
+ 
 
 const fetchInventory = async () => {
   try {
@@ -134,7 +132,9 @@ const fetchInventory = async () => {
     setRows([]);
   }
 };
-
+ useEffect(() => {
+    fetchInventory();
+  }, []);
   // Filter rows
   const filteredRows = useMemo(() => {
     let result = rows;
@@ -265,7 +265,7 @@ const fetchInventory = async () => {
         </div>
 
         {/* Group Filter Dropdown */}
-        <div className="flex items-center gap-2">
+        {/* <div className="flex items-center gap-2">
           <select
             value={selectedGroupFilter}
             onChange={(e) => {
@@ -295,7 +295,7 @@ const fetchInventory = async () => {
               </option>
             ))}
           </select>
-        </div>
+        </div> */}
       </div>
 
       {/* Table */}

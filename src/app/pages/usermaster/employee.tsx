@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import apiHelper from "@/utils/apiHelper";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/solid";
 import { LockClosedIcon } from "@heroicons/react/24/outline";
-import { useForm, useWatch } from "react-hook-form";
+import { useForm, useWatch, Controller } from "react-hook-form";
 import {
   Dialog,
   DialogPanel,
@@ -55,11 +55,11 @@ type Employee = {
 
 type FormValues = {
   id?: number;
-    teamLeadId?: number;
+  teamLeadId?: number;
   department: string;
   branch: string;
   role: string;
-  
+
   employeeName: string;
   mobileNumber: string;
   alternateNumber: string;
@@ -87,7 +87,6 @@ const statusOptions = [
 
 // Change from { id, name } to { label, value } format for Combobox
 
-
 const branchOptions = [
   { label: "Mumbai", value: "Mumbai" },
   { label: "Delhi", value: "Delhi" },
@@ -95,8 +94,6 @@ const branchOptions = [
   { label: "Chennai", value: "Chennai" },
   { label: "Pune", value: "Pune" },
 ];
-
-
 
 const Employee = () => {
   const [showDrawer, setShowDrawer] = useState(false);
@@ -121,8 +118,8 @@ const Employee = () => {
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
   const [isBulkDelete, setIsBulkDelete] = useState(false);
-const [departmentOptions, setDepartmentOptions] = useState<any[]>([]);
-const [roleOptions, setRoleOptions] = useState<any[]>([]);
+  const [departmentOptions, setDepartmentOptions] = useState<any[]>([]);
+  const [roleOptions, setRoleOptions] = useState<any[]>([]);
   // Add this after your useForm declaration
   const {
     register,
@@ -134,7 +131,7 @@ const [roleOptions, setRoleOptions] = useState<any[]>([]);
   } = useForm<FormValues>({
     defaultValues: {
       department: "",
-          teamLeadId: undefined,
+      teamLeadId: undefined,
       branch: "",
       role: "",
       employeeName: "",
@@ -153,22 +150,22 @@ const [roleOptions, setRoleOptions] = useState<any[]>([]);
   const formRoleValue = useWatch({ control, name: "role" });
   const formStatusValue = useWatch({ control, name: "status" });
   const formTeamLeadValue = useWatch({
-  control,
-  name: "teamLeadId",
-});
-const [teamLeadOptions, setTeamLeadOptions] = useState([]);
-const getTeamLeads = async (department: string) => {
-  const res = await apiHelper.get(
-    `/employees/team-leads?department=${department}`
-  );
+    control,
+    name: "teamLeadId",
+  });
+  const [teamLeadOptions, setTeamLeadOptions] = useState([]);
+  const getTeamLeads = async (department: string) => {
+    const res = await apiHelper.get(
+      `/employees/team-leads?department=${department}`,
+    );
 
-  setTeamLeadOptions(
-    res.data.map((item: any) => ({
-      label: item.employeeName,
-      value: item.id,
-    }))
-  );
-};
+    setTeamLeadOptions(
+      res.data.map((item: any) => ({
+        label: item.employeeName,
+        value: item.id,
+      })),
+    );
+  };
   const formValidationRules = {
     department: { required: "Department is required" },
     branch: { required: "Branch is required" },
@@ -226,37 +223,37 @@ const getTeamLeads = async (department: string) => {
     { id: "ACTIVE", name: "Active" },
     { id: "INACTIVE", name: "Inactive" },
   ];
-const getDepartments = async () => {
-  try {
-    const res = await apiHelper.get("/employees/departments");
+  const getDepartments = async () => {
+    try {
+      const res = await apiHelper.get("/employees/departments");
 
-    setDepartmentOptions(
-      res.data.map((item: any) => ({
-        label: item.name,
-        value: item.name,      // ✅ Store department name
-        departmentId: item.id, // Keep id separately
-      }))
-    );
-  } catch (err) {
-    console.log(err);
-  }
-};
-const getRoles = async (departmentId: number) => {
-  try {
-    const res = await apiHelper.get(
-      `/employees/roles/department/${departmentId}`
-    );
+      setDepartmentOptions(
+        res.data.map((item: any) => ({
+          label: item.name,
+          value: item.name, // ✅ Store department name
+          departmentId: item.id, // Keep id separately
+        })),
+      );
+    } catch (err) {
+      console.log(err);
+    }
+  };
+  const getRoles = async (departmentId: number) => {
+    try {
+      const res = await apiHelper.get(
+        `/employees/roles/department/${departmentId}`,
+      );
 
-    setRoleOptions(
-      res.data.map((item: any) => ({
-        label: item.roleName,
-        value: item.roleName, // Store role name
-      }))
-    );
-  } catch (err) {
-    console.log(err);
-  }
-};
+      setRoleOptions(
+        res.data.map((item: any) => ({
+          label: item.roleName,
+          value: item.roleName, // Store role name
+        })),
+      );
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   const getEmployees = async () => {
     try {
@@ -270,8 +267,7 @@ const getRoles = async (departmentId: number) => {
 
   useEffect(() => {
     getEmployees();
-     getDepartments();
-    
+    getDepartments();
   }, []);
   const handleOpenAddDrawer = () => {
     setEditId(null);
@@ -279,7 +275,7 @@ const getRoles = async (departmentId: number) => {
       department: "",
       branch: "",
       role: "",
-        teamLeadId: undefined,
+      teamLeadId: undefined,
       employeeName: "",
       mobileNumber: "",
       alternateNumber: "",
@@ -291,47 +287,47 @@ const getRoles = async (departmentId: number) => {
     setShowDrawer(true);
   };
 
-const handleOpenEditDrawer = async (item: Employee) => {
-  try {
-    const response = await apiHelper.get(`/employees/${item.id}`);
+  const handleOpenEditDrawer = async (item: Employee) => {
+    try {
+      const response = await apiHelper.get(`/employees/${item.id}`);
 
-    const employee = response.data;
+      const employee = response.data;
 
-    setEditId(employee.id);
+      setEditId(employee.id);
 
-    // Load roles for selected department
-    const department = departmentOptions.find(
-      (d) => d.value === employee.department
-    );
+      // Load roles for selected department
+      const department = departmentOptions.find(
+        (d) => d.value === employee.department,
+      );
 
-    if (department) {
-      await getRoles(department.departmentId);
+      if (department) {
+        await getRoles(department.departmentId);
+      }
+
+      // Load Team Leads if role is Sales Executive
+      if (employee.role === "Sales Executive") {
+        await getTeamLeads(employee.department);
+      }
+
+      reset({
+        department: employee.department,
+        branch: employee.branch,
+        role: employee.role,
+        teamLeadId: employee.teamLeadId,
+        employeeName: employee.employeeName,
+        mobileNumber: employee.mobileNumber,
+        alternateNumber: employee.alternateNumber || "",
+        email: employee.email,
+        password: "",
+        confirmPassword: "",
+        status: employee.status,
+      });
+
+      setShowDrawer(true);
+    } catch (error) {
+      console.log(error);
     }
-
-    // Load Team Leads if role is Sales Executive
-    if (employee.role === "Sales Executive") {
-      await getTeamLeads(employee.department);
-    }
-
-    reset({
-      department: employee.department,
-      branch: employee.branch,
-      role: employee.role,
-    teamLeadId: employee.teamLeadId, 
-      employeeName: employee.employeeName,
-      mobileNumber: employee.mobileNumber,
-      alternateNumber: employee.alternateNumber || "",
-      email: employee.email,
-      password: "",
-      confirmPassword: "",
-      status: employee.status,
-    });
-
-    setShowDrawer(true);
-  } catch (error) {
-    console.log(error);
-  }
-};
+  };
   const handleDelete = (id: number) => {
     setDeleteTargetId(id);
     setIsBulkDelete(false);
@@ -390,7 +386,7 @@ const handleOpenEditDrawer = async (item: Employee) => {
       const payload = {
         department: data.department,
         branch: data.branch,
-          teamLeadId: data.teamLeadId,
+        teamLeadId: data.teamLeadId,
         role: data.role,
         employeeName: data.employeeName,
         mobileNumber: data.mobileNumber,
@@ -491,47 +487,47 @@ const handleOpenEditDrawer = async (item: Employee) => {
           </p>
         </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-2 md:flex-nowrap">
-  {/* Left side - Filter and icons */}
-  <div className="flex items-center gap-2">
-    <button
-      type="button"
-      onClick={() => setShowFilterBar(!showFilterBar)}
-      className={`inline-flex items-center gap-1.5 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
-        showFilterBar
-          ? "bg-primary-50 border-primary-200 text-primary-600 dark:bg-dark-600 dark:border-dark-500 dark:text-white"
-          : "dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
-      }`}
-    >
-      <FunnelIcon className="size-4.5" />
-      <span className="hidden sm:inline">Filter</span>
-    </button>
+        <div className="flex flex-wrap items-center justify-between gap-2 md:flex-nowrap">
+          {/* Left side - Filter and icons */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowFilterBar(!showFilterBar)}
+              className={`inline-flex items-center gap-1.5 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
+                showFilterBar
+                  ? "bg-primary-50 border-primary-200 text-primary-600 dark:bg-dark-600 dark:border-dark-500 dark:text-white"
+                  : "dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              <FunnelIcon className="size-4.5" />
+              <span className="hidden sm:inline">Filter</span>
+            </button>
 
-    <button
-      type="button"
-      className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
-    >
-      <RiFileExcel2Fill className="text-lg text-green-500" />
-    </button>
+            <button
+              type="button"
+              className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            >
+              <RiFileExcel2Fill className="text-lg text-green-500" />
+            </button>
 
-    <button
-      type="button"
-      className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
-    >
-      <RiFilePdfFill className="text-lg text-red-500" />
-    </button>
-  </div>
+            <button
+              type="button"
+              className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            >
+              <RiFilePdfFill className="text-lg text-red-500" />
+            </button>
+          </div>
 
-  {/* Right side - Add Employee button */}
-  <Button
-    color="primary"
-    onClick={handleOpenAddDrawer}
-    className="whitespace-nowrap"
-  >
-    <PlusIcon className="mr-1.5 size-4.5" />
-    Add Employee
-  </Button>
-</div>
+          {/* Right side - Add Employee button */}
+          <Button
+            color="primary"
+            onClick={handleOpenAddDrawer}
+            className="whitespace-nowrap"
+          >
+            <PlusIcon className="mr-1.5 size-4.5" />
+            Add Employee
+          </Button>
+        </div>
       </div>
 
       {/* Search */}
@@ -1020,98 +1016,131 @@ const handleOpenEditDrawer = async (item: Employee) => {
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
                       <div>
-                        <Combobox
-                          label={
-                            <span>
-                              Type of Department{" "}
-                              <span className="text-red-500">*</span>
-                            </span>
-                          }
-                          placeholder="Select Department"
-                          data={departmentOptions}
-                          value={departmentOptions.find(
-                            (item) => item.value === formDepartmentValue,
-                          )}
-                        onChange={(val: any) => {
-  setValue("department", val?.value || ""); // "Sales"
-  setValue("role", "");
+                        <Controller
+                          name="department"
+                          control={control}
+                          rules={{
+                            required: "Department is required",
+                          }}
+                          render={({ field, fieldState }) => (
+                            <Combobox
+                              label={
+                                <span>
+                                  Type of Department{" "}
+                                  <span className="text-red-500">*</span>
+                                </span>
+                              }
+                              placeholder="Select Department"
+                              data={departmentOptions}
+                              value={
+                                departmentOptions.find(
+                                  (item) => item.value === field.value,
+                                ) || null
+                              }
+                              error={fieldState.error?.message}
+                              onChange={(val: any) => {
+                                field.onChange(val?.value || "");
 
-  if (val?.departmentId) {
-    getRoles(val.departmentId); // 1
-  } else {
-    setRoleOptions([]);
-  }
-}}
-                          error={
-                            errors?.department && errors.department.message
-                          }
+                                setValue("role", "");
+                                setValue("teamLeadId", undefined);
+
+                                if (val?.departmentId) {
+                                  getRoles(val.departmentId);
+                                } else {
+                                  setRoleOptions([]);
+                                }
+                              }}
+                            />
+                          )}
                         />
                       </div>
                     </div>
                     <div>
-                      <Combobox
-                        label={
-                          <span>
-                            Branch <span className="text-red-500">*</span>
-                          </span>
-                        }
-                         placeholder="Select Branch"
-                        data={branchOptions}
-                        value={branchOptions.find(
-                          (item) => item.value === formBranchValue,
+                      <Controller
+                        name="branch"
+                        control={control}
+                        rules={{
+                          required: "Branch is required",
+                        }}
+                        render={({ field, fieldState }) => (
+                          <Combobox
+                            label={
+                              <span>
+                                Branch <span className="text-red-500">*</span>
+                              </span>
+                            }
+                            placeholder="Select Branch"
+                            data={branchOptions}
+                            value={
+                              branchOptions.find(
+                                (item) => item.value === field.value,
+                              ) || null
+                            }
+                            error={fieldState.error?.message}
+                            onChange={(val: any) =>
+                              field.onChange(val?.value || "")
+                            }
+                          />
                         )}
-                        onChange={(val: any) =>
-                          setValue("branch", val?.value || "")
-                        }
-                        error={errors?.branch && errors.branch.message}
                       />
                     </div>
                   </div>
 
                   <div>
-                   <Combobox
-  label={
-    <span>
-      Role <span className="text-red-500">*</span>
-    </span>
-  }
-  placeholder="Select Role"
-  data={roleOptions}
-  value={roleOptions.find(
-    (item) => item.value === formRoleValue
-  )}
-  onChange={(val: any) => {
-    setValue("role", val?.value || "");
+                    <Controller
+                      name="role"
+                      control={control}
+                      rules={{
+                        required: "Role is required",
+                      }}
+                      render={({ field, fieldState }) => (
+                        <Combobox
+                          label={
+                            <span>
+                              Role <span className="text-red-500">*</span>
+                            </span>
+                          }
+                          placeholder="Select Role"
+                          data={roleOptions}
+                          value={
+                            roleOptions.find(
+                              (item) => item.value === field.value,
+                            ) || null
+                          }
+                          error={fieldState.error?.message}
+                          onChange={(val: any) => {
+                            field.onChange(val?.value || "");
 
-    if (val?.value === "Sales Executive") {
-      getTeamLeads(formDepartmentValue);
-    } else {
-      setTeamLeadOptions([]);
-      setValue("teamLeadId", undefined);
-    }
-  }}
-  error={errors?.role?.message}
-/>
+                            if (val?.value === "Sales Executive") {
+                              getTeamLeads(formDepartmentValue);
+                            } else {
+                              setTeamLeadOptions([]);
+                              setValue("teamLeadId", undefined);
+                            }
+                          }}
+                        />
+                      )}
+                    />
                   </div>
-{formRoleValue === "Sales Executive" && (
-  <Combobox
-    label={
-      <span>
-        Team Lead <span className="text-red-500">*</span>
-      </span>
-    }
-    placeholder="Select Team Lead"
-    data={teamLeadOptions}
-   value={
-  teamLeadOptions.find(
-    (item) => item.value === formTeamLeadValue
-  ) || null
-}
-    onChange={(val: any) =>
-      setValue("teamLeadId", val?.value || undefined)
-    }
-  />
-)}
+                  {formRoleValue === "Sales Executive" && (
+                    <Combobox
+                      label={
+                        <span>
+                          Team Lead <span className="text-red-500">*</span>
+                        </span>
+                      }
+                      placeholder="Select Team Lead"
+                      data={teamLeadOptions}
+                      value={
+                        teamLeadOptions.find(
+                          (item) => item.value === formTeamLeadValue,
+                        ) || null
+                      }
+                      onChange={(val: any) =>
+                        setValue("teamLeadId", val?.value || undefined)
+                      }
+                    />
+                  )}
                   <div>
                     <Input
                       label={

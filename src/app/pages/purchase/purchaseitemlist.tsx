@@ -141,11 +141,11 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
   const [loading, setLoading] = useState(false);
   const [isView, setIsView] = useState(false);
 
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
-const [confirmState, setConfirmState] = useState<"pending" | "success" | "error">("pending");
-const [confirmLoading, setConfirmLoading] = useState(false);
-const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
-const [isBulkDelete, setIsBulkDelete] = useState(false);
+//   const [showConfirmModal, setShowConfirmModal] = useState(false);
+// const [confirmState, setConfirmState] = useState<"pending" | "success" | "error">("pending");
+// const [confirmLoading, setConfirmLoading] = useState(false);
+// const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+// const [isBulkDelete, setIsBulkDelete] = useState(false);
 
   // Drawer states
   const [showDrawer, setShowDrawer] = useState(false);
@@ -702,25 +702,25 @@ const handleInwardSubmit = async () => {
                         </button>
                       )}
                     </Td>
-                    <Td className="py-4 text-center">
-                      {item.status === "Inward" ? (
-                        <button
-                          onClick={() => handleViewClick(item)}
-                          title="View"
-                          className="cursor-pointer text-blue-500 transition-colors hover:text-blue-700"
-                        >
-                          <EyeIcon className="size-5" />
-                        </button>
-                      ) : (
-                        <button
-                          disabled
-                          title="View Disabled"
-                          className="cursor-not-allowed text-gray-400"
-                        >
-                          <EyeIcon className="size-5" />
-                        </button>
-                      )}
-                    </Td>
+                   <Td className="py-4 text-center">
+  {["Inward", "Booked"].includes(item.status) ? (
+    <button
+      onClick={() => handleViewClick(item)}
+      title="View"
+      className="cursor-pointer text-blue-500 transition-colors hover:text-blue-700"
+    >
+      <EyeIcon className="size-5" />
+    </button>
+  ) : (
+    <button
+      disabled
+      title="View Disabled"
+      className="cursor-not-allowed text-gray-400"
+    >
+      <EyeIcon className="size-5" />
+    </button>
+  )}
+</Td>
                   </Tr>
                 );
               })}
