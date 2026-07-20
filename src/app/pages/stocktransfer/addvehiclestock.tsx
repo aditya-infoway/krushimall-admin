@@ -100,13 +100,13 @@ modelName?: string;
   status?: string;
 };
 
-const branchOptions = [
-  { label: "Mumbai", value: "Mumbai" },
-  { label: "Delhi", value: "Delhi" },
-  { label: "Bangalore", value: "Bangalore" },
-  { label: "Chennai", value: "Chennai" },
-  { label: "Pune", value: "Pune" },
-];
+// const branchOptions = [
+//   { label: "Mumbai", value: "Mumbai" },
+//   { label: "Delhi", value: "Delhi" },
+//   { label: "Bangalore", value: "Bangalore" },
+//   { label: "Chennai", value: "Chennai" },
+//   { label: "Pune", value: "Pune" },
+// ];
 
 // const chassisOptions = [
 //   { label: "CH-2024-001 - Honda City", value: "CH-2024-001" },
@@ -585,7 +585,7 @@ const taxableValue = (selectedVehicles || []).reduce(
   }, []);
   const {
     register,
-    handleSubmit,
+    // handleSubmit,
     setValue,
     control,
     watch,
@@ -933,12 +933,12 @@ const handleSave = async () => {
     <div className="min-h-screen bg-white p-6 transition-colors duration-200 dark:bg-gray-900">
       {/* Header with Back Button */}
     <div className="mb-6 flex items-center justify-between border-b border-gray-200 pb-4 dark:border-gray-700">
-  <h2 className="text-xl font-bold text-gray-800 dark:text-white">
+  <h2 className="text-30 md:text-xl lg:text-xl font-bold text-gray-800 dark:text-white whitespace-nowrap">
     {id ? "Edit Vehicle Stock Transfer" : "Add Vehicle Stock Transfer"}
   </h2>
  <button
   onClick={handleBack}
-   className="bg-primary-500 hover:bg-primary-600 cursor-pointer inline-flex w-full items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold text-white transition-colors sm:w-auto sm:px-5"
+   className="bg-primary-500 hover:bg-primary-600 cursor-pointer inline-flex w-30 items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold text-white transition-colors sm:w-auto sm:px-5"
            >
              <ArrowLeftIcon className="mr-1.5 size-4" />
              Back

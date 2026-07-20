@@ -11,7 +11,7 @@ import {
 } from "@headlessui/react";
 import { Fragment, useState, useEffect, useRef } from "react";
 import { RiFileExcel2Fill, RiFilePdfFill } from "react-icons/ri";
-import { useForm, useWatch } from "react-hook-form";
+import { useForm, useWatch ,Controller } from "react-hook-form";
 import {
   XMarkIcon,
   PencilSquareIcon,
@@ -1098,35 +1098,38 @@ export default function ShowroomVariantPage() {
                       Model
                     </span>
                     <div className="w-full">
-                      <Combobox
-                        data={modelOptions}
-                        value={
-                          modelOptions.find(
-                            (option) => option.id === String(selectedModelId),
-                          ) || null
-                        }
-                        onChange={(option: any) => {
-                          if (!option) return;
+                     <Controller
+  name="modelId"
+  control={control}
+  rules={{
+    validate: (value) =>
+      value && Number(value) > 0 || "Model is required",
+  }}
+  render={({ field, fieldState }) => (
+    <Combobox
+      data={modelOptions}
+      value={
+        modelOptions.find(
+          (option) => String(option.id) === String(field.value)
+        ) || null
+      }
+      error={fieldState.error?.message}
+      displayField="name"
+      placeholder="Search or select model"
+      onChange={(option: any) => {
+        if (!option) return;
 
-                          setValue("modelId", Number(option.id), {
-                            shouldValidate: true,
-                          });
+        field.onChange(option.id);
 
-                          setValue("modelName", option.name);
+        setValue("modelName", option.name);
 
-                          // Clear previous model's variant
-                          setValue("variantId", "");
-
-                          setValue("variantName", "");
-                        }}
-                        displayField="name"
-                        placeholder="Search or select model"
-                      />
-                      {errors.modelId && (
-                        <p className="mt-1 text-xs text-red-500">
-                          {errors.modelId.message}
-                        </p>
-                      )}
+        setValue("variantId", "");
+        setValue("variantName", "");
+      }}
+    />
+  )}
+/>
+                    
                     </div>
                   </div>
 
@@ -1137,36 +1140,39 @@ export default function ShowroomVariantPage() {
                       <span className="ml-1 text-red-500">*</span>
                     </label>
 
-                    <Combobox
-                      data={filteredVariantOptions}
-                      value={
-                        filteredVariantOptions.find(
-                          (option) => option.id === String(selectedVariantId),
-                        ) || null
-                      }
-                      onChange={(option: any) => {
-                        if (!option) return;
+                    <Controller
+  name="variantId"
+  control={control}
+  rules={{
+    validate: (value) =>
+      value && Number(value) > 0 || "Variant is required",
+  }}
+  render={({ field, fieldState }) => (
+    <Combobox
+      data={filteredVariantOptions}
+      value={
+        filteredVariantOptions.find(
+          (option) => String(option.id) === String(field.value)
+        ) || null
+      }
+      error={fieldState.error?.message}
+      displayField="name"
+      placeholder={
+        selectedModelId
+          ? "Search or select variant"
+          : "Select model first"
+      }
+      onChange={(option: any) => {
+        if (!option) return;
 
-                        setValue("variantId", Number(option.id), {
-                          shouldValidate: true,
-                        });
+        field.onChange(option.id);
 
-                        setValue("variantName", option.name, {
-                          shouldValidate: true,
-                        });
-                      }}
-                      displayField="name"
-                      placeholder={
-                        selectedModelId
-                          ? "Search or select variant"
-                          : "Select model first"
-                      }
-                    />
-                    {errors.variantName && (
-                      <p className="mt-1 text-xs text-red-500">
-                        {errors.variantName.message}
-                      </p>
-                    )}
+        setValue("variantName", option.name);
+      }}
+    />
+  )}
+/>
+                 
                   </div>
                   {/* Pur Price + Tax */}
                   <div className="grid grid-cols-2 gap-4">

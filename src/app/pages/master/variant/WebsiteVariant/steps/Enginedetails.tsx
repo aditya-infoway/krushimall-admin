@@ -98,10 +98,12 @@ export function Enginedetails({
   setCurrentStep,
    websiteVariantId,   // ✅ prop accept karo
   editData,
+    isEditMode,
 }: {
   setCurrentStep: React.Dispatch<React.SetStateAction<number>>;
   websiteVariantId?: string | null;
   editData?: any;
+    isEditMode?: boolean;
 }) {
   const kycFormCtx = useKYCFormContext();
 
@@ -515,7 +517,7 @@ useEffect(() => {
           Previous
         </Button>
         <Button type="submit" className="min-w-28" color="primary">
-           {websiteVariantId ? "Update & Next" : "Save & Next"}
+            {isEditMode ? "Update & Next" : "Save & Next"}
         </Button>
       </div>
     </form>

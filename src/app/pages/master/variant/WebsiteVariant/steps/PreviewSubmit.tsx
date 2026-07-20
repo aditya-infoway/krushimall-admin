@@ -689,7 +689,7 @@ const handleSaveDraft = () => {
         <Button
           type="button"
           variant="outlined"
-          className="flex min-w-[7rem] items-center gap-2"
+          className="flex min-w-28 items-center gap-2"
           onClick={() => setCurrentStep(5)}
         >
           <ChevronLeft className="h-4 w-4" />
@@ -699,7 +699,7 @@ const handleSaveDraft = () => {
           <Button
             type="button"
             variant="outlined"
-            className="flex min-w-[7rem] items-center gap-2"
+            className="flex min-w-28 items-center gap-2"
             onClick={handleSaveDraft}
           >
             <Save className="h-4 w-4" />
@@ -707,7 +707,7 @@ const handleSaveDraft = () => {
           </Button>
           <Button
             type="button"
-            className="flex min-w-[7rem] items-center gap-2"
+            className="flex min-w-28 items-center gap-2"
             color="primary"
             disabled={!agreed || loading}
             onClick={handleSubmit}

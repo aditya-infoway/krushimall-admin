@@ -10,7 +10,7 @@ import {
   MenuItem,
 } from "@headlessui/react";
 import { Fragment, useState, useEffect } from "react";
-import { useForm, useWatch } from "react-hook-form";
+import { useForm, useWatch,Controller } from "react-hook-form";
 import { RiFileExcel2Fill, RiFilePdfFill } from "react-icons/ri";
 import {
   XMarkIcon,
@@ -1057,81 +1057,77 @@ export default function Model() {
                     <span className="mb-2 block text-sm font-medium">
                       Category
                     </span>
-                    <Combobox
-                      data={categoryOptions}
-                      displayField="name"
-                      value={
-                        categoryOptions.find(
-                          (option) =>
-                            String(option.id) === String(formCategoryId),
-                        ) || null
-                      }
-                      placeholder="Select Category"
-                      onChange={(selectedOption: any) => {
-                        const selectedCategoryId = Number(selectedOption.id);
+                  <Controller
+  name="categoryId"
+  control={control}
+  rules={{
+    validate: (value) =>
+      value && Number(value) > 0 || "Category is required",
+  }}
+  render={({ field, fieldState }) => (
+    <Combobox
+      data={categoryOptions}
+      value={
+        categoryOptions.find(
+          (option) => String(option.id) === String(field.value)
+        ) || null
+      }
+      error={fieldState.error?.message}
+      displayField="name"
+      searchFields={["name"]}
+      placeholder="Select Category"
+      onChange={(selectedOption: any) => {
+        field.onChange(selectedOption.id);
 
-                        setValue("category", selectedOption.name, {
-                          shouldValidate: true,
-                        });
+        setValue("category", selectedOption.name);
 
-                        setValue("categoryId", selectedOption.id, {
-                          shouldValidate: true,
-                        });
+        setValue("brand", "");
+        setValue("brandId", "");
 
-                        // Clear old brand after category changes
-                        setValue("brand", "");
+        const categoryBrands = brands.filter(
+          (brand) =>
+            Number(brand.categoryId) === Number(selectedOption.id)
+        );
 
-                        setValue("brandId", "");
-
-                        // Filter using categoryId
-                        const categoryBrands = brands.filter(
-                          (brand) =>
-                            Number(brand.categoryId) === selectedCategoryId,
-                        );
-
-                        console.log(
-                          "Selected Category ID:",
-                          selectedCategoryId,
-                        );
-
-                        console.log("Category Brands:", categoryBrands);
-
-                        setFilteredBrands(categoryBrands);
-                      }}
-                     
-                      searchFields={["name"]}
-                    />
+        setFilteredBrands(categoryBrands);
+      }}
+    />
+  )}
+/>
                   </div>
 
                   <div>
                     <span className="mb-2 block text-sm font-medium">
                       Brand
                     </span>
-                    <Combobox
-                      data={brandOptions}
-                      displayField="name"
-                      value={
-                        brandOptions.find(
-                          (option) => String(option.id) === String(formBrandId),
-                        ) || null
-                      }
-                      placeholder={
-                        formCategoryId
-                          ? "Select Brand"
-                          : "First select category"
-                      }
-                      onChange={(selectedOption: any) => {
-                        setValue("brand", selectedOption.name, {
-                          shouldValidate: true,
-                        });
-
-                        setValue("brandId", selectedOption.id, {
-                          shouldValidate: true,
-                        });
-                      }}
-                     
-                      searchFields={["name"]}
-                    />
+                   <Controller
+  name="brandId"
+  control={control}
+  rules={{
+    validate: (value) =>
+      value && Number(value) > 0 || "Brand is required",
+  }}
+  render={({ field, fieldState }) => (
+    <Combobox
+      data={brandOptions}
+      value={
+        brandOptions.find(
+          (option) => String(option.id) === String(field.value)
+        ) || null
+      }
+      error={fieldState.error?.message}
+      displayField="name"
+      searchFields={["name"]}
+      placeholder={
+        formCategoryId ? "Select Brand" : "First select category"
+      }
+      onChange={(selectedOption: any) => {
+        field.onChange(selectedOption.id);
+        setValue("brand", selectedOption.name);
+      }}
+    />
+  )}
+/>
                   </div>
                   <div>
                     <label className="mb-2 block text-sm font-medium">
