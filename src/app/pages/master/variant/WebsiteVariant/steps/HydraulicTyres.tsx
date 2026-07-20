@@ -105,10 +105,12 @@ export function HydraulicTyres({
   setCurrentStep,
   websiteVariantId,   
   editData, 
+   isEditMode,
 }: {
   setCurrentStep: React.Dispatch<React.SetStateAction<number>>;
   websiteVariantId?: string | null;
   editData?: any;
+   isEditMode?: boolean;
 }) {
   const kycFormCtx = useKYCFormContext();
   const [loading, setLoading] = useState(false);
@@ -621,7 +623,7 @@ export function HydraulicTyres({
           color="primary"
           disabled={loading}
         >
-              {websiteVariantId ? "Update & Next" : "Save & Next"}
+              {isEditMode ? "Update & Next" : "Save & Next"}
         </Button>
       </div>
     </form>

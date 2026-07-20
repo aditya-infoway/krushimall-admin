@@ -46,6 +46,7 @@ export interface PurchaseRegisterRow {
   status: string;
   verified: boolean;
   allInward: boolean;
+   hasBookedItem: boolean;
 }
 
 interface TractorPurchaseRegisterProps {
@@ -198,7 +199,7 @@ const TractorPurchaseRegister: React.FC<TractorPurchaseRegisterProps> = ({
           mobileNo: item.mobileNumber || "",
           vehicalNo: item.vehicleNumber || "",
           status: item.status === "VERIFY" ? "Verified" : "Pending",
-
+hasBookedItem: item.hasBookedItem,
           verified: item.verified,
           allInward: item.allInward,
         })),
@@ -465,7 +466,7 @@ const TractorPurchaseRegister: React.FC<TractorPurchaseRegisterProps> = ({
                     </Td>
                     <Td className="py-4 text-center">
                       <div className="flex items-center justify-center gap-1.5">
-                        {!item.allInward && (
+                      {!item.allInward && !item.hasBookedItem && (
                           <button
                             onClick={() => handleEditRow(item)}
                             className="cursor-pointer text-blue-500 hover:text-blue-700"

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useForm, useWatch } from "react-hook-form";
+import { useForm, useWatch ,Controller  } from "react-hook-form";
 import {
   Dialog,
   DialogPanel,
@@ -781,31 +781,48 @@ const onFormSubmit = async (data: FormValues) => {
                     <label className="mb-2 block text-sm font-medium">
                       Finance Accounts
                     </label>
-                    <Combobox
-                      data={financeAccounts}
-                      value={selectedFinance}
-                      onChange={(val: any) => setSelectedFinance(val)}
-                      displayField="label"
-                      placeholder="Search Finance Account"
-                      searchFields={["label", "mobile"]}
-                      columns={[
-                        {
-                          header: "Account",
-                          field: "label",
-                          width: "2fr",
-                        },
-                        {
-                          header: "Mobile",
-                          field: "mobile",
-                          width: "1fr",
-                        },
-                        {
-                          header: "Opening",
-                          field: "openingBalance",
-                          width: "1fr",
-                        },
-                      ]}
-                    />
+                    <Controller
+  name="finance"
+  control={control}
+  rules={{
+    required: "Finance Account is required",
+  }}
+  render={({ field, fieldState }) => (
+    <Combobox
+      data={financeAccounts}
+      displayField="label"
+      placeholder="Search Finance Account"
+      searchFields={["label", "mobile"]}
+      columns={[
+        {
+          header: "Account",
+          field: "label",
+          width: "2fr",
+        },
+        {
+          header: "Mobile",
+          field: "mobile",
+          width: "1fr",
+        },
+        {
+          header: "Opening",
+          field: "openingBalance",
+          width: "1fr",
+        },
+      ]}
+      value={
+        financeAccounts.find(
+          (item: any) => item.value === field.value
+        ) || null
+      }
+      error={fieldState.error?.message}
+      onChange={(val: any) => {
+        field.onChange(val?.value || "");
+        setSelectedFinance(val || null);
+      }}
+    />
+  )}
+/>
                   </div>
                 <Input
   label={

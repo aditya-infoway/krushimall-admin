@@ -11,7 +11,7 @@ import {
 } from "@headlessui/react";
 import { Fragment, useState, useEffect } from "react";
 import { RiFileExcel2Fill, RiFilePdfFill } from "react-icons/ri";
-import { useForm, useWatch } from "react-hook-form";
+import { useForm, useWatch, Controller } from "react-hook-form";
 import {
   XMarkIcon,
   PencilSquareIcon,
@@ -90,9 +90,11 @@ const statusOptions = [
 export default function Createvariant() {
   const [showDrawer, setShowDrawer] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
-  const [modelYears, setModelYears] = useState<{ id: number; name: string }[]>(
-    [],
-  );
+  type BrandOption = { id: number; name: string; categoryId: number };
+type ModelOption = { id: number; name: string; brandId: number };
+type ModelYearOption = { id: number; name: string; modelId: number };
+ const [modelYears, setModelYears] = useState<ModelYearOption[]>([]);
+const [filteredModelYears, setFilteredModelYears] = useState<ModelYearOption[]>([]);
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -103,8 +105,10 @@ export default function Createvariant() {
   );
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-  const [brands, setBrands] = useState<{ id: number; name: string }[]>([]);
-  const [models, setModels] = useState<{ id: number; name: string }[]>([]);
+const [brands, setBrands] = useState<BrandOption[]>([]);
+const [filteredBrands, setFilteredBrands] = useState<BrandOption[]>([]);
+const [models, setModels] = useState<ModelOption[]>([]);
+const [filteredModels, setFilteredModels] = useState<ModelOption[]>([]);
   const [loading, setLoading] = useState(false);
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -115,22 +119,22 @@ export default function Createvariant() {
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
   const [isBulkDelete, setIsBulkDelete] = useState(false);
 
-  const categoryOptions = categories.map((cat) => ({
-    id: String(cat.id),
-    name: cat.name,
-  }));
-  const brandOptions = brands.map((br) => ({
-    id: String(br.id),
-    name: br.name,
-  }));
-  const modelOptions = models.map((md) => ({
-    id: String(md.id),
-    name: md.name,
-  }));
-  const modelYearOptions = modelYears.map((yr) => ({
-    id: String(yr.id),
-    name: yr.name,
-  }));
+const categoryOptions = categories.map((cat) => ({
+  id: String(cat.id),
+  name: cat.name,
+}));
+const brandOptions = filteredBrands.map((br) => ({
+  id: String(br.id),
+  name: br.name,
+}));
+const modelOptions = filteredModels.map((md) => ({
+  id: String(md.id),
+  name: md.name,
+}));
+const modelYearOptions = filteredModelYears.map((yr) => ({
+  id: String(yr.id),
+  name: yr.name,
+}));
 
   const [search, setSearch] = useState("");
   const [showFilterBar, setShowFilterBar] = useState(false);
@@ -144,27 +148,8 @@ export default function Createvariant() {
   // const [years, setYears] = useState<YearDataType[]>([]);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
-  useEffect(() => {
-    getCategories();
-    getBrands();
-    getModels();
-    getModelYears();
-  }, []);
-  const getModelYears = async () => {
-    try {
-      const response = await apiHelper.get("/model-year");
-      const data = response?.data || response;
 
-      setModelYears(
-        (Array.isArray(data) ? data : []).map((item: any) => ({
-          id: item.id || item._id,
-          name: item.modelYear,
-        })),
-      );
-    } catch {
-      setModelYears([]);
-    }
-  };
+
   const getVariants = async () => {
     try {
       const response = await apiHelper.get("/variant");
@@ -211,35 +196,64 @@ export default function Createvariant() {
   };
 
   const getBrands = async () => {
-    try {
-      const response = await apiHelper.get("/brand");
-      const data = response?.data || response;
-      setBrands(
-        (Array.isArray(data) ? data : []).map((item: any) => ({
-          id: item.id || item._id,
-          name: item.brandName || item.name,
-        })),
-      );
-    } catch (error) {
-      setBrands([]);
-    }
-  };
+  try {
+    const response = await apiHelper.get("/brand");
+    const data = response?.data || response;
+    setBrands(
+      (Array.isArray(data) ? data : []).map((item: any) => ({
+        id: Number(item.id || item._id),
+        name: item.brandName || item.name || "",
+        categoryId: Number(
+          typeof item.category === "object" ? item.category?.id : item.categoryId,
+        ),
+      })),
+    );
+  } catch (error) {
+    setBrands([]);
+  }
+};
 
-  const getModels = async () => {
-    try {
-      const response = await apiHelper.get("/model");
-      const data = response?.data || response;
-      setModels(
-        (Array.isArray(data) ? data : []).map((item: any) => ({
-          id: item.id || item._id,
-          name: item.modelName || item.name,
-        })),
-      );
-    } catch (error) {
-      setModels([]);
-    }
-  };
+const getModels = async () => {
+  try {
+    const response = await apiHelper.get("/model");
+    const data = response?.data || response;
+    setModels(
+      (Array.isArray(data) ? data : []).map((item: any) => ({
+        id: Number(item.id || item._id),
+        name: item.modelName || item.name || "",
+        brandId: Number(
+          typeof item.brand === "object" ? item.brand?.id : item.brandId,
+        ),
+      })),
+    );
+  } catch (error) {
+    setModels([]);
+  }
+};
 
+const getModelYears = async () => {
+  try {
+    const response = await apiHelper.get("/model-year");
+    const data = response?.data || response;
+    setModelYears(
+      (Array.isArray(data) ? data : []).map((item: any) => ({
+        id: Number(item.id || item._id),
+        name: item.modelYear,
+        modelId: Number(
+          typeof item.model === "object" ? item.model?.id : item.modelId,
+        ),
+      })),
+    );
+  } catch {
+    setModelYears([]);
+  }
+};
+  useEffect(() => {
+    getCategories();
+    getBrands();
+    getModels();
+    getModelYears();
+  }, []);
   // React Hook Form implementation
   const {
     register,
@@ -275,9 +289,9 @@ export default function Createvariant() {
   const formModelValue = useWatch({ control, name: "model" });
   const formImageValue = useWatch({ control, name: "image" });
   const formModelYearId = useWatch({
-  control,
-  name: "modelYearId",
-});
+    control,
+    name: "modelYearId",
+  });
   // const formValidationRules = {
   //   category: { required: "Category is required" },
   //   brand: { required: "Brand is required" },
@@ -344,9 +358,11 @@ export default function Createvariant() {
       status: "ACTIVE",
     });
 
-    setSelectedFile(null);
-
-    setShowDrawer(true);
+     setFilteredBrands([]);
+  setFilteredModels([]);
+  setFilteredModelYears([]);
+  setSelectedFile(null);
+  setShowDrawer(true);
   };
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -378,6 +394,9 @@ export default function Createvariant() {
       image: item.image ? apiHelper.getImageUrl(item.image) : "",
       status: item.status,
     });
+     setFilteredBrands(brands.filter((b) => Number(b.categoryId) === Number(item.categoryId)));
+  setFilteredModels(models.filter((m) => Number(m.brandId) === Number(item.brandId)));
+  setFilteredModelYears(modelYears.filter((y) => Number(y.modelId) === Number(item.modelId)));
     setShowDrawer(true);
   };
 
@@ -585,46 +604,46 @@ export default function Createvariant() {
           </p>
         </div>
 
-       <div className="flex flex-wrap items-center justify-between gap-2 md:flex-nowrap">
-  {/* Left side - Filter and icons */}
-  <div className="flex items-center gap-2">
-    <button
-      type="button"
-      onClick={() => setShowFilterBar(!showFilterBar)}
-      className={`inline-flex items-center gap-1.5 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
-        showFilterBar
-          ? "bg-primary-50 border-primary-200 text-primary-600 dark:bg-dark-600 dark:border-dark-500 dark:text-white"
-          : "dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
-      }`}
-    >
-      <FunnelIcon className="size-4.5" />
-      <span className="hidden sm:inline">Filter</span>
-    </button>
+        <div className="flex flex-wrap items-center justify-between gap-2 md:flex-nowrap">
+          {/* Left side - Filter and icons */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowFilterBar(!showFilterBar)}
+              className={`inline-flex items-center gap-1.5 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
+                showFilterBar
+                  ? "bg-primary-50 border-primary-200 text-primary-600 dark:bg-dark-600 dark:border-dark-500 dark:text-white"
+                  : "dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              <FunnelIcon className="size-4.5" />
+              <span className="hidden sm:inline">Filter</span>
+            </button>
 
-    <button
-      type="button"
-      className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
-    >
-      <RiFileExcel2Fill className="text-lg text-green-500" />
-    </button>
+            <button
+              type="button"
+              className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            >
+              <RiFileExcel2Fill className="text-lg text-green-500" />
+            </button>
 
-    <button
-      type="button"
-      className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
-    >
-      <RiFilePdfFill className="text-lg text-red-500" />
-    </button>
-  </div>
+            <button
+              type="button"
+              className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            >
+              <RiFilePdfFill className="text-lg text-red-500" />
+            </button>
+          </div>
 
-  {/* Right side - Add Variant button */}
-  <Button
-    color="primary"
-    onClick={handleOpenAddDrawer}
-    className="whitespace-nowrap"
-  >
-    Add Variant
-  </Button>
-</div>
+          {/* Right side - Add Variant button */}
+          <Button
+            color="primary"
+            onClick={handleOpenAddDrawer}
+            className="whitespace-nowrap"
+          >
+            Add Variant
+          </Button>
+        </div>
       </div>
 
       {/* Global Context Search Box */}
@@ -1162,20 +1181,39 @@ export default function Createvariant() {
                     <span className="mb-2 block text-sm font-medium">
                       Category
                     </span>
-                    <Combobox
-                      data={categoryOptions}
-                      displayField="name"
-                      value={
-                        categoryOptions.find(
-                          (opt) => opt.name === formCategoryValue,
-                        ) || categoryOptions[0]
-                      }
-                      onChange={(opt: any) => {
-                        setValue("category", opt?.name || "");
-                        setValue("categoryId", opt?.id || "");
+                    <Controller
+                      name="categoryId"
+                      control={control}
+                      rules={{
+                        validate: (value) =>
+                          (value && Number(value) > 0) ||
+                          "Category is required",
                       }}
-                      placeholder="Search or select category"
-                      searchFields={["name"]}
+                      render={({ field, fieldState }) => (
+                        <Combobox
+                          data={categoryOptions}
+                          value={
+                            categoryOptions.find(
+                              (opt) => String(opt.id) === String(field.value),
+                            ) || null
+                          }
+                          error={fieldState.error?.message}
+                          displayField="name"
+                          searchFields={["name"]}
+                          placeholder="Select Category"
+                         onChange={(opt: any) => {
+  field.onChange(opt.id);
+  setValue("category", opt.name);
+  setValue("brand", ""); setValue("brandId", "");
+  setValue("model", ""); setValue("modelId", "");
+  setValue("modelYear", ""); setValue("modelYearId", "");
+
+  setFilteredBrands(brands.filter((b) => Number(b.categoryId) === Number(opt.id)));
+  setFilteredModels([]);
+  setFilteredModelYears([]);
+}}
+                        />
+                      )}
                     />
                   </div>
 
@@ -1183,20 +1221,36 @@ export default function Createvariant() {
                     <span className="mb-2 block text-sm font-medium">
                       Brand
                     </span>
-                    <Combobox
-                      data={brandOptions}
-                      displayField="name"
-                      value={
-                        brandOptions.find(
-                          (opt) => opt.name === formBrandValue,
-                        ) || brandOptions[0]
-                      }
-                      onChange={(opt: any) => {
-                        setValue("brand", opt?.name || "");
-                        setValue("brandId", opt?.id || "");
+                    <Controller
+                      name="brandId"
+                      control={control}
+                      rules={{
+                        validate: (value) =>
+                          (value && Number(value) > 0) || "Brand is required",
                       }}
-                      placeholder="Search or select brand"
-                      searchFields={["name"]}
+                      render={({ field, fieldState }) => (
+                        <Combobox
+                          data={brandOptions}
+                          value={
+                            brandOptions.find(
+                              (opt) => String(opt.id) === String(field.value),
+                            ) || null
+                          }
+                          error={fieldState.error?.message}
+                          displayField="name"
+                          searchFields={["name"]}
+                          placeholder="Select Brand"
+                          onChange={(opt: any) => {
+  field.onChange(opt.id);
+  setValue("brand", opt.name);
+  setValue("model", ""); setValue("modelId", "");
+  setValue("modelYear", ""); setValue("modelYearId", "");
+
+  setFilteredModels(models.filter((m) => Number(m.brandId) === Number(opt.id)));
+  setFilteredModelYears([]);
+}}
+                        />
+                      )}
                     />
                   </div>
 
@@ -1204,20 +1258,34 @@ export default function Createvariant() {
                     <span className="mb-2 block text-sm font-medium">
                       Model
                     </span>
-                    <Combobox
-                      data={modelOptions}
-                      displayField="name"
-                      value={
-                        modelOptions.find(
-                          (opt) => opt.name === formModelValue,
-                        ) || modelOptions[0]
-                      }
-                      onChange={(opt: any) => {
-                        setValue("model", opt?.name || "");
-                        setValue("modelId", opt?.id || "");
+                    <Controller
+                      name="modelId"
+                      control={control}
+                      rules={{
+                        validate: (value) =>
+                          (value && Number(value) > 0) || "Model is required",
                       }}
-                      placeholder="Search or select model"
-                      searchFields={["name"]}
+                      render={({ field, fieldState }) => (
+                        <Combobox
+                          data={modelOptions}
+                          value={
+                            modelOptions.find(
+                              (opt) => String(opt.id) === String(field.value),
+                            ) || null
+                          }
+                          error={fieldState.error?.message}
+                          displayField="name"
+                          searchFields={["name"]}
+                          placeholder="Select Model"
+                         onChange={(opt: any) => {
+  field.onChange(opt.id);
+  setValue("model", opt.name);
+  setValue("modelYear", ""); setValue("modelYearId", "");
+
+  setFilteredModelYears(modelYears.filter((y) => Number(y.modelId) === Number(opt.id)));
+}}
+                        />
+                      )}
                     />
                   </div>
 
@@ -1225,38 +1293,56 @@ export default function Createvariant() {
                     <label className="mb-2 block text-sm font-medium">
                       Year
                     </label>
-                 <Combobox
-  data={modelYearOptions}
-  value={
-    modelYearOptions.find(
-      (opt) => Number(opt.id) === Number(formModelYearId)
-    ) || null
-  }
-  placeholder="Select Model Year"
-  onChange={(opt: any) => {
-    setValue("modelYear", opt.name);
-    setValue("modelYearId", Number(opt.id));
-  }}
-  displayField="name"
-/>
+                    <Controller
+                      name="modelYearId"
+                      control={control}
+                      rules={{
+                        validate: (value) =>
+                          (value && Number(value) > 0) ||
+                          "Model Year is required",
+                      }}
+                      render={({ field, fieldState }) => (
+                        <Combobox
+                          data={modelYearOptions}
+                          value={
+                            modelYearOptions.find(
+                              (opt) => String(opt.id) === String(field.value),
+                            ) || null
+                          }
+                          error={fieldState.error?.message}
+                          displayField="name"
+                          searchFields={["name"]}
+                          placeholder="Select Model Year"
+                          onChange={(opt: any) => {
+                            field.onChange(opt.id);
+                            setValue("modelYear", opt.name);
+                          }}
+                        />
+                      )}
+                    />
                   </div>
                   <div>
                     <label className="mb-2 block text-sm font-medium">
                       Variant Code
                     </label>
+
                     <Input
                       placeholder="Enter Variant Code"
+                      error={errors.variantCode?.message}
                       {...register("variantCode", {
                         required: "Variant Code is required",
                       })}
                     />
                   </div>
+
                   <div>
                     <label className="mb-2 block text-sm font-medium">
                       Variant Name
                     </label>
+
                     <Input
                       placeholder="Enter Variant Name"
+                      error={errors.variantName?.message}
                       {...register("variantName", {
                         required: "Variant Name is required",
                       })}

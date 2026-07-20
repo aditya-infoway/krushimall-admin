@@ -59,10 +59,12 @@ export function PriceLocation({
   setCurrentStep,
     websiteVariantId,  
   editData,  
+   isEditMode,
 }: {
   setCurrentStep: React.Dispatch<React.SetStateAction<number>>;
    websiteVariantId?: string | null;
   editData?: any;
+   isEditMode?: boolean;
 }) {
   const kycFormCtx = useKYCFormContext();
   const [position, setPosition] = useState<[number, number]>([
@@ -840,7 +842,7 @@ export function PriceLocation({
           Previous
         </Button>
         <Button type="submit" className="min-w-28" color="primary">
-             {websiteVariantId ? "Update & Next" : "Save & Next"}
+             {isEditMode ? "Update & Next" : "Save & Next"}
         </Button>
       </div>
     </form>

@@ -34,6 +34,7 @@ type VehicleStock = {
   branch: {
     id: number;
     branchName: string;
+    mobileNo?: string;
   };
 
   manager: {
@@ -48,6 +49,26 @@ type VehicleStock = {
   engineNo: string;
   itemName: string;
   itemCode: string;
+
+  vehicleSrNo?: string;
+  mfgDate?: string;
+  keyNo?: string;
+  batteryNo?: string;
+  batteryMake?: string;
+
+  f1TyresNo?: string;
+  f2TyresNo?: string;
+  s1TyresNo?: string;
+  s2TyresNo?: string;
+
+  location?: string;
+
+  grnNumber?: string;
+  grnDate?: string;
+  grnRecordDate?: string;
+
+  contactNo?: string;
+  branchManagerName?: string;
 };
 
 const entriesOptions = [
@@ -320,7 +341,7 @@ const VehicleStock = () => {
         <div className="overflow-x-auto">
           <Table
             hoverable
-            className="w-full min-w-[1200px] text-left [&_.table-th]:font-semibold"
+            className="w-full min-w-300 text-left [&_.table-th]:font-semibold"
           >
             <THead className="dark:bg-dark-700/60 dark:border-dark-600 border-b border-gray-200 bg-gray-100">
               <Tr>
@@ -425,7 +446,7 @@ const VehicleStock = () => {
                         >
                           <MenuItems
                             anchor="bottom end"
-                            className="dark:bg-dark-800 dark:ring-dark-500 dark:border-dark-500 z-[100] w-36 rounded-lg border border-gray-100 bg-white p-1 shadow-lg ring-1 ring-black/5 [--anchor-gap:4px] focus:outline-none"
+                            className="dark:bg-dark-800 dark:ring-dark-500 dark:border-dark-500 z-100 w-36 rounded-lg border border-gray-100 bg-white p-1 shadow-lg ring-1 ring-black/5 [--anchor-gap:4px] focus:outline-none"
                           >
                             <MenuItem>
                               {({ active }) => (
@@ -532,7 +553,7 @@ const VehicleStock = () => {
                   >
                     <MenuItems
                       anchor="top start"
-                      className="dark:bg-dark-700 dark:border-dark-600 z-[200] w-20 space-y-0.5 rounded-lg border border-gray-200 bg-white p-1 shadow-xl ring-1 ring-black/5 [--anchor-gap:6px] focus:outline-none"
+                      className="dark:bg-dark-700 dark:border-dark-600 z-200 w-20 space-y-0.5 rounded-lg border border-gray-200 bg-white p-1 shadow-xl ring-1 ring-black/5 [--anchor-gap:6px] focus:outline-none"
                     >
                       {entriesOptions.map((opt) => (
                         <MenuItem key={opt.id}>

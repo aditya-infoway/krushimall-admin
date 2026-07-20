@@ -1259,22 +1259,33 @@ const handleBulkDelete = async () => {
                       />
                     </div>
                     <div>
-                      <Combobox
-                        label={
-                          <span>
-                            Branch Type <span className="text-red-500">*</span>
-                          </span>
-                        }
-                        placeholder="Select type"
-                        data={branchTypeOptions}
-                        value={branchTypeOptions.find(
-                          (item) => item.value === formBranchTypeValue,
-                        )}
-                        onChange={(val: any) =>
-                          setValue("branchType", val?.value || "")
-                        }
-                        error={errors?.branchType && errors.branchType.message}
-                      />
+                   <Controller
+  name="branchType"
+  control={control}
+  rules={{
+    required: "Branch type is required",
+  }}
+  render={({ field, fieldState }) => (
+    <Combobox
+      label={
+        <span>
+          Branch Type <span className="text-red-500">*</span>
+        </span>
+      }
+      placeholder="Select type"
+      data={branchTypeOptions}
+      value={
+        branchTypeOptions.find(
+          (item) => item.value === field.value
+        ) || null
+      }
+      error={fieldState.error?.message}
+      onChange={(val: any) => {
+        field.onChange(val?.value || "");
+      }}
+    />
+  )}
+/>
                     </div>
                   </div>
 
@@ -1284,60 +1295,68 @@ const handleBulkDelete = async () => {
                   {/* Row 2: Manager Name, Mobile, Gmail - 3 columns */}
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
-                      <Combobox
-                        label={
-                          <span>
-                            Branch Manager Name{" "}
-                            <span className="text-red-500">*</span>
-                          </span>
-                        }
-                        placeholder="Search Manager"
-                        data={managerAccounts}
-                        displayField="label"
-                        error={errors.managerName?.message}
-                        value={managerAccounts.find(
-                          (x) => x.label === watch("managerName"),
-                        )}
-                        searchFields={["label", "mobile"]}
-                        columns={[
-                          {
-                            header: "Account",
-                            field: "label",
-                            width: "2fr",
-                          },
-                          {
-                            header: "Mobile",
-                            field: "mobile",
-                            width: "1.5fr",
-                          },
-                        ]}
-                        onChange={(acc: any) => {
-                          if (!acc) return;
-                          setValue("managerId", acc.id);
-                          setValue("managerName", acc.label);
-                          setValue("mobileNo", acc.mobile || "");
-                          setValue("gmailId", acc.email || "");
+                    <Controller
+  name="managerName"
+  control={control}
+  rules={{
+    required: "Manager name is required",
+  }}
+  render={({ field, fieldState }) => (
+    <Combobox
+      label={
+        <span>
+          Branch Manager Name <span className="text-red-500">*</span>
+        </span>
+      }
+      placeholder="Search Manager"
+      data={managerAccounts}
+      displayField="label"
+      searchFields={["label", "mobile"]}
+      columns={[
+        {
+          header: "Account",
+          field: "label",
+          width: "2fr",
+        },
+        {
+          header: "Mobile",
+          field: "mobile",
+          width: "1.5fr",
+        },
+      ]}
+      value={
+        managerAccounts.find(
+          (x: any) => x.label === field.value
+        ) || null
+      }
+      error={fieldState.error?.message}
+      onChange={(acc: any) => {
+        if (!acc) {
+          field.onChange("");
+          setValue("managerId", undefined as any);
+          return;
+        }
 
-                          setValue("gstNo", acc.gstNo || "");
-                          setValue("panCardNo", acc.panNo || "");
+        field.onChange(acc.label);
 
-                          setValue("address1", acc.address1 || "");
-                          setValue("address2", acc.address2 || "");
-
-                          setValue("country", acc.country || "");
-                          setValue("countryCode", acc.countryCode);
-                          setValue("state", acc.state || "");
-                          setValue("stateCode", acc.stateCode);
-                          setValue("district", acc.district || "");
-                          setValue("city", acc.city || "");
-                          setValue("pinCode", acc.pinCode || "");
-                        }}
-                      />
-                      {errors.managerName && (
-                        <span className="text-xs text-red-500">
-                          {errors.managerName.message}
-                        </span>
-                      )}
+        setValue("managerId", acc.id);
+        setValue("mobileNo", acc.mobile || "");
+        setValue("gmailId", acc.email || "");
+        setValue("gstNo", acc.gstNo || "");
+        setValue("panCardNo", acc.panNo || "");
+        setValue("address1", acc.address1 || "");
+        setValue("address2", acc.address2 || "");
+        setValue("country", acc.country || "");
+        setValue("countryCode", acc.countryCode || "");
+        setValue("state", acc.state || "");
+        setValue("stateCode", acc.stateCode || "");
+        setValue("district", acc.district || "");
+        setValue("city", acc.city || "");
+        setValue("pinCode", acc.pinCode || "");
+      }}
+    />
+  )}
+/>
                     </div>
                     <div>
                       <Input
