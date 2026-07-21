@@ -585,7 +585,7 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
     (acc: any) =>
       acc.group === "Supplier" ||
       acc.group === "Sundry Creditors" ||
-      acc.group === "Sundry Creditor (Internal)",
+      acc.group === "Sundry Creditor (internal)",
   )
   .map((acc: any) => ({
     id: String(acc.id),
@@ -643,13 +643,13 @@ const groupOptions = [
     value: "Sundry Creditors",
   },
   {
-    label: "Sundry Creditor (Internal)",
-    value: "Sundry Creditor (Internal)",
+    label: "Sundry Creditor (internal)",
+    value: "Sundry Creditor (internal)",
   },
 ];
 const isCreditorGroup =
   accountForm.group === "Sundry Creditors" ||
-  accountForm.group === "Sundry Creditor (Internal)";
+  accountForm.group === "Sundry Creditor (internal)";
   const drCrOptions = [
     { label: "Dr", value: "Dr" },
     { label: "Cr", value: "Cr" },
