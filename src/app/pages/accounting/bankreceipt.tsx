@@ -550,7 +550,7 @@ export default function BankReceipt() {
   }, [filterType, filterDateFrom, filterDateTo, filterPaymentType, search]);
   const downloadExcel = async () => {
     try {
-      const blob = await apiHelper.getBlob("/bank-receipt/export/excel");
+      const blob = await apiHelper.getBlob("/accountant/bank-receipt/export/excel");
 
       const url = window.URL.createObjectURL(blob);
 
@@ -697,7 +697,7 @@ export default function BankReceipt() {
       {/* Main Table */}
       <div className="dark:bg-dark-800 dark:border-dark-700 rounded-xl border border-gray-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1400px] text-left [&_.table-th]:font-semibold">
+          <table className="w-full min-w-350 text-left [&_.table-th]:font-semibold">
             <thead className="dark:bg-dark-700/60 dark:border-dark-600 border-b border-gray-200 bg-gray-100">
               <tr>
                 <th className="w-10 px-2 py-3.5 text-center">
