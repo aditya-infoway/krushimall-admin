@@ -313,13 +313,13 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
   const selectedGroup = accountForm.group;
   const isCreditorGroup =
     accountForm.group === "Sundry Creditors" ||
-    accountForm.group === "Sundry Creditor (Internal)";
+    accountForm.group === "Sundry Creditor (internal)";
   const groupOptions = [
     { label: "Supplier", value: "Supplier" },
     { label: "Sundry Creditors", value: "Sundry Creditors" },
     {
-      label: "Sundry Creditor (Internal)",
-      value: "Sundry Creditor (Internal)",
+      label: "Sundry Creditor (internal)",
+      value: "Sundry Creditor (internal)",
     },
   ];
 
@@ -868,8 +868,8 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
     try {
       const res = await apiHelper.get("/accounts");
 
-      const accounts = Array.isArray(res.data?.data)
-        ? res.data.data
+      const accounts = Array.isArray(res.data)
+        ? res.data
         : Array.isArray(res.data)
           ? res.data
           : [];
@@ -879,7 +879,7 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
           (acc: any) =>
             acc.group === "Supplier" ||
             acc.group === "Sundry Creditors" ||
-            acc.group === "Sundry Creditor (Internal)",
+            acc.group === "Sundry Creditor (internal)",
         )
         .map((acc: any) => ({
           id: String(acc.id),
