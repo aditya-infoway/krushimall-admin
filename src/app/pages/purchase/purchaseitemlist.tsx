@@ -56,6 +56,8 @@ export interface PurchaseItemRow {
   grnNumber?: string;
   grnDate?: string;
   grnRecordDate?: string;
+     createdBy?: string; 
+    createdType?: string 
 }
 
 export interface InwardDrawerData {
@@ -128,6 +130,8 @@ const columns = [
   "Status",
   "columns",
   "Action",
+    "CreatedBy",
+    "CreatedType"
 ];
 
 const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
@@ -231,6 +235,8 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
           grnNumber: item.grnNumber || "",
           grnDate: item.grnDate || "",
           grnRecordDate: item.grnRecordDate || "",
+             createdBy: item.createdBy || "",
+    createdType: item.createdType || "",
         })),
       );
     } catch (error) {
@@ -614,6 +620,12 @@ const handleInwardSubmit = async () => {
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Status
                 </Th>
+                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                  Created By
+                </Th>
+                <Th className="w-20 py-3.5 text-center text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                Created Type
+                </Th>
                 <Th className="w-20 py-3.5 text-center text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Inward
                 </Th>
@@ -674,6 +686,8 @@ const handleInwardSubmit = async () => {
                         {item.status}
                       </span>
                     </Td>
+                     <Td className="py-4 text-right">{item.createdBy }</Td>
+                    <Td className="py-4 text-right">{item.createdType  }</Td>
                     <Td className="py-4 text-center">
                       {item.status === "Pending" ? (
                         <button

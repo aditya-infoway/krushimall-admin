@@ -47,6 +47,9 @@ export interface PurchaseRegisterRow {
   verified: boolean;
   allInward: boolean;
    hasBookedItem: boolean;
+    createdBy?: string;
+  createdById?: number;
+  createdType?: string;
 }
 
 interface TractorPurchaseRegisterProps {
@@ -106,6 +109,8 @@ const columns = [
   "Mobile No",
   "Vehicle No",
   "Status",
+   "Created By",      // Add
+  "Created Type",
 ];
 
 const TractorPurchaseRegister: React.FC<TractorPurchaseRegisterProps> = ({
@@ -202,6 +207,9 @@ const TractorPurchaseRegister: React.FC<TractorPurchaseRegisterProps> = ({
 hasBookedItem: item.hasBookedItem,
           verified: item.verified,
           allInward: item.allInward,
+           createdBy: item.createdBy,
+    createdById: item.createdById,
+    createdType: item.createdType,
         })),
       );
     } catch (error) {
@@ -441,6 +449,13 @@ hasBookedItem: item.hasBookedItem,
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Status
                 </Th>
+                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+  Created By
+</Th>
+
+<Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+  Created Type
+</Th>
               </Tr>
             </THead>
 
@@ -519,6 +534,8 @@ hasBookedItem: item.hasBookedItem,
                         {item.status}
                       </span>
                     </Td>
+                      <Td className="py-4">{item.createdBy}</Td>
+                    <Td className="py-4">{item.createdType }</Td>
                   </Tr>
                 );
               })}

@@ -42,6 +42,8 @@ export interface AccessoriesPurchaseRegisterRow {
   vehicalNo: string;
   status: "Pending" | "Verified" | "Cancelled";
   allItemsInward?: boolean;
+     createdBy: string;
+  createdType: string;
 }
 
 interface AccessoriesPurchaseRegisterProps {
@@ -105,24 +107,22 @@ const columns = [
 
 const AccessoriesPurchaseRegister: React.FC<
   AccessoriesPurchaseRegisterProps
-> = ({
-  onAddPurchase,
-  onEditRow,
-  onDeleteRow,
-}) => {
+> = ({ onAddPurchase, onEditRow, onDeleteRow }) => {
   const [search, setSearch] = useState("");
   const [rowsPerPage, setRowsPerPage] = useState(15);
   const [selectedStatusFilter, setSelectedStatusFilter] = useState("All");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-const [rows, setRows] = useState<AccessoriesPurchaseRegisterRow[]>([]);
+  const [rows, setRows] = useState<AccessoriesPurchaseRegisterRow[]>([]);
   const navigate = useNavigate();
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-const [confirmState, setConfirmState] = useState<"pending" | "success" | "error">("pending");
-const [confirmLoading, setConfirmLoading] = useState(false);
-const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
-const [isBulkDelete, setIsBulkDelete] = useState(false);
+  const [confirmState, setConfirmState] = useState<
+    "pending" | "success" | "error"
+  >("pending");
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [isBulkDelete, setIsBulkDelete] = useState(false);
 
   // Filter rows
   const filteredRows = useMemo(() => {
@@ -161,67 +161,62 @@ const [isBulkDelete, setIsBulkDelete] = useState(false);
   const indexOfLastItem = currentPage * rowsPerPage;
   const indexOfFirstItem = indexOfLastItem - rowsPerPage;
   const currentItems = filteredRows.slice(indexOfFirstItem, indexOfLastItem);
-const fetchAccessoriesPurchases = async () => {
-  try {
-    const res = await apiHelper.get("/accessories-purchase");
+  const fetchAccessoriesPurchases = async () => {
+    try {
+      const res = await apiHelper.get("/accessories-purchase");
 
-    const data = (res.data || []).map((item: any) => ({
-      id: String(item.id),
+      const data = (res.data || []).map((item: any) => ({
+        id: String(item.id),
 
-      purchaseDate: item.purchaseDate
-        ? new Date(item.purchaseDate).toLocaleDateString("en-GB")
-        : "-",
+        purchaseDate: item.purchaseDate
+          ? new Date(item.purchaseDate).toLocaleDateString("en-GB")
+          : "-",
 
-      terms: item.terms || "-",
+        terms: item.terms || "-",
 
-      supplierName:
-        item.account?.accountName || "-",
+        supplierName: item.account?.accountName || "-",
 
-      billNo: item.billNo,
+        billNo: item.billNo,
 
-      purchaseBillNo:
-        item.purchaseBillNo || "-",
+        purchaseBillNo: item.purchaseBillNo || "-",
 
-      location:
-        item.purchaseLocation || "-",
+        location: item.purchaseLocation || "-",
 
-      totalQuantity: item.totalQty,
+        totalQuantity: item.totalQty,
 
-      totalAmount: item.totalAmount,
+        totalAmount: item.totalAmount,
 
-      freightInsuranceOther:
-        Number(item.freightCharge || 0) +
-        Number(item.insurance || 0) +
-        Number(item.otherCharge || 0),
+        freightInsuranceOther:
+          Number(item.freightCharge || 0) +
+          Number(item.insurance || 0) +
+          Number(item.otherCharge || 0),
 
-      cgstAmount: item.cgst,
+        cgstAmount: item.cgst,
 
-      sgstAmount: item.sgst,
+        sgstAmount: item.sgst,
 
-      igstAmount: item.igst,
+        igstAmount: item.igst,
 
-      grandTotal: item.grandTotal,
+        grandTotal: item.grandTotal,
 
-      // Your schema doesn't have these fields
-      transportName: "-",
-      mobileNo: "-",
-      vehicalNo: "-",
+        // Your schema doesn't have these fields
+        transportName: "-",
+        mobileNo: "-",
+        vehicalNo: "-",
+createdBy: item.createdBy || "-",
+  createdType: item.createdType || "-",
+        status: item.verifyStatus === "verify" ? "Verified" : "Pending",
+        allItemsInward: item.allItemsInward,
+      }));
 
-      status:
-        item.verifyStatus === "verify"
-          ? "Verified"
-          : "Pending",
-            allItemsInward: item.allItemsInward,
-    }));
-
-    setRows(data);
-  } catch (error) {
-    console.log(error);
-  }
-};
-useEffect(() => {
-  fetchAccessoriesPurchases();
-}, []);
+      setRows(data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  useEffect(() => {
+    fetchAccessoriesPurchases();
+  }, []);
   const isAllPageSelected =
     currentItems.length > 0 &&
     currentItems.every((item) => selectedIds.includes(item.id));
@@ -249,57 +244,61 @@ useEffect(() => {
     onAddPurchase?.();
   };
 
- const handleEditRow = (row: AccessoriesPurchaseRegisterRow) => {
-  navigate(`/purchase/accessories/add/${row.id}`);
-};
+  const handleEditRow = (row: AccessoriesPurchaseRegisterRow) => {
+    navigate(`/purchase/accessories/add/${row.id}`);
+  };
 
- const handleDeleteRow = (row: AccessoriesPurchaseRegisterRow) => {
-  setDeleteTargetId(row.id);
-  setIsBulkDelete(false);
-  setConfirmState("pending");
-  setShowConfirmModal(true);
-};
+  const handleDeleteRow = (row: AccessoriesPurchaseRegisterRow) => {
+    setDeleteTargetId(row.id);
+    setIsBulkDelete(false);
+    setConfirmState("pending");
+    setShowConfirmModal(true);
+  };
 
-
-const performDelete = async () => {
-  setConfirmLoading(true);
-  try {
-    if (isBulkDelete) {
-      await Promise.all(selectedIds.map((id) => apiHelper.delete(`/accessories-purchase/${id}`)));
-      toast.success(`${selectedIds.length} purchases deleted successfully!`);
-      setSelectedIds([]);
-      await fetchAccessoriesPurchases();
-      setCurrentPage(1);
-      setConfirmState("success");
-    } else {
-      if (deleteTargetId === null) return;
-      await apiHelper.delete(`/accessories-purchase/${deleteTargetId}`);
-      toast.success("Purchase deleted successfully!");
-      await fetchAccessoriesPurchases();
-      setDeleteTargetId(null);
-      setConfirmState("success");
+  const performDelete = async () => {
+    setConfirmLoading(true);
+    try {
+      if (isBulkDelete) {
+        await Promise.all(
+          selectedIds.map((id) =>
+            apiHelper.delete(`/accessories-purchase/${id}`),
+          ),
+        );
+        toast.success(`${selectedIds.length} purchases deleted successfully!`);
+        setSelectedIds([]);
+        await fetchAccessoriesPurchases();
+        setCurrentPage(1);
+        setConfirmState("success");
+      } else {
+        if (deleteTargetId === null) return;
+        await apiHelper.delete(`/accessories-purchase/${deleteTargetId}`);
+        toast.success("Purchase deleted successfully!");
+        await fetchAccessoriesPurchases();
+        setDeleteTargetId(null);
+        setConfirmState("success");
+      }
+      setTimeout(() => setShowConfirmModal(false), 1500);
+    } catch (error: any) {
+      console.error("Delete failed:", error);
+      setConfirmState("error");
+      toast.error(
+        error.response?.data?.message || "Failed to delete. Please try again.",
+      );
+    } finally {
+      setConfirmLoading(false);
     }
-    setTimeout(() => setShowConfirmModal(false), 1500);
-  } catch (error: any) {
-    console.error("Delete failed:", error);
-    setConfirmState("error");
-    toast.error(error.response?.data?.message || "Failed to delete. Please try again.");
-  } finally {
-    setConfirmLoading(false);
-  }
-};
+  };
 
-const handleBulkDelete = () => {
-  if (selectedIds.length === 0) return;
-  setIsBulkDelete(true);
-  setConfirmState("pending");
-  setShowConfirmModal(true);
-};
+  const handleBulkDelete = () => {
+    if (selectedIds.length === 0) return;
+    setIsBulkDelete(true);
+    setConfirmState("pending");
+    setShowConfirmModal(true);
+  };
 
-
- const handleInward = (row: AccessoriesPurchaseRegisterRow) => {
- navigate(`/purchase/accessories-inward/${row.id}`);
-};
+  const handleInward = (row: AccessoriesPurchaseRegisterRow) => {
+    navigate(`/purchase/accessories-inward/${row.id}`);
+  };
   return (
     <div className="relative min-h-screen space-y-6 p-4 pb-28 text-gray-900 md:p-6 dark:text-gray-100">
       {/* Header */}
@@ -313,34 +312,34 @@ const handleBulkDelete = () => {
           </p>
         </div>
 
-       <div className="flex flex-wrap items-center justify-between gap-2 md:flex-nowrap">
-  {/* Left side - Excel and PDF icons */}
-  <div className="flex items-center gap-2">
-    <button
-      type="button"
-      className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
-    >
-      <RiFileExcel2Fill className="text-lg text-green-500" />
-    </button>
+        <div className="flex flex-wrap items-center justify-between gap-2 md:flex-nowrap">
+          {/* Left side - Excel and PDF icons */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            >
+              <RiFileExcel2Fill className="text-lg text-green-500" />
+            </button>
 
-    <button
-      type="button"
-      className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
-    >
-      <RiFilePdfFill className="text-lg text-red-500" />
-    </button>
-  </div>
+            <button
+              type="button"
+              className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            >
+              <RiFilePdfFill className="text-lg text-red-500" />
+            </button>
+          </div>
 
-  {/* Right side - Add Purchase button */}
-  <Button
-    color="primary"
-    onClick={handleAddPurchase}
-    className="whitespace-nowrap"
-  >
-    <PlusIcon className="mr-1.5 size-4.5" />
-    Add Purchase
-  </Button>
-</div>
+          {/* Right side - Add Purchase button */}
+          <Button
+            color="primary"
+            onClick={handleAddPurchase}
+            className="whitespace-nowrap"
+          >
+            <PlusIcon className="mr-1.5 size-4.5" />
+            Add Purchase
+          </Button>
+        </div>
       </div>
 
       {/* Search and Filter */}
@@ -450,6 +449,13 @@ const handleBulkDelete = () => {
                   Vehicle No
                 </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                  Created By
+                </Th>
+
+                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                  Created Type
+                </Th>
+                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Status
                 </Th>
               </Tr>
@@ -476,29 +482,27 @@ const handleBulkDelete = () => {
                       {indexOfFirstItem + index + 1}
                     </Td>
                     <Td className="py-4 text-center">
-                     <div className="flex items-center justify-center gap-1">
+                      <div className="flex items-center justify-center gap-1">
+                        {!item.allItemsInward && (
+                          <button
+                            onClick={() => handleEditRow(item)}
+                            title="Edit"
+                            className="cursor-pointer text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                          >
+                            <PencilIcon className="size-4" />
+                          </button>
+                        )}
 
-  {!item.allItemsInward && (
-    <button
-      onClick={() => handleEditRow(item)}
-      title="Edit"
-      className="cursor-pointer text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-    >
-      <PencilIcon className="size-4" />
-    </button>
-  )}
-
-  {item.status === "Verified" && (
-    <button
-      onClick={() => handleInward(item)}
-      title="Inward"
-      className="cursor-pointer text-green-500 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
-    >
-      <ArrowDownCircleIcon className="size-5" />
-    </button>
-  )}
-
-</div>
+                        {item.status === "Verified" && (
+                          <button
+                            onClick={() => handleInward(item)}
+                            title="Inward"
+                            className="cursor-pointer text-green-500 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
+                          >
+                            <ArrowDownCircleIcon className="size-5" />
+                          </button>
+                        )}
+                      </div>
                     </Td>
                     <Td className="py-4 whitespace-nowrap">
                       {item.purchaseDate}
@@ -524,6 +528,13 @@ const handleBulkDelete = () => {
                     <Td className="py-4">{item.transportName}</Td>
                     <Td className="py-4">{item.mobileNo}</Td>
                     <Td className="py-4">{item.vehicalNo}</Td>
+                      <Td className="py-4">{item.createdBy}</Td>
+
+<Td className="py-4">
+  <span className="rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+    {item.createdType}
+  </span>
+</Td>
                     <Td className="py-4">
                       <span
                         className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${statusColors[item.status]}`}
@@ -634,39 +645,41 @@ const handleBulkDelete = () => {
       </div>
 
       {/* Confirmation Modal */}
-<ConfirmModal
-  show={showConfirmModal}
-  onClose={() => {
-    setShowConfirmModal(false);
-    setDeleteTargetId(null);
-    setConfirmState("pending");
-  }}
-  onOk={performDelete}
-  confirmLoading={confirmLoading}
-  state={confirmState}
-  messages={{
-    pending: {
-      Icon: ExclamationTriangleIcon,
-      title: isBulkDelete ? "Delete Selected Purchases?" : "Are you sure?",
-      description: isBulkDelete 
-        ? `Are you sure you want to delete ${selectedIds.length} selected purchases? This action cannot be undone.`
-        : "Are you sure you want to delete this purchase? Once deleted, it cannot be restored.",
-      actionText: isBulkDelete ? "Delete All" : "Delete",
-    },
-    success: {
-      title: "Deleted Successfully",
-      description: isBulkDelete 
-        ? `${selectedIds.length} purchases have been deleted.`
-        : "The purchase has been deleted.",
-      actionText: "Done",
-    },
-    error: {
-      title: "Delete Failed",
-      description: "Failed to delete. Please try again.",
-      actionText: "Try Again",
-    },
-  }}
-/>
+      <ConfirmModal
+        show={showConfirmModal}
+        onClose={() => {
+          setShowConfirmModal(false);
+          setDeleteTargetId(null);
+          setConfirmState("pending");
+        }}
+        onOk={performDelete}
+        confirmLoading={confirmLoading}
+        state={confirmState}
+        messages={{
+          pending: {
+            Icon: ExclamationTriangleIcon,
+            title: isBulkDelete
+              ? "Delete Selected Purchases?"
+              : "Are you sure?",
+            description: isBulkDelete
+              ? `Are you sure you want to delete ${selectedIds.length} selected purchases? This action cannot be undone.`
+              : "Are you sure you want to delete this purchase? Once deleted, it cannot be restored.",
+            actionText: isBulkDelete ? "Delete All" : "Delete",
+          },
+          success: {
+            title: "Deleted Successfully",
+            description: isBulkDelete
+              ? `${selectedIds.length} purchases have been deleted.`
+              : "The purchase has been deleted.",
+            actionText: "Done",
+          },
+          error: {
+            title: "Delete Failed",
+            description: "Failed to delete. Please try again.",
+            actionText: "Try Again",
+          },
+        }}
+      />
     </div>
   );
 };
