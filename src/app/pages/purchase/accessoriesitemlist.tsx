@@ -24,9 +24,6 @@ import {
 import { Fragment } from "react";
 import { DatePicker } from "@/components/shared/form/Datepicker";
 import apiHelper from "@/utils/apiHelper";
-import { toast } from "sonner";
-import { ConfirmModal } from "@/components/shared/ConfirmModal";
-import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 
 // ---------- Types ----------
 export interface PurchaseItemRow {
@@ -55,6 +52,10 @@ export interface PurchaseItemRow {
   first2TyerNo?: string;
   second1TyerNo?: string;
   second2TyerNo?: string;
+
+  inwardBy?: string;
+  inwardType?: string;
+  inwardDate?: string;
   location?: string;
   grnNumber?: string;
   grnDate?: string;
@@ -179,12 +180,6 @@ const AccessoriesItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => 
 
   const [transportErrors, setTransportErrors] = useState<any>({});
   const [transportSaved, setTransportSaved] = useState(false);
-
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
-const [confirmState, setConfirmState] = useState<"pending" | "success" | "error">("pending");
-const [confirmLoading, setConfirmLoading] = useState(false);
-const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
-
   // Fetch purchase items
   useEffect(() => {
     if (id) {
@@ -225,7 +220,9 @@ const purchase = res.data;
     perRate: Number(item.purchaseRate),
     gstPercent: Number(item.gstPercent),
     amount: Number(item.netAmount),
-
+   inwardBy: item.inwardBy || "",
+    inwardType: item.inwardType || "",
+    inwardDate: item.inwardDate || "",
    status: item.status || "Pending",
   }))
 );
@@ -292,11 +289,10 @@ const handleSelectRow = async (item: PurchaseItemRow) => {
     await apiHelper.put(`/accessories-purchase/item-status/${item.id}`, {
       status: "Inward",
     });
-    toast.success("Item status updated to Inward!");
-    await fetchPurchaseItems();
-  } catch (err: any) {
+
+    fetchPurchaseItems();
+  } catch (err) {
     console.error(err);
-    toast.error(err.response?.data?.message || "Failed to update item status.");
   }
 };
 
@@ -386,37 +382,27 @@ const handleSelectRow = async (item: PurchaseItemRow) => {
 
     return Object.keys(errors).length === 0;
   };
+  const handleTransportSave = async () => {
+    if (!validateTransport()) return;
 
-  
-const handleTransportSave = async () => {
-  if (!validateTransport()) return;
-  try {
     await apiHelper.put(`/purchases/${id}/transport`, transportData);
     setTransportSaved(true);
-    toast.success("Transport details saved successfully!");
     setShowTransportModal(false);
-  } catch (err: any) {
-    console.log(err);
-    toast.error(err.response?.data?.message || "Failed to save transport details.");
-  }
-};
+  };
+  const handleInwardSubmit = async () => {
+    if (!validateInward()) return;
+    try {
+      await apiHelper.put(
+        `/purchases/purchase-items/${selectedItem?.id}/inward`,
+        inwardData,
+      );
 
-
-const handleInwardSubmit = async () => {
-  if (!validateInward()) return;
-  try {
-    await apiHelper.put(
-      `/purchases/purchase-items/${selectedItem?.id}/inward`,
-      inwardData,
-    );
-    toast.success("Inward details saved successfully!");
-    await fetchPurchaseItems();
-    setShowDrawer(false);
-  } catch (err: any) {
-    console.log(err);
-    toast.error(err.response?.data?.message || "Failed to save inward details.");
-  }
-};
+      await fetchPurchaseItems();
+      setShowDrawer(false);
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   const handleInwardChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -510,13 +496,7 @@ const handleInwardSubmit = async () => {
             </svg>
             Back
           </button>
-          <button
-            type="button"
-            onClick={() => setShowTransportModal(true)}
-            className="bg-primary-500 hover:bg-primary-600 inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white"
-          >
-            Add Transport
-          </button>
+        
         </div>
       </div>
       {/* Search and Filter */}
@@ -618,9 +598,16 @@ const handleInwardSubmit = async () => {
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Status
                 </Th>
-                <Th className="w-20 py-3.5 text-center text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  Inward
+                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                 Created By
                 </Th>
+                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                 Created Type
+                </Th>
+                  <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+               Inward Date
+                </Th>
+              
                 <Th className="w-20 py-3.5 text-center text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   View
                 </Th>
@@ -677,44 +664,13 @@ const handleInwardSubmit = async () => {
                         {item.status}
                       </span>
                     </Td>
+                     <Td className="py-4">{item.inwardBy }</Td>
+                    <Td className="py-4">{item.inwardType }</Td>
+                     <Td className="py-4">  {item.inwardDate
+    ? new Date(item.inwardDate).toLocaleString("en-GB")
+    : "-"}</Td>
                     <Td className="py-4 text-center">
-                      {item.status === "Pending" ? (
-                        <button
-                          disabled={!transportSaved}
-                          onClick={() => handleInwardClick(item)}
-                          title={
-                            transportSaved
-                              ? "Inward"
-                              : "Please add transport first"
-                          }
-                          className={`${
-                            transportSaved
-                              ? "cursor-pointer text-green-500 hover:text-green-700"
-                              : "cursor-not-allowed text-gray-400"
-                          }`}
-                        >
-                          <ArrowDownCircleIcon className="size-5" />
-                        </button>
-                      ) : (
-                        <button
-                          disabled
-                          title="Already Inward"
-                          className="cursor-not-allowed text-gray-400"
-                        >
-                          <ArrowDownCircleIcon className="size-5" />
-                        </button>
-                      )}
-                    </Td>
-                    <Td className="py-4 text-center">
-                      {item.status === "Inward" ? (
-                        <button
-                          onClick={() => handleViewClick(item)}
-                          title="View"
-                          className="cursor-pointer text-blue-500 transition-colors hover:text-blue-700"
-                        >
-                          <EyeIcon className="size-5" />
-                        </button>
-                      ) : (
+                     
                         <button
                           disabled
                           title="View Disabled"
@@ -722,7 +678,7 @@ const handleInwardSubmit = async () => {
                         >
                           <EyeIcon className="size-5" />
                         </button>
-                      )}
+                   
                     </Td>
                   </Tr>
                 );
@@ -1049,7 +1005,6 @@ const handleInwardSubmit = async () => {
                     </label>
                     <DatePicker
                       placeholder="Select MFG Date"
-                      options={{ disableMobile: true }}
                       disabled={isView}
                       value={inwardData.mfgDate}
                       onChange={(selectedDates: Date[]) => {
@@ -1251,7 +1206,6 @@ const handleInwardSubmit = async () => {
                     <DatePicker
                       placeholder="Select GRN Date"
                       disabled={isView}
-                      options={{ disableMobile: true }}
                       value={inwardData.grnDate}
                       onChange={(selectedDates: Date[]) => {
                         if (selectedDates && selectedDates.length > 0) {
@@ -1280,7 +1234,6 @@ const handleInwardSubmit = async () => {
                     </label>
                     <DatePicker
                       placeholder="Select GRN Record Date"
-                      options={{ disableMobile: true }}
                       value={inwardData.grnRecordDate}
                       disabled={isView}
                       onChange={(selectedDates: Date[]) => {

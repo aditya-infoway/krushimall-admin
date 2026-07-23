@@ -34,7 +34,7 @@ import { Timepicker } from "@/components/shared/form/Timepicker";
 import { Listbox } from "@/components/shared/form/StyledListbox";
 import { toast } from "sonner";
 import { toLocalDateString } from "@/utils/date";
-
+import { useNavigate } from "react-router";
 const columns = [
   {
     title: "New",
@@ -98,7 +98,7 @@ export default function Followup() {
   const [discussion, setDiscussion] = useState("");
   const [followups, setFollowups] = useState<any[]>([]);
   const [expectedPurchaseDate, setExpectedPurchaseDate] = useState<any>(null);
-
+const navigate = useNavigate();
   const [errors, setErrors] = useState({
     expectedPurchaseDate: "",
     nextDate: "",
@@ -355,6 +355,7 @@ export default function Followup() {
                       </button>
 
                       <button
+                        onClick={() => navigate(`/followups/history/${item.leadId}`)}
                         className="hover:text-primary-500 dark:hover:text-primary-400 cursor-pointer transition-colors"
                         title="Follow Up"
                       >
