@@ -208,6 +208,12 @@ export default function LeadBuilder() {
   const handleOrderBill = (id: number) => {
     window.open(`${getBaseUrl()}/api/leads/${id}/Quotation`, "_blank");
   };
+   const handleDeliveryChallan = (leadId: number) => {
+    window.open(
+      `${getBaseUrl()}/api/orders/lead/${leadId}/delivery-challan`,
+      "_blank",
+    );
+  };
   const handleEditQuotation = (id: number) => {
   navigate(`/leadmaster/quotation/edit/${id}`);
 };
@@ -257,6 +263,7 @@ export default function LeadBuilder() {
                 <Th className="w-45 min-w-45">Purchase Detail</Th>
                 <Th className="w-40 min-w-40 text-center">Update</Th>
                 <Th className="w-45 min-w-45 text-center">Process / Billing</Th>
+                 <Th className="w-45 min-w-45 text-center">Print</Th>
                 <Th className="w-40 min-w-40">Status</Th>
                 <Th className="w-20 text-center">Action</Th>
               </Tr>
@@ -411,7 +418,32 @@ export default function LeadBuilder() {
                       </button>
                     </div>
                   </Td>
-
+                  <Td> 
+                     <div className="flex w-full flex-col gap-1.5">
+                      <button
+                          onClick={() => handleDeliveryChallan(lead.id)}
+                        className="w-full cursor-pointer rounded-md border border-emerald-500 py-0.5 text-[12px] text-emerald-600"
+                      >
+                        Delivery Challan
+                      </button>
+                      <button
+                        onClick={() => handleCreateBooking(lead.id)}
+                        className="w-full cursor-pointer rounded-md border border-red-500 py-0.5 text-[12px] text-red-600"
+                      >
+                        Create Booking
+                      </button>
+                      <button
+                        onClick={() => handleCancel(lead.id)}
+                        className="w-full cursor-pointer rounded-md border border-blue-900 py-0.5 text-[12px] text-blue-900"
+                      >
+                        Cancel
+                      </button>
+                      {/* Solid Red Button */}
+                      <button className="w-full cursor-pointer rounded-md border border-red-600 py-0.5 text-[12px] text-red-600">
+                        Order Bill
+                      </button>
+                    </div>
+                  </Td>
                   {/* Status Column - Vertical */}
                   <Td>
                     <div className="space-y-1">

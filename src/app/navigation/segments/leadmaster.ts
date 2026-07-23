@@ -20,6 +20,13 @@ export const leadmaster: NavigationTree = {
    path: "/leadmaster/Quatationhistory",
   
   },
+  {
+   id: "Testdrivehistory",
+   type: "item",
+   title: "Testdrive History",
+   path: "/leadmaster/testdrivehistory",
+  
+  },
  
  ],
 };

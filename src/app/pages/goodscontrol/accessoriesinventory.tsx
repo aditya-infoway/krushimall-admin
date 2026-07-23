@@ -10,25 +10,26 @@ import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/Table";
 import { Checkbox } from "@/components/ui";
 import { Listbox } from "@/components/shared/form/StyledListbox";
 import apiHelper from "@/utils/apiHelper";
-
+import { EyeIcon } from "@heroicons/react/24/outline";
+import { useNavigate } from "react-router-dom";
 // ---------- Types ----------
 export interface AccessoriesInventoryRow {
   id: number;
   itemName: string;
-  itemCode: string;
-  hsn: string;
+  codeNo: string;
+  hsnCode: string;
   group: string;
-  tax: number;
-  purPrice: number;
+  taxSlab: number;
+
+  purchasePrice: number;
   salesPrice: number;
   mrp: number;
-  closingStock: number;
-  minStock?: number;
-  maxStock?: number;
-  reorderLevel?: number;
+
+  opStock: number;
+  currentStock: number;
+
   unit?: string;
   brand?: string;
-  location?: string;
 }
 
 interface AccessoriesInventoryProps {
@@ -68,8 +69,8 @@ const entriesOptions = [
 //   { id: "28", name: "28%" },
 // ];
 
-const fmt = (n: number) =>
-  n.toLocaleString("en-IN", {
+const fmt = (n?: number | null) =>
+  Number(n ?? 0).toLocaleString("en-IN", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
@@ -109,30 +110,25 @@ const AccessoriesInventory: React.FC<AccessoriesInventoryProps> = ({
   // const navigate = useNavigate();
 
   // Sample data - replace with API call
- 
 
-const fetchInventory = async () => {
-  try {
-   const res = await apiHelper.get(
-  "/accessories-purchase/accessories-inventory",
-);
+  const navigate = useNavigate();
+  const fetchInventory = async () => {
+    try {
+      const res = await apiHelper.get("/accessories");
 
-    console.log(
-      "Accessories inventory:",
-      res.data,
-    );
+      console.log("Accessories inventory:", res.data);
 
-    setRows(res.data || []);
-  } catch (error: any) {
-    console.error(
-      "Failed to fetch accessories inventory:",
-      error.response?.data || error,
-    );
+      setRows(res.data || []);
+    } catch (error: any) {
+      console.error(
+        "Failed to fetch accessories inventory:",
+        error.response?.data || error,
+      );
 
-    setRows([]);
-  }
-};
- useEffect(() => {
+      setRows([]);
+    }
+  };
+  useEffect(() => {
     fetchInventory();
   }, []);
   // Filter rows
@@ -143,14 +139,7 @@ const fetchInventory = async () => {
     if (search.trim()) {
       const q = search.toLowerCase();
       result = result.filter((r) =>
-        [
-          r.itemName,
-          r.itemCode,
-          r.hsn,
-          r.group,
-          r.brand,
-          r.location,
-        ]
+        [r.itemName, r.codeNo, r.hsnCode, r.group, ]
           .join(" ")
           .toLowerCase()
           .includes(q),
@@ -164,7 +153,7 @@ const fetchInventory = async () => {
 
     // Tax filter
     if (selectedTaxFilter !== "All") {
-      result = result.filter((r) => r.tax === parseFloat(selectedTaxFilter));
+      result = result.filter((r) => r.taxSlab === parseFloat(selectedTaxFilter));
     }
 
     return result;
@@ -198,31 +187,34 @@ const fetchInventory = async () => {
   };
 
   // Stock status indicator
-  const getStockStatus = (closingStock: number, minStock?: number) => {
-    if (!minStock) return "normal";
-    if (closingStock <= 0) return "out";
-    if (closingStock <= minStock) return "low";
-    return "normal";
-  };
+  // const getStockStatus = (closingStock: number, minStock?: number) => {
+  //   if (!minStock) return "normal";
+  //   if (closingStock <= 0) return "out";
+  //   if (closingStock <= minStock) return "low";
+  //   return "normal";
+  // };
 
-  const getStockStatusColor = (status: string) => {
-    switch (status) {
-      case "out":
-        return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400";
-      case "low":
-        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400";
-      default:
-        return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400";
-    }
-  };
+  // const getStockStatusColor = (status: string) => {
+  //   switch (status) {
+  //     case "out":
+  //       return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400";
+  //     case "low":
+  //       return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400";
+  //     default:
+  //       return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400";
+  //   }
+  // };
 
-  const getStockStatusLabel = (status: string) => {
-    switch (status) {
-      case "out": return "Out of Stock";
-      case "low": return "Low Stock";
-      default: return "In Stock";
-    }
-  };
+  // const getStockStatusLabel = (status: string) => {
+  //   switch (status) {
+  //     case "out":
+  //       return "Out of Stock";
+  //     case "low":
+  //       return "Low Stock";
+  //     default:
+  //       return "In Stock";
+  //   }
+  // };
 
   return (
     <div className="relative min-h-screen space-y-6 p-4 pb-28 text-gray-900 md:p-6 dark:text-gray-100">
@@ -314,46 +306,48 @@ const fetchInventory = async () => {
                     onChange={(e: any) => handleSelectAll(e.target.checked)}
                   />
                 </Th>
-                <Th className="   py-3.5  text-xs font-semibold  text-gray-500 uppercase dark:text-gray-400">
+                <Th className="py-3.5 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
                   S.No
                 </Th>
-                <Th className="  py-3.5 text-xs font-semibold  text-gray-500 uppercase dark:text-gray-400">
+                <Th className="py-3.5 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
                   Item Name
                 </Th>
-                <Th className="  py-3.5 text-xs font-semibold  text-gray-500 uppercase dark:text-gray-400">
+                <Th className="py-3.5 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
                   Item Code
                 </Th>
-                <Th className="  py-3.5 text-xs font-semibold  text-gray-500 uppercase dark:text-gray-400">
+                <Th className="py-3.5 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
                   HSN
                 </Th>
-                <Th className="  py-3.5 text-xs font-semibold  text-gray-500 uppercase dark:text-gray-400">
+                <Th className="py-3.5 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
                   Group
                 </Th>
-                <Th className="  py-3.5 text-xs font-semibold  text-gray-500 uppercase dark:text-gray-400">
+                <Th className="py-3.5 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
                   Tax (%)
                 </Th>
-                <Th className="  py-3.5 text-xs font-semibold  text-gray-500 uppercase dark:text-gray-400">
+                <Th className="py-3.5 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
                   Purchase Price
                 </Th>
-                <Th className="  py-3.5 text-xs font-semibold  text-gray-500 uppercase dark:text-gray-400">
+                <Th className="py-3.5 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
                   Sales Price
                 </Th>
-                <Th className="  py-3.5 text-xs font-semibold  text-gray-500 uppercase dark:text-gray-400">
+                <Th className="py-3.5 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
                   MRP
                 </Th>
-                <Th className="  py-3.5 text-xs font-semibold  text-gray-500 uppercase dark:text-gray-400">
-                  Closing Stock
+                <Th className="py-3.5 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
+                  Current Stock
                 </Th>
-              
+                <Th className="py-3.5 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
+                  Action
+                </Th>
               </Tr>
             </THead>
 
             <TBody className="dark:divide-dark-700 divide-y divide-gray-200">
               {currentItems.map((item, index) => {
                 const isRowSelected = selectedIds.includes(item.id);
-                const stockStatus = getStockStatus(item.closingStock, item.minStock);
-                const statusColor = getStockStatusColor(stockStatus);
-                const statusLabel = getStockStatusLabel(stockStatus);
+                // const stockStatus = getStockStatus(item.closingStock, item.minStock);
+                // const statusColor = getStockStatusColor(stockStatus);
+                // const statusLabel = getStockStatusLabel(stockStatus);
 
                 return (
                   <Tr
@@ -373,26 +367,41 @@ const fetchInventory = async () => {
                       {indexOfFirstItem + index + 1}
                     </Td>
                     <Td className="py-4 font-medium">{item.itemName}</Td>
-                    <Td className="py-4 font-mono text-sm">{item.itemCode}</Td>
-                    <Td className="py-4 font-mono text-sm">{item.hsn}</Td>
+                    <Td className="py-4 font-mono text-sm">{item.codeNo}</Td>
+                    <Td className="py-4 font-mono text-sm">{item.hsnCode}</Td>
                     <Td className="py-4">
-                      <span className="inline-flex rounded-full bg-primary-500 px-3 py-1 text-xs font-medium text-white ">
+                      <span className="bg-primary-500 inline-flex rounded-full px-3 py-1 text-xs font-medium text-white">
                         {item.group}
                       </span>
                     </Td>
-                    <Td className="py-4">{item.tax}%</Td>
-                    <Td className="py-4 font-medium">₹{fmt(item.purPrice)}</Td>
-                    <Td className="py-4 font-medium">₹{fmt(item.salesPrice)}</Td>
+                    <Td className="py-4">{item.taxSlab}%</Td>
+                    <Td className="py-4 font-medium">
+                      ₹{fmt(item.purchasePrice)}
+                    </Td>
+                    <Td className="py-4 font-medium">
+                      ₹{fmt(item.salesPrice)}
+                    </Td>
                     <Td className="py-4 font-medium">₹{fmt(item.mrp)}</Td>
                     <Td className="py-4">
                       <div className="flex items-center gap-2">
                         {/* <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${statusColor}`}>
                           {statusLabel}
                         </span> */}
-                        <span className="font-semibold">{item.closingStock}</span>
+                        <span className="font-semibold">
+                          {item.currentStock}
+                        </span>
                       </div>
                     </Td>
-                  
+                    <Td className="py-4">
+                      <button
+                       onClick={() =>
+    navigate(`/goodscontrol/accessoriesinventory/history/${item.id}`)
+  }
+                        className="text-primary-600 hover:bg-primary-50 rounded-md p-2"
+                      >
+                        <EyeIcon className="h-5 w-5" />
+                      </button>
+                    </Td>
                   </Tr>
                 );
               })}
