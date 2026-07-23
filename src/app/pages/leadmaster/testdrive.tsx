@@ -104,6 +104,7 @@ export function TestDriveModal({
   // Fetch dropdown data
   useEffect(() => {
     if (isOpen) {
+      fetchVariants();
       fetchModels();
       fetchColors();
       // Reset form when modal opens
@@ -141,25 +142,17 @@ export function TestDriveModal({
     }
   };
 
-  const fetchVariants = async (modelId: number) => {
-    try {
-      const res = await apiHelper.get(`/showroom-variant?modelId=${modelId}`);
-      const data = Array.isArray(res.data?.data)
-        ? res.data.data
-        : Array.isArray(res.data)
-          ? res.data
-          : [];
-      const variantList = data.map((item: any) => ({
-        id: item.id,
-        name: item.variantName,
-        modelId: item.modelId,
-      }));
-      setVariants(variantList);
-      setFilteredVariants(variantList);
-    } catch (error) {
-      console.error("Error fetching variants:", error);
-    }
-  };
+ const fetchVariants = async () => {
+  const res = await apiHelper.get("/showroom-variant");
+
+  const data = Array.isArray(res.data?.data)
+    ? res.data.data
+    : Array.isArray(res.data)
+    ? res.data
+    : [];
+
+  setVariants(data);
+};
 
   const fetchColors = async () => {
     try {
@@ -179,19 +172,31 @@ export function TestDriveModal({
 
   // Handle Model Change
   const handleModelChange = (selectedOption: any) => {
-    const modelId = selectedOption?.id || null;
-    setValue("modelId", modelId);
-    setValue("showroomVariantId", null);
-    setValue("colourId", null);
+  const modelId = selectedOption?.id || null;
 
-    if (modelId) {
-      fetchVariants(modelId);
-      setFilteredColors([]);
-    } else {
-      setFilteredVariants([]);
-      setFilteredColors([]);
-    }
-  };
+  setValue("modelId", modelId);
+  setValue("showroomVariantId", null);
+  setValue("colourId", null);
+
+  if (modelId) {
+    const filtered = variants.filter(
+      (v: any) => Number(v.modelId) === Number(modelId)
+    );
+
+    setFilteredVariants(
+      filtered.map((item: any) => ({
+        id: item.id,
+        name: item.variantName,
+        modelId: item.modelId,
+      }))
+    );
+
+    setFilteredColors([]);
+  } else {
+    setFilteredVariants([]);
+    setFilteredColors([]);
+  }
+};
 
   // Handle Variant Change
   const handleVariantChange = (selectedOption: any) => {
