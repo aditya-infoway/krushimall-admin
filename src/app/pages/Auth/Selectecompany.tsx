@@ -276,34 +276,25 @@ accountNumber: !formData.accountNumber
   }),
 };
 const handleSelectCompany = (company: Company) => {
+ 
+
   const financialYear = company.financialYears?.[0];
+ 
 
   if (!financialYear) {
     alert("Financial year not found");
     return;
   }
 
-  // Save selected company in current browser session
-  sessionStorage.setItem(
-    "companyId",
-    String(company.id),
-  );
+  sessionStorage.setItem("companyId", String(company.id));
+  sessionStorage.setItem("companyName", company.companyName);
 
-  sessionStorage.setItem(
-    "companyName",
-    company.companyName,
-  );
+  sessionStorage.setItem("financialYearId", String(financialYear.id));
+  sessionStorage.setItem("financialYear", financialYear.financialYear);
+  sessionStorage.setItem("fyStartDate", financialYear.fyStartDate);
+  sessionStorage.setItem("fyEndDate", financialYear.fyEndDate);
 
-  // Save selected financial year
-  sessionStorage.setItem(
-    "financialYearId",
-    String(financialYear.id),
-  );
-
-  sessionStorage.setItem(
-    "financialYear",
-    financialYear.financialYear,
-  );
+ 
 
   navigate("/dashboards/dashboard");
 };

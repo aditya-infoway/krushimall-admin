@@ -168,7 +168,20 @@ export default function TestDriveHistoryDetails() {
   //       "_blank",
   //     );
   //   };
+const formatIndianTime = (time?: string) => {
+  if (!time) return "-";
 
+  const [hour, minute] = time.split(":").map(Number);
+
+  const date = new Date();
+  date.setHours(hour, minute, 0);
+
+  return date.toLocaleTimeString("en-IN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+};
   return (
     <Page title="Quotation Revision History">
       <div className="transition-content px-(--margin-x) pb-6">
@@ -295,9 +308,13 @@ export default function TestDriveHistoryDetails() {
                         )}
                       </td>
 
-                      <td className="px-4 py-3">{item.testDriveFromTime}</td>
+                     <td className="px-4 py-3">
+  {formatIndianTime(item.testDriveFromTime)}
+</td>
 
-                      <td className="px-4 py-3">{item.testDriveToTime}</td>
+<td className="px-4 py-3">
+  {formatIndianTime(item.testDriveToTime)}
+</td>
 
                       <td className="px-4 py-3">{item.duration}</td>
 

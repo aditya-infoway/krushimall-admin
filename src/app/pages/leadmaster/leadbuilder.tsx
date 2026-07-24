@@ -460,7 +460,7 @@ export default function LeadBuilder() {
                                 : "bg-sky-500"
                           }`}
                         >
-                          {lead.leadTemperature}
+                          {lead.leadStatus}
                         </span>
                       </div>
                       <div className="flex items-center gap-3 text-[12px]">

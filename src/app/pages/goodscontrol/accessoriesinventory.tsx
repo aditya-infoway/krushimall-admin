@@ -397,7 +397,7 @@ const AccessoriesInventory: React.FC<AccessoriesInventoryProps> = ({
                        onClick={() =>
     navigate(`/goodscontrol/accessoriesinventory/history/${item.id}`)
   }
-                        className="text-primary-600 hover:bg-primary-50 rounded-md p-2"
+                        className="text-primary-600 hover:bg-primary-50 rounded-md p-2 cursor-pointer"
                       >
                         <EyeIcon className="h-5 w-5" />
                       </button>
