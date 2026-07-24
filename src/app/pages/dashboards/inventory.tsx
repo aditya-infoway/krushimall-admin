@@ -28,7 +28,8 @@ import {
   ArrowPathIcon,
 } from "@heroicons/react/24/outline";
 import { DatePicker } from "@/components/shared/form/Datepicker";
-
+import { useState,useEffect } from "react";
+import apiHelper from "@/utils/apiHelper";
 // ---------- Types ----------
 interface Member {
   id: number;
@@ -107,7 +108,15 @@ interface MainTableRow {
 export default function Dashboard() {
   const [currentPage, setCurrentPage] = React.useState(1);
   const [rowsPerPage] = React.useState(10);
+const today = new Date();
 
+const fyStartDate = sessionStorage.getItem("fyStartDate");
+
+const [fromDate, setFromDate] = useState(
+  fyStartDate ? new Date(fyStartDate) : today
+);
+
+const [toDate, setToDate] = useState(today);
   const members: Member[] = [
     { id: 101, name: "Nitin", amount: 5000 },
     { id: 102, name: "Rahul", amount: 3200 },
@@ -132,196 +141,98 @@ export default function Dashboard() {
     { memberId: 109, name: "Jay", amount: 3600, txnId: "TXN009" },
     { memberId: 110, name: "Manish", amount: 9200, txnId: "TXN010" },
   ];
+const [leadSummary, setLeadSummary] = useState({
+  hot: 0,
+  warm: 0,
+  cold: 0,
+  booked: 0,
+  total: 0,
+});
 
-  const modelAnalysisData: ModelAnalysisRow[] = [
-    {
-      model: "Mahindra 265 DI",
-      present: 45,
-      transit: 12,
-      purchase: 8,
-      sales: 25,
-    },
-    {
-      model: "Swaraj 744 FE",
-      present: 38,
-      transit: 15,
-      purchase: 10,
-      sales: 20,
-    },
-    { model: "Eicher 380", present: 52, transit: 8, purchase: 6, sales: 30 },
-    {
-      model: "John Deere 5050",
-      present: 28,
-      transit: 20,
-      purchase: 12,
-      sales: 18,
-    },
-    {
-      model: "New Holland 3630",
-      present: 33,
-      transit: 10,
-      purchase: 7,
-      sales: 22,
-    },
-  ];
+ const [modelAnalysisData, setModelAnalysisData] = useState<ModelAnalysisRow[]>([]);
+const [pieChartData, setPieChartData] = useState<PieData[]>([]);
 
-  const mainTableData: MainTableRow[] = [
-    {
-      srNo: 1,
-      model: "Mahindra 265 DI",
-      variant: "Deluxe",
-      colour: "Red",
-      purchaseOrder: "PO-001",
-      present: 45,
-      transit: 12,
-      hot: 18,
-      booked: 10,
-      lost: 5,
-    },
-    {
-      srNo: 2,
-      model: "Swaraj 744 FE",
-      variant: "Standard",
-      colour: "Blue",
-      purchaseOrder: "PO-002",
-      present: 38,
-      transit: 15,
-      hot: 12,
-      booked: 8,
-      lost: 3,
-    },
-    {
-      srNo: 3,
-      model: "Eicher 380",
-      variant: "Premium",
-      colour: "Green",
-      purchaseOrder: "PO-003",
-      present: 52,
-      transit: 8,
-      hot: 20,
-      booked: 15,
-      lost: 7,
-    },
-    {
-      srNo: 4,
-      model: "John Deere 5050",
-      variant: "Base",
-      colour: "Yellow",
-      purchaseOrder: "PO-004",
-      present: 28,
-      transit: 20,
-      hot: 10,
-      booked: 5,
-      lost: 2,
-    },
-    {
-      srNo: 5,
-      model: "New Holland 3630",
-      variant: "Plus",
-      colour: "White",
-      purchaseOrder: "PO-005",
-      present: 33,
-      transit: 10,
-      hot: 15,
-      booked: 12,
-      lost: 4,
-    },
-    {
-      srNo: 6,
-      model: "Mahindra 575 DI",
-      variant: "Premium",
-      colour: "Black",
-      purchaseOrder: "PO-006",
-      present: 40,
-      transit: 18,
-      hot: 22,
-      booked: 14,
-      lost: 6,
-    },
-    {
-      srNo: 7,
-      model: "Swaraj 855 FE",
-      variant: "Deluxe",
-      colour: "Orange",
-      purchaseOrder: "PO-007",
-      present: 25,
-      transit: 22,
-      hot: 8,
-      booked: 6,
-      lost: 3,
-    },
-    {
-      srNo: 8,
-      model: "Eicher 480",
-      variant: "Standard",
-      colour: "Red",
-      purchaseOrder: "PO-008",
-      present: 48,
-      transit: 6,
-      hot: 25,
-      booked: 18,
-      lost: 8,
-    },
-    {
-      srNo: 9,
-      model: "John Deere 5075",
-      variant: "Premium",
-      colour: "Green",
-      purchaseOrder: "PO-009",
-      present: 30,
-      transit: 14,
-      hot: 12,
-      booked: 9,
-      lost: 4,
-    },
-    {
-      srNo: 10,
-      model: "New Holland 4710",
-      variant: "Base",
-      colour: "Blue",
-      purchaseOrder: "PO-010",
-      present: 22,
-      transit: 25,
-      hot: 6,
-      booked: 4,
-      lost: 2,
-    },
-    {
-      srNo: 11,
-      model: "Mahindra 265 DI",
-      variant: "Plus",
-      colour: "White",
-      purchaseOrder: "PO-011",
-      present: 35,
-      transit: 16,
-      hot: 14,
-      booked: 11,
-      lost: 5,
-    },
-    {
-      srNo: 12,
-      model: "Swaraj 744 FE",
-      variant: "Premium",
-      colour: "Black",
-      purchaseOrder: "PO-012",
-      present: 42,
-      transit: 9,
-      hot: 20,
-      booked: 16,
-      lost: 6,
-    },
-  ];
+ const [mainTableData, setMainTableData] = useState<MainTableRow[]>([]);
+const formatDateParam = (date: Date) => {
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+};
 
-  // Pie chart data
-  const pieChartData: PieData[] = [
-    { name: "Present", value: 35 },
-    { name: "Transit", value: 25 },
-    { name: "Hot", value: 20 },
-    { name: "Booked", value: 15 },
-    { name: "Lost", value: 5 },
-  ];
+const fetchInventoryAnalysis = async () => {
+  try {
+    const params = new URLSearchParams();
+    if (fromDate) params.append("fromDate", formatDateParam(fromDate));
+    if (toDate) params.append("toDate", formatDateParam(toDate));
 
-  const PIE_COLORS = ["#22c55e", "#3b82f6", "#ef4444", "#8b5cf6", "#6b7280"];
+    const res = await apiHelper.get(
+      `/purchases/model-analysis?${params.toString()}`,
+    );
+
+    const analysis = res.data.modelAnalysis || [];
+
+    setModelAnalysisData(
+      analysis.map((item: any) => ({
+        model: item.model,
+        present: item.present,
+        transit: item.transit,
+        purchase: item.purchase,
+        sales: item.sales,
+      })),
+    );
+
+    setPieChartData(res.data.pieData || []);
+  } catch (error) {
+    console.error("Failed to fetch inventory analysis:", error);
+  }
+};
+
+const fetchInventoryDetails = async () => {
+  try {
+    const params = new URLSearchParams();
+    if (fromDate) params.append("fromDate", formatDateParam(fromDate));
+    if (toDate) params.append("toDate", formatDateParam(toDate));
+
+    const res = await apiHelper.get(
+      `/purchases/inventory-details?${params.toString()}`,
+    );
+    setMainTableData(res.data || []);
+  } catch (error) {
+    console.error("Failed to fetch inventory details:", error);
+  }
+};
+
+const fetchLeadSummary = async () => {
+  try {
+    const res = await apiHelper.get("/leads");
+
+    let leads = res.data;
+
+    // Date range filter (frontend side, createdAt se)
+    if (fromDate) {
+      leads = leads.filter(
+        (l: any) => new Date(l.createdAt) >= new Date(fromDate.setHours(0, 0, 0, 0)),
+      );
+    }
+    if (toDate) {
+      const end = new Date(toDate);
+      end.setHours(23, 59, 59, 999);
+      leads = leads.filter((l: any) => new Date(l.createdAt) <= end);
+    }
+
+    setLeadSummary({
+      hot: leads.filter((l: any) => l.leadStatus === "Hot").length,
+      warm: leads.filter((l: any) => l.leadStatus === "Warm").length,
+      cold: leads.filter((l: any) => l.leadStatus === "Cold").length,
+      booked: leads.filter((l: any) => l.leadStatus === "Booked").length,
+      total: leads.length,
+    });
+  } catch (error) {
+    console.error(error);
+  }
+};
+const PIE_COLORS = ["#22c55e", "#3b82f6", "#8b5cf6"]; // Present, Transit, Booked
 
   // Pagination logic
   const totalItems = mainTableData.length;
@@ -330,6 +241,12 @@ export default function Dashboard() {
   const indexOfFirstItem = indexOfLastItem - rowsPerPage;
   const currentItems = mainTableData.slice(indexOfFirstItem, indexOfLastItem);
 
+
+useEffect(() => {
+  fetchLeadSummary();
+  fetchInventoryAnalysis();
+  fetchInventoryDetails();
+}, [fromDate, toDate]);
   const getPageNumbers = () => {
     const pages = [];
     const maxVisible = 12;
@@ -381,9 +298,17 @@ export default function Dashboard() {
         <div className="mt-3 flex flex-wrap items-center gap-2 sm:mt-0">
           {/* Date Picker */}
           <div className="flex items-center gap-2">
-            <DatePicker placeholder="From Date" />
+           <DatePicker
+  value={fromDate}
+  onChange={(date) => setFromDate(date as Date)}
+  placeholder="From Date"
+/>
             <span className="text-gray-400">to</span>
-            <DatePicker placeholder="To Date" />
+            <DatePicker
+  value={toDate}
+  onChange={(date) => setToDate(date as Date)}
+  placeholder="To Date"
+/>
           </div>
 
           {/* Action Buttons Group */}
@@ -401,123 +326,98 @@ export default function Dashboard() {
             </button>
 
             {/* Refresh Button */}
-            <button className="dark:border-dark-600 dark:bg-dark-700 dark:hover:bg-dark-600 flex cursor-pointer items-center justify-center rounded-lg border border-gray-300 bg-white p-1.5 text-gray-600 hover:bg-gray-50 sm:p-2 dark:text-gray-300">
-              <ArrowPathIcon className="h-4 w-4" />
-            </button>
+           <button
+  onClick={() => {
+    fetchLeadSummary();
+    fetchInventoryAnalysis();
+    fetchInventoryDetails();
+  }}
+  className="dark:border-dark-600 dark:bg-dark-700 dark:hover:bg-dark-600 flex cursor-pointer items-center justify-center rounded-lg border border-gray-300 bg-white p-1.5 text-gray-600 hover:bg-gray-50 sm:p-2 dark:text-gray-300"
+>
+  <ArrowPathIcon className="h-4 w-4" />
+</button>
           </div>
         </div>
       </div>
       {/* 4 Stats Cards */}
-      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-xl bg-gradient-to-br from-red-500 to-red-600 p-5 text-white shadow-lg">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium opacity-90">Hot Lead</p>
-              <p className="mt-1 text-3xl font-bold">100</p>
-              <span className="mt-2 inline-block rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-medium">
-                +12%
-              </span>
-            </div>
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20">
-              <svg
-                className="h-6 w-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 10V3L4 14h7v7l9-11h-7z"
-                />
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-xl bg-gradient-to-br from-orange-400 to-orange-500 p-5 text-white shadow-lg">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium opacity-90">Warm Lead</p>
-              <p className="mt-1 text-3xl font-bold">200</p>
-              <span className="mt-2 inline-block rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-medium">
-                +8%
-              </span>
-            </div>
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20">
-              <svg
-                className="h-6 w-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 p-5 text-white shadow-lg">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium opacity-90">Cold Lead</p>
-              <p className="mt-1 text-3xl font-bold">300</p>
-              <span className="mt-2 inline-block rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-medium">
-                -3%
-              </span>
-            </div>
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20">
-              <svg
-                className="h-6 w-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-xl bg-gradient-to-br from-green-500 to-green-600 p-5 text-white shadow-lg">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium opacity-90">Booked Lead</p>
-              <p className="mt-1 text-3xl font-bold">400</p>
-              <span className="mt-2 inline-block rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-medium">
-                +25%
-              </span>
-            </div>
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20">
-              <svg
-                className="h-6 w-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-          </div>
-        </div>
+    <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+  {/* Hot Lead */}
+  <div className="rounded-xl bg-linear-to-br from-red-500 to-red-600 p-5 text-white shadow-lg">
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="text-sm font-medium opacity-90">Hot Lead</p>
+        <p className="mt-1 text-3xl font-bold">{leadSummary.hot}</p>
       </div>
+      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20">
+        <svg
+          className="h-6 w-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M13 10V3L4 14h7v7l9-11h-7z"
+          />
+        </svg>
+      </div>
+    </div>
+  </div>
 
+  {/* Warm Lead */}
+  <div className="rounded-xl bg-linear-to-br from-orange-400 to-orange-500 p-5 text-white shadow-lg">
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="text-sm font-medium opacity-90">Warm Lead</p>
+        <p className="mt-1 text-3xl font-bold">{leadSummary.warm}</p>
+      </div>
+      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20">
+        <svg
+          className="h-6 w-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  {/* Cold Lead */}
+  <div className="rounded-xl bg-linear-to-br from-blue-400 to-blue-600 p-5 text-white shadow-lg">
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="text-sm font-medium opacity-90">Cold Lead</p>
+        <p className="mt-1 text-3xl font-bold">{leadSummary.cold}</p>
+      </div>
+      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20">
+        <svg
+          className="h-6 w-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  {/* Total Lead */}
+ <div className="rounded-xl bg-linear-to-br from-green-500 to-green-600 p-5 text-white shadow-lg"> <div className="flex items-center justify-between"> <div> <p className="text-sm font-medium opacity-90">Booked Lead</p> <p className="mt-1 text-3xl font-bold">  {leadSummary.booked}</p>  </div> <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20"> <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" > <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /> </svg> </div> </div> </div> </div>
       {/* Pie Chart + Model Analysis in one row */}
       <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Left - Pie Chart */}
@@ -525,7 +425,7 @@ export default function Dashboard() {
           <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
             Lead Distribution
           </h3>
-          <div className="h-[340px] w-full">
+          <div className="h-85 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart
                 margin={{
@@ -583,7 +483,7 @@ export default function Dashboard() {
             Model Analysis
           </h3>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[650px] border-collapse text-sm">
+            <table className="w-full min-w-min-w-162.5 border-collapse text-sm">
               <thead className="dark:bg-dark-600 bg-gray-50">
                 <tr>
                   <th className="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">

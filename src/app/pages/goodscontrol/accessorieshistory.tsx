@@ -72,11 +72,11 @@ const AccessoriesHistory = () => {
     try {
       setLoading(true);
       const res = await apiHelper.get(`/accessories/history/${id}`);
-      
+
       console.log(res);
 
       setRows(res.history || []);
-      
+
       // Set accessory details from response
       if (res.itemName) {
         setAccessory({
@@ -188,15 +188,17 @@ const AccessoriesHistory = () => {
               <thead>
                 <tr className="dark:border-dark-500 dark:bg-dark-800 border-b border-gray-200 bg-gray-50 whitespace-nowrap">
                   <th className="px-4 py-3 font-semibold">Sr. No.</th>
-                  
-                <th className="px-4 py-3 font-semibold">Date</th>
-<th className="px-4 py-3 font-semibold">Type</th>
-<th className="px-4 py-3 font-semibold">Part Name</th>
-<th className="px-4 py-3 font-semibold">Bill No</th>
-<th className="px-4 py-3 font-semibold text-end">Qty</th>
-<th className="px-4 py-3 font-semibold text-end">Bill Amount</th>
-<th className="px-4 py-3 font-semibold text-end">Stock</th>
-<th className="px-4 py-3 font-semibold">User</th>
+
+                  <th className="px-4 py-3 font-semibold">Date</th>
+                  <th className="px-4 py-3 font-semibold">Type</th>
+                  <th className="px-4 py-3 font-semibold">Party Name</th>
+                  <th className="px-4 py-3 font-semibold">Bill No</th>
+                  <th className="px-4 py-3 text-end font-semibold">Qty</th>
+                  <th className="px-4 py-3 text-end font-semibold">
+                    Bill Amount
+                  </th>
+                  <th className="px-4 py-3 text-end font-semibold">Stock</th>
+                  <th className="px-4 py-3 font-semibold">User</th>
                 </tr>
               </thead>
               <tbody>
@@ -224,39 +226,32 @@ const AccessoriesHistory = () => {
                       <td className="px-4 py-3">
                         {indexOfFirstItem + index + 1}
                       </td>
-                     <td className="px-4 py-3">
-  {new Date(row.date).toLocaleDateString("en-IN")}
-</td>
+                      <td className="px-4 py-3">
+                        {new Date(row.date).toLocaleDateString("en-IN")}
+                      </td>
 
-<td className="px-4 py-3">
-  {row.type}
-</td>
+                      <td className="px-4 py-3">{row.type}</td>
 
-<td className="px-4 py-3 font-medium">
-  {row.partyName}
-</td>
+                      <td className="px-4 py-3 font-medium">{row.partyName}</td>
 
-<td className="px-4 py-3">
-  {row.reference}
-</td>
+                      <td className="px-4 py-3">{row.reference}</td>
 
-<td className="px-4 py-3 text-end font-semibold text-green-600">
-  {row.qtyIn}
-</td>
+                      <td className="px-4 py-3 text-end font-semibold text-green-600">
+                        {row.qtyIn}
+                      </td>
 
-<td className="px-4 py-3 text-end">
-  ₹{Number(row.billAmount).toLocaleString("en-IN", {
-    minimumFractionDigits: 2,
-  })}
-</td>
+                      <td className="px-4 py-3 text-end">
+                        ₹
+                        {Number(row.billAmount).toLocaleString("en-IN", {
+                          minimumFractionDigits: 2,
+                        })}
+                      </td>
 
-<td className="px-4 py-3 text-end font-bold">
-  {row.balance}
-</td>
+                      <td className="px-4 py-3 text-end font-bold">
+                        {row.balance}
+                      </td>
 
-<td className="px-4 py-3">
-  {row.createdBy}
-</td>
+                      <td className="px-4 py-3">{row.createdBy}</td>
                     </tr>
                   ))
                 )}
@@ -341,7 +336,7 @@ const AccessoriesHistory = () => {
                   </button>
                   {Array.from(
                     { length: totalPages },
-                    (_, index) => index + 1
+                    (_, index) => index + 1,
                   ).map((page) => (
                     <button
                       key={page}

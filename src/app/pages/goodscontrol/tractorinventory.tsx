@@ -511,29 +511,25 @@ const TractorInventory: React.FC<TractorInventoryProps> = ({
                     <Td className="py-4 font-medium text-gray-500">
                       {indexOfFirstItem + index + 1}
                     </Td>
-                   <Td className="py-4">
-  {item.status !== "Booked" && (
-    <button
-      type="button"
-      onClick={() =>
-        handleToggleStock(item.id)
-      }
-      className={`relative h-6 w-12 rounded-full transition-all ${
-        item.stock === "On"
-          ? "bg-primary-500"
-          : "dark:bg-dark-600 bg-gray-300"
-      }`}
-    >
-      <span
-        className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${
-          item.stock === "On"
-            ? "left-6.5"
-            : "left-0.5"
-        }`}
-      />
-    </button>
-  )}
-</Td>
+                    <Td className="py-4">
+                      {item.status !== "Booked" && (
+                        <button
+                          type="button"
+                          onClick={() => handleToggleStock(item.id)}
+                          className={`relative h-6 w-12 rounded-full transition-all ${
+                            item.stock === "On"
+                              ? "bg-primary-500"
+                              : "dark:bg-dark-600 bg-gray-300"
+                          }`}
+                        >
+                          <span
+                            className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${
+                              item.stock === "On" ? "left-6.5" : "left-0.5"
+                            }`}
+                          />
+                        </button>
+                      )}
+                    </Td>
                     <Td className="py-4">
                       <span
                         className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${statusColors[item.status]}`}
