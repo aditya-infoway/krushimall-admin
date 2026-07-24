@@ -255,26 +255,26 @@ export default function BankReceipt() {
 
     return Object.keys(newErrors).length === 0;
   };
-  const getLeads = async () => {
-    try {
-      const res = await apiHelper.get("/leads");
+const getLeads = async () => {
+  try {
+    const res = await apiHelper.get("/leads/pending"); // ✅ endpoint change
 
-      const leads = res.data || [];
+    const leads = res.data || [];
 
-      const options = leads.map((item: any) => ({
-        value: item.id,
-        label: `${item.quotationNo} - ${item.customer?.accountName || ""}`,
-        quotationNo: item.quotationNo,
-        customerName: item.customer?.accountName || "",
-        mobile: item.customer?.mobile || "",
-        customerId: item.customer?.id,
-      }));
+    const options = leads.map((item: any) => ({
+      value: item.id,
+      label: `${item.quotationNo} - ${item.customer?.accountName || ""}`,
+      quotationNo: item.quotationNo,
+      customerName: item.customer?.accountName || "",
+      mobile: item.customer?.mobile || "",
+      customerId: item.customer?.id,
+    }));
 
-      setLeadOptions(options);
-    } catch (err) {
-      console.log(err);
-    }
-  };
+    setLeadOptions(options);
+  } catch (err) {
+    console.log(err);
+  }
+};
 
   useEffect(() => {
     getLeads();
@@ -299,18 +299,15 @@ export default function BankReceipt() {
         }));
 
       // Opposite Accounts
-      const opp = accounts
-        .filter(
-          (a: any) => a.group === "Customer" || a.group === "Sundry Debtors",
-        )
-        .map((a: any) => ({
-          value: a.id,
-          label: a.accountName,
-          mobile: a.mobile,
-          openingBalance: a.openingBalance,
-          balance: a.closingBalance,
-          balanceType: a.drCr,
-        }));
+      const opp = accounts.map((a: any) => ({
+        value: a.id,
+        label: a.accountName,
+        mobile: a.mobile,
+        openingBalance: a.openingBalance,
+        balance: a.closingBalance,
+        balanceType: a.drCr,
+        group: a.group,
+      }));
 
       setBankAccounts(bank);
       setOppAccounts(opp);
@@ -550,7 +547,9 @@ export default function BankReceipt() {
   }, [filterType, filterDateFrom, filterDateTo, filterPaymentType, search]);
   const downloadExcel = async () => {
     try {
-      const blob = await apiHelper.getBlob("/accountant/bank-receipt/export/excel");
+      const blob = await apiHelper.getBlob(
+        "/accountant/bank-receipt/export/excel",
+      );
 
       const url = window.URL.createObjectURL(blob);
 
@@ -1092,7 +1091,7 @@ export default function BankReceipt() {
                   </div>
 
                   {/* Right side - Combobox */}
-                  <div className="w-full sm:max-w-sm">
+                   <div className="w-full  md:w-110 lg:w-110 ">
                     {form.type === "Lead Cancel" && (
                       <Combobox
                         data={leadOptions}
@@ -1245,7 +1244,9 @@ export default function BankReceipt() {
                       )}
                     </div>
                     <Combobox
-                      data={oppAccounts}
+                      data={oppAccounts.filter(
+                        (a: any) => a.value !== form.bankAccount?.value,
+                      )}
                       displayField="label"
                       value={form.oppAccount}
                       onChange={(val: any) => {

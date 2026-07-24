@@ -36,15 +36,18 @@ import { Listbox } from "@/components/shared/form/StyledListbox";
 
 type Category = {
   id: number;
-  categoryName: string; // ✅ Changed from "name"
-  name?: string; // Keep for backward compatibility if needed
+  categoryName: string;
+  name?: string; 
   status: string; // ✅ Changed from boolean to string (or keep as boolean if backend converts)
   createdAt: string;
+  image: string;
 };
 
 type FormValues = {
   name: string;
   status: string; // Changed to string
+    image: string | File;
+
 };
 
 const statusOptions = [
@@ -138,6 +141,7 @@ export default function Category() {
         ...item,
         name: item.categoryName || item.name || "Unknown",
         id: item.id || item._id,
+         image: apiHelper.getImageUrl(item.image),
         createdAt: item.createdAt
           ? new Date(item.createdAt).toLocaleDateString("en-GB", {
               day: "numeric",
@@ -167,10 +171,12 @@ export default function Category() {
     defaultValues: {
       name: "",
       status: "ACTIVE",
+        image: "",
     },
   });
 
   const formStatusValue = useWatch({ control, name: "status" });
+  const formImageValue = useWatch({ control, name: "image" });
 
   const formOption = {
     name: { required: "Category name is required" },
@@ -190,17 +196,22 @@ export default function Category() {
     { id: "INACTIVE", name: "Off" },
   ];
 
-  const handleOpenAddDrawer = () => {
-    setEditId(null);
-    reset({ name: "", status: "ACTIVE" }); // ✅ String instead of boolean
-    setShowDrawer(true);
-  };
+ const handleOpenAddDrawer = () => {
+  setEditId(null);
+  reset({ 
+    name: "", 
+    status: "ACTIVE",
+    image: ""  // 
+  });
+  setShowDrawer(true);
+};
 
   const handleOpenEditDrawer = (item: Category) => {
     setEditId(item.id);
     reset({
       name: item.categoryName || item.name, // Use categoryName from API
       status: item.status === "ACTIVE" ? "ACTIVE" : "INACTIVE", // Keep as string
+      image: item.image || "",
     });
     setShowDrawer(true);
   };
@@ -271,36 +282,69 @@ export default function Category() {
     }
   };
 
-  const onFormSubmit = async (data: FormValues) => {
-    try {
-      console.log("Sending:", { categoryName: data.name, status: data.status });
 
-      if (editId !== null) {
-        await apiHelper.put(`/category/${editId}`, {
-          categoryName: data.name,
-          status: data.status,
-        });
-        toast.success("Category updated successfully!");
-      } else {
-        await apiHelper.post("/category", {
-          categoryName: data.name,
-          status: data.status,
-        });
-        toast.success("Category created successfully!");
-      }
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setValue("image", reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  }
+};
 
-      await getCategories();
-      setShowDrawer(false);
-      reset();
-    } catch (error: any) {
-      console.error("Failed to save category:", error);
-      console.error("Backend error:", error.response?.data);
-      toast.error(
-        error.response?.data?.message ||
-          "Failed to save category. Please try again.",
-      );
+ const onFormSubmit = async (data: FormValues) => {
+  try {
+    const formData = new FormData();
+    formData.append("categoryName", data.name);
+    formData.append("status", data.status);
+
+    // Log FormData contents
+    console.log("FormData contents:");
+    for (let pair of formData.entries()) {
+      console.log(pair[0] + ': ' + pair[1]);
     }
-  };
+
+    // Handle image upload
+    if (data.image) {
+      if (typeof data.image === 'string' && data.image.startsWith("data:")) {
+        const response = await fetch(data.image);
+        const blob = await response.blob();
+        const file = new File([blob], "category-image.jpg", { type: blob.type });
+        formData.append("image", file);
+      } else if (data.image instanceof File) {
+        formData.append("image", data.image);
+      }
+    }
+
+    console.log("📤 Uploading with FormData (multipart)");
+    console.log("Fields:", {
+      categoryName: data.name,
+      status: data.status,
+      hasImage: !!data.image
+    });
+
+    if (editId !== null) {
+      await apiHelper.put(`/category/${editId}`, formData);
+      toast.success("Category updated successfully!");
+    } else {
+      await apiHelper.post("/category", formData);
+      toast.success("Category created successfully!");
+    }
+
+    await getCategories();
+    setShowDrawer(false);
+    reset();
+  } catch (error: any) {
+    console.error("Failed to save category:", error);
+    toast.error(
+      error.response?.data?.message ||
+        "Failed to save category. Please try again.",
+    );
+  }
+};
+
 
   const filteredData = categories.filter((item) => {
     const itemName = item.categoryName || item.name || "";
@@ -487,6 +531,9 @@ export default function Category() {
                   S.No
                 </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+  Image
+</Th>
+                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Category Name
                 </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
@@ -515,6 +562,24 @@ export default function Category() {
                     <Td className="py-4 font-medium text-gray-500">
                       {indexOfFirstItem + index + 1}
                     </Td>
+                    <Td className="py-4">
+  <div className="dark:border-dark-500 flex h-15 w-15 items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
+    {item.image ? (
+      <img
+        src={item.image}
+        alt={item.name}
+        className="h-full w-full object-contain"
+        onError={(e) => {
+          (e.target as HTMLImageElement).style.display = "none";
+        }}
+      />
+    ) : (
+      <span className="text-xs font-bold text-gray-400 uppercase">
+        {(item.name || "NA").substring(0, 2)}
+      </span>
+    )}
+  </div>
+</Td>
                     <Td className="py-4 font-medium text-gray-900 dark:text-white">
                       {item.categoryName || item.name || "N/A"}
                     </Td>
@@ -603,7 +668,7 @@ export default function Category() {
               {currentItems.length === 0 && (
                 <Tr>
                   <Td
-                    colSpan={6}
+                    colSpan={7}
                     className="py-12 text-center text-gray-400 dark:text-gray-500"
                   >
                     No categories found
@@ -835,6 +900,38 @@ export default function Category() {
                       error={errors?.name && errors.name.message}
                     />
                   </div>
+
+                  <div>
+  <label className="mb-2 block text-sm font-medium">
+    Category Image
+  </label>
+  <input
+    type="file"
+    accept="image/*"
+    onChange={handleImageChange}
+    className="dark:file:bg-dark-800 dark:file:text-dark-200 block w-full text-sm file:mr-4 file:rounded-full file:border-0 file:bg-gray-100 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-gray-700 hover:file:bg-gray-200"
+  />
+  {formImageValue ? (
+    <div>
+      <img
+        src={formImageValue}
+        alt="Preview"
+        className="dark:border-dark-500 mt-3 h-20 w-20 rounded-xl border border-gray-200 object-contain"
+      />
+      {editId && (
+        <p className="mt-1 text-xs text-gray-400">
+          Current image (upload new to replace)
+        </p>
+      )}
+    </div>
+  ) : (
+    editId && (
+      <p className="mt-1 text-xs text-gray-400">
+        No image uploaded
+      </p>
+    )
+  )}
+</div>
 
                   <div>
                     <span className="mb-2 block text-sm font-medium">
