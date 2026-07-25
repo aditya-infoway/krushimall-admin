@@ -302,7 +302,7 @@ export function PriceLocation({
                 Ex-Showroom Price <span className="text-red-500">*</span>
               </label>
               <div className="relative">
-                <span className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-500">
+                <span className="absolute left-3 top-2.75 text-gray-500">
                   ₹
                 </span>
                 <Input
@@ -321,7 +321,7 @@ export function PriceLocation({
                 <span className="text-xs text-gray-400">(Optional)</span>
               </label>
               <div className="relative">
-                <span className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-500">
+                 <span className="absolute left-3 top-2.75 text-gray-500">
                   ₹
                 </span>
                 <Input
@@ -490,7 +490,7 @@ export function PriceLocation({
                 <span className="text-xs text-gray-400">(Optional)</span>
               </label>
               <div className="relative">
-                <span className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-500">
+                 <span className="absolute left-3 top-2.75 text-gray-500">
                   ₹
                 </span>
                 <Input
@@ -498,7 +498,7 @@ export function PriceLocation({
                   type="number"
                   placeholder="Enter amount"
                   className="pl-8"
-                  error={errors?.downPayment?.message}
+                 
                 />
               </div>
             </div>
@@ -540,7 +540,7 @@ export function PriceLocation({
                 <span className="text-xs text-gray-400">(Optional)</span>
               </label>
               <div className="relative">
-                <span className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-500">
+                  <span className="absolute left-3 top-2.75 text-gray-500">
                   ₹
                 </span>
                 <Input
@@ -548,7 +548,7 @@ export function PriceLocation({
                   type="number"
                   placeholder="Enter offer price"
                   className="pl-8"
-                  error={errors?.offerPrice?.message}
+                  
                 />
               </div>
             </div>
@@ -656,7 +656,7 @@ export function PriceLocation({
               />
 
               {errors?.state && (
-                <p className="mt-1 text-sm text-red-500">
+            <p className="text-error dark:text-error-lighter mt-1 text-xs">
                   {errors.state.message}
                 </p>
               )}
@@ -690,7 +690,7 @@ export function PriceLocation({
               />
 
               {errors?.district && (
-                <p className="mt-1 text-sm text-red-500">
+                 <p className="text-error dark:text-error-lighter mt-1 text-xs">
                   {errors.district.message}
                 </p>
               )}
@@ -724,7 +724,7 @@ export function PriceLocation({
               />
 
               {errors?.taluka && (
-                <p className="mt-1 text-sm text-red-500">
+               <p className="text-error dark:text-error-lighter mt-1 text-xs">
                   {errors.taluka.message}
                 </p>
               )}
@@ -757,7 +757,7 @@ export function PriceLocation({
               />
 
               {errors?.city && (
-                <p className="mt-1 text-sm text-red-500">
+                <p className="text-error dark:text-error-lighter mt-1 text-xs">
                   {errors.city.message}
                 </p>
               )}
@@ -801,7 +801,7 @@ export function PriceLocation({
               placeholder="Enter complete address..."
             />
             {errors?.fullAddress && (
-              <p className="mt-1 text-sm text-red-500">
+              <p className="text-error dark:text-error-lighter mt-1 text-xs">
                 {errors.fullAddress.message}
               </p>
             )}

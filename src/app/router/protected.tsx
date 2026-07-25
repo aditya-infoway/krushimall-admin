@@ -2,7 +2,7 @@ import { Navigate, RouteObject } from "react-router";
 
 import AuthGuard from "@/middleware/AuthGuard";
 import { DynamicLayout } from "../layouts/DynamicLayout";
-import { AppLayout } from "../layouts/AppLayout";
+// import { AppLayout } from "../layouts/AppLayout";
 
 /**
  * Protected routes configuration
@@ -617,7 +617,45 @@ const protectedRoutes: RouteObject = {
     },
   ],
 },
-
+    {
+  path: "allot",
+  children: [
+    {
+      path: "vehicleIncharge",
+      lazy: async () => ({
+        Component: (
+          await import("@/app/pages/allot/vehicleIncharge")
+        ).default,
+      }),
+    },
+    {
+      path: "accessoriesAllot",
+      lazy: async () => ({
+        Component: (
+          await import("@/app/pages/allot/accessoriesAllot")
+        ).default,
+      }),
+    },
+    {
+      path: "vehicle_verify_accessories",
+      lazy: async () => ({
+        Component: (
+          await import("@/app/pages/allot/vehicle_verify_accessories")
+        ).default,
+      }),
+    },
+    {
+  path: "accessories-allot/:id",
+  lazy: async () => ({
+    Component: (
+      await import(
+        "@/app/pages/allot/accessoriesallotdetails"
+      )
+    ).default,
+  }),
+}
+  ],
+},
         {
           path: "report",
           children: [

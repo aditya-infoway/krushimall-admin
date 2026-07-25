@@ -31,58 +31,58 @@ import { DatePicker } from "@/components/shared/form/Datepicker";
 import { useState,useEffect } from "react";
 import apiHelper from "@/utils/apiHelper";
 // ---------- Types ----------
-interface Member {
-  id: number;
-  name: string;
-  amount: number;
-}
+// interface Member {
+//   id: number;
+//   name: string;
+//   amount: number;
+// }
 
-interface Transaction {
-  memberId: number;
-  name: string;
-  amount: number;
-  txnId: string;
-}
+// interface Transaction {
+//   memberId: number;
+//   name: string;
+//   amount: number;
+//   txnId: string;
+// }
 
-interface WeeklySalesData {
-  day: string;
-  sales: number;
-}
+// interface WeeklySalesData {
+//   day: string;
+//   sales: number;
+// }
 
-interface RevenueData {
-  name: string;
-  value: number;
-}
+// interface RevenueData {
+//   name: string;
+//   value: number;
+// }
 
-interface OrderData {
-  value: number;
-}
+// interface OrderData {
+//   value: number;
+// }
 
 interface PieData {
   name: string;
   value: number;
 }
 
-interface CustomerData {
-  name: string;
-  value: number;
-  fill: string;
-}
+// interface CustomerData {
+//   name: string;
+//   value: number;
+//   fill: string;
+// }
 
-interface SalesData {
-  week: number;
-  sales: number;
-}
+// interface SalesData {
+//   week: number;
+//   sales: number;
+// }
 
-interface MiniBarData {
-  name: string;
-  value: number;
-}
+// interface MiniBarData {
+//   name: string;
+//   value: number;
+// }
 
-interface MiniLineData {
-  name: string;
-  value: number;
-}
+// interface MiniLineData {
+//   name: string;
+//   value: number;
+// }
 
 interface ModelAnalysisRow {
   model: string;
@@ -112,35 +112,34 @@ const today = new Date();
 
 const fyStartDate = sessionStorage.getItem("fyStartDate");
 
-const [fromDate, setFromDate] = useState(
+const [fromDate, setFromDate] = useState<Date | string>(
   fyStartDate ? new Date(fyStartDate) : today
 );
+const [toDate, setToDate] = useState<Date | string>(today);
+  // const members: Member[] = [
+  //   { id: 101, name: "Nitin", amount: 5000 },
+  //   { id: 102, name: "Rahul", amount: 3200 },
+  //   { id: 103, name: "Amit", amount: 7800 },
+  //   { id: 104, name: "Vikas", amount: 4500 },
+  //   { id: 105, name: "Suresh", amount: 6100 },
+  //   { id: 106, name: "Bhavik", amount: 8100 },
+  //   { id: 107, name: "Ram", amount: 7100 },
+  //   { id: 108, name: "Dipesh", amount: 9100 },
+  //   { id: 109, name: "Dixit", amount: 5100 },
+  // ];
 
-const [toDate, setToDate] = useState(today);
-  const members: Member[] = [
-    { id: 101, name: "Nitin", amount: 5000 },
-    { id: 102, name: "Rahul", amount: 3200 },
-    { id: 103, name: "Amit", amount: 7800 },
-    { id: 104, name: "Vikas", amount: 4500 },
-    { id: 105, name: "Suresh", amount: 6100 },
-    { id: 106, name: "Bhavik", amount: 8100 },
-    { id: 107, name: "Ram", amount: 7100 },
-    { id: 108, name: "Dipesh", amount: 9100 },
-    { id: 109, name: "Dixit", amount: 5100 },
-  ];
-
-  const transactions: Transaction[] = [
-    { memberId: 101, name: "Nitin", amount: 5000, txnId: "TXN001" },
-    { memberId: 102, name: "Rahul", amount: 3200, txnId: "TXN002" },
-    { memberId: 103, name: "Amit", amount: 7800, txnId: "TXN003" },
-    { memberId: 104, name: "Vikas", amount: 4500, txnId: "TXN004" },
-    { memberId: 105, name: "Suresh", amount: 6100, txnId: "TXN005" },
-    { memberId: 106, name: "Kunal", amount: 2900, txnId: "TXN006" },
-    { memberId: 107, name: "Rohit", amount: 8800, txnId: "TXN007" },
-    { memberId: 108, name: "Pankaj", amount: 5400, txnId: "TXN008" },
-    { memberId: 109, name: "Jay", amount: 3600, txnId: "TXN009" },
-    { memberId: 110, name: "Manish", amount: 9200, txnId: "TXN010" },
-  ];
+  // const transactions: Transaction[] = [
+  //   { memberId: 101, name: "Nitin", amount: 5000, txnId: "TXN001" },
+  //   { memberId: 102, name: "Rahul", amount: 3200, txnId: "TXN002" },
+  //   { memberId: 103, name: "Amit", amount: 7800, txnId: "TXN003" },
+  //   { memberId: 104, name: "Vikas", amount: 4500, txnId: "TXN004" },
+  //   { memberId: 105, name: "Suresh", amount: 6100, txnId: "TXN005" },
+  //   { memberId: 106, name: "Kunal", amount: 2900, txnId: "TXN006" },
+  //   { memberId: 107, name: "Rohit", amount: 8800, txnId: "TXN007" },
+  //   { memberId: 108, name: "Pankaj", amount: 5400, txnId: "TXN008" },
+  //   { memberId: 109, name: "Jay", amount: 3600, txnId: "TXN009" },
+  //   { memberId: 110, name: "Manish", amount: 9200, txnId: "TXN010" },
+  // ];
 const [leadSummary, setLeadSummary] = useState({
   hot: 0,
   warm: 0,
@@ -153,18 +152,25 @@ const [leadSummary, setLeadSummary] = useState({
 const [pieChartData, setPieChartData] = useState<PieData[]>([]);
 
  const [mainTableData, setMainTableData] = useState<MainTableRow[]>([]);
-const formatDateParam = (date: Date) => {
-  const yyyy = date.getFullYear();
-  const mm = String(date.getMonth() + 1).padStart(2, "0");
-  const dd = String(date.getDate()).padStart(2, "0");
+const formatDateParam = (date: Date | string) => {
+  const d = date instanceof Date ? date : new Date(date);
+
+  if (isNaN(d.getTime())) return ""; // invalid date guard
+
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
   return `${yyyy}-${mm}-${dd}`;
 };
 
 const fetchInventoryAnalysis = async () => {
   try {
     const params = new URLSearchParams();
-    if (fromDate) params.append("fromDate", formatDateParam(fromDate));
-    if (toDate) params.append("toDate", formatDateParam(toDate));
+    const from = fromDate ? formatDateParam(fromDate) : "";
+    const to = toDate ? formatDateParam(toDate) : "";
+
+    if (from) params.append("fromDate", from);
+    if (to) params.append("toDate", to);
 
     const res = await apiHelper.get(
       `/purchases/model-analysis?${params.toString()}`,
@@ -191,8 +197,11 @@ const fetchInventoryAnalysis = async () => {
 const fetchInventoryDetails = async () => {
   try {
     const params = new URLSearchParams();
-    if (fromDate) params.append("fromDate", formatDateParam(fromDate));
-    if (toDate) params.append("toDate", formatDateParam(toDate));
+    const from = fromDate ? formatDateParam(fromDate) : "";
+    const to = toDate ? formatDateParam(toDate) : "";
+
+    if (from) params.append("fromDate", from);
+    if (to) params.append("toDate", to);
 
     const res = await apiHelper.get(
       `/purchases/inventory-details?${params.toString()}`,
@@ -209,11 +218,10 @@ const fetchLeadSummary = async () => {
 
     let leads = res.data;
 
-    // Date range filter (frontend side, createdAt se)
     if (fromDate) {
-      leads = leads.filter(
-        (l: any) => new Date(l.createdAt) >= new Date(fromDate.setHours(0, 0, 0, 0)),
-      );
+      const start = new Date(fromDate); // string ho ya Date, dono se valid Date banta hai
+      start.setHours(0, 0, 0, 0);
+      leads = leads.filter((l: any) => new Date(l.createdAt) >= start);
     }
     if (toDate) {
       const end = new Date(toDate);
@@ -298,15 +306,23 @@ useEffect(() => {
         <div className="mt-3 flex flex-wrap items-center gap-2 sm:mt-0">
           {/* Date Picker */}
           <div className="flex items-center gap-2">
-           <DatePicker
+ <DatePicker
   value={fromDate}
-  onChange={(date) => setFromDate(date as Date)}
+  onChange={(dates) => {
+    if (dates && dates.length > 0) {
+      setFromDate(dates[0]);
+    }
+  }}
   placeholder="From Date"
 />
             <span className="text-gray-400">to</span>
-            <DatePicker
+    <DatePicker
   value={toDate}
-  onChange={(date) => setToDate(date as Date)}
+  onChange={(dates) => {
+    if (dates && dates.length > 0) {
+      setToDate(dates[0]);
+    }
+  }}
   placeholder="To Date"
 />
           </div>

@@ -157,7 +157,7 @@ useEffect(() => {
   if (loading) {
     return (
       <Page title="Website Variant">
-        <div className="flex min-h-[400px] items-center justify-center">
+        <div className="flex min-h-100 items-center justify-center">
           <p className="text-gray-500">
             Loading website variant...
           </p>

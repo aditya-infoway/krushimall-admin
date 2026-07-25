@@ -15,8 +15,7 @@ import apiHelper from "@/utils/apiHelper";
 // Options for various select fields
 import { useEffect } from "react";
 import { toast } from "sonner";
-
-
+import { Combobox } from "@/components/shared/form/Combobox";
 
 const tractorStatusOptions = [
   { label: "Available", value: "available" },
@@ -48,21 +47,15 @@ const dealerOptions = [
 ];
 
 interface BasicInformationProps {
-  setCurrentStep: React.Dispatch<
-    React.SetStateAction<number>
-  >;
+  setCurrentStep: React.Dispatch<React.SetStateAction<number>>;
 
   websiteVariantId: string | null;
 
-  setWebsiteVariantId: React.Dispatch<
-    React.SetStateAction<string | null>
-  >;
+  setWebsiteVariantId: React.Dispatch<React.SetStateAction<string | null>>;
 
   editData: any;
 
-  setEditData: React.Dispatch<
-    React.SetStateAction<any>
-  >;
+  setEditData: React.Dispatch<React.SetStateAction<any>>;
 }
 export function BasicInformation({
   setCurrentStep,
@@ -73,23 +66,21 @@ export function BasicInformation({
 }: BasicInformationProps) {
   const kycFormCtx = useKYCFormContext();
 
-const {
-  register,
-  handleSubmit,
-  formState: { errors },
-  control,
-  watch,
-  setValue,
-  reset,
-} = useForm<BasicInformationType>({
-  resolver:
-    yupResolver(
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    control,
+    watch,
+    setValue,
+    reset,
+  } = useForm<BasicInformationType>({
+    resolver: yupResolver(
       BasicInformationSchema,
     ) as unknown as Resolver<BasicInformationType>,
 
-  defaultValues:
-    kycFormCtx.state.formData.BasicInformation,
-});
+    defaultValues: kycFormCtx.state.formData.BasicInformation,
+  });
   const [country, setCountry] = useState("");
   const [state, setState] = useState("");
   const [city, setCity] = useState("");
@@ -104,229 +95,178 @@ const {
   const showCustomColorInput = watch("showCustomColor");
   const [highlightCount, setHighlightCount] = useState(5);
 
+  useEffect(() => {
+    if (!editData) return;
 
-useEffect(() => {
-  if (!editData) return;
+    reset({
+      categoryId: editData.categoryId ?? "",
 
-  reset({
-    categoryId:
-      editData.categoryId ?? "",
+      brandId: editData.brandId ?? "",
 
-    brandId:
-      editData.brandId ?? "",
+      modelId: editData.modelId ?? "",
 
-    modelId:
-      editData.modelId ?? "",
+      modelYearId: editData.modelYearId ?? "",
 
-    modelYearId:
-      editData.modelYearId ?? "",
+      variantId: editData.variantId ?? "",
 
-    variantId:
-      editData.variantId ?? "",
+      variantCode: editData.variantCode ?? "",
 
-    variantCode:
-      editData.variantCode ?? "",
+      productName: editData.productName ?? "",
 
-    productName:
-      editData.productName ?? "",
+      productCode: editData.productCode ?? "",
 
-    productCode:
-      editData.productCode ?? "",
+      skuCode: editData.skuCode ?? "",
 
-    skuCode:
-      editData.skuCode ?? "",
+      launchYear: editData.launchYear ? editData.launchYear.split("T")[0] : "",
 
-    launchYear:
-      editData.launchYear
-        ? editData.launchYear
-            .split("T")[0]
-        : "",
+      country: editData.country ?? "",
 
-    country:
-      editData.country ?? "",
+      tractorStatus: editData.tractorStatus ?? "",
 
-    tractorStatus:
-      editData.tractorStatus ?? "",
+      shortDescription: editData.shortDescription ?? "",
 
-    shortDescription:
-      editData.shortDescription ?? "",
+      highlights: {
+        highlight1: editData.highlight1 ?? "",
 
-    highlights: {
-      highlight1:
-        editData.highlight1 ?? "",
+        highlight2: editData.highlight2 ?? "",
 
-      highlight2:
-        editData.highlight2 ?? "",
+        highlight3: editData.highlight3 ?? "",
 
-      highlight3:
-        editData.highlight3 ?? "",
+        highlight4: editData.highlight4 ?? "",
 
-      highlight4:
-        editData.highlight4 ?? "",
+        highlight5: editData.highlight5 ?? "",
+      },
 
-      highlight5:
-        editData.highlight5 ?? "",
-    },
+      colors: {
+        red: editData.redColor ?? false,
 
-    colors: {
-      red:
-        editData.redColor ?? false,
+        blue: editData.blueColor ?? false,
 
-      blue:
-        editData.blueColor ?? false,
+        green: editData.greenColor ?? false,
 
-      green:
-        editData.greenColor ?? false,
+        orange: editData.orangeColor ?? false,
 
-      orange:
-        editData.orangeColor ??
-        false,
+        black: editData.blackColor ?? false,
 
-      black:
-        editData.blackColor ??
-        false,
+        white: editData.whiteColor ?? false,
 
-      white:
-        editData.whiteColor ??
-        false,
+        custom: editData.customColor ?? false,
+      },
 
-      custom:
-        editData.customColor ??
-        false,
-    },
+      showCustomColor: editData.customColor ?? false,
 
-    showCustomColor:
-      editData.customColor ?? false,
+      customColorName: editData.customColorName ?? "",
 
-    customColorName:
-      editData.customColorName ??
-      "",
+      customColorCode: editData.customColorCode ?? "#000000",
 
-    customColorCode:
-      editData.customColorCode ??
-      "#000000",
-
-    availableStates:
-      Array.isArray(
-        editData.availableStates,
-      )
+      availableStates: Array.isArray(editData.availableStates)
         ? editData.availableStates
         : [],
 
-    availableDistricts:
-      Array.isArray(
-        editData.availableDistricts,
-      )
+      availableDistricts: Array.isArray(editData.availableDistricts)
         ? editData.availableDistricts
         : [],
 
-    availableDealers:
-      Array.isArray(
-        editData.availableDealers,
-      )
+      availableDealers: Array.isArray(editData.availableDealers)
         ? editData.availableDealers
         : [],
 
-    stockStatus:
-      editData.stockStatus ?? "",
+      stockStatus: editData.stockStatus ?? "",
 
-    seoTitle:
-      editData.seoTitle ?? "",
+      seoTitle: editData.seoTitle ?? "",
 
-    seoUrl:
-      editData.seoUrl ?? "",
+      seoUrl: editData.seoUrl ?? "",
 
-    metaDescription:
-      editData.metaDescription ??
-      "",
+      metaDescription: editData.metaDescription ?? "",
 
-    keywords:
-      editData.keywords ?? "",
-  });
-
-  // Required to generate state options
-  setCountry(
-    editData.country ?? "",
-  );
-}, [editData, reset]);
-const onSubmit = async (data: BasicInformationType) => {
-  
-  try {
-    const payload = {
-      categoryId: data.categoryId ? Number(data.categoryId) : null,
-      brandId: data.brandId ? Number(data.brandId) : null,
-      modelId: data.modelId ? Number(data.modelId) : null,
-      modelYearId: data.modelYearId ? Number(data.modelYearId) : null,
-      variantId: data.variantId ? Number(data.variantId) : null,
-      variantCode: data.variantCode,
-      productName: data.productName,
-      productCode: data.productCode,
-      skuCode: data.skuCode,
-      launchYear: data.launchYear ? new Date(data.launchYear).toISOString() : null,
-      country: data.country,
-      tractorStatus: data.tractorStatus,
-      shortDescription: data.shortDescription,
-      highlight1: data.highlights?.highlight1,
-      highlight2: data.highlights?.highlight2,
-      highlight3: data.highlights?.highlight3,
-      highlight4: data.highlights?.highlight4,
-      highlight5: data.highlights?.highlight5,
-       redColor: Boolean(data.colors?.red),
-  blueColor: Boolean(data.colors?.blue),
-  greenColor: Boolean(data.colors?.green),
-  orangeColor: Boolean(data.colors?.orange),
-  blackColor: Boolean(data.colors?.black),
-  whiteColor: Boolean(data.colors?.white),
-  customColor: Boolean(data.colors?.custom),
-      customColorName: data.customColorName,
-      customColorCode: data.customColorCode,
-      availableStates: data.availableStates,
-      availableDistricts: data.availableDistricts,
-      availableDealers: data.availableDealers,
-      stockStatus: data.stockStatus,
-      seoTitle: data.seoTitle,
-      seoUrl: data.seoUrl,
-      metaDescription: data.metaDescription,
-      keywords: data.keywords,
-      currentStep: 0,
-    };
-
-   if (websiteVariantId) {
-      // UPDATE — existing record (edit mode ya already-created record)
-      await apiHelper.put(
-        `/website-variants/${websiteVariantId}/save-step`,
-        payload,
-      );
-    } else {
-      // CREATE — sirf tab jab genuinely naya record ban raha ho
-      const res = await apiHelper.post("/website-variants", payload);
-      const newVariantId = res.data.id;
-      setWebsiteVariantId(String(newVariantId));
-    }
-
-    kycFormCtx.dispatch({
-      type: "SET_FORM_DATA",
-      payload: {
-        BasicInformation: data,
-      },
+      keywords: editData.keywords ?? "",
     });
 
-    kycFormCtx.dispatch({
-      type: "SET_STEP_STATUS",
-      payload: {
-        BasicInformation: {
-          isDone: true,
+    // Required to generate state options
+    setCountry(editData.country ?? "");
+  }, [editData, reset]);
+  const onSubmit = async (data: BasicInformationType) => {
+    try {
+      const payload = {
+        categoryId: data.categoryId ? Number(data.categoryId) : null,
+        brandId: data.brandId ? Number(data.brandId) : null,
+        modelId: data.modelId ? Number(data.modelId) : null,
+        modelYearId: data.modelYearId ? Number(data.modelYearId) : null,
+        variantId: data.variantId ? Number(data.variantId) : null,
+        variantCode: data.variantCode,
+        productName: data.productName,
+        productCode: data.productCode,
+        skuCode: data.skuCode,
+        launchYear: data.launchYear
+          ? new Date(data.launchYear).toISOString()
+          : null,
+        country: data.country,
+        tractorStatus: data.tractorStatus,
+        shortDescription: data.shortDescription,
+        highlight1: data.highlights?.highlight1,
+        highlight2: data.highlights?.highlight2,
+        highlight3: data.highlights?.highlight3,
+        highlight4: data.highlights?.highlight4,
+        highlight5: data.highlights?.highlight5,
+        redColor: Boolean(data.colors?.red),
+        blueColor: Boolean(data.colors?.blue),
+        greenColor: Boolean(data.colors?.green),
+        orangeColor: Boolean(data.colors?.orange),
+        blackColor: Boolean(data.colors?.black),
+        whiteColor: Boolean(data.colors?.white),
+        customColor: Boolean(data.colors?.custom),
+        customColorName: data.customColorName,
+        customColorCode: data.customColorCode,
+        availableStates: data.availableStates,
+        availableDistricts: data.availableDistricts,
+        availableDealers: data.availableDealers,
+        stockStatus: data.stockStatus,
+        seoTitle: data.seoTitle,
+        seoUrl: data.seoUrl,
+        metaDescription: data.metaDescription,
+        keywords: data.keywords,
+        currentStep: 0,
+      };
+
+      if (websiteVariantId) {
+        // UPDATE — existing record (edit mode ya already-created record)
+        await apiHelper.put(
+          `/website-variants/${websiteVariantId}/save-step`,
+          payload,
+        );
+      } else {
+        // CREATE — sirf tab jab genuinely naya record ban raha ho
+        const res = await apiHelper.post("/website-variants", payload);
+        const newVariantId = res.data.id;
+        setWebsiteVariantId(String(newVariantId));
+      }
+
+      kycFormCtx.dispatch({
+        type: "SET_FORM_DATA",
+        payload: {
+          BasicInformation: data,
         },
-      },
-    });
+      });
 
-    toast.success("Basic information saved successfully!");
-    setCurrentStep(1);
-  } catch (error: any) {
-    console.error(error);
-    toast.error(error.response?.data?.message || "Failed to save basic information. Please try again.");
-  }
-};
+      kycFormCtx.dispatch({
+        type: "SET_STEP_STATUS",
+        payload: {
+          BasicInformation: {
+            isDone: true,
+          },
+        },
+      });
+
+      toast.success("Basic information saved successfully!");
+      setCurrentStep(1);
+    } catch (error: any) {
+      console.error(error);
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to save basic information. Please try again.",
+      );
+    }
+  };
   const countryOptions = Country.getAllCountries().map((country) => ({
     value: country.isoCode,
     label: country.name,
@@ -336,32 +276,29 @@ const onSubmit = async (data: BasicInformationType) => {
     label: state.name,
     state,
   }));
- const selectedStates =
-  watch("availableStates") || [];
+  const selectedStates = watch("availableStates") || [];
 
-const cityOptions = Array.isArray(selectedStates) 
-  ? selectedStates.flatMap((stateCode: string) =>
-      City.getCitiesOfState(country, stateCode).map(
-        (city) => ({
+  const cityOptions = Array.isArray(selectedStates)
+    ? selectedStates.flatMap((stateCode: string) =>
+        City.getCitiesOfState(country, stateCode).map((city) => ({
           value: city.name,
           label: city.name,
-        })
+        })),
       )
-    )
-  : [];
+    : [];
 
   const formatLocalDate = (date: Date | null): string => {
-  if (!date) return "";
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-};
+    if (!date) return "";
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
 
-const parseLocalDate = (dateStr: string): Date | undefined => {
-  if (!dateStr) return undefined;
-  return new Date(dateStr + "T00:00:00");
-};
+  const parseLocalDate = (dateStr: string): Date | undefined => {
+    if (!dateStr) return undefined;
+    return new Date(dateStr + "T00:00:00");
+  };
   const customSelectStyles = {
     control: (provided: any, state: any) => ({
       ...provided,
@@ -494,14 +431,18 @@ const parseLocalDate = (dateStr: string): Date | undefined => {
               name="categoryId"
               control={control}
               render={({ field }) => (
-                <Listbox
+                <Combobox
                   data={categories}
                   value={
                     categories.find((item: any) => item.id === field.value) ||
                     null
                   }
+                  displayField="categoryName"
+                  placeholder="Select Category"
+                  label="Select Category"
+                  error={errors.categoryId?.message}
                   onChange={(option: any) => {
-                    field.onChange(option.id);
+                    field.onChange(option?.id ?? "");
 
                     setValue("brandId", "");
                     setValue("modelId", "");
@@ -509,50 +450,37 @@ const parseLocalDate = (dateStr: string): Date | undefined => {
                     setValue("variantId", "");
                     setValue("variantCode", "");
                   }}
-                  displayField="categoryName"
-                  placeholder="Select Category"
-                  label="Select Category"
                 />
               )}
             />
-            {errors?.tractorCategory && (
-              <p className="mt-1 text-sm text-red-500">
-                {errors.tractorCategory.message}
-              </p>
-            )}
           </div>
           <div>
             <Controller
               name="brandId"
               control={control}
               render={({ field }) => (
-                <Listbox
+                <Combobox
                   data={filteredBrands}
                   value={
                     filteredBrands.find(
                       (item: any) => item.id === field.value,
                     ) || null
                   }
+                  displayField="brandName"
+                  placeholder="Select Brand"
+                  label="Select Brand"
+                  error={errors.brandId?.message}
                   onChange={(option: any) => {
-                    field.onChange(option.id);
+                    field.onChange(option?.id ?? "");
 
                     setValue("modelId", "");
                     setValue("modelYearId", "");
                     setValue("variantId", "");
                     setValue("variantCode", "");
                   }}
-                  displayField="brandName"
-                  placeholder="Select Brand"
-                  label="Select Brand"
                 />
               )}
             />
-
-            {errors?.brandName && (
-              <p className="mt-1 text-sm text-red-500">
-                {errors.brandName.message}
-              </p>
-            )}
           </div>
 
           <div>
@@ -560,56 +488,54 @@ const parseLocalDate = (dateStr: string): Date | undefined => {
               name="modelId"
               control={control}
               render={({ field }) => (
-                <Listbox
+                <Combobox
                   data={filteredModels}
                   value={
                     filteredModels.find(
                       (item: any) => item.id === field.value,
                     ) || null
                   }
+                  displayField="modelName"
+                  placeholder="Select Model"
+                  label="Select Model"
+                  error={errors.modelId?.message}
                   onChange={(option: any) => {
-                    field.onChange(option.id);
+                    field.onChange(option?.id ?? "");
 
                     setValue("modelYearId", "");
                     setValue("variantId", "");
                     setValue("variantCode", "");
                   }}
-                  displayField="modelName"
-                  placeholder="Select Model"
-                  label="Select Model"
                 />
               )}
             />
-
-            {errors?.modelName && (
-              <p className="mt-1 text-sm text-red-500">
-                {errors.modelName.message}
-              </p>
-            )}
           </div>
-          <Controller
-            name="modelYearId"
-            control={control}
-            render={({ field }) => (
-              <Listbox
-                data={filteredModelYears}
-                value={
-                  filteredModelYears.find(
-                    (item: any) => item.id === field.value,
-                  ) || null
-                }
-                onChange={(option: any) => {
-                  field.onChange(option.id);
+          <div>
+            <Controller
+              name="modelYearId"
+              control={control}
+              render={({ field }) => (
+                <Combobox
+                  data={filteredModelYears}
+                  value={
+                    filteredModelYears.find(
+                      (item: any) => item.id === field.value,
+                    ) || null
+                  }
+                  displayField="modelYear"
+                  placeholder="Select Model Year"
+                  label="Select Model Year"
+                  error={errors.modelYearId?.message}
+                  onChange={(option: any) => {
+                    field.onChange(option?.id ?? "");
 
-                  setValue("variantId", "");
-                  setValue("variantCode", "");
-                }}
-                displayField="modelYear"
-                placeholder="Select Model Year"
-                label="Select Model Year"
-              />
-            )}
-          />
+                    setValue("variantId", "");
+                    setValue("variantCode", "");
+                  }}
+                />
+              )}
+            />
+          </div>
         </div>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -618,29 +544,24 @@ const parseLocalDate = (dateStr: string): Date | undefined => {
               name="variantId"
               control={control}
               render={({ field }) => (
-                <Listbox
+                <Combobox
                   data={filteredVariants}
                   value={
                     filteredVariants.find(
                       (item: any) => item.id === field.value,
                     ) || null
                   }
-                  onChange={(option: any) => {
-                    field.onChange(option.id);
-
-                    setValue("variantCode", option.variantCode || "");
-                  }}
                   displayField="variantName"
                   placeholder="Select Variant"
                   label="Select Variant"
+                  error={errors.variantId?.message}
+                  onChange={(option: any) => {
+                    field.onChange(option?.id ?? "");
+                    setValue("variantCode", option?.variantCode || "");
+                  }}
                 />
               )}
             />
-            {errors?.variantName && (
-              <p className="mt-1 text-sm text-red-500">
-                {errors.variantName.message}
-              </p>
-            )}
           </div>
           <Input
             {...register("variantCode")}
@@ -648,23 +569,23 @@ const parseLocalDate = (dateStr: string): Date | undefined => {
             placeholder="Variant Code"
             disabled
           />
-         <Controller
-  name="launchYear"
-  control={control}
-  render={({ field }) => (
-    <DatePicker
-      value={field.value ? parseLocalDate(field.value) : undefined}
-      onChange={(selectedDates: Date[]) => {
-        field.onChange(formatLocalDate(selectedDates[0] || null));
-      }}
-      label="Launch Year"
-      error={errors?.launchYear?.message}
-      options={{ disableMobile: true }}
-      placeholder="Select launch date..."
-    />
-  )}
-/>
-           <Input
+          <Controller
+            name="launchYear"
+            control={control}
+            render={({ field }) => (
+              <DatePicker
+                value={field.value ? parseLocalDate(field.value) : undefined}
+                onChange={(selectedDates: Date[]) => {
+                  field.onChange(formatLocalDate(selectedDates[0] || null));
+                }}
+                label="Launch Year"
+                error={errors?.launchYear?.message}
+                options={{ disableMobile: true }}
+                placeholder="Select launch date..."
+              />
+            )}
+          />
+          <Input
             {...register("productName")}
             label="Website Display Product Name"
             placeholder="Enter product Name"
@@ -683,35 +604,30 @@ const parseLocalDate = (dateStr: string): Date | undefined => {
             placeholder="Enter SKU code"
             error={errors?.skuCode?.message}
           />
-           <div>
+          <div>
             <Controller
               name="tractorStatus"
               control={control}
               render={({ field }) => (
-                <Listbox
+                <Combobox
                   data={tractorStatusOptions}
                   value={
                     tractorStatusOptions.find(
-                      (item) => item.value === field.value,
+                      (item: any) => item.value === field.value,
                     ) || null
                   }
-                  onChange={(option: any) => field.onChange(option?.value)}
                   displayField="label"
                   placeholder="Select Status"
                   label="Tractor Status"
+                  error={errors.tractorStatus?.message}
+                  onChange={(option: any) => {
+                    field.onChange(option?.value ?? "");
+                  }}
                 />
               )}
             />
-
-            {errors?.tractorStatus && (
-              <p className="mt-1 text-sm text-red-500">
-                {errors.tractorStatus.message}
-              </p>
-            )}
           </div>
         </div>
-
-       
 
         {/* Short Description */}
         <div className="border-y border-gray-500 py-8">
@@ -722,7 +638,7 @@ const parseLocalDate = (dateStr: string): Date | undefined => {
             maxLength={200}
             rows={3}
             error={errors?.shortDescription?.message}
-           description="Max 200 characters"
+            description="Max 200 characters"
           />
         </div>
 
@@ -762,49 +678,52 @@ const parseLocalDate = (dateStr: string): Date | undefined => {
           <p className="mb-4 text-sm text-gray-500">
             Select available colors for this tractor
           </p>
-<div className="flex flex-wrap gap-3">
-  {colorOptions.map((color) => (
-    <label key={color.value} className="flex items-center gap-2">
-      <Controller
-        name={`colors.${color.value}` as any}
-        control={control}
-        render={({ field }) => (
-          <input
-            type="checkbox"
-            checked={!!field.value}
-            onChange={(e) => field.onChange(e.target.checked)}
-            className="h-4 w-4 rounded border-gray-300"
-          />
-        )}
-      />
-      <span
-        className="flex h-6 w-6 rounded-full"
-        style={{ backgroundColor: color.value }}
-      />
-      <span>{color.label}</span>
-    </label>
-  ))}
+          <div className="flex flex-wrap gap-3">
+            {colorOptions.map((color) => (
+              <label key={color.value} className="flex items-center gap-2">
+                <Controller
+                  name={`colors.${color.value}` as any}
+                  control={control}
+                  render={({ field }) => (
+                    <input
+                      type="checkbox"
+                      checked={!!field.value}
+                      onChange={(e) => field.onChange(e.target.checked)}
+                      className="h-4 w-4 rounded border-gray-300"
+                    />
+                  )}
+                />
 
-  <label className="flex items-center gap-2">
-    <Controller
-      name="colors.custom"
-      control={control}
-      render={({ field }) => (
-        <input
-          type="checkbox"
-          checked={!!field.value}
-          onChange={(e) => {
-            field.onChange(e.target.checked);
-            setValue("showCustomColor", e.target.checked);
-          }}
-          className="h-4 w-4 rounded border-gray-300"
-        />
-      )}
-    />
-    <span>Custom</span>
-  </label>
-</div>
+                <span
+                  className="flex h-6 w-6 rounded-full"
+                  style={{ backgroundColor: color.value }}
+                />
+                <span>{color.label}</span>
+              </label>
+            ))}
 
+            <label className="flex items-center gap-2">
+              <Controller
+                name="colors.custom"
+                control={control}
+                render={({ field }) => (
+                  <input
+                    type="checkbox"
+                    checked={!!field.value}
+                    onChange={(e) => {
+                      field.onChange(e.target.checked);
+                      setValue("showCustomColor", e.target.checked);
+                    }}
+                    className="h-4 w-4 rounded border-gray-300"
+                  />
+                )}
+              />
+              <span>Custom</span>
+            </label>
+          </div>
+          {errors.colors?.message && (
+            <p className="mt-2 text-sm text-red-500">{errors.colors.message}</p>
+          )}
           {showCustomColorInput && (
             <div className="mt-4 grid gap-4 md:grid-cols-2">
               <Input
@@ -837,37 +756,37 @@ const parseLocalDate = (dateStr: string): Date | undefined => {
           </p>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
-             <div>
-            <label className="mb-1 inline-block">Country</label>
-            <Controller
-              name="country"
-              control={control}
-              render={({ field }) => (
-                <Select
-                  options={countryOptions}
-                  classNamePrefix="react-select"
-                  styles={customSelectStyles}
-                  placeholder="Search Country"
-                  value={
-                    countryOptions.find(
-                      (option) => option.value === field.value,
-                    ) || null
-                  }
-                  onChange={(selected) => {
-                    field.onChange(selected?.value || "");
-                    setCountry(selected?.value || "");
-                    setState("");
-                    setCity("");
-                  }}
-                />
+            <div>
+              <label className="mb-1 inline-block">Country</label>
+              <Controller
+                name="country"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    options={countryOptions}
+                    classNamePrefix="react-select"
+                    styles={customSelectStyles}
+                    placeholder="Search Country"
+                    value={
+                      countryOptions.find(
+                        (option) => option.value === field.value,
+                      ) || null
+                    }
+                    onChange={(selected) => {
+                      field.onChange(selected?.value || "");
+                      setCountry(selected?.value || "");
+                      setState("");
+                      setCity("");
+                    }}
+                  />
+                )}
+              />
+              {errors.country && (
+                <p className="text-error dark:text-error-lighter mt-1 text-xs">
+                  {errors.country.message}
+                </p>
               )}
-            />
-            {errors.country && (
-              <p className="text-error dark:text-error-lighter mt-1 text-xs">
-                {errors.country.message}
-              </p>
-            )}
-          </div>
+            </div>
             <div>
               <label className="mb-1 block text-sm font-medium">
                 Available States <span className="text-red-500">*</span>
@@ -880,7 +799,7 @@ const parseLocalDate = (dateStr: string): Date | undefined => {
                     options={stateOptions}
                     isMulti
                     styles={customSelectStyles}
-                      classNamePrefix="react-select"
+                    classNamePrefix="react-select"
                     placeholder="Search State"
                     isDisabled={!country}
                     value={stateOptions.filter((option) =>
@@ -895,12 +814,12 @@ const parseLocalDate = (dateStr: string): Date | undefined => {
                 )}
               />
 
-              <p className="mt-1 text-xs text-gray-400">
+              {/* <p className="mt-1 text-xs text-gray-400">
                 Hold Ctrl/Cmd to select multiple
-              </p>
+              </p> */}
 
               {errors?.availableStates && (
-                <p className="mt-1 text-sm text-red-500">
+                <p className="text-error dark:text-error-lighter mt-1 text-xs">
                   {errors.availableStates.message}
                 </p>
               )}
@@ -918,7 +837,7 @@ const parseLocalDate = (dateStr: string): Date | undefined => {
                     options={cityOptions}
                     isMulti
                     styles={customSelectStyles}
-                      classNamePrefix="react-select"
+                    classNamePrefix="react-select"
                     placeholder="Search District"
                     isDisabled={!selectedStates.length}
                     value={cityOptions.filter((option) =>
@@ -932,37 +851,38 @@ const parseLocalDate = (dateStr: string): Date | undefined => {
                   />
                 )}
               />
-              
-              <p className="mt-1 text-xs text-gray-400">
+
+              {/* <p className="mt-1 text-xs text-gray-400">
                 Hold Ctrl/Cmd to select multiple
-              </p>
+              </p> */}
 
               {errors?.availableDistricts && (
-                <p className="mt-1 text-sm text-red-500">
+                <p className="text-error dark:text-error-lighter mt-1 text-xs">
                   {errors.availableDistricts.message}
                 </p>
               )}
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium">
+              {/* <label className="mb-1 block text-sm font-medium">
                 {" "}
                 Available Dealers <span className="text-red-500">*</span>{" "}
-              </label>
+              </label> */}
               <Controller
                 name="availableDealers"
                 control={control}
                 render={({ field }) => (
-                  <Select
-                    options={dealerOptions}
-                    isMulti
-                    styles={customSelectStyles}
-                      classNamePrefix="react-select"
-                    placeholder="Search Dealers"
-                    value={dealerOptions.filter((option) =>
+                  <Combobox
+                    data={dealerOptions}
+                    value={dealerOptions.filter((option: any) =>
                       field.value?.includes(option.value),
                     )}
-                    onChange={(selected: any) => {
+                    displayField="label"
+                    placeholder="Search Dealers"
+                    label="Available Dealers"
+                    multiple
+                    error={errors.availableDealers?.message}
+                    onChange={(selected: any[]) => {
                       field.onChange(
                         selected?.map((item: any) => item.value) || [],
                       );
@@ -970,15 +890,6 @@ const parseLocalDate = (dateStr: string): Date | undefined => {
                   />
                 )}
               />
-              <p className="mt-1 text-xs text-gray-400">
-                Hold Ctrl/Cmd to select multiple
-              </p>
-
-              {errors?.availableDealers && (
-                <p className="mt-1 text-sm text-red-500">
-                  {errors.availableDealers.message}
-                </p>
-              )}
             </div>
 
             <div>
@@ -986,25 +897,23 @@ const parseLocalDate = (dateStr: string): Date | undefined => {
                 name="stockStatus"
                 control={control}
                 render={({ field }) => (
-                  <Listbox
+                  <Combobox
                     data={stockStatusOptions}
                     value={
                       stockStatusOptions.find(
-                        (item) => item.value === field.value,
+                        (item: any) => item.value === field.value,
                       ) || null
                     }
-                    onChange={(option: any) => field.onChange(option?.value)}
                     displayField="label"
                     placeholder="Select Stock Status"
                     label="Stock Status"
+                    error={errors.stockStatus?.message}
+                    onChange={(option: any) => {
+                      field.onChange(option?.value ?? "");
+                    }}
                   />
                 )}
               />
-              {errors?.stockStatus && (
-                <p className="mt-1 text-sm text-red-500">
-                  {errors.stockStatus.message}
-                </p>
-              )}
             </div>
           </div>
         </div>
