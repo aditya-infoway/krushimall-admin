@@ -1,4 +1,3 @@
-// src/app/pages/purchase/tractor/purchaseitemlist.tsx
 import React, { useMemo, useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -469,6 +468,17 @@ const handleInwardSubmit = async () => {
     setIsView(true);
     setShowDrawer(true);
   };
+
+
+
+
+const toLocalDateString = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
   return (
     <div className="relative min-h-screen space-y-6 p-4 pb-28 text-gray-900 md:p-6 dark:text-gray-100">
       {/* Header */}
@@ -1066,10 +1076,10 @@ const handleInwardSubmit = async () => {
                       onChange={(selectedDates: Date[]) => {
                         if (selectedDates && selectedDates.length > 0) {
                           const date = selectedDates[0];
-                          const formattedDate =
-                            date instanceof Date
-                              ? date.toISOString().split("T")[0]
-                              : date;
+                         const formattedDate =
+  date instanceof Date
+    ? toLocalDateString(date)
+    : date;
                           setInwardData({
                             ...inwardData,
                             mfgDate: formattedDate as string,
@@ -1268,9 +1278,9 @@ const handleInwardSubmit = async () => {
                         if (selectedDates && selectedDates.length > 0) {
                           const date = selectedDates[0];
                           const formattedDate =
-                            date instanceof Date
-                              ? date.toISOString().split("T")[0]
-                              : date;
+  date instanceof Date
+    ? toLocalDateString(date)
+    : date;
                           setInwardData({
                             ...inwardData,
                             grnDate: formattedDate as string,
@@ -1297,10 +1307,10 @@ const handleInwardSubmit = async () => {
                       onChange={(selectedDates: Date[]) => {
                         if (selectedDates && selectedDates.length > 0) {
                           const date = selectedDates[0];
-                          const formattedDate =
-                            date instanceof Date
-                              ? date.toISOString().split("T")[0]
-                              : date;
+const formattedDate =
+  date instanceof Date
+    ? toLocalDateString(date)
+    : date;
                           setInwardData({
                             ...inwardData,
                             grnRecordDate: formattedDate as string,
