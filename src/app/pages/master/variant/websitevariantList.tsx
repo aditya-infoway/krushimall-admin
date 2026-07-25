@@ -33,15 +33,36 @@ import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 import { Button, Checkbox, Input } from "@/components/ui";
 import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/Table";
 import { Listbox } from "@/components/shared/form/StyledListbox";
-
+import { Combobox } from "@/components/shared/form/Combobox";
 // Dummy data structure matching the table design
 type WebsiteVariantType = {
   id: number;
-  category?: { categoryName: string };
-  brand?: { brandName: string };
-  model?: { modelName: string };
-  variant?: { variantName: string };
-  modelYear?: { year: number };
+
+  category?: {
+    id: number;
+    categoryName: string;
+  };
+
+  brand?: {
+    id: number;
+    brandName: string;
+  };
+
+  model?: {
+    id: number;
+    modelName: string;
+  };
+
+  modelYear?: {
+    id: number;
+    modelYear: number;
+  };
+
+  variant?: {
+    id: number;
+    variantName: string;
+  };
+
   productName: string;
   variantCode: string;
   status: string;
@@ -59,8 +80,8 @@ export default function WebsiteVariantList() {
   const navigate = useNavigate();
   const [showDrawer, setShowDrawer] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
-const [variants, setVariants] = useState<WebsiteVariantType[]>([]);
-const [loading, setLoading] = useState(false);
+  const [variants, setVariants] = useState<WebsiteVariantType[]>([]);
+  const [loading, setLoading] = useState(false);
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -73,68 +94,183 @@ const [loading, setLoading] = useState(false);
   const [selectedModelFilter, setSelectedModelFilter] = useState("All");
   // const [selectedYearFilter, setSelectedYearFilter] = useState("All");
   const [selectedStatusFilter, setSelectedStatusFilter] = useState("All");
-
+const [selectedCategoryFilter, setSelectedCategoryFilter] = useState("All");
+const [selectedYearFilter, setSelectedYearFilter] = useState("All");
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-const [confirmState, setConfirmState] = useState<"pending" | "success" | "error">("pending");
-const [confirmLoading, setConfirmLoading] = useState(false);
-const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
-const [isBulkDelete, setIsBulkDelete] = useState(false);
+  const [confirmState, setConfirmState] = useState<
+    "pending" | "success" | "error"
+  >("pending");
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+  const [isBulkDelete, setIsBulkDelete] = useState(false);
+type FilterOption = {
+  id: string;
+  name: string;
+};
 
-  // Selection states
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
-const fetchVariants = async () => {
+const [categories, setCategories] = useState<FilterOption[]>([]);
+const [brands, setBrands] = useState<FilterOption[]>([]);
+const [models, setModels] = useState<FilterOption[]>([]);
+const [modelYears, setModelYears] = useState<FilterOption[]>([]);
+const getCategories = async () => {
   try {
-    setLoading(true);
+    const res = await apiHelper.get("/category");
+    const data = res?.data || res;
 
-    const res = await apiHelper.get("/website-variants");
-
-    setVariants(res.data.data || res.data);
-    
-  } catch (error) {
-    console.error("Error fetching website variants:", error);
-  } finally {
-    setLoading(false);
+    setCategories(
+      (Array.isArray(data) ? data : []).map((item: any) => ({
+        id: item.id,
+        name: item.categoryName,
+      }))
+    );
+  } catch {
+    setCategories([]);
   }
 };
 
-useEffect(() => {
-  fetchVariants();
-}, []);
-  // Filter logic
-const filteredData = variants.filter((item) => {
-   const matchesSearch =
-  item.productName
-    ?.toLowerCase()
-    .includes(search.toLowerCase()) ||
-  item.variant?.variantName
-    ?.toLowerCase()
-    .includes(search.toLowerCase()) ||
-  item.variantCode
-    ?.toLowerCase()
-    .includes(search.toLowerCase()) ||
-  item.brand?.brandName
-    ?.toLowerCase()
-    .includes(search.toLowerCase()) ||
-  item.model?.modelName
-    ?.toLowerCase()
-    .includes(search.toLowerCase());
+const getBrands = async () => {
+  try {
+    const res = await apiHelper.get("/brand");
+    const data = res?.data || res;
 
-  
-    const matchesBrandDropdown =
-      selectedBrandFilter === "All" || item.brand?.brandName === selectedBrandFilter;
-    const matchesModelDropdown =
-      selectedModelFilter === "All" || item.model?.modelName === selectedModelFilter;
-   
+    setBrands(
+      (Array.isArray(data) ? data : []).map((item: any) => ({
+        id: item.id,
+        name: item.brandName,
+      }))
+    );
+  } catch {
+    setBrands([]);
+  }
+};
+
+const getModels = async () => {
+  try {
+    const res = await apiHelper.get("/model");
+    const data = res?.data || res;
+
+    setModels(
+      (Array.isArray(data) ? data : []).map((item: any) => ({
+        id: item.id,
+        name: item.modelName,
+      }))
+    );
+  } catch {
+    setModels([]);
+  }
+};
+
+const getModelYears = async () => {
+  try {
+    const res = await apiHelper.get("/model-year");
+    const data = res?.data || res;
+
+    setModelYears(
+      (Array.isArray(data) ? data : []).map((item: any) => ({
+        id: item.id,
+        name: item.modelYear,
+      }))
+    );
+  } catch {
+    setModelYears([]);
+  }
+};
+useEffect(() => {
+  getCategories();
+  getBrands();
+  getModels();
+  getModelYears();
+}, []);
+  // Selection states
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const fetchVariants = async () => {
+    try {
+      setLoading(true);
+
+      const res = await apiHelper.get("/website-variants");
+
+      setVariants(res.data.data || res.data);
+    } catch (error) {
+      console.error("Error fetching website variants:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchVariants();
+  }, []);
+ const categoryOptions = [
+  { id: "All", name: "All Categories" },
+  ...categories.map((c: any) => ({
+    id: String(c.id),
+    name: c.name,
+  })),
+];
+
+const brandOptions = [
+  { id: "All", name: "All Brands" },
+  ...brands.map((b: any) => ({
+    id: String(b.id),
+    name: b.name,
+  })),
+];
+
+const modelOptions = [
+  { id: "All", name: "All Models" },
+  ...models.map((m: any) => ({
+    id: String(m.id),
+    name: m.name,
+  })),
+];
+
+const yearFilterOptions = [
+  { id: "All", name: "All Years" },
+  ...modelYears.map((y: any) => ({
+    id: String(y.id),
+    name: String(y.name),
+  })),
+];
+
+const statusFilterOptions = [
+  { id: "All", name: "All" },
+  { id: "ACTIVE", name: "ACTIVE" },
+  { id: "INACTIVE", name: "INACTIVE" },
+];
+  // Filter logic
+  const filteredData = variants.filter((item) => {
+    const matchesSearch =
+      item.productName?.toLowerCase().includes(search.toLowerCase()) ||
+      item.variant?.variantName?.toLowerCase().includes(search.toLowerCase()) ||
+      item.variantCode?.toLowerCase().includes(search.toLowerCase()) ||
+      item.brand?.brandName?.toLowerCase().includes(search.toLowerCase()) ||
+      item.model?.modelName?.toLowerCase().includes(search.toLowerCase());
+const matchesCategoryDropdown =
+  selectedCategoryFilter === "All" ||
+  String(item.category?.id) === selectedCategoryFilter;
+
+const matchesBrandDropdown =
+  selectedBrandFilter === "All" ||
+  String(item.brand?.id) === selectedBrandFilter;
+
+const matchesModelDropdown =
+  selectedModelFilter === "All" ||
+  String(item.model?.id) === selectedModelFilter;
+
+const matchesYearDropdown =
+  selectedYearFilter === "All" ||
+  String(item.modelYear?.id) === selectedYearFilter;;
+
     const matchesStatusDropdown =
       selectedStatusFilter === "All" ||
       String(item.status) === selectedStatusFilter;
 
     return (
       matchesSearch &&
-      // matchesCategoryDropdown &&
+      matchesCategoryDropdown &&
       matchesBrandDropdown &&
       matchesModelDropdown &&
-      // matchesYearDropdown &&
+      matchesYearDropdown &&
       matchesStatusDropdown
     );
   });
@@ -165,87 +301,84 @@ const filteredData = variants.filter((item) => {
     setSelectedIds((prev) =>
       prev.includes(id)
         ? prev.filter((selectedId) => selectedId !== id)
-        : [...prev, id]
+        : [...prev, id],
     );
   };
 
   // CRUD handlers (dummy implementations)
 
+  const handleEdit = (item: WebsiteVariantType) => {
+    navigate(`/master/variant/website/create?id=${item.id}`);
+  };
 
- const handleEdit = (item: WebsiteVariantType) => {
-  navigate(`/master/variant/website/create?id=${item.id}`);
-};
+  const handleDelete = (id: number) => {
+    setDeleteTargetId(id);
+    setIsBulkDelete(false);
+    setConfirmState("pending");
+    setShowConfirmModal(true);
+  };
 
- const handleDelete = (id: number) => {
-  setDeleteTargetId(id);
-  setIsBulkDelete(false);
-  setConfirmState("pending");
-  setShowConfirmModal(true);
-};
+  const handleBulkDelete = () => {
+    setIsBulkDelete(true);
+    setConfirmState("pending");
+    setShowConfirmModal(true);
+  };
 
- const handleBulkDelete = () => {
-  setIsBulkDelete(true);
-  setConfirmState("pending");
-  setShowConfirmModal(true);
-};
-
-
-const performDelete = async () => {
-  setConfirmLoading(true);
-  try {
-    if (isBulkDelete) {
-      await apiHelper.post("/website-variants/bulk-delete", {
-        ids: selectedIds,
-      });
-      toast.success(`${selectedIds.length} website variants deleted successfully!`);
-      await fetchVariants();
-      setSelectedIds([]);
-      setCurrentPage(1);
-      setConfirmState("success");
-    } else {
-      if (deleteTargetId === null) return;
-      await apiHelper.delete(`/website-variants/${deleteTargetId}`);
-      toast.success("Website variant deleted successfully!");
-      await fetchVariants();
-      setSelectedIds((prev) => prev.filter((id) => id !== deleteTargetId));
-      setDeleteTargetId(null);
-      setConfirmState("success");
+  const performDelete = async () => {
+    setConfirmLoading(true);
+    try {
+      if (isBulkDelete) {
+        await apiHelper.post("/website-variants/bulk-delete", {
+          ids: selectedIds,
+        });
+        toast.success(
+          `${selectedIds.length} website variants deleted successfully!`,
+        );
+        await fetchVariants();
+        setSelectedIds([]);
+        setCurrentPage(1);
+        setConfirmState("success");
+      } else {
+        if (deleteTargetId === null) return;
+        await apiHelper.delete(`/website-variants/${deleteTargetId}`);
+        toast.success("Website variant deleted successfully!");
+        await fetchVariants();
+        setSelectedIds((prev) => prev.filter((id) => id !== deleteTargetId));
+        setDeleteTargetId(null);
+        setConfirmState("success");
+      }
+      setTimeout(() => setShowConfirmModal(false), 1500);
+    } catch (error: any) {
+      console.error("Delete failed:", error);
+      setConfirmState("error");
+      toast.error(
+        error.response?.data?.message || "Failed to delete. Please try again.",
+      );
+    } finally {
+      setConfirmLoading(false);
     }
-    setTimeout(() => setShowConfirmModal(false), 1500);
-  } catch (error: any) {
-    console.error("Delete failed:", error);
-    setConfirmState("error");
-    toast.error(error.response?.data?.message || "Failed to delete. Please try again.");
-  } finally {
-    setConfirmLoading(false);
-  }
-};
+  };
 
- const handleToggleStatus = async (id: number) => {
-  try {
-    setVariants((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              status:
-                item.status === "ACTIVE"
-                  ? "INACTIVE"
-                  : "ACTIVE",
-            }
-          : item
-      )
-    );
+  const handleToggleStatus = async (id: number) => {
+    try {
+      setVariants((prev) =>
+        prev.map((item) =>
+          item.id === id
+            ? {
+                ...item,
+                status: item.status === "ACTIVE" ? "INACTIVE" : "ACTIVE",
+              }
+            : item,
+        ),
+      );
 
-    await apiHelper.patch(
-      `/website-variants/${id}/toggle-status`
-    );
-  } catch (error) {
-    console.error("Toggle failed:", error);
+      await apiHelper.patch(`/website-variants/${id}/toggle-status`);
+    } catch (error) {
+      console.error("Toggle failed:", error);
 
-    fetchVariants(); // reload old data if API fails
-  }
-};
+      fetchVariants(); // reload old data if API fails
+    }
+  };
 
   return (
     <div className="relative min-h-screen space-y-6 p-4 pb-28 text-gray-900 md:p-6 dark:text-gray-100">
@@ -253,60 +386,60 @@ const performDelete = async () => {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-xl font-semibold text-gray-900 md:text-2xl dark:text-white">
-          Website Variant List
+            Website Variant List
           </h1>
           <p className="dark:text-dark-300 mt-1 text-sm text-gray-500">
-           Manage all website variants from here
+            Manage all website variants from here
           </p>
         </div>
-
         <div className="flex flex-wrap items-center justify-between gap-2 md:flex-nowrap">
-  {/* Left side - Filter and icons */}
-  <div className="flex items-center gap-2">
-    <button
-      type="button"
-      onClick={() => setShowFilterBar(!showFilterBar)}
-      className={`inline-flex items-center gap-1.5 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
-        showFilterBar
-          ? "bg-primary-50 border-primary-200 text-primary-600 dark:bg-dark-600 dark:border-dark-500 dark:text-white"
-          : "dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
-      }`}
-    >
-      <FunnelIcon className="size-4.5" />
-      <span className="hidden sm:inline">Filter</span>
-    </button>
+          {/* Left side - Filter and icons */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowFilterBar(!showFilterBar)}
+              className={`inline-flex items-center gap-1.5 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
+                showFilterBar
+                  ? "bg-primary-50 border-primary-200 text-primary-600 dark:bg-dark-600 dark:border-dark-500 dark:text-white"
+                  : "dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              <FunnelIcon className="size-4.5" />
+              <span className="hidden sm:inline">Filter</span>
+            </button>
 
-    <button
-      type="button"
-      className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
-    >
-      <RiFileExcel2Fill className="text-lg text-green-500" />
-    </button>
+            <button
+              type="button"
+              className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            >
+              <RiFileExcel2Fill className="text-lg text-green-500" />
+            </button>
 
-    <button
-      type="button"
-      className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
-    >
-      <RiFilePdfFill className="text-lg text-red-500" />
-    </button>
-  </div>
+            <button
+              type="button"
+              className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            >
+              <RiFilePdfFill className="text-lg text-red-500" />
+            </button>
+          </div>
 
-  {/* Right side - Add Website Variant button */}
-  <Button
-    color="primary"
-    onClick={() => navigate("/master/variant/website/create")}
-    className="whitespace-nowrap"
-  >
-    Add Website Variant
-  </Button>
-</div>      </div>
+          {/* Right side - Add Website Variant button */}
+          <Button
+            color="primary"
+            onClick={() => navigate("/master/variant/website/create")}
+            className="whitespace-nowrap"
+          >
+            Add Website Variant
+          </Button>
+        </div>{" "}
+      </div>
 
       {/* Global Context Search Box */}
       <div className="relative w-full max-w-md">
         <MagnifyingGlassIcon className="absolute top-1/2 left-3 size-4.5 -translate-y-1/2 text-gray-400" />
         <input
           type="text"
-        placeholder="Search product, variant, model..."
+          placeholder="Search product, variant, model..."
           value={search}
           onChange={(e) => {
             setSearch(e.target.value);
@@ -317,14 +450,14 @@ const performDelete = async () => {
       </div>
 
       {/* Five Dropdown Filters */}
-      {/* {showFilterBar && (
+      {showFilterBar && (
         <div className="dark:bg-dark-700 dark:border-dark-500 animate-in fade-in slide-in-from-top-2 rounded-xl border border-gray-200 bg-white p-4 transition-all duration-150">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
             <div className="flex flex-col gap-1">
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
                 Category
               </span>
-              <Listbox
+              <Combobox
                 data={categoryOptions}
                 value={
                   categoryOptions.find(
@@ -343,7 +476,7 @@ const performDelete = async () => {
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
                 Brand
               </span>
-              <Listbox
+              <Combobox
                 data={brandOptions}
                 value={
                   brandOptions.find(
@@ -362,7 +495,7 @@ const performDelete = async () => {
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
                 Model
               </span>
-              <Listbox
+              <Combobox
                 data={modelOptions}
                 value={
                   modelOptions.find(
@@ -381,7 +514,7 @@ const performDelete = async () => {
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
                 Year
               </span>
-              <Listbox
+              <Combobox
                 data={yearFilterOptions}
                 value={
                   yearFilterOptions.find(
@@ -400,7 +533,7 @@ const performDelete = async () => {
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
                 Status
               </span>
-              <Listbox
+              <Combobox
                 data={statusFilterOptions}
                 value={
                   statusFilterOptions.find(
@@ -416,14 +549,14 @@ const performDelete = async () => {
             </div>
           </div>
         </div>
-      )} */}
+      )}
 
       {/* Main Table Layout Panel Container */}
       <div className="dark:bg-dark-800 dark:border-dark-700 rounded-xl border border-gray-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
           <Table
             hoverable
-            className="w-full min-w-[800px] text-left [&_.table-th]:font-semibold"
+            className="w-full min-w-200 text-left [&_.table-th]:font-semibold"
           >
             <THead className="dark:bg-dark-700/60 dark:border-dark-600 border-b border-gray-200 bg-gray-100">
               <Tr>
@@ -435,48 +568,48 @@ const performDelete = async () => {
                   />
                 </Th>
                 <Th className="w-16 py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-  S.No
-</Th>
+                  S.No
+                </Th>
 
-<Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-  Category
-</Th>
+                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                  Category
+                </Th>
 
-<Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-  Brand
-</Th>
+                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                  Brand
+                </Th>
 
-<Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-  Model
-</Th>
+                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                  Model
+                </Th>
 
-<Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-  Variant Name
-</Th>
+                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                  Variant Name
+                </Th>
 
-<Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-  Variant Code
-</Th>
+                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                  Variant Code
+                </Th>
 
-<Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-  Model Year
-</Th>
+                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                  Model Year
+                </Th>
 
-<Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-  Product Name
-</Th>
+                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                  Product Name
+                </Th>
 
-<Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-  Status
-</Th>
+                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                  Status
+                </Th>
 
-<Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-  Created
-</Th>
+                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                  Created
+                </Th>
 
-<Th className="w-20 py-3.5 text-center text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-  Actions
-</Th>
+                <Th className="w-20 py-3.5 text-center text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                  Actions
+                </Th>
               </Tr>
             </THead>
 
@@ -487,12 +620,9 @@ const performDelete = async () => {
                   <Tr
                     key={item.id}
                     className={`${
-                      isRowSelected
-                        ? "dark:bg-dark-600/30 bg-gray-50/50"
-                        : ""
+                      isRowSelected ? "dark:bg-dark-600/30 bg-gray-50/50" : ""
                     } dark:hover:bg-dark-700/40 transition-colors hover:bg-gray-50/30`}
                   >
-                    
                     <Td className="py-4 text-center">
                       <Checkbox
                         className="size-4.5"
@@ -500,35 +630,36 @@ const performDelete = async () => {
                         onChange={() => handleSelectRow(item.id)}
                       />
                     </Td>
-                    <Td className="font-medium text-gray-500 py-4">
+                    <Td className="py-4 font-medium text-gray-500">
                       {indexOfFirstItem + index + 1}
                     </Td>
-                    <Td className="text-gray-600 dark:text-dark-200 py-4">
-  {item.category?.categoryName}
-</Td>
+                    <Td className="dark:text-dark-200 py-4 text-gray-600">
+                      {item.category?.categoryName}
+                    </Td>
 
-<Td className="text-gray-600 dark:text-dark-200 py-4">
-  {item.brand?.brandName}
-</Td>
+                    <Td className="dark:text-dark-200 py-4 text-gray-600">
+                      {item.brand?.brandName}
+                    </Td>
 
-<Td className="text-gray-600 dark:text-dark-200 py-4">
-  {item.model?.modelName}
-</Td>
+                    <Td className="dark:text-dark-200 py-4 text-gray-600">
+                      {item.model?.modelName}
+                    </Td>
 
-<Td className="text-gray-600 dark:text-dark-200 py-4">
-  {item.variant?.variantName}
-</Td>
+                    <Td className="dark:text-dark-200 py-4 text-gray-600">
+                      {item.variant?.variantName}
+                    </Td>
 
-<Td className="text-gray-600 dark:text-dark-200 py-4">
-  {item.variantCode}
-</Td>
+                    <Td className="dark:text-dark-200 py-4 text-gray-600">
+                      {item.variantCode}
+                    </Td>
 
-<Td className="text-gray-600 dark:text-dark-200 py-4">
-{item.modelYear?.year || "-"}</Td>
+                    <Td className="dark:text-dark-200 py-4 text-gray-600">
+                      {item.modelYear?.modelYear || "-"}
+                    </Td>
 
-<Td className="font-medium text-gray-900 dark:text-gray-400 py-4">
-  {item.productName}
-</Td>
+                    <Td className="py-4 font-medium text-gray-900 dark:text-gray-400">
+                      {item.productName}
+                    </Td>
                     <Td className="py-4">
                       <button
                         type="button"
@@ -536,24 +667,25 @@ const performDelete = async () => {
                         className={`relative h-6 w-12 rounded-full transition-all ${
                           item.status === "ACTIVE"
                             ? "bg-primary-500"
-                            : "bg-gray-300 dark:bg-dark-600"
+                            : "dark:bg-dark-600 bg-gray-300"
                         }`}
                       >
                         <span
                           className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${
-                            item.status === "ACTIVE"
-                              ? "left-6.5"
-                              : "left-0.5"
+                            item.status === "ACTIVE" ? "left-6.5" : "left-0.5"
                           }`}
                         />
                       </button>
                     </Td>
-                    <Td className="text-gray-500 dark:text-gray-400 py-4">
+                    <Td className="py-4 text-gray-500 dark:text-gray-400">
                       {new Date(item.createdAt).toLocaleDateString("en-IN")}
                     </Td>
-                    <Td className="text-center py-4">
-                      <Menu as="div" className="relative inline-block text-left">
-                        <MenuButton className="inline-flex size-8 items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-dark-600 transition-colors text-gray-500 dark:text-dark-200">
+                    <Td className="py-4 text-center">
+                      <Menu
+                        as="div"
+                        className="relative inline-block text-left"
+                      >
+                        <MenuButton className="dark:hover:bg-dark-600 dark:text-dark-200 inline-flex size-8 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-100">
                           <EllipsisHorizontalIcon className="size-5" />
                         </MenuButton>
                         <Transition
@@ -567,7 +699,7 @@ const performDelete = async () => {
                         >
                           <MenuItems
                             anchor="bottom end"
-                            className="dark:bg-dark-800 dark:ring-dark-500 dark:border-dark-500 z-[100] w-36 rounded-lg border border-gray-100 bg-white p-1 shadow-lg ring-1 ring-black/5 [--anchor-gap:4px] focus:outline-none"
+                            className="dark:bg-dark-800 dark:ring-dark-500 dark:border-dark-500 z-100 w-36 rounded-lg border border-gray-100 bg-white p-1 shadow-lg ring-1 ring-black/5 [--anchor-gap:4px] focus:outline-none"
                           >
                             <MenuItem>
                               {({ active }) => (
@@ -659,7 +791,7 @@ const performDelete = async () => {
                   >
                     <MenuItems
                       anchor="top start"
-                      className="dark:bg-dark-700 dark:border-dark-600 z-[200] w-20 space-y-0.5 rounded-lg border border-gray-200 bg-white p-1 shadow-xl ring-1 ring-black/5 [--anchor-gap:6px] focus:outline-none"
+                      className="dark:bg-dark-700 dark:border-dark-600 z-200 w-20 space-y-0.5 rounded-lg border border-gray-200 bg-white p-1 shadow-xl ring-1 ring-black/5 [--anchor-gap:6px] focus:outline-none"
                     >
                       {entriesOptions.map((opt) => (
                         <MenuItem key={opt.id}>
@@ -733,7 +865,7 @@ const performDelete = async () => {
                     >
                       {page}
                     </button>
-                  )
+                  ),
                 )}
 
                 <button
@@ -783,41 +915,42 @@ const performDelete = async () => {
           </div>
         </div>
       )}
-{/* Confirmation Modal */}
-<ConfirmModal
-  show={showConfirmModal}
-  onClose={() => {
-    setShowConfirmModal(false);
-    setDeleteTargetId(null);
-    setConfirmState("pending");
-  }}
-  onOk={performDelete}
-  confirmLoading={confirmLoading}
-  state={confirmState}
-  messages={{
-    pending: {
-      Icon: ExclamationTriangleIcon,
-      title: isBulkDelete ? "Delete Selected Website Variants?" : "Are you sure?",
-      description: isBulkDelete 
-        ? `Are you sure you want to delete ${selectedIds.length} selected website variants? This action cannot be undone.`
-        : "Are you sure you want to delete this website variant? Once deleted, it cannot be restored.",
-      actionText: isBulkDelete ? "Delete All" : "Delete",
-    },
-    success: {
-      title: "Deleted Successfully",
-      description: isBulkDelete 
-        ? `${selectedIds.length} website variants have been deleted.`
-        : "The website variant has been deleted.",
-      actionText: "Done",
-    },
-    error: {
-      title: "Delete Failed",
-      description: "Failed to delete. Please try again.",
-      actionText: "Try Again",
-    },
-  }}
-/>
-  
+      {/* Confirmation Modal */}
+      <ConfirmModal
+        show={showConfirmModal}
+        onClose={() => {
+          setShowConfirmModal(false);
+          setDeleteTargetId(null);
+          setConfirmState("pending");
+        }}
+        onOk={performDelete}
+        confirmLoading={confirmLoading}
+        state={confirmState}
+        messages={{
+          pending: {
+            Icon: ExclamationTriangleIcon,
+            title: isBulkDelete
+              ? "Delete Selected Website Variants?"
+              : "Are you sure?",
+            description: isBulkDelete
+              ? `Are you sure you want to delete ${selectedIds.length} selected website variants? This action cannot be undone.`
+              : "Are you sure you want to delete this website variant? Once deleted, it cannot be restored.",
+            actionText: isBulkDelete ? "Delete All" : "Delete",
+          },
+          success: {
+            title: "Deleted Successfully",
+            description: isBulkDelete
+              ? `${selectedIds.length} website variants have been deleted.`
+              : "The website variant has been deleted.",
+            actionText: "Done",
+          },
+          error: {
+            title: "Delete Failed",
+            description: "Failed to delete. Please try again.",
+            actionText: "Try Again",
+          },
+        }}
+      />
     </div>
   );
 }

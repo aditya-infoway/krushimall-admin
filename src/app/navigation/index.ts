@@ -13,7 +13,7 @@ import { bookregister } from "./segments/bookregister";
 import { ledgerreport } from "./segments/ledgerreport";
 import { bookingbalance } from "./segments/bookingbalance";
 import { stocktransfer } from "./segments/stocktransfer";
-
+import { allot } from "./segments/allot";
 
 export const navigation = [
   dashboards,
@@ -29,6 +29,7 @@ export const navigation = [
   ledgerreport,
   bookingbalance,
   goodcontrol,
+  allot,
   report,
   followups,
   

@@ -58,9 +58,9 @@ customColorName: "",
 customColorCode: "#ff0000",
 showCustomColor: false,
   // Dealer Availability
-  availableStates: "",
-  availableDistricts: "",
-  availableDealers: [],
+  availableStates: [],
+availableDistricts: [],
+availableDealers: [],
   stockStatus: "",
   
   // SEO Details
@@ -161,14 +161,14 @@ HydraulicTyres: {
 },
     PriceLocation: {
   // Pricing Details
-  exShowroomPrice: 0,
+  exShowroomPrice: null,
   onRoadPrice: null,
   currency: "INR",
   gst: 18,
   tcsApplicable: "no",
   tcsPercentage: null,
-  financeAvailable: "",
-  emiAvailable: "",
+  financeAvailable:"yes",
+  emiAvailable: "yes",
   downPayment: null,
   offerPrice: null,
   negotiable: "no",
