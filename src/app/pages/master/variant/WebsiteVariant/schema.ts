@@ -21,7 +21,9 @@ productName : Yup.string().required("Tractor Product Name is required"),
   skuCode: Yup.string().trim(),
   launchYear: Yup.string().nullable(),
   modelYearId: Yup.string().required("Model Year is required"),
-  country: Yup.string().trim("Country is required "),
+  country: Yup.string()
+  .trim()
+  .required("Country is required"),
   tractorStatus: Yup.string().trim().required("Tractor Status Required"),
   
   // Short Description
@@ -37,7 +39,8 @@ productName : Yup.string().required("Tractor Product Name is required"),
   }),
   
   // Available Colors
-  colors: Yup.object().shape({
+ colors: Yup.object()
+  .shape({
     red: Yup.boolean(),
     blue: Yup.boolean(),
     green: Yup.boolean(),
@@ -45,7 +48,16 @@ productName : Yup.string().required("Tractor Product Name is required"),
     black: Yup.boolean(),
     white: Yup.boolean(),
     custom: Yup.boolean(),
-  }),
+  })
+  .test(
+    "at-least-one-color",
+    "Please select at least one color",
+    (value) => {
+      if (!value) return false;
+
+      return Object.values(value).some((selected) => selected === true);
+    }
+  ),
   customColorName: Yup.string().when("colors.custom", {
   is: true,
   then: (schema) =>
@@ -64,17 +76,19 @@ showCustomColor: Yup.boolean(),
   
   // Dealer Availability
   availableStates: Yup.array()
-    .of(Yup.string())
-    .min(1, "Please select at least one state")
-    .required("Available States Required"),
-  availableDistricts: Yup.array()
-    .of(Yup.string())
-    .min(1, "Please select at least one district")
-    .required("Available Districts Required"),
-  availableDealers: Yup.array()
-    .of(Yup.string())
-    .min(1, "Please select at least one dealer")
-    .required("Available Dealers Required"),
+  .ensure()
+  .of(Yup.string())
+  .min(1, "Please select at least one state"),
+
+availableDistricts: Yup.array()
+  .ensure()
+  .of(Yup.string())
+  .min(1, "Please select at least one district"),
+
+availableDealers: Yup.array()
+  .ensure()
+  .of(Yup.string())
+  .min(1, "Please select at least one dealer"),
   stockStatus: Yup.string().trim().required("Stock Status Required"),
   
   // SEO Details
@@ -204,10 +218,13 @@ draftSensitivity: Yup.string().required("Please select draft sensitivity"),
 });
 export const PriceLocationSchema = Yup.object().shape({
   // Pricing Details
-  exShowroomPrice: Yup.number()
-    .typeError("Ex-Showroom Price must be a number")
-    .positive("Ex-Showroom Price must be positive")
-    .required("Ex-Showroom Price Required"),
+exShowroomPrice: Yup.number()
+  .transform((value, originalValue) =>
+    originalValue === "" ? undefined : value
+  )
+  .typeError("Ex-Showroom Price must be a number")
+  .required("Ex-Showroom Price Required")
+  .moreThan(0, "Ex-Showroom Price must be greater than 0"),
   onRoadPrice: Yup.number()
     .typeError("On-Road Price must be a number")
     .positive("On-Road Price must be positive")
@@ -253,7 +270,7 @@ export const PriceLocationSchema = Yup.object().shape({
   negotiable: Yup.string().trim().oneOf(["yes", "no"]),
   
   // Location Details
-    country: Yup.string().trim("Country is required "),
+    country: Yup.string().trim().required("Country is required "),
   state: Yup.string().trim().required("State Required"),
   district: Yup.string().trim().required("District Required"),
   taluka: Yup.string().trim(),
@@ -358,9 +375,9 @@ customColorCode?: string | null;
 showCustomColor?: boolean;
   
   // Dealer Availability
-  availableStates: string;
-  availableDistricts: string;
-  availableDealers: string[];
+ availableStates: string[];
+availableDistricts: string[];
+availableDealers: string[];
   stockStatus: string;
   
   // SEO Details
@@ -469,7 +486,7 @@ draftSensitivity?: string;
 
 export type PriceLocationType = {
   // Pricing Details
-  exShowroomPrice: number;
+  exShowroomPrice: number | null;
   onRoadPrice?: number | null;
   currency: string;
   gst?: number | null;

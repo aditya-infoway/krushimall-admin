@@ -71,12 +71,14 @@ const DatePicker = forwardRef<FlatpickrRef, DatePickerProps>(
       loadLocale();
     }, [locale]);
 
-    const options = {
-      dateFormat: "d-m-Y",
-      inline: isCalendar,
-      locale: localeData,
-      ...userOptions,
-    };
+   const options = {
+  dateFormat: "Y-m-d",       // matches what onChange stores (toISOString) — fixes the parse mismatch
+  altInput: true,             // shows a separate, nicely formatted input to the user
+  altFormat: "d-m-Y",         // what the user sees: DD-MM-YYYY, e.g. 25-07-2026
+  inline: isCalendar,
+  locale: localeData,
+  ...userOptions,
+};
 
     const mergedRef = useMergedRef(flatpickrRef, ref);
 
