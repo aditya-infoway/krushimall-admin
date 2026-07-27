@@ -237,18 +237,28 @@ const AccessoriesHistory = () => {
                       <td className="px-4 py-3">{row.reference}</td>
 
                       <td className="px-4 py-3 text-end font-semibold text-green-600">
-                        {row.qtyIn}
+                        {row.qtyIn > 0 ? (
+                          <span className="text-green-500">+{row.qtyIn}</span>
+                        ) : (
+                          <span className="text-red-500">-{row.qtyOut}</span>
+                        )}
                       </td>
 
                       <td className="px-4 py-3 text-end">
-                        ₹
-                        {Number(row.billAmount).toLocaleString("en-IN", {
-                          minimumFractionDigits: 2,
-                        })}
+                     {row.billAmount != null ? (
+  <>
+    ₹
+    {Number(row.billAmount).toLocaleString("en-IN", {
+      minimumFractionDigits: 2,
+    })}
+  </>
+) : (
+  "-"
+)}
                       </td>
 
                       <td className="px-4 py-3 text-end font-bold">
-                        {row.balance}
+                        {row.balance || "-"}
                       </td>
 
                       <td className="px-4 py-3">{row.createdBy}</td>

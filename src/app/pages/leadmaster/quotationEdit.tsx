@@ -163,15 +163,30 @@ const QuotationEdit = () => {
       if (lead.showroomVariant) {
         setShowroomVariant(lead.showroomVariant);
 
-        setAccessories(
-          (lead.showroomVariant.accessories || []).map((item: any) => ({
-            ...item,
-            name:
-              item.accessory?.itemName || item.accessory?.accessoryName || "",
-            quantity: item.qty || 1,
-            selected: true,
-          })),
-        );
+       const selectedAccessories = lead.selectedAccessories || [];
+
+const hasSavedAccessories = selectedAccessories.length > 0;
+
+setAccessories(
+  (lead.showroomVariant.accessories || []).map((item: any) => {
+    const selected = selectedAccessories.find(
+      (a: any) => Number(a.accessoryId) === Number(item.accessoryId)
+    );
+
+    return {
+      ...item,
+      name:
+        item.accessory?.itemName ||
+        item.accessory?.accessoryName ||
+        "",
+      quantity: item.qty || 1,
+
+      // First quotation -> all ON
+      // Edited quotation -> use saved state
+      selected: hasSavedAccessories ? !!selected : true,
+    };
+  })
+);
       }
     } catch (error) {
       console.error(error);

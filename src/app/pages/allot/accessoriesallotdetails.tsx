@@ -1,3 +1,4 @@
+// src/app/pages/allot/AccessoriesAllotDetail.tsx
 import React, { useMemo, useState, useEffect } from "react";
 import {
   MagnifyingGlassIcon,
@@ -6,20 +7,26 @@ import {
   ChevronRightIcon,
   ArrowLeftIcon,
   EyeIcon,
+  XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/Table";
 import { Listbox } from "@/components/shared/form/StyledListbox";
 import apiHelper from "@/utils/apiHelper";
 import { useNavigate, useParams } from "react-router-dom";
+import AccessoryPurchaseHistory from "./AccessoryPurchaseHistory";
+import { toast } from "sonner";
+import { DatePicker } from "@/components/shared/form/Datepicker";
 
+import { useForm, Controller } from "react-hook-form";
 // ---------- Types ----------
 interface AccessoryItem {
-  id: number;
+  id: number; // OrderAccessory ID
+  itemId: number; // Accessory ID
   itemName: string;
   itemCode: string;
   hsnCode: string;
   selectedStock: number;
-  taxRate: number;
+  tax: number;
   salesPrice: number;
   status: string;
 }
@@ -36,6 +43,9 @@ interface AccessoryAllotmentDetail {
   variant: string;
   color: string;
   chassisNo: string;
+  accessoriesAllotStatus: string;
+  invoiceNo?: string;
+  invoiceDate?: string;
   accessories: AccessoryItem[];
 }
 
@@ -67,15 +77,31 @@ const columns = [
 ];
 
 const AccessoriesAllotDetail: React.FC = () => {
+  const { control, register, handleSubmit,  setValue, } = useForm({
+    defaultValues: {
+      invoiceNo: "",
+      invoiceDate: "",
+    },
+  });
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  
+  const [showInvoiceDrawer, setShowInvoiceDrawer] = useState(false);
+
+  // const [invoiceNo, setInvoiceNo] = useState("");
+  // const [invoiceDate, setInvoiceDate] = useState<Date | null>(new Date());
   const [search, setSearch] = useState("");
   const [rowsPerPage, setRowsPerPage] = useState(15);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedStatus, setSelectedStatus] = useState("all");
-  const [detailData, setDetailData] = useState<AccessoryAllotmentDetail | null>(null);
+  const [detailData, setDetailData] = useState<AccessoryAllotmentDetail | null>(
+    null,
+  );
   const [loading, setLoading] = useState(true);
+  const isSaved =
+    detailData?.accessoriesAllotStatus?.toLowerCase() === "completed";
+  // State for history modal
+  const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
 
   // Fetch accessory items for this allotment
   const fetchAccessoryItems = async () => {
@@ -84,6 +110,14 @@ const AccessoriesAllotDetail: React.FC = () => {
       const res = await apiHelper.get(`/orders/accessories-allot/${id}`);
       console.log("Accessory items detail:", res.data);
       setDetailData(res.data || null);
+      // Pre-fill invoice data if exists
+    if (res.data?.invoiceNo) {
+  setValue("invoiceNo", res.data.invoiceNo);
+}
+
+if (res.data?.invoiceDate) {
+  setValue("invoiceDate", res.data.invoiceDate);
+}
     } catch (error: any) {
       console.error(
         "Failed to fetch accessory items:",
@@ -124,11 +158,33 @@ const AccessoriesAllotDetail: React.FC = () => {
     return result;
   }, [detailData, search, selectedStatus]);
 
+  const allCompleted =
+    !!detailData &&
+    detailData.accessories.length > 0 &&
+    detailData.accessories.every(
+      (item) => item.status.toLowerCase() === "completed",
+    );
+
   const totalItems = filteredRows.length;
   const totalPages = Math.ceil(totalItems / rowsPerPage);
   const indexOfLastItem = currentPage * rowsPerPage;
   const indexOfFirstItem = indexOfLastItem - rowsPerPage;
   const currentItems = filteredRows.slice(indexOfFirstItem, indexOfLastItem);
+const submitInvoice = async (data: any) => {
+  try {
+    await apiHelper.post(`/orders/accessories-allot/${id}/save`, {
+      invoiceNo: data.invoiceNo,
+      invoiceDate: data.invoiceDate,
+    });
+
+    toast.success("Saved Successfully");
+    setShowInvoiceDrawer(false);
+    fetchAccessoryItems();
+    navigate("/allot/accessoriesAllot");
+  } catch (err: any) {
+    toast.error(err.response?.data?.message || "Failed to save");
+  }
+};
 
   // Handle status completion for individual accessory
   const handleComplete = async (itemId: number) => {
@@ -146,12 +202,14 @@ const AccessoriesAllotDetail: React.FC = () => {
       }
     } catch (err) {
       console.error(err);
+      toast.error("Failed to update status");
     }
   };
 
-  // Handle view action for individual accessory
+  // Handle view action for individual accessory - opens the history modal
   const handleView = (item: AccessoryItem) => {
-    navigate(`/accessories-allot/${id}/item/${item.id}`);
+    setSelectedItemId(item.itemId);
+    setShowHistoryModal(true);
   };
 
   // Handle back navigation
@@ -173,7 +231,7 @@ const AccessoriesAllotDetail: React.FC = () => {
         <p className="text-gray-500">No data found</p>
         <button
           onClick={handleBack}
-          className="mt-4 text-primary-500 hover:text-primary-600"
+          className="text-primary-500 hover:text-primary-600 mt-4"
         >
           Go Back
         </button>
@@ -187,13 +245,6 @@ const AccessoriesAllotDetail: React.FC = () => {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <div className="flex items-center gap-3">
-            <button
-              onClick={handleBack}
-              className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-              title="Go back"
-            >
-              <ArrowLeftIcon className="size-5" />
-            </button>
             <h1 className="text-xl font-semibold text-gray-900 md:text-2xl dark:text-white">
               Accessories Allotment Details
             </h1>
@@ -211,6 +262,13 @@ const AccessoriesAllotDetail: React.FC = () => {
             <DocumentArrowDownIcon className="size-4.5 text-gray-400" />
             Excel
           </button>
+          <button
+            onClick={() => navigate(-1)}
+            className="bg-primary-500 hover:bg-primary-600 inline-flex w-full cursor-pointer items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold text-white transition-colors sm:w-auto sm:px-5"
+          >
+            <ArrowLeftIcon className="mr-1.5 size-4" />
+            Back
+          </button>
         </div>
       </div>
 
@@ -218,24 +276,39 @@ const AccessoriesAllotDetail: React.FC = () => {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="dark:bg-dark-800 dark:border-dark-700 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
           <p className="text-sm text-gray-500">Total Accessories</p>
-          <p className="text-2xl font-semibold">{detailData.accessories.length}</p>
+          <p className="text-2xl font-semibold">
+            {detailData.accessories.length}
+          </p>
         </div>
         <div className="dark:bg-dark-800 dark:border-dark-700 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
           <p className="text-sm text-gray-500">Pending</p>
           <p className="text-2xl font-semibold text-yellow-600">
-            {detailData.accessories.filter((item) => item.status === "pending").length}
+            {
+              detailData.accessories.filter((item) => item.status === "pending")
+                .length
+            }
           </p>
         </div>
         <div className="dark:bg-dark-800 dark:border-dark-700 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
           <p className="text-sm text-gray-500">Completed</p>
           <p className="text-2xl font-semibold text-green-600">
-            {detailData.accessories.filter((item) => item.status === "completed").length}
+            {
+              detailData.accessories.filter(
+                (item) => item.status === "completed",
+              ).length
+            }
           </p>
         </div>
         <div className="dark:bg-dark-800 dark:border-dark-700 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
           <p className="text-sm text-gray-500">Total Value</p>
           <p className="text-2xl font-semibold">
-            ₹{detailData.accessories.reduce((sum, item) => sum + (item.salesPrice * item.selectedStock), 0).toLocaleString()}
+            ₹
+            {detailData.accessories
+              .reduce(
+                (sum, item) => sum + item.salesPrice * item.selectedStock,
+                0,
+              )
+              .toLocaleString()}
           </p>
         </div>
       </div>
@@ -263,7 +336,7 @@ const AccessoriesAllotDetail: React.FC = () => {
               setSelectedStatus(e.target.value);
               setCurrentPage(1);
             }}
-            className="dark:border-dark-500 dark:bg-dark-800 rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary-500/20"
+            className="dark:border-dark-500 dark:bg-dark-800 focus:ring-primary-500/20 rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none focus:ring-2"
           >
             {statusOptions.map((option) => (
               <option key={option.id} value={option.id}>
@@ -325,18 +398,28 @@ const AccessoriesAllotDetail: React.FC = () => {
                   <Td className="font-medium">{item.itemName}</Td>
                   <Td>{item.itemCode}</Td>
                   <Td>{item.hsnCode}</Td>
-                  <Td>{item.selectedStock}</Td>
-                  <Td>{item.taxRate}%</Td>
+                  <Td className="">
+                    <button
+                      onClick={() => handleView(item)}
+                      disabled={item.status === "completed"}
+                      className={`transition-colors  ${
+                        item.status === "completed"
+                          ? "cursor-not-allowed text-gray-400 opacity-50"
+                          : "text-primary-500 hover:text-primary-600"
+                      }`}
+                      title={
+                        item.status === "completed"
+                          ? "Already Allotted"
+                          : "View Purchase History"
+                      }
+                    >
+                      <EyeIcon className="size-5" />
+                    </button>
+                  </Td>
+                  <Td>{item.tax}%</Td>
                   <Td>₹{item.salesPrice.toLocaleString()}</Td>
                   <Td>
                     <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleView(item)}
-                        className="text-primary-500 hover:text-primary-600 transition-colors"
-                        title="View details"
-                      >
-                        <EyeIcon className="size-5" />
-                      </button>
                       <label className="relative inline-flex cursor-pointer items-center">
                         <input
                           type="checkbox"
@@ -344,7 +427,7 @@ const AccessoriesAllotDetail: React.FC = () => {
                           onChange={() => handleComplete(item.id)}
                           className="peer sr-only"
                         />
-                        <div className="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-green-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:ring-2 peer-focus:ring-green-300 dark:border-gray-600 dark:bg-gray-700"></div>
+                        <div className="peer h-6 w-11 rounded-full bg-gray-200 peer-checked:bg-green-600 peer-focus:ring-2 peer-focus:ring-green-300 after:absolute after:top-0.5 after:left-0.5 after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:border-gray-600 dark:bg-gray-700"></div>
                       </label>
                     </div>
                   </Td>
@@ -373,6 +456,7 @@ const AccessoriesAllotDetail: React.FC = () => {
                 </Tr>
               )}
             </TBody>
+
           </Table>
         </div>
 
@@ -459,6 +543,187 @@ const AccessoriesAllotDetail: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* {allCompleted && ( */}
+        <div className="mt-6 flex items-center gap-3">
+        <button
+  type="button"
+  onClick={() => {
+    if (!isSaved) {
+      setShowInvoiceDrawer(true);
+    }
+  }}
+  disabled={isSaved}
+  className={`cursor-pointer rounded-lg px-5 py-2.5 font-medium text-white transition-colors ${
+    isSaved
+      ? "cursor-not-allowed bg-gray-400 opacity-60"
+      : "bg-primary-500 hover:bg-primary-600"
+  }`}
+>
+  {isSaved ? "Saved" : "Save"}
+</button>
+          <button
+            type="button"
+            onClick={handleBack}
+            className="cursor-pointer rounded-lg border border-gray-300 px-5 py-2.5 font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+          >
+            Cancel
+          </button>
+        </div>
+      {/* )} */}
+
+      {/* Invoice Drawer - Right Side Slide Over */}
+     {showInvoiceDrawer && (
+  <div className="fixed inset-0 z-50 overflow-hidden">
+    {/* Backdrop */}
+    <div
+      className="absolute inset-0 bg-black/50"
+      onClick={() => setShowInvoiceDrawer(false)}
+    />
+
+    {/* Drawer */}
+    <div className="absolute top-0 right-0 h-full w-full max-w-md bg-white shadow-2xl dark:bg-gray-800">
+      <form
+        onSubmit={handleSubmit(submitInvoice)}
+        className="flex h-full flex-col"
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4 dark:border-gray-700">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+            Accessories Invoice
+          </h2>
+
+          <button
+            type="button"
+            onClick={() => setShowInvoiceDrawer(false)}
+            className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+          >
+            <XMarkIcon className="size-6" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-6">
+          <div className="space-y-6">
+
+            {/* Invoice Number */}
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Invoice Number <span className="text-red-500">*</span>
+              </label>
+
+              <input
+                {...register("invoiceNo", {
+                  required: "Invoice Number is required",
+                })}
+                placeholder="Enter invoice number"
+                className="focus:border-primary-500 focus:ring-primary-500/20 w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none focus:ring-2 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+              />
+            </div>
+
+            {/* Invoice Date */}
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Invoice Date <span className="text-red-500">*</span>
+              </label>
+
+              <Controller
+                name="invoiceDate"
+                control={control}
+                rules={{
+                  required: "Invoice Date is required",
+                }}
+                render={({ field, fieldState }) => (
+                  <DatePicker
+                    value={field.value}
+                    onChange={(val) => field.onChange(val)}
+                    placeholder="DD-MM-YYYY"
+                    options={{
+                      dateFormat: "d-m-Y",
+                      disableMobile: true,
+                      maxDate: "today",
+                    }}
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm"
+                    error={fieldState.error?.message}
+                  />
+                )}
+              />
+            </div>
+
+            {/* Summary */}
+            <div className="rounded-lg bg-gray-50 p-4 dark:bg-gray-700/50">
+              <h3 className="mb-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+                Summary
+              </h3>
+
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-500 dark:text-gray-400">
+                    Total Accessories:
+                  </span>
+
+                  <span className="font-medium text-gray-900 dark:text-white">
+                    {detailData.accessories.length}
+                  </span>
+                </div>
+
+                <div className="flex justify-between">
+                  <span className="text-gray-500 dark:text-gray-400">
+                    Total Value:
+                  </span>
+
+                  <span className="font-medium text-gray-900 dark:text-white">
+                    ₹
+                    {detailData.accessories
+                      .reduce(
+                        (sum, item) =>
+                          sum + item.salesPrice * item.selectedStock,
+                        0
+                      )
+                      .toLocaleString()}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="border-t border-gray-200 px-6 py-4 dark:border-gray-700">
+          <div className="flex gap-3">
+            <button
+              type="submit"
+              className="bg-primary-500 hover:bg-primary-600 flex-1 rounded-lg px-4 py-2.5 text-sm font-medium text-white transition-colors"
+            >
+              Save Invoice
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowInvoiceDrawer(false)}
+              className="flex-1 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
+
+      {/* Render the history modal with props */}
+      {showHistoryModal && selectedItemId && id && (
+        <AccessoryPurchaseHistory
+          allotmentId={id}
+          itemId={selectedItemId}
+          onClose={() => {
+            setShowHistoryModal(false);
+            setSelectedItemId(null);
+          }}
+        />
+      )}
     </div>
   );
 };
