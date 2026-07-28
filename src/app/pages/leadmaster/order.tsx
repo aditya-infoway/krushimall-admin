@@ -582,12 +582,9 @@ const Order: React.FC = () => {
         // ==========================================
         // SELECTED ACCESSORIES
         // ==========================================
-        const accessories =
-          lead?.selectedAccessories ??
-          lead?.accessories ??
-          lead?.showroomVariant?.accessories ??
-          [];
-
+     const accessories = lead?.hasQuotationHistory
+  ? (lead?.selectedAccessories || [])
+  : (lead?.showroomVariant?.accessories || []);
         setSelectedAccessories(
           Array.isArray(accessories)
             ? accessories.map((item: any) => {

@@ -165,7 +165,7 @@ const QuotationEdit = () => {
 
        const selectedAccessories = lead.selectedAccessories || [];
 
-const hasSavedAccessories = selectedAccessories.length > 0;
+const hasSavedAccessories = lead.hasQuotationHistory;
 
 setAccessories(
   (lead.showroomVariant.accessories || []).map((item: any) => {

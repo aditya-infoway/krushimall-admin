@@ -7,6 +7,9 @@ import {
   ChevronRightIcon,
   ArrowLeftIcon,
   EyeIcon,
+  XMarkIcon,
+  PlusIcon,
+  CheckIcon,
 } from "@heroicons/react/24/outline";
 import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/Table";
 import { Listbox } from "@/components/shared/form/StyledListbox";
@@ -25,6 +28,7 @@ interface AccessoryItem {
   tax: number;
   salesPrice: number;
   status: string;
+    verifyStatus: string;
 }
 
 interface AccessoryAllotmentDetail {
@@ -43,6 +47,9 @@ interface AccessoryAllotmentDetail {
   invoiceNo?: string;
   invoiceDate?: string;
   accessories: AccessoryItem[];
+  pendingAccessories?: AccessoryItem[];
+allottedAccessories?: AccessoryItem[];
+allVerified:"string";
 }
 
 // ---------- Options ----------
@@ -54,36 +61,20 @@ const entriesOptions = [
   { id: 100, name: "100" },
 ];
 
-const statusOptions = [
-  { id: "all", name: "All Status" },
-  { id: "pending", name: "Pending" },
-  { id: "completed", name: "Completed" },
-];
-
-const columns = [
-  "#",
-  "Item Name",
-  "Item Code",
-  "HSN Code",
-  "Selected Stock",
-  "Tax Rate",
-  "Sales Price",
-  "Action",
-  "Status",
-];
-
 const VehicleVerifyAccessories: React.FC = () => {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [rowsPerPage, setRowsPerPage] = useState(15);
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedStatus, setSelectedStatus] = useState("all");
   const [orders, setOrders] = useState<AccessoryAllotmentDetail[]>([]);
   const [loading, setLoading] = useState(true);
+  const [verifyingId, setVerifyingId] = useState<number | null>(null);
 
-  // State for history modal
-  const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
-  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  // State for drawer
+  const [showDrawer, setShowDrawer] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [selectedOrder, setSelectedOrder] =
+    useState<AccessoryAllotmentDetail | null>(null);
 
   // Fetch accessory items for this allotment (using vehicle verify endpoint)
   const fetchAccessoryItems = async () => {
@@ -97,7 +88,7 @@ const VehicleVerifyAccessories: React.FC = () => {
         "Failed to fetch accessory items:",
         error.response?.data || error,
       );
-     setOrders([]);
+      setOrders([]);
       toast.error("Failed to load vehicle verify accessories");
     } finally {
       setLoading(false);
@@ -109,31 +100,30 @@ const VehicleVerifyAccessories: React.FC = () => {
   }, []);
 
   // Filter rows
-const filteredRows = useMemo(() => {
-  let result = [...orders];
+  const filteredRows = useMemo(() => {
+    let result = [...orders];
 
-  if (search.trim()) {
-    const q = search.toLowerCase();
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      result = result.filter((order) =>
+        [
+          order.accountName,
+          order.mobileNo,
+          order.quotationNo,
+          order.dmsEnquiryNo,
+          order.model,
+          order.variant,
+          order.chassisNo,
+          order.invoiceNo,
+        ]
+          .join(" ")
+          .toLowerCase()
+          .includes(q),
+      );
+    }
 
-    result = result.filter(order =>
-      [
-        order.accountName,
-        order.mobileNo,
-        order.quotationNo,
-        order.dmsEnquiryNo,
-        order.model,
-        order.variant,
-        order.chassisNo,
-        order.invoiceNo,
-      ]
-        .join(" ")
-        .toLowerCase()
-        .includes(q)
-    );
-  }
-
-  return result;
-}, [orders, search]);
+    return result;
+  }, [orders, search]);
 
   const totalItems = filteredRows.length;
   const totalPages = Math.ceil(totalItems / rowsPerPage);
@@ -141,35 +131,85 @@ const filteredRows = useMemo(() => {
   const indexOfFirstItem = indexOfLastItem - rowsPerPage;
   const currentItems = filteredRows.slice(indexOfFirstItem, indexOfLastItem);
 
-  // Handle view action for individual accessory - opens the history modal
-  const handleView = (item: AccessoryItem) => {
-    setSelectedItemId(item.itemId);
-    setShowHistoryModal(true);
-  };
+  // Handle open drawer with accessories
+const handleOpenDrawer = (order: AccessoryAllotmentDetail) => {
+  setSelectedOrder({
+    ...order,
+    accessories: [...(order.allottedAccessories ?? [])],
+  });
 
+  setShowDrawer(true);
+};;
+const handleOpenViewModal = (order: any) => {
+  setSelectedOrder({
+    ...order,
+    accessories: order.pendingAccessories,
+  });
+
+  setShowViewModal(true);
+};
   // Handle back navigation
   const handleBack = () => {
     navigate("/allot/accessoriesAllot");
   };
 
+  // Checkbox click -> verify this accessory item (vehicle-verify stage)
+const handleCheckboxChange = async (itemId: number) => {
+  if (!selectedOrder) return;
+
+  // Check if already verified
+  const target = selectedOrder.allottedAccessories?.find(
+    (item) => item.id === itemId
+  );
+
+  if (!target || target.verifyStatus === "completed") return;
+
+  try {
+    setVerifyingId(itemId);
+
+    await apiHelper.patch(
+      `/orders/vehicle-verify-accessories/${selectedOrder.id}/item/${itemId}`
+    );
+
+    const updateAccessories = (order: AccessoryAllotmentDetail) => {
+      if (order.id !== selectedOrder.id) return order;
+
+      return {
+        ...order,
+        allottedAccessories:
+          order.allottedAccessories?.map((item) =>
+            item.id === itemId
+              ? {
+                  ...item,
+                  verifyStatus: "completed",
+                }
+              : item
+          ) ?? [],
+      };
+    };
+
+    setOrders((prev) => prev.map(updateAccessories));
+    setSelectedOrder((prev) =>
+      prev ? updateAccessories(prev) : prev
+    );
+
+    toast.success("Item verified successfully");
+  } catch (error: any) {
+    console.error("Failed to verify item:", error);
+
+    toast.error(
+      error.response?.data?.message ||
+        "Failed to verify accessory item"
+    );
+  } finally {
+    setVerifyingId(null);
+  }
+};
+
   if (loading) {
     return (
       <div className="flex h-96 items-center justify-center">
         <div className="text-gray-500">Loading...</div>
-      </div>
-    );
-  }
-
-  if (!orders) {
-    return (
-      <div className="flex h-96 flex-col items-center justify-center">
-        <p className="text-gray-500">No data found</p>
-        <button
-          onClick={handleBack}
-          className="text-primary-500 hover:text-primary-600 mt-4"
-        >
-          Go Back
-        </button>
       </div>
     );
   }
@@ -184,9 +224,6 @@ const filteredRows = useMemo(() => {
               Verify Vehicle Accessories
             </h1>
           </div>
-          {/* <p className="dark:text-dark-300 mt-1 text-sm text-gray-500">
-            {orders.accountName} - {orders.chassisNo}
-          </p> */}
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -207,48 +244,7 @@ const filteredRows = useMemo(() => {
         </div>
       </div>
 
-      {/* Summary Cards */}
-      {/* <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="dark:bg-dark-800 dark:border-dark-700 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-          <p className="text-sm text-gray-500">Total Accessories</p>
-          <p className="text-2xl font-semibold">
-            {orders.accessories.length}
-          </p>
-        </div>
-        <div className="dark:bg-dark-800 dark:border-dark-700 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-          <p className="text-sm text-gray-500">Pending</p>
-          <p className="text-2xl font-semibold text-yellow-600">
-            {
-              orders.accessories.filter((item) => item.status === "pending")
-                .length
-            }
-          </p>
-        </div>
-        <div className="dark:bg-dark-800 dark:border-dark-700 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-          <p className="text-sm text-gray-500">Completed</p>
-          <p className="text-2xl font-semibold text-green-600">
-            {
-              orders.accessories.filter(
-                (item) => item.status === "completed",
-              ).length
-            }
-          </p>
-        </div>
-        <div className="dark:bg-dark-800 dark:border-dark-700 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-          <p className="text-sm text-gray-500">Total Value</p>
-          <p className="text-2xl font-semibold">
-            ₹
-            {orders.accessories
-              .reduce(
-                (sum, item) => sum + item.salesPrice * item.selectedStock,
-                0,
-              )
-              .toLocaleString()}
-          </p>
-        </div>
-      </div> */}
-
-      {/* Search and Filter */}
+      {/* Search */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative w-full max-w-md">
           <MagnifyingGlassIcon className="absolute top-1/2 left-3 size-4.5 -translate-y-1/2 text-gray-400" />
@@ -263,23 +259,6 @@ const filteredRows = useMemo(() => {
             className="dark:border-dark-500 dark:bg-dark-800 focus:border-primary-500 focus:ring-primary-500/20 w-full rounded-lg border border-gray-300 bg-white py-2.5 pr-4 pl-10 text-sm transition-all duration-200 outline-none focus:ring-2"
           />
         </div>
-
-        <div className="flex items-center gap-2">
-          <select
-            value={selectedStatus}
-            onChange={(e) => {
-              setSelectedStatus(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="dark:border-dark-500 dark:bg-dark-800 focus:ring-primary-500/20 rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none focus:ring-2"
-          >
-            {statusOptions.map((option) => (
-              <option key={option.id} value={option.id}>
-                {option.name}
-              </option>
-            ))}
-          </select>
-        </div>
       </div>
 
       {/* Table */}
@@ -287,137 +266,129 @@ const filteredRows = useMemo(() => {
         <div className="overflow-x-auto">
           <Table
             hoverable
-            className="w-full min-w-550 text-left [&_.table-th]:font-semibold"
+            className="w-full min-w-300 text-left [&_.table-th]:font-semibold"
           >
-           <THead className="dark:bg-dark-700/60 dark:border-dark-600 border-b border-gray-200 bg-gray-100">
-  <Tr>
-    <Th className="py-3.5 text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
-      S.No
-    </Th>
-
-    <Th className="py-3.5 text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
-      Account Name
-    </Th>
-
-    <Th className="py-3.5 text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
-      Mobile No
-    </Th>
-
-    <Th className="py-3.5 text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
-      Quotation No
-    </Th>
-
-    <Th className="py-3.5 text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
-      DMS Date
-    </Th>
-
-    <Th className="py-3.5 text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
-      DMS No
-    </Th>
-
-    <Th className="py-3.5 text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
-      Model
-    </Th>
-
-    <Th className="py-3.5 text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
-      Variant
-    </Th>
-
-    <Th className="py-3.5 text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
-      Color
-    </Th>
-
-    <Th className="py-3.5 text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
-      Chassis No
-    </Th>
-
-    <Th className="py-3.5 text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
-      Accessories No
-    </Th>
-
-    <Th className="py-3.5 text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
-      Accessories Date
-    </Th>
-
-    <Th className="py-3.5 text-center text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
-      Allotted
-    </Th>
-
-    <Th className="py-3.5 text-center text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
-      Pending
-    </Th>
-
-    <Th className="py-3.5 text-center text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
-      Action
-    </Th>
-  </Tr>
-</THead>
+            <THead className="dark:bg-dark-700/60 dark:border-dark-600 border-b border-gray-200 bg-gray-100">
+              <Tr>
+                <Th className="py-3.5 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
+                  S.No
+                </Th>
+                <Th className="py-3.5 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
+                  Account Name
+                </Th>
+                <Th className="py-3.5 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
+                  Mobile No
+                </Th>
+                <Th className="py-3.5 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
+                  Quotation No
+                </Th>
+                <Th className="py-3.5 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
+                  DMS Date
+                </Th>
+                <Th className="py-3.5 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
+                  DMS No
+                </Th>
+                <Th className="py-3.5 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
+                  Model
+                </Th>
+                <Th className="py-3.5 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
+                  Variant
+                </Th>
+                <Th className="py-3.5 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
+                  Color
+                </Th>
+                <Th className="py-3.5 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
+                  Chassis No
+                </Th>
+                <Th className="py-3.5 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
+                  Accessories No
+                </Th>
+                <Th className="py-3.5 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
+                  Accessories Date
+                </Th>
+                <Th className="py-3.5 text-center text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
+                  Allotted
+                </Th>
+                <Th className="py-3.5 text-center text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
+                  Pending
+                </Th>
+              </Tr>
+            </THead>
 
             <TBody className="dark:divide-dark-700 divide-y divide-gray-200">
-              {currentItems.map((item, index) => (
-                <Tr
-                  key={item.id}
-                  className="dark:hover:bg-dark-700/40 transition-colors hover:bg-gray-50/30"
-                >
-                  <Td className="py-4 font-medium text-gray-500">
-                    {indexOfFirstItem + index + 1}
-                  </Td>
-                  <Td>{item.accountName}</Td>
+              {currentItems.map((order, index) => {
+  //          const allVerified =
+  // order.allottedAccessories?.length > 0 &&
+  // order.allottedAccessories.every(
+  //   (item) => item.verifyStatus === "completed"
+  // );
 
-    <Td>{item.mobileNo}</Td>
+                return (
+                  <Tr
+                    key={order.id}
+                    className="dark:hover:bg-dark-700/40 transition-colors hover:bg-gray-50/30"
+                  >
+                    <Td className="py-4 font-medium text-gray-500">
+                      {indexOfFirstItem + index + 1}
+                    </Td>
+                    <Td>{order.accountName}</Td>
+                    <Td>{order.mobileNo}</Td>
+                    <Td>{order.quotationNo}</Td>
+                    <Td>{order.dmsEnquiryDate}</Td>
+                    <Td>{order.dmsEnquiryNo}</Td>
+                    <Td>{order.model}</Td>
+                    <Td>{order.variant}</Td>
+                    <Td>{order.color}</Td>
+                    <Td>{order.chassisNo}</Td>
+                    <Td>{order.invoiceNo || "-"}</Td>
+                    <Td>{order.invoiceDate || "-"}</Td>
+                    <Td className="text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="flex flex-col items-center gap-1">
+                          {/* {!allVerified && ( */}
+                            <button
+                              onClick={() => handleOpenDrawer(order)}
+                              className="bg-primary-500 hover:bg-primary-600 inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-full text-white transition-colors"
+                              title="Verify accessories"
+                            >
+                              <PlusIcon className="h-4 w-4" />
+                            </button>
+                          {/* )} */}
 
-    <Td>{item.quotationNo}</Td>
-
-    <Td>{item.dmsEnquiryDate}</Td>
-
-    <Td>{item.dmsEnquiryNo}</Td>
-
-    <Td>{item.model}</Td>
-
-    <Td>{item.variant}</Td>
-
-    <Td>{item.color}</Td>
-
-    <Td>{item.chassisNo}</Td>
-
-    <Td>{item.invoiceNo || "-"}</Td>
-
-    <Td>{item.invoiceDate || "-"}</Td>
-
-    <Td className="text-center">
-      {
-        item.accessories.filter(
-          (item) => item.status === "completed"
-        ).length
-      }
-    </Td>
-
-    <Td className="text-center">
-      {
-        item.accessories.filter(
-          (item) => item.status !== "completed"
-        ).length
-      }
-    </Td>
-
-    <Td className="text-center">
-      <button
-        onClick={() => navigate(`/allot/vehicle-verify-accessories/${orders.id}`)}
-        className="text-primary-500 hover:text-primary-600"
-      >
-        <EyeIcon className="size-5" />
-      </button>
-    </Td>
-                </Tr>
-              ))}
+                          {/* {allVerified && ( */}
+                        <div
+  className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-white ${
+    order.allVerified
+      ? "bg-green-500"
+      : "bg-gray-400"
+  }`}
+>
+  <CheckIcon className="h-3 w-3" />
+</div>
+                          {/* )} */}
+                        </div>
+                      </div>
+                    </Td>
+                    <Td className="text-center font-medium text-yellow-600">
+                      <button
+                        onClick={() => handleOpenViewModal(order)}
+                        className="text-primary-500 hover:text-primary-600 transition-colors cursor-pointer"
+                        title="View details"
+                      >
+                        <EyeIcon className="size-5" />
+                      </button>
+                    </Td>
+                  </Tr>
+                );
+              })}
 
               {currentItems.length === 0 && (
                 <Tr>
                   <Td
-                    colSpan={columns.length}
+                    colSpan={14}
                     className="py-12 text-center text-gray-400 dark:text-gray-500"
                   >
-                    No accessories items found
+                    No verified vehicle orders found
                   </Td>
                 </Tr>
               )}
@@ -509,27 +480,232 @@ const filteredRows = useMemo(() => {
         )}
       </div>
 
-      {/* Verify Button */}
-      <div className="mt-6 flex items-center gap-3">
-        <button
-          type="button"
-          className="cursor-pointer rounded-lg bg-green-600 px-5 py-2.5 font-medium text-white transition-colors hover:bg-green-700"
-          onClick={() => {
-            toast.success("Vehicle accessories verified successfully!");
-            // Navigate to the appropriate page or refresh
-            navigate("/allot/accessoriesAllot");
-          }}
-        >
-          Verify Vehicle
-        </button>
-        <button
-          type="button"
-          onClick={handleBack}
-          className="cursor-pointer rounded-lg border border-gray-300 px-5 py-2.5 font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
-        >
-          Cancel
-        </button>
-      </div>
+      {/* Right Side Drawer - View Only (opens from Pending column eye icon) */}
+      {showViewModal && selectedOrder && (
+        <div className="fixed inset-0 z-50 overflow-hidden">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setShowViewModal(false)}
+          />
+
+          {/* Drawer */}
+          <div className="absolute top-0 right-0 h-full w-full max-w-2xl bg-white shadow-2xl dark:bg-gray-800">
+            <div className="flex h-full flex-col">
+              {/* Header */}
+              <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4 dark:border-gray-700">
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    Accessories Details
+                  </h2>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {selectedOrder.accountName} - {selectedOrder.chassisNo}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowViewModal(false)}
+                  className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+                >
+                  <XMarkIcon className="size-6" />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="flex-1 overflow-y-auto p-6">
+                {selectedOrder.accessories.length > 0 ? (
+                  <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+                    <Table hoverable className="w-full text-left">
+                      <THead className="bg-gray-100 dark:bg-gray-700">
+                        <Tr>
+                          <Th className="py-3 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
+                            S.No
+                          </Th>
+                          <Th className="py-3 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
+                            Item Name
+                          </Th>
+                          <Th className="py-3 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
+                            Item Code
+                          </Th>
+                          <Th className="py-3 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
+                            HSN Code
+                          </Th>
+                          <Th className="py-3 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
+                            Status
+                          </Th>
+                        </Tr>
+                      </THead>
+                      <TBody className="divide-y divide-gray-200 dark:divide-gray-700">
+                        {selectedOrder.accessories.map((item, index) => (
+                          <Tr key={item.id}>
+                            <Td className="py-3">{index + 1}</Td>
+                            <Td className="font-medium">{item.itemName}</Td>
+                            <Td>{item.itemCode}</Td>
+                            <Td>{item.hsnCode}</Td>
+                            <Td>
+                              <span
+                                className={`rounded-full px-2 py-1 text-xs font-medium ${
+                                  item.status === "completed"
+                                    ? "bg-green-100 text-green-700"
+                                    : "bg-yellow-100 text-yellow-700"
+                                }`}
+                              >
+                                {item.status === "completed"
+                                  ? "Verified"
+                                  : "Pending"}
+                              </span>
+                            </Td>
+                          </Tr>
+                        ))}
+                      </TBody>
+                    </Table>
+                  </div>
+                ) : (
+                  <div className="flex h-40 items-center justify-center text-gray-500">
+                    No accessories found
+                  </div>
+                )}
+              </div>
+
+              {/* Footer */}
+              <div className="border-t border-gray-200 px-6 py-4 dark:border-gray-700">
+                <button
+                  onClick={() => setShowViewModal(false)}
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Right Side Drawer - Checkbox to verify each accessory */}
+      {showDrawer && selectedOrder && (
+        <div className="fixed inset-0 z-50 overflow-hidden">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setShowDrawer(false)}
+          />
+
+          {/* Drawer */}
+          <div className="absolute top-0 right-0 h-full w-full max-w-2xl bg-white shadow-2xl dark:bg-gray-800">
+            <div className="flex h-full flex-col">
+              {/* Header */}
+              <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4 dark:border-gray-700">
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    Accessories List
+                  </h2>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {selectedOrder.accountName} - {selectedOrder.chassisNo}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowDrawer(false)}
+                  className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+                >
+                  <XMarkIcon className="size-6" />
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 overflow-y-auto p-6">
+                {selectedOrder.accessories.length > 0 ? (
+                  <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+                    <Table hoverable className="w-full text-left">
+                      <THead className="bg-gray-100 dark:bg-gray-700">
+                        <Tr>
+                          <Th className="py-3 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
+                            S.No
+                          </Th>
+                          <Th className="py-3 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
+                            Item Name
+                          </Th>
+                          <Th className="py-3 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
+                            Item Code
+                          </Th>
+                          <Th className="py-3 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
+                            HSN Code
+                          </Th>
+                          <Th className="py-3 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
+                            Status
+                          </Th>
+                          <Th className="py-3 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
+                            Action
+                          </Th>
+                        </Tr>
+                      </THead>
+                      <TBody className="divide-y divide-gray-200 dark:divide-gray-700">
+                        {selectedOrder.accessories.map((item, index) => {
+                         const isCompleted = item.verifyStatus === "completed";
+                          const isBusy = verifyingId === item.id;
+
+                          return (
+                            <Tr key={item.id}>
+                              <Td className="py-3">{index + 1}</Td>
+                              <Td className="font-medium">{item.itemName}</Td>
+                              <Td>{item.itemCode}</Td>
+                              <Td>{item.hsnCode}</Td>
+                              <Td>
+                                <span
+                                  className={`rounded-full px-2 py-1 text-xs font-medium ${
+                                    isCompleted
+                                      ? "bg-green-100 text-green-700"
+                                      : "bg-yellow-100 text-yellow-700"
+                                  }`}
+                                >
+                                  {isCompleted ? "Verified" : "Pending"}
+                                </span>
+                              </Td>
+                              <Td className="text-center">
+                                {isCompleted ? (
+                                  // Verified ho gaya - checkbox hide, check icon dikhega
+                                  <div
+                                    className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-white"
+                                    title="Verified"
+                                  >
+                                    <CheckIcon className="h-3 w-3" />
+                                  </div>
+                                ) : (
+                                  <input
+                                    type="checkbox"
+                                    checked={false}
+                                    disabled={isBusy}
+                                    onChange={() =>
+                                      handleCheckboxChange(item.id)
+                                    }
+                                    className="h-5 w-5 cursor-pointer rounded border-gray-300 text-green-600 focus:ring-green-500 disabled:cursor-not-allowed disabled:opacity-50"
+                                  />
+                                )}
+                              </Td>
+                            </Tr>
+                          );
+                        })}
+                      </TBody>
+                    </Table>
+                  </div>
+                ) : (
+                  <div className="flex h-40 items-center justify-center text-gray-500">
+                    No accessories found
+                  </div>
+                )}
+              </div>
+
+              {/* Footer - Close button only */}
+              <div className="border-t border-gray-200 px-6 py-4 dark:border-gray-700">
+                <button
+                  onClick={() => setShowDrawer(false)}
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
