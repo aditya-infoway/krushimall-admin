@@ -248,7 +248,7 @@ const handleView = (item: AccessoriesAllotRow) => {
                   <Td>
                     <button
                       onClick={() => handleView(item)}
-                      className="text-primary-500 hover:text-primary-600 transition-colors"
+                      className="text-primary-500 hover:text-primary-600 transition-colors cursor-pointer" 
                       title="View details"
                     >
                       <EyeIcon className="size-5" />
