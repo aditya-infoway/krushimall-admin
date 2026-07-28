@@ -67,6 +67,9 @@ interface AccessoryItem {
   barCode: string;
   status: "ACTIVE" | "INACTIVE";
   createdAt: string;
+   createdBy?: string;
+  createdById?: number;
+  createdType?: string;
 }
 
 interface FormValues {
@@ -749,6 +752,12 @@ const Accessories = () => {
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Status
                 </Th>
+                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                 Created Type
+                </Th>
+                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                 Created By
+                </Th>
                 <Th className="w-20 py-3.5 text-center text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Actions
                 </Th>
@@ -836,6 +845,9 @@ const Accessories = () => {
                         />
                       </button>
                     </Td>
+                     <Td className="dark:text-dark-200 py-4 text-center text-gray-600">{item.createdType || "-"}</Td>
+
+<Td className="dark:text-dark-200 py-4 text-center text-gray-600">{item.createdBy || "-"}</Td>
                     <Td className="py-4 text-center">
                       <Menu
                         as="div"
