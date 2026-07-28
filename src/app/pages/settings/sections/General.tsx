@@ -60,7 +60,7 @@ export default function General() {
     { value: "QUOTATION", label: "QUOTATION" },
     { value: "LEAD", label: "LEAD" },
     { value: "JOBCARD", label: "JOB CARD" },
-    { value: "INVOICE", label: "INVOICE" },
+    { value: "ACCESSORIES_INVOICE", label: "ACCESSORIES_INVOICE" },
   ];
 
   useEffect(() => {

@@ -208,15 +208,15 @@ export default function LeadBuilder() {
   const handleOrderBill = (id: number) => {
     window.open(`${getBaseUrl()}/api/leads/${id}/Quotation`, "_blank");
   };
-   const handleDeliveryChallan = (leadId: number) => {
+  const handleDeliveryChallan = (leadId: number) => {
     window.open(
       `${getBaseUrl()}/api/orders/lead/${leadId}/delivery-challan`,
       "_blank",
     );
   };
   const handleEditQuotation = (id: number) => {
-  navigate(`/leadmaster/quotation/edit/${id}`);
-};
+    navigate(`/leadmaster/quotation/edit/${id}`);
+  };
   return (
     <div className="relative min-h-screen space-y-6 p-4 pb-28 text-gray-900 md:p-6 dark:text-gray-100">
       {/* Page Header */}
@@ -263,7 +263,7 @@ export default function LeadBuilder() {
                 <Th className="w-45 min-w-45">Purchase Detail</Th>
                 <Th className="w-40 min-w-40 text-center">Update</Th>
                 <Th className="w-45 min-w-45 text-center">Process / Billing</Th>
-                 <Th className="w-45 min-w-45 text-center">Print</Th>
+                <Th className="w-45 min-w-45 text-center">Print</Th>
                 <Th className="w-40 min-w-40">Status</Th>
                 <Th className="w-20 text-center">Action</Th>
               </Tr>
@@ -373,11 +373,19 @@ export default function LeadBuilder() {
                         >
                           Send Quotation
                         </button>
-
                         <button
                           onClick={() => handleEditQuotation(lead.id)}
-                          className="flex h-8 w-8 items-center justify-center rounded-full border border-blue-500 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-pointer"
-                          title="Edit Quotation"
+                          disabled={!!lead.order}
+                          className={`flex h-8 w-8 items-center justify-center rounded-full border ${
+                            lead.order
+                              ? "cursor-not-allowed border-gray-500 bg-gray-500 text-gray-400"
+                              : "cursor-pointer border-blue-500 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                          }`}
+                          title={
+                            lead.order
+                              ? "Quotation cannot be edited after Order is created"
+                              : "Edit Quotation"
+                          }
                         >
                           <PencilSquareIcon className="h-4 w-4" />
                         </button>
@@ -418,10 +426,10 @@ export default function LeadBuilder() {
                       </button>
                     </div>
                   </Td>
-                  <Td> 
-                     <div className="flex w-full flex-col gap-1.5">
+                  <Td>
+                    <div className="flex w-full flex-col gap-1.5">
                       <button
-                          onClick={() => handleDeliveryChallan(lead.id)}
+                        onClick={() => handleDeliveryChallan(lead.id)}
                         className="w-full cursor-pointer rounded-md border border-emerald-500 py-0.5 text-[12px] text-emerald-600"
                       >
                         Delivery Challan
