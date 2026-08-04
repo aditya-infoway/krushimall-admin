@@ -101,7 +101,7 @@ const initialForm = {
   narration: "",
   createdType: "",
   createdBy: "",
-  leadNo: "",
+   leadNo: null as any,
   jobCardNo: "",
 };
 
@@ -952,7 +952,7 @@ const handlePrint = async (item: CashReceipt) => {
                         setForm({
                           ...form,
                           type: "Manual",
-                          leadNo: "",
+                      leadNo: null,
                           jobCardNo: "",
                         });
                         if (errors.leadNo) setErrors({ ...errors, leadNo: "" });

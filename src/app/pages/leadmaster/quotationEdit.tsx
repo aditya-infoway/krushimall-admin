@@ -119,13 +119,19 @@ const QuotationEdit = () => {
     setModels(res.data);
   };
 
-  const fetchVariants = async () => {
-    const res = await apiHelper.get("/showroom-variant");
+const fetchVariants = async (modelId?: number) => {
+  const res = await apiHelper.get("/showroom-variant");
 
-    const data = res.data || res.data;
+  const data = res.data || [];
 
-    setAllVariants(data);
-  };
+  setAllVariants(data);
+
+  if (modelId) {
+    setVariants(
+      data.filter((item: any) => Number(item.modelId) === Number(modelId))
+    );
+  }
+};
   const fetchColours = async () => {
     const res = await apiHelper.get("/colours");
 
