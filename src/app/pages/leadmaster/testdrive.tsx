@@ -98,7 +98,9 @@ export function TestDriveModal({
     duration: { required: "Duration is required" },
     licenceNo: { required: "Licence No is required" },
     feedback: { required: "Feedback is required" },
-    vehicleSpeedometerRunning: { required: "Vehicle Speedometer Reading is required" },
+    vehicleSpeedometerRunning: {
+      required: "Vehicle Speedometer Reading is required",
+    },
   };
 
   // Fetch dropdown data
@@ -142,17 +144,17 @@ export function TestDriveModal({
     }
   };
 
- const fetchVariants = async () => {
-  const res = await apiHelper.get("/showroom-variant");
+  const fetchVariants = async () => {
+    const res = await apiHelper.get("/showroom-variant");
 
-  const data = Array.isArray(res.data?.data)
-    ? res.data.data
-    : Array.isArray(res.data)
-    ? res.data
-    : [];
+    const data = Array.isArray(res.data?.data)
+      ? res.data.data
+      : Array.isArray(res.data)
+        ? res.data
+        : [];
 
-  setVariants(data);
-};
+    setVariants(data);
+  };
 
   const fetchColors = async () => {
     try {
@@ -172,31 +174,31 @@ export function TestDriveModal({
 
   // Handle Model Change
   const handleModelChange = (selectedOption: any) => {
-  const modelId = selectedOption?.id || null;
+    const modelId = selectedOption?.id || null;
 
-  setValue("modelId", modelId);
-  setValue("showroomVariantId", null);
-  setValue("colourId", null);
+    setValue("modelId", modelId);
+    setValue("showroomVariantId", null);
+    setValue("colourId", null);
 
-  if (modelId) {
-    const filtered = variants.filter(
-      (v: any) => Number(v.modelId) === Number(modelId)
-    );
+    if (modelId) {
+      const filtered = variants.filter(
+        (v: any) => Number(v.modelId) === Number(modelId),
+      );
 
-    setFilteredVariants(
-      filtered.map((item: any) => ({
-        id: item.id,
-        name: item.variantName,
-        modelId: item.modelId,
-      }))
-    );
+      setFilteredVariants(
+        filtered.map((item: any) => ({
+          id: item.id,
+          name: item.variantName,
+          modelId: item.modelId,
+        })),
+      );
 
-    setFilteredColors([]);
-  } else {
-    setFilteredVariants([]);
-    setFilteredColors([]);
-  }
-};
+      setFilteredColors([]);
+    } else {
+      setFilteredVariants([]);
+      setFilteredColors([]);
+    }
+  };
 
   // Handle Variant Change
   const handleVariantChange = (selectedOption: any) => {
@@ -245,13 +247,16 @@ export function TestDriveModal({
       };
 
       await apiHelper.post("/test-drives", payload);
-      
+
       toast.success("Test drive added successfully!");
       if (onSuccess) onSuccess();
       onClose();
     } catch (error: any) {
       console.error("Error submitting test drive:", error);
-      toast.error(error.response?.data?.message || "Failed to add test drive. Please try again.");
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to add test drive. Please try again.",
+      );
     } finally {
       setLoading(false);
     }
@@ -278,7 +283,10 @@ export function TestDriveModal({
             </button>
           </div>
 
-          <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-1 flex-col">
+          <form
+            onSubmit={handleSubmit(onFormSubmit)}
+            className="flex flex-1 flex-col"
+          >
             {/* Body */}
             <div className="flex-1 overflow-y-auto p-6">
               <div className="grid grid-cols-2 gap-4">
@@ -323,7 +331,9 @@ export function TestDriveModal({
                           null
                         }
                         onChange={handleVariantChange}
-                        placeholder={formModelId ? "Select Variant" : "First select model"}
+                        placeholder={
+                          formModelId ? "Select Variant" : "First select model"
+                        }
                         searchFields={["name"]}
                         error={fieldState.error?.message}
                       />
@@ -349,7 +359,11 @@ export function TestDriveModal({
                           null
                         }
                         onChange={handleColorChange}
-                        placeholder={formVariantId ? "Select Colour" : "First select variant"}
+                        placeholder={
+                          formVariantId
+                            ? "Select Colour"
+                            : "First select variant"
+                        }
                         searchFields={["name"]}
                         error={fieldState.error?.message}
                       />
@@ -383,17 +397,25 @@ export function TestDriveModal({
                   <label className="dark:text-dark-200 text-sm font-medium text-gray-700">
                     From Time <span className="text-red-500">*</span>
                   </label>
+
                   <Controller
                     name="testDriveFromTime"
                     control={control}
                     rules={validationRules.testDriveFromTime}
                     render={({ field, fieldState }) => (
-                      <Timepicker
-                        value={field.value}
-                        onChange={(val) => field.onChange(val)}
-                        placeholder="Select time"
-                        error={fieldState.error?.message}
-                      />
+                      <>
+                        <Timepicker
+                          value={field.value}
+                          onChange={(val) => field.onChange(val)}
+                          placeholder="Select time"
+                        />
+
+                        {fieldState.error && (
+                          <p className="mt-1 text-xs text-red-500">
+                            {fieldState.error.message}
+                          </p>
+                        )}
+                      </>
                     )}
                   />
                 </div>
@@ -408,12 +430,19 @@ export function TestDriveModal({
                     control={control}
                     rules={validationRules.testDriveToTime}
                     render={({ field, fieldState }) => (
-                      <Timepicker
-                        value={field.value}
-                        onChange={(val) => field.onChange(val)}
-                        placeholder="Select time"
-                        error={fieldState.error?.message}
-                      />
+                      <>
+                        <Timepicker
+                          value={field.value}
+                          onChange={(val) => field.onChange(val)}
+                          placeholder="Select time"
+                        />
+
+                        {fieldState.error && (
+                          <p className="mt-1 text-xs text-red-500">
+                            {fieldState.error.message}
+                          </p>
+                        )}
+                      </>
                     )}
                   />
                 </div>
@@ -430,7 +459,7 @@ export function TestDriveModal({
                     className={`dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 rounded-md border px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none ${
                       errors.duration
                         ? "border-red-500 dark:border-red-500"
-                        : "border-gray-300 dark:border-dark-500"
+                        : "dark:border-dark-500 border-gray-300"
                     }`}
                   />
                   {errors.duration && (
@@ -445,17 +474,21 @@ export function TestDriveModal({
                   <label className="dark:text-dark-200 text-sm font-medium text-gray-700">
                     <span className="md:hidden">Vehicle Speedometer</span>
                     <span className="hidden md:inline">
-                      Vehicle Speedometer Running <span className="text-red-500">*</span>
+                      Vehicle Speedometer Running{" "}
+                      <span className="text-red-500">*</span>
                     </span>
                   </label>
                   <input
                     type="text"
                     placeholder="Enter reading"
-                    {...register("vehicleSpeedometerRunning", validationRules.vehicleSpeedometerRunning)}
+                    {...register(
+                      "vehicleSpeedometerRunning",
+                      validationRules.vehicleSpeedometerRunning,
+                    )}
                     className={`dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 rounded-md border px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none ${
                       errors.vehicleSpeedometerRunning
                         ? "border-red-500 dark:border-red-500"
-                        : "border-gray-300 dark:border-dark-500"
+                        : "dark:border-dark-500 border-gray-300"
                     }`}
                   />
                   {errors.vehicleSpeedometerRunning && (
@@ -477,7 +510,7 @@ export function TestDriveModal({
                     className={`dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 rounded-md border px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none ${
                       errors.licenceNo
                         ? "border-red-500 dark:border-red-500"
-                        : "border-gray-300 dark:border-dark-500"
+                        : "dark:border-dark-500 border-gray-300"
                     }`}
                   />
                   {errors.licenceNo && (
