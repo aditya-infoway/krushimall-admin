@@ -657,7 +657,7 @@ const VehicleStock = () => {
         <div className="dark:bg-dark-800 dark:border-dark-700 animate-in fade-in slide-in-from-bottom-4 rounded-xl border border-gray-200 bg-white p-6 shadow-lg">
           <div className="mb-4 flex items-center justify-between">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Vehicle Details - {selectedVehicle.stockTransferId}
+              Vehicle Details - {selectedVehicle.transferNo}
             </h3>
             <button
               onClick={() => setShowDetails(false)}
@@ -681,18 +681,20 @@ const VehicleStock = () => {
               </THead>
               <TBody className="dark:divide-dark-700 divide-y divide-gray-200">
                 <Tr>
-                  <Td className="py-3 font-medium">Stock Transfer ID</Td>
-                  <Td className="py-3">{selectedVehicle.stockTransferId}</Td>
+                  <Td className="py-3 font-medium">Stock Transfer No</Td>
+                  <Td className="py-3">{selectedVehicle.transferNo}</Td>
                 </Tr>
                 <Tr>
                   <Td className="py-3 font-medium">Date</Td>
                   <Td className="py-3">
-                    {new Date(selectedVehicle.date).toLocaleDateString("en-IN")}
+                    {new Date(selectedVehicle.transferDate).toLocaleDateString(
+                      "en-IN",
+                    )}
                   </Td>
                 </Tr>
                 <Tr>
                   <Td className="py-3 font-medium">Branch</Td>
-                  <Td className="py-3">{selectedVehicle.branch}</Td>
+                  <Td className="py-3">{selectedVehicle.branch?.branchName}</Td>
                 </Tr>
                 <Tr>
                   <Td className="py-3 font-medium">Branch Manager</Td>
@@ -712,11 +714,11 @@ const VehicleStock = () => {
                 </Tr>
                 <Tr>
                   <Td className="py-3 font-medium">Model</Td>
-                  <Td className="py-3">{selectedVehicle.model}</Td>
+                  <Td className="py-3">{selectedVehicle.modelName}</Td>
                 </Tr>
                 <Tr>
                   <Td className="py-3 font-medium">Variant</Td>
-                  <Td className="py-3">{selectedVehicle.variant}</Td>
+                  <Td className="py-3">{selectedVehicle.variantName}</Td>
                 </Tr>
                 <Tr>
                   <Td className="py-3 font-medium">Colour</Td>

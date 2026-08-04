@@ -153,7 +153,7 @@ const Employee = () => {
     control,
     name: "teamLeadId",
   });
-  const [teamLeadOptions, setTeamLeadOptions] = useState([]);
+ const [teamLeadOptions, setTeamLeadOptions] = useState<any[]>([]);
   const getTeamLeads = async (department: string) => {
     const res = await apiHelper.get(
       `/employees/team-leads?department=${department}`,

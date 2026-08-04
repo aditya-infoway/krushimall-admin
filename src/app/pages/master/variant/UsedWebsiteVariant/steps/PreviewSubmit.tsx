@@ -24,10 +24,11 @@ import { toast } from "sonner";
 export function PreviewSubmit({
   setCurrentStep,
   setFinished,
-   websiteVariantId
+  websiteVariantId,
 }: {
   setCurrentStep: React.Dispatch<React.SetStateAction<number>>;
   setFinished: React.Dispatch<React.SetStateAction<boolean>>;
+  websiteVariantId?: number | string;
 }) {
   // const kycFormCtx = useKYCFormContext();
   const [loading, setLoading] = useState(false);

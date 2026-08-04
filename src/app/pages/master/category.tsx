@@ -46,7 +46,7 @@ type Category = {
 type FormValues = {
   name: string;
   status: string; // Changed to string
-    image: string | File;
+    image: string 
 
 };
 
@@ -176,7 +176,10 @@ export default function Category() {
   });
 
   const formStatusValue = useWatch({ control, name: "status" });
-  const formImageValue = useWatch({ control, name: "image" });
+ const formImageValue: string = useWatch({
+  control,
+  name: "image",
+});
 
   const formOption = {
     name: { required: "Category name is required" },
@@ -307,16 +310,15 @@ export default function Category() {
     }
 
     // Handle image upload
-    if (data.image) {
-      if (typeof data.image === 'string' && data.image.startsWith("data:")) {
-        const response = await fetch(data.image);
-        const blob = await response.blob();
-        const file = new File([blob], "category-image.jpg", { type: blob.type });
-        formData.append("image", file);
-      } else if (data.image instanceof File) {
-        formData.append("image", data.image);
-      }
-    }
+   if (data.image && data.image.startsWith("data:")) {
+  const response = await fetch(data.image);
+  const blob = await response.blob();
+  const file = new File([blob], "category-image.jpg", {
+    type: blob.type,
+  });
+
+  formData.append("image", file);
+}
 
     console.log("📤 Uploading with FormData (multipart)");
     console.log("Fields:", {

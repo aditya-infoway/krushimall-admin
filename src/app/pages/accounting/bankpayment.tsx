@@ -56,7 +56,7 @@ const initialForm = {
   narration: "",
   createdType: "",
   createdBy: "",
-  leadNo: "",
+ leadNo: null as any,
 };
 
 interface BankPayment {
@@ -172,28 +172,24 @@ export default function BankPayment() {
   const currentItems = filteredRows.slice(indexOfFirstItem, indexOfLastItem);
   const [bankAccounts, setBankAccounts] = useState<any[]>([]);
   const [oppAccounts, setOppAccounts] = useState<any[]>([]);
- const companyId = Number(
-  sessionStorage.getItem("companyId"),
-);
+  const companyId = Number(sessionStorage.getItem("companyId"));
 
-const financialYearId = Number(
-  sessionStorage.getItem("financialYearId"),
-);
+  const financialYearId = Number(sessionStorage.getItem("financialYearId"));
   const getPurchaseBills = async () => {
     try {
-     const res = await apiHelper.get("/purchases/pending");
+      const res = await apiHelper.get("/purchases/pending");
 
       setPurchaseBills(
-  res.data.map((p: any) => ({
-    value: p.id,
-    label: p.billNo,
-    party: p.account?.accountName,
-    accountId: p.accountId,
-    balance: p.account?.closingBalance,
-    balanceType: p.account?.drCr,
-    pendingAmount: p.pendingAmount,
-  }))
-);
+        res.data.map((p: any) => ({
+          value: p.id,
+          label: p.billNo,
+          party: p.account?.accountName,
+          accountId: p.accountId,
+          balance: p.account?.closingBalance,
+          balanceType: p.account?.drCr,
+          pendingAmount: p.pendingAmount,
+        })),
+      );
     } catch (err) {
       console.log(err);
     }
@@ -286,97 +282,79 @@ const financialYearId = Number(
     getBankPayments();
   }, []);
   const purchaseBillOptions = purchaseBills;
- const validateForm = () => {
-  const newErrors: Record<string, string> = {};
-if (!companyId) {
-  newErrors.companyId =
-    "Company is not selected";
-}
-
-if (!financialYearId) {
-  newErrors.financialYearId =
-    "Financial year is not selected";
-}
-  // Bank Account
-  if (!form.bankAccount?.value) {
-    newErrors.bankAccount = "Bank Account is required";
-  }
-
-  // Opp. Account
-  if (!form.oppAccount?.value) {
-    newErrors.oppAccount = "Opp. Account is required";
-  }
-
-  // Date
-  if (
-    !form.date ||
-    (Array.isArray(form.date) &&
-      form.date.length === 0)
-  ) {
-    newErrors.date = "Date is required";
-  }
-
-  // Purchase Bill
-  if (
-    form.type === "Purchase" &&
-    !purchaseBill?.value
-  ) {
-    newErrors.purchaseBill =
-      "Purchase Bill is required";
-  }
-
-  // Lead
-  if (
-    form.type === "Lead Cancel" &&
-    !form.leadNo?.id
-  ) {
-    newErrors.leadNo = "Lead is required";
-  }
-
-  // Amount
-  const amount = Number(form.amount);
-
-  if (
-    form.amount === "" ||
-    form.amount === null ||
-    form.amount === undefined
-  ) {
-    newErrors.amount = "Amount is required";
-  } else if (isNaN(amount)) {
-    newErrors.amount = "Enter a valid amount";
-  } else if (amount <= 0) {
-    newErrors.amount =
-      "Amount must be greater than 0";
-  }
-
-  // Payment Mode
-  if (!form.paymentMode?.id) {
-    newErrors.paymentMode =
-      "Payment Mode is required";
-  }
-
-  // Cheque validations
-  if (form.paymentMode?.id === "Cheque") {
-    if (!form.chequeNo?.trim()) {
-      newErrors.chequeNo =
-        "Cheque No. is required";
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+    if (!companyId) {
+      newErrors.companyId = "Company is not selected";
     }
 
-    if (!form.chequeDate) {
-      newErrors.chequeDate =
-        "Cheque Date is required";
+    if (!financialYearId) {
+      newErrors.financialYearId = "Financial year is not selected";
+    }
+    // Bank Account
+    if (!form.bankAccount?.value) {
+      newErrors.bankAccount = "Bank Account is required";
     }
 
-    if (!form.chequeClearDate) {
-      newErrors.chequeClearDate =
-        "Cheque Clear Date is required";
+    // Opp. Account
+    if (!form.oppAccount?.value) {
+      newErrors.oppAccount = "Opp. Account is required";
     }
-  }
 
-  setErrors(newErrors);
+    // Date
+    if (!form.date || (Array.isArray(form.date) && form.date.length === 0)) {
+      newErrors.date = "Date is required";
+    }
 
-  return Object.keys(newErrors).length === 0;
-};
+    // Purchase Bill
+    if (form.type === "Purchase" && !purchaseBill?.value) {
+      newErrors.purchaseBill = "Purchase Bill is required";
+    }
+
+    // Lead
+    if (form.type === "Lead Cancel" && !form.leadNo) {
+      newErrors.leadNo = "Lead is required";
+    }
+
+    // Amount
+    const amount = Number(form.amount);
+
+    if (
+      form.amount === "" ||
+      form.amount === null ||
+      form.amount === undefined
+    ) {
+      newErrors.amount = "Amount is required";
+    } else if (isNaN(amount)) {
+      newErrors.amount = "Enter a valid amount";
+    } else if (amount <= 0) {
+      newErrors.amount = "Amount must be greater than 0";
+    }
+
+    // Payment Mode
+    if (!form.paymentMode?.id) {
+      newErrors.paymentMode = "Payment Mode is required";
+    }
+
+    // Cheque validations
+    if (form.paymentMode?.id === "Cheque") {
+      if (!form.chequeNo?.trim()) {
+        newErrors.chequeNo = "Cheque No. is required";
+      }
+
+      if (!form.chequeDate) {
+        newErrors.chequeDate = "Cheque Date is required";
+      }
+
+      if (!form.chequeClearDate) {
+        newErrors.chequeClearDate = "Cheque Clear Date is required";
+      }
+    }
+
+    setErrors(newErrors);
+
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleAdd = async () => {
     setEditId(null);
@@ -436,46 +414,47 @@ if (!financialYearId) {
   };
 
   const handleSubmit = async () => {
-  if (!validateForm()) return;
-  if (!companyId || !financialYearId) {
-    toast.error(
-      "Company or financial year is not selected",
-    );
-    return;
-  }
-  try {
-    const payload = {
-      companyId,
-      financialYearId,
-      date: form.date,
-      bankAccountId: form.bankAccount.value,
-      oppAccountId: form.oppAccount.value,
-      amount: Number(form.amount),
-      paymentMode: form.paymentMode?.id,
-      chequeNo: form.chequeNo,
-      chequeDate: form.chequeDate,
-      clearDate: form.chequeClearDate,
-      narration: form.narration,
-      purchaseId: form.type === "Purchase" ? purchaseBill?.value : null,
-      leadId: null,
-    };
-
-    if (editId) {
-      await apiHelper.put(`/bank-payment/${editId}`, payload);
-      toast.success("Bank payment updated successfully!");
-    } else {
-      await apiHelper.post("/bank-payment", payload);
-      toast.success("Bank payment added successfully!");
+    if (!validateForm()) return;
+    if (!companyId || !financialYearId) {
+      toast.error("Company or financial year is not selected");
+      return;
     }
+    try {
+      const payload = {
+        companyId,
+        financialYearId,
+        date: form.date,
+        bankAccountId: form.bankAccount.value,
+        oppAccountId: form.oppAccount.value,
+        amount: Number(form.amount),
+        paymentMode: form.paymentMode?.id,
+        chequeNo: form.chequeNo,
+        chequeDate: form.chequeDate,
+        clearDate: form.chequeClearDate,
+        narration: form.narration,
+        purchaseId: form.type === "Purchase" ? purchaseBill?.value : null,
+        leadId: null,
+      };
 
-    await getBankPayments();
-    await getVoucherNo();
-    setShowDrawer(false);
-  } catch (error: any) {
-    console.log(error);
-    toast.error(error.response?.data?.message || "Failed to save bank payment. Please try again.");
-  }
-};
+      if (editId) {
+        await apiHelper.put(`/bank-payment/${editId}`, payload);
+        toast.success("Bank payment updated successfully!");
+      } else {
+        await apiHelper.post("/bank-payment", payload);
+        toast.success("Bank payment added successfully!");
+      }
+
+      await getBankPayments();
+      await getVoucherNo();
+      setShowDrawer(false);
+    } catch (error: any) {
+      console.log(error);
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to save bank payment. Please try again.",
+      );
+    }
+  };
   const isAllPageSelected =
     currentItems.length > 0 &&
     currentItems.every((item) => selectedIds.includes(item.id));
@@ -532,27 +511,25 @@ if (!financialYearId) {
   useEffect(() => {
     setCurrentPage(1);
   }, [filterType, filterDateFrom, filterDateTo, filterPaymentMode, search]);
-const downloadExcel = async () => {
-  try {
-    const blob = await apiHelper.getBlob(
-      "/bank-payment/export/excel"
-    );
+  const downloadExcel = async () => {
+    try {
+      const blob = await apiHelper.getBlob("/bank-payment/export/excel");
 
-    const url = window.URL.createObjectURL(blob);
+      const url = window.URL.createObjectURL(blob);
 
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "BankPaymentRegister.xlsx";
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "BankPaymentRegister.xlsx";
 
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
 
-    window.URL.revokeObjectURL(url);
-  } catch (err) {
-    console.log(err);
-  }
-};
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.log(err);
+    }
+  };
   return (
     <div className="relative min-h-screen space-y-6 p-4 pb-28 text-gray-900 md:p-6 dark:text-gray-100">
       {/* Upper Actions Control Toolbar Layout */}
@@ -566,48 +543,48 @@ const downloadExcel = async () => {
           </p>
         </div>
 
-       <div className="flex flex-wrap items-center justify-between gap-2 md:flex-nowrap">
-  {/* Left side - Filter and icons */}
-  <div className="flex items-center gap-2">
-    <button
-      type="button"
-      onClick={() => setShowFilterBar(!showFilterBar)}
-      className={`inline-flex items-center gap-1.5 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
-        showFilterBar
-          ? "dark:bg-dark-600 dark:border-dark-500 border-red-200 bg-red-50 text-red-600 dark:text-white"
-          : "dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
-      }`}
-    >
-      <Filter className="size-4.5" />
-      <span className="hidden sm:inline">Filter</span>
-    </button>
+        <div className="flex flex-wrap items-center justify-between gap-2 md:flex-nowrap">
+          {/* Left side - Filter and icons */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowFilterBar(!showFilterBar)}
+              className={`inline-flex items-center gap-1.5 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
+                showFilterBar
+                  ? "dark:bg-dark-600 dark:border-dark-500 border-red-200 bg-red-50 text-red-600 dark:text-white"
+                  : "dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              <Filter className="size-4.5" />
+              <span className="hidden sm:inline">Filter</span>
+            </button>
 
-    <button
-      type="button"
-      onClick={downloadExcel}
-      className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
-    >
-      <RiFileExcel2Fill className="text-lg text-green-500" />
-    </button>
+            <button
+              type="button"
+              onClick={downloadExcel}
+              className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            >
+              <RiFileExcel2Fill className="text-lg text-green-500" />
+            </button>
 
-    <button
-      type="button"
-      className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
-    >
-      <RiFilePdfFill className="text-lg text-red-500" />
-    </button>
-  </div>
+            <button
+              type="button"
+              className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            >
+              <RiFilePdfFill className="text-lg text-red-500" />
+            </button>
+          </div>
 
-  {/* Right side - Add Bank Payment button */}
-  <button
-    type="button"
-    onClick={handleAdd}
-    className="bg-primary-600 hover:bg-primary-700 cursor-pointer inline-flex items-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-medium text-white transition-colors whitespace-nowrap"
-  >
-    <Plus className="size-4.5" />
-    Add Bank Payment
-  </button>
-</div>
+          {/* Right side - Add Bank Payment button */}
+          <button
+            type="button"
+            onClick={handleAdd}
+            className="bg-primary-600 hover:bg-primary-700 inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-medium whitespace-nowrap text-white transition-colors"
+          >
+            <Plus className="size-4.5" />
+            Add Bank Payment
+          </button>
+        </div>
       </div>
 
       {/* Search */}
@@ -689,13 +666,13 @@ const downloadExcel = async () => {
           <table className="w-full min-w-300 text-left [&_.table-th]:font-semibold">
             <thead className="dark:bg-dark-700/60 dark:border-dark-600 border-b border-gray-200 bg-gray-100">
               <tr>
-<th className="w-10 px-2 py-3.5 text-center">
-  <Checkbox
-    checked={isAllPageSelected}
-    onChange={(e: any) => handleSelectAll(e.target.checked)}
-    className="size-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
-  />
-</th>
+                <th className="w-10 px-2 py-3.5 text-center">
+                  <Checkbox
+                    checked={isAllPageSelected}
+                    onChange={(e: any) => handleSelectAll(e.target.checked)}
+                    className="size-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                  />
+                </th>
                 <th className="w-12 px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
                   S.No
                 </th>
@@ -752,13 +729,13 @@ const downloadExcel = async () => {
                     key={item.id}
                     className={`${isRowSelected ? "dark:bg-dark-600/30 bg-gray-50/50" : ""} dark:hover:bg-dark-700/40 transition-colors hover:bg-gray-50/30`}
                   >
-                   <td className="px-2 py-3 text-center">
-  <Checkbox
-    checked={isRowSelected}
-    onChange={() => handleSelectRow(item.id)}
-    className="size-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
-  />
-</td>
+                    <td className="px-2 py-3 text-center">
+                      <Checkbox
+                        checked={isRowSelected}
+                        onChange={() => handleSelectRow(item.id)}
+                        className="size-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                      />
+                    </td>
                     <td className="px-3 py-3 text-sm font-medium whitespace-nowrap text-gray-500">
                       {indexOfFirstItem + index + 1}
                     </td>
@@ -769,7 +746,7 @@ const downloadExcel = async () => {
                       {item.voucherNo}
                     </td>
                     <td className="py-3 whitespace-nowrap">
-                      <span className="bg-primary-500 inline-flex rounded-full px-2 py-0.5 text-xs font-semibold text-white ">
+                      <span className="bg-primary-500 inline-flex rounded-full px-2 py-0.5 text-xs font-semibold text-white">
                         {item.type}
                       </span>
                     </td>
@@ -802,14 +779,16 @@ const downloadExcel = async () => {
                       {item.chequeNo || "-"}
                     </td>
                     <td className="px-3 py-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
-                       {item.chequeDate
-    ? new Date(item.chequeDate).toLocaleDateString("en-GB")
-    : "-"}
+                      {item.chequeDate
+                        ? new Date(item.chequeDate).toLocaleDateString("en-GB")
+                        : "-"}
                     </td>
                     <td className="px-3 py-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
                       {item.chequeClearDate
-    ? new Date(item.chequeClearDate).toLocaleDateString("en-GB")
-    : "-"}
+                        ? new Date(item.chequeClearDate).toLocaleDateString(
+                            "en-GB",
+                          )
+                        : "-"}
                     </td>
                     <td className="px-3 py-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
                       {item.narration}
@@ -1107,7 +1086,7 @@ const downloadExcel = async () => {
                         value={purchaseBill}
                         placeholder="Search Purchase Bill No..."
                         searchFields={["label", "party"]}
-                          error={errors.purchaseBill}
+                        error={errors.purchaseBill}
                         columns={[
                           {
                             header: "Bill No",
@@ -1120,25 +1099,25 @@ const downloadExcel = async () => {
                             width: "3fr",
                           },
                         ]}
-                     onChange={(value: any) => {
-  setPurchaseBill(value);
+                        onChange={(value: any) => {
+                          setPurchaseBill(value);
 
-  const purchase = purchaseBills.find(
-    (p) => p.value === value?.value
-  );
+                          const purchase = purchaseBills.find(
+                            (p) => p.value === value?.value,
+                          );
 
-  if (!purchase) return;
+                          if (!purchase) return;
 
-  const account = oppAccounts.find(
-    (a) => a.value === purchase.accountId
-  );
+                          const account = oppAccounts.find(
+                            (a) => a.value === purchase.accountId,
+                          );
 
-  setForm((prev) => ({
-    ...prev,
-    oppAccount: account || null,
-    amount: String(purchase.pendingAmount),
-  }));
-}}
+                          setForm((prev) => ({
+                            ...prev,
+                            oppAccount: account || null,
+                            amount: String(purchase.pendingAmount),
+                          }));
+                        }}
                       />
                     </div>
                   )}
@@ -1179,7 +1158,7 @@ const downloadExcel = async () => {
                       displayField="label"
                       placeholder="Search Bank Account"
                       searchFields={["label", "mobile"]}
-                       error={errors.bankAccount}
+                      error={errors.bankAccount}
                       columns={[
                         {
                           header: "Account",
@@ -1235,7 +1214,7 @@ const downloadExcel = async () => {
                       <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                         Opp. Account <span className="text-red-500">*</span>
                       </label>
-                        {form.oppAccount && (
+                      {form.oppAccount && (
                         <span
                           className={`text-sm font-semibold ${
                             form.oppAccount.balanceType === "Dr"
@@ -1267,8 +1246,8 @@ const downloadExcel = async () => {
                       displayField="label"
                       placeholder="Search Opp. Account"
                       searchFields={["label", "mobile"]}
-                        error={errors.oppAccount}
-                          disabled={form.type === "Purchase"}
+                      error={errors.oppAccount}
+                      disabled={form.type === "Purchase"}
                       columns={[
                         {
                           header: "Account",
