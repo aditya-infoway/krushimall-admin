@@ -334,7 +334,7 @@ export type BasicInformationType = {
   modelId?: number | string;
   modelYearId?: number | string;
   variantId?: number | string;
-
+isUpcoming?: boolean;
   variantCode?: string;
   brandName: string;
   modelName: string;
