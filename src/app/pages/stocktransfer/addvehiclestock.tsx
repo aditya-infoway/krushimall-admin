@@ -403,9 +403,13 @@ if (selectedBranch) {
       setSelectedVehicles(transfer.vehicles);
       const vehicle = transfer.vehicles[0];
 
-if (vehicle) {
-  setValue("chassisNo", vehicle.chassisNo);
-
+  if (vehicle) {
+    // 👇 ADD THIS — merge current vehicle into dropdown options
+    setVehicleOptions((prev: any[]) => {
+      const exists = prev.some((v) => v.chassisNo === vehicle.chassisNo);
+      return exists ? prev : [...prev, vehicle];
+    });
+ setValue("chassisNo", vehicle.chassisNo);
   setValue("vehicleSrNo", vehicle.serialNo || "");
  setValue("model", vehicle.modelName || "");
 setValue("variant", vehicle.variantName || "");
@@ -436,14 +440,10 @@ setValue("s2TyresNo", vehicle.second2TyreNo || "");
   }
 };
 useEffect(() => {
-  if (
-    id &&
-    vehicleOptions.length > 0 &&
-    branchOptions.length > 0
-  ) {
+  if (id && branchOptions.length > 0) {
     getTransferById();
   }
-}, [id, vehicleOptions, branchOptions]);
+}, [id, branchOptions]);
 const getCompany = async () => {
   try {
     // Get selected IDs only from sessionStorage
@@ -657,7 +657,7 @@ useEffect(() => {
     if (!vehicleData) return;
 
     setPendingVehicle(vehicleData);
-
+     setValue("chassisNo", vehicleData.chassisNo);
     setValue("vehicleSrNo", vehicleData.serialNo || "");
     setValue("model", vehicleData.model || "");
     setValue("variant", vehicleData.variant || "");

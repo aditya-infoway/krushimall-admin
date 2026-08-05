@@ -180,6 +180,7 @@ export function BasicInformation({
       metaDescription: editData.metaDescription ?? "",
 
       keywords: editData.keywords ?? "",
+      isUpcoming: editData.isUpcoming ?? false,
     });
 
     // Required to generate state options
@@ -225,6 +226,7 @@ export function BasicInformation({
         seoUrl: data.seoUrl,
         metaDescription: data.metaDescription,
         keywords: data.keywords,
+        isUpcoming: Boolean(data.isUpcoming),
         currentStep: 0,
       };
 
@@ -425,7 +427,26 @@ export function BasicInformation({
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
       <div className="mt-6 space-y-6">
         {/* Basic Information Section */}
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
+          <div className="mt-7 flex items-center">
+            <Controller
+              name="isUpcoming"
+              control={control}
+              render={({ field }) => (
+                <label className="flex cursor-pointer items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={!!field.value}
+                    onChange={(e) => field.onChange(e.target.checked)}
+                    className="text-primary-600 h-4 w-4 rounded border-gray-300"
+                  />
+                  <span className="text-sm font-medium">
+                     Upcoming Tractor
+                  </span>
+                </label>
+              )}
+            />
+          </div>
           <div>
             <Controller
               name="categoryId"
