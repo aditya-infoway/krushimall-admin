@@ -369,7 +369,7 @@ export default function LeadBuilder() {
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => handleOrderBill(lead.id)}
-                          className="flex-1 cursor-pointer rounded-full border border-yellow-500 py-1 text-[12px] text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-900/20"
+                          className="flex-1 cursor-pointer rounded-full border border-yellow-500 py-1 px-2 text-[12px] text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-900/20"
                         >
                           Send Quotation
                         </button>

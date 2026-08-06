@@ -1999,7 +1999,9 @@ const financialYearId = Number(
 
       setExecutives(
         data
-          .filter((item: any) => item.role === "Executive")
+          .filter((item: any) =>
+  item.role?.toLowerCase().includes("executive"),
+)
           .map((item: any) => ({
             id: item.id,
             name: item.employeeName,

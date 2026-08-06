@@ -39,7 +39,7 @@ import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 type Employee = {
   id: number;
   department: string;
-  branch: string;
+  branchId: string;
   role: string;
   employeeName: string;
   mobileNumber: string;
@@ -57,7 +57,7 @@ type FormValues = {
   id?: number;
   teamLeadId?: number;
   department: string;
-  branch: string;
+  branchId: string;
   role: string;
 
   employeeName: string;
@@ -87,13 +87,7 @@ const statusOptions = [
 
 // Change from { id, name } to { label, value } format for Combobox
 
-const branchOptions = [
-  { label: "Mumbai", value: "Mumbai" },
-  { label: "Delhi", value: "Delhi" },
-  { label: "Bangalore", value: "Bangalore" },
-  { label: "Chennai", value: "Chennai" },
-  { label: "Pune", value: "Pune" },
-];
+
 
 const Employee = () => {
   const [showDrawer, setShowDrawer] = useState(false);
@@ -110,7 +104,7 @@ const Employee = () => {
   const [selectedStatusFilter, setSelectedStatusFilter] = useState("All");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
+const [branchOptions, setBranchOptions] = useState<any[]>([]);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [confirmState, setConfirmState] = useState<
     "pending" | "success" | "error"
@@ -154,6 +148,7 @@ const Employee = () => {
     name: "teamLeadId",
   });
  const [teamLeadOptions, setTeamLeadOptions] = useState<any[]>([]);
+ 
   const getTeamLeads = async (department: string) => {
     const res = await apiHelper.get(
       `/employees/team-leads?department=${department}`,
@@ -264,10 +259,26 @@ const Employee = () => {
       console.log(error);
     }
   };
+const getBranches = async () => {
+  try {
+    const branches = await apiHelper.get("/branch");
 
+   
+
+    setBranchOptions(
+      branches.map((item: any) => ({
+        label: item.branchName,
+        value: item.id,
+      }))
+    );
+  } catch (err) {
+    console.log(err);
+  }
+};
   useEffect(() => {
     getEmployees();
     getDepartments();
+      getBranches();
   }, []);
   const handleOpenAddDrawer = () => {
     setEditId(null);
@@ -385,7 +396,7 @@ const Employee = () => {
     try {
       const payload = {
         department: data.department,
-        branch: data.branch,
+         branchId: data.branchId,
         teamLeadId: data.teamLeadId,
         role: data.role,
         employeeName: data.employeeName,
@@ -1056,33 +1067,29 @@ const Employee = () => {
                       </div>
                     </div>
                     <div>
-                      <Controller
-                        name="branch"
-                        control={control}
-                        rules={{
-                          required: "Branch is required",
-                        }}
-                        render={({ field, fieldState }) => (
-                          <Combobox
-                            label={
-                              <span>
-                                Branch <span className="text-red-500">*</span>
-                              </span>
-                            }
-                            placeholder="Select Branch"
-                            data={branchOptions}
-                            value={
-                              branchOptions.find(
-                                (item) => item.value === field.value,
-                              ) || null
-                            }
-                            error={fieldState.error?.message}
-                            onChange={(val: any) =>
-                              field.onChange(val?.value || "")
-                            }
-                          />
-                        )}
-                      />
+                     <Controller
+  name="branchId"
+  control={control}
+  rules={{ required: "Branch is required" }}
+  render={({ field, fieldState }) => (
+    <Combobox
+      label={
+        <span>
+          Branch <span className="text-red-500">*</span>
+        </span>
+      }
+      placeholder="Select Branch"
+      data={branchOptions}
+      value={
+        branchOptions.find(
+          (item) => item.value === field.value
+        ) || null
+      }
+      error={fieldState.error?.message}
+      onChange={(val: any) => field.onChange(val?.value ?? null)}
+    />
+  )}
+/>
                     </div>
                   </div>
 
