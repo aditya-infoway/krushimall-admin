@@ -441,35 +441,35 @@ const CreateBranch = () => {
   };
 
   const handleDelete = async (id: number) => {
-  try {
-    if (window.confirm("Are you sure you want to delete this branch?")) {
-      await apiHelper.delete(`/branch/${id}`);
-      toast.success("Branch deleted successfully");
-      getBranches();
+    try {
+      if (window.confirm("Are you sure you want to delete this branch?")) {
+        await apiHelper.delete(`/branch/${id}`);
+        toast.success("Branch deleted successfully");
+        getBranches();
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error("Failed to delete branch");
     }
-  } catch (error) {
-    console.log(error);
-    toast.error("Failed to delete branch");
-  }
-};
+  };
 
-const handleBulkDelete = async () => {
-  try {
-    if (
-      window.confirm("Are you sure you want to delete selected branches?")
-    ) {
-      await Promise.all(
-        selectedIds.map((id) => apiHelper.delete(`/branch/${id}`)),
-      );
-      setSelectedIds([]);
-      toast.success(`${selectedIds.length} branches deleted successfully`);
-      getBranches();
+  const handleBulkDelete = async () => {
+    try {
+      if (
+        window.confirm("Are you sure you want to delete selected branches?")
+      ) {
+        await Promise.all(
+          selectedIds.map((id) => apiHelper.delete(`/branch/${id}`)),
+        );
+        setSelectedIds([]);
+        toast.success(`${selectedIds.length} branches deleted successfully`);
+        getBranches();
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error("Failed to delete selected branches");
     }
-  } catch (error) {
-    console.log(error);
-    toast.error("Failed to delete selected branches");
-  }
-};
+  };
 
   const onFormSubmit = async (data: FormValues) => {
     try {
@@ -510,15 +510,15 @@ const handleBulkDelete = async () => {
         formData.append("logo", logoFile);
       }
 
-       if (editId) {
-      await apiHelper.put(`/branch/${editId}`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      toast.success("Branch updated successfully");
-    } else {
-      await apiHelper.upload("/branch", formData);
-      toast.success("Branch created successfully");
-    }
+      if (editId) {
+        await apiHelper.put(`/branch/${editId}`, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        toast.success("Branch updated successfully");
+      } else {
+        await apiHelper.upload("/branch", formData);
+        toast.success("Branch created successfully");
+      }
 
       getBranches();
       setShowDrawer(false);
@@ -547,12 +547,12 @@ const handleBulkDelete = async () => {
         pinCode: "",
       });
     } catch (error: any) {
-    console.log(error);
-    toast.error(
-      error.response?.data?.message ||
-        error.message ||
-        "Something went wrong",
-    );
+      console.log(error);
+      toast.error(
+        error.response?.data?.message ||
+          error.message ||
+          "Something went wrong",
+      );
     }
   };
   const filteredData = branches.filter((item: any) => {
@@ -664,47 +664,47 @@ const handleBulkDelete = async () => {
           </p>
         </div>
 
-       <div className="flex flex-wrap items-center justify-between gap-2 md:flex-nowrap">
-  {/* Left side - Filter and icons */}
-  <div className="flex items-center gap-2">
-    <button
-      type="button"
-      onClick={() => setShowFilterBar(!showFilterBar)}
-      className={`inline-flex items-center gap-1.5 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
-        showFilterBar
-          ? "bg-primary-50 border-primary-200 text-primary-600 dark:bg-dark-600 dark:border-dark-500 dark:text-white"
-          : "dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
-      }`}
-    >
-      <FunnelIcon className="size-4.5" />
-      <span className="hidden sm:inline">Filter</span>
-    </button>
+        <div className="flex flex-wrap items-center justify-between gap-2 md:flex-nowrap">
+          {/* Left side - Filter and icons */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowFilterBar(!showFilterBar)}
+              className={`inline-flex items-center gap-1.5 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
+                showFilterBar
+                  ? "bg-primary-50 border-primary-200 text-primary-600 dark:bg-dark-600 dark:border-dark-500 dark:text-white"
+                  : "dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              <FunnelIcon className="size-4.5" />
+              <span className="hidden sm:inline">Filter</span>
+            </button>
 
-    <button
-      type="button"
-      className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
-    >
-      <RiFileExcel2Fill className="text-lg text-green-500" />
-    </button>
+            <button
+              type="button"
+              className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            >
+              <RiFileExcel2Fill className="text-lg text-green-500" />
+            </button>
 
-    <button
-      type="button"
-      className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
-    >
-      <RiFilePdfFill className="text-lg text-red-500" />
-    </button>
-  </div>
+            <button
+              type="button"
+              className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            >
+              <RiFilePdfFill className="text-lg text-red-500" />
+            </button>
+          </div>
 
-  {/* Right side - Add Branch button */}
-  <Button
-    color="primary"
-    onClick={handleOpenAddDrawer}
-    className="whitespace-nowrap"
-  >
-    <PlusIcon className="mr-1.5 size-4.5" />
-    Add Branch
-  </Button>
-</div>
+          {/* Right side - Add Branch button */}
+          <Button
+            color="primary"
+            onClick={handleOpenAddDrawer}
+            className="whitespace-nowrap"
+          >
+            <PlusIcon className="mr-1.5 size-4.5" />
+            Add Branch
+          </Button>
+        </div>
       </div>
 
       {/* Search */}
@@ -1259,33 +1259,34 @@ const handleBulkDelete = async () => {
                       />
                     </div>
                     <div>
-                   <Controller
-  name="branchType"
-  control={control}
-  rules={{
-    required: "Branch type is required",
-  }}
-  render={({ field, fieldState }) => (
-    <Combobox
-      label={
-        <span>
-          Branch Type <span className="text-red-500">*</span>
-        </span>
-      }
-      placeholder="Select type"
-      data={branchTypeOptions}
-      value={
-        branchTypeOptions.find(
-          (item) => item.value === field.value
-        ) || null
-      }
-      error={fieldState.error?.message}
-      onChange={(val: any) => {
-        field.onChange(val?.value || "");
-      }}
-    />
-  )}
-/>
+                      <Controller
+                        name="branchType"
+                        control={control}
+                        rules={{
+                          required: "Branch type is required",
+                        }}
+                        render={({ field, fieldState }) => (
+                          <Combobox
+                            label={
+                              <span>
+                                Branch Type{" "}
+                                <span className="text-red-500">*</span>
+                              </span>
+                            }
+                            placeholder="Select type"
+                            data={branchTypeOptions}
+                            value={
+                              branchTypeOptions.find(
+                                (item) => item.value === field.value,
+                              ) || null
+                            }
+                            error={fieldState.error?.message}
+                            onChange={(val: any) => {
+                              field.onChange(val?.value || "");
+                            }}
+                          />
+                        )}
+                      />
                     </div>
                   </div>
 
@@ -1295,68 +1296,69 @@ const handleBulkDelete = async () => {
                   {/* Row 2: Manager Name, Mobile, Gmail - 3 columns */}
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
-                    <Controller
-  name="managerName"
-  control={control}
-  rules={{
-    required: "Manager name is required",
-  }}
-  render={({ field, fieldState }) => (
-    <Combobox
-      label={
-        <span>
-          Branch Manager Name <span className="text-red-500">*</span>
-        </span>
-      }
-      placeholder="Search Manager"
-      data={managerAccounts}
-      displayField="label"
-      searchFields={["label", "mobile"]}
-      columns={[
-        {
-          header: "Account",
-          field: "label",
-          width: "2fr",
-        },
-        {
-          header: "Mobile",
-          field: "mobile",
-          width: "1.5fr",
-        },
-      ]}
-      value={
-        managerAccounts.find(
-          (x: any) => x.label === field.value
-        ) || null
-      }
-      error={fieldState.error?.message}
-      onChange={(acc: any) => {
-        if (!acc) {
-          field.onChange("");
-          setValue("managerId", undefined as any);
-          return;
-        }
+                      <Controller
+                        name="managerName"
+                        control={control}
+                        rules={{
+                          required: "Manager name is required",
+                        }}
+                        render={({ field, fieldState }) => (
+                          <Combobox
+                            label={
+                              <span>
+                                Branch Manager Name{" "}
+                                <span className="text-red-500">*</span>
+                              </span>
+                            }
+                            placeholder="Search Manager"
+                            data={managerAccounts}
+                            displayField="label"
+                            searchFields={["label", "mobile"]}
+                            columns={[
+                              {
+                                header: "Account",
+                                field: "label",
+                                width: "2fr",
+                              },
+                              {
+                                header: "Mobile",
+                                field: "mobile",
+                                width: "1.5fr",
+                              },
+                            ]}
+                            value={
+                              managerAccounts.find(
+                                (x: any) => x.label === field.value,
+                              ) || null
+                            }
+                            error={fieldState.error?.message}
+                            onChange={(acc: any) => {
+                              if (!acc) {
+                                field.onChange("");
+                                setValue("managerId", undefined as any);
+                                return;
+                              }
 
-        field.onChange(acc.label);
+                              field.onChange(acc.label);
 
-        setValue("managerId", acc.id);
-        setValue("mobileNo", acc.mobile || "");
-        setValue("gmailId", acc.email || "");
-        setValue("gstNo", acc.gstNo || "");
-        setValue("panCardNo", acc.panNo || "");
-        setValue("address1", acc.address1 || "");
-        setValue("address2", acc.address2 || "");
-        setValue("country", acc.country || "");
-        setValue("countryCode", acc.countryCode || "");
-        setValue("state", acc.state || "");
-        setValue("stateCode", acc.stateCode || "");
-        setValue("district", acc.district || "");
-        setValue("city", acc.city || "");
-        setValue("pinCode", acc.pinCode || "");
-      }}
-    />
-  )}
-/>
+                              setValue("managerId", acc.id);
+                              setValue("mobileNo", acc.mobile || "");
+                              setValue("gmailId", acc.email || "");
+                              setValue("gstNo", acc.gstNo || "");
+                              setValue("panCardNo", acc.panNo || "");
+                              setValue("address1", acc.address1 || "");
+                              setValue("address2", acc.address2 || "");
+                              setValue("country", acc.country || "");
+                              setValue("countryCode", acc.countryCode || "");
+                              setValue("state", acc.state || "");
+                              setValue("stateCode", acc.stateCode || "");
+                              setValue("district", acc.district || "");
+                              setValue("city", acc.city || "");
+                              setValue("pinCode", acc.pinCode || "");
+                            }}
+                          />
+                        )}
+                      />
                     </div>
                     <div>
                       <Input

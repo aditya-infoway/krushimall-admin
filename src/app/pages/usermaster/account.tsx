@@ -375,8 +375,7 @@ const Account = () => {
                       {item.state}
                     </Td>
                     <Td className="dark:text-dark-200 py-4 text-gray-600">
-                      {item.employee?.employeeName ||
-                        item.createdByBranch?.branchName ||
+                      {
                         item.createdBy ||
                         "-"}
                     </Td>
