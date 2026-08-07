@@ -10,7 +10,7 @@ import {
   MenuItem,
 } from "@headlessui/react";
 import { Fragment, useState, useEffect } from "react";
-import { useForm, useWatch,Controller } from "react-hook-form";
+import { useForm, useWatch, Controller } from "react-hook-form";
 import { RiFileExcel2Fill, RiFilePdfFill } from "react-icons/ri";
 import {
   XMarkIcon,
@@ -110,7 +110,8 @@ export default function Model() {
   const [selectedBrandFilter, setSelectedBrandFilter] = useState("All");
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState("All");
   const [selectedStatusFilter, setSelectedStatusFilter] = useState("All"); // Status filter state
-
+  const [filterBrands, setFilterBrands] = useState<BrandOption[]>([]);
+  const [filterModels, setFilterModels] = useState<ModelType[]>([]);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -254,20 +255,26 @@ export default function Model() {
   // Dropdown filtering layer data definitions
   const nameFilterOptions = [
     { id: "All", name: "All Models" },
-    ...Array.from(new Set(models.map((m) => m.modelName))).map((mName) => ({
-      id: mName,
-      name: mName,
+    ...filterModels.map((m) => ({
+      id: String(m.id),
+      name: m.modelName,
     })),
   ];
 
   const brandFilterOptions = [
     { id: "All", name: "All Brands" },
-    ...brands.map((b) => ({ id: b.name, name: b.name })),
+    ...filterBrands.map((b) => ({
+      id: String(b.id),
+      name: b.name,
+    })),
   ];
 
   const categoryFilterOptions = [
     { id: "All", name: "All Categories" },
-    ...categories.map((c) => ({ id: c.name, name: c.name })),
+    ...categories.map((c) => ({
+      id: String(c.id),
+      name: c.name,
+    })),
   ];
 
   // Status Filter Options
@@ -443,13 +450,16 @@ export default function Model() {
       item.brand.toLowerCase().includes(search.toLowerCase()) ||
       item.category.toLowerCase().includes(search.toLowerCase());
 
-    const matchesNameDropdown =
-      selectedNameFilter === "All" || item.modelName === selectedNameFilter;
     const matchesBrandDropdown =
-      selectedBrandFilter === "All" || item.brand === selectedBrandFilter;
+      selectedBrandFilter === "All" ||
+      String(item.brandId) === selectedBrandFilter;
+
     const matchesCategoryDropdown =
       selectedCategoryFilter === "All" ||
-      item.category === selectedCategoryFilter;
+      String(item.categoryId) === selectedCategoryFilter;
+
+    const matchesNameDropdown =
+      selectedNameFilter === "All" || String(item.id) === selectedNameFilter;
     const matchesStatusDropdown =
       selectedStatusFilter === "All" ||
       String(item.status) === selectedStatusFilter;
@@ -571,51 +581,6 @@ export default function Model() {
       {showFilterBar && (
         <div className="dark:bg-dark-700 dark:border-dark-500 animate-in fade-in slide-in-from-top-2 rounded-xl border border-gray-200 bg-white p-4 transition-all duration-150">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
-            {/* Filter 1: Model Name */}
-            {/* Filter 1: Model Name */}
-            <div className="flex flex-col gap-1">
-              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
-                Model Name
-              </span>
-              <Combobox
-                data={nameFilterOptions}
-                displayField="name"
-                value={
-                  nameFilterOptions.find((o) => o.id === selectedNameFilter) ||
-                  nameFilterOptions[0]
-                }
-                onChange={(opt: any) => {
-                  setSelectedNameFilter(opt?.id || "All");
-                  setCurrentPage(1);
-                }}
-                placeholder="Search or select model..."
-                searchFields={["name"]}
-              />
-            </div>
-
-            {/* Filter 2: Brand */}
-            <div className="flex flex-col gap-1">
-              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
-                Brand
-              </span>
-              <Combobox
-                data={brandFilterOptions}
-                displayField="name"
-                value={
-                  brandFilterOptions.find(
-                    (o) => o.id === selectedBrandFilter,
-                  ) || brandFilterOptions[0]
-                }
-                onChange={(opt: any) => {
-                  setSelectedBrandFilter(opt?.id || "All");
-                  setCurrentPage(1);
-                }}
-                placeholder="Search or select brand..."
-                searchFields={["name"]}
-              />
-            </div>
-
-            {/* Filter 3: Category */}
             <div className="flex flex-col gap-1">
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
                 Category
@@ -629,13 +594,69 @@ export default function Model() {
                   ) || categoryFilterOptions[0]
                 }
                 onChange={(opt: any) => {
-                  setSelectedCategoryFilter(opt?.id || "All");
-                  setCurrentPage(1);
+                  setSelectedCategoryFilter(opt.id);
+                  setSelectedBrandFilter("All");
+                  setSelectedNameFilter("All");
+
+                  const categoryBrands = brands.filter(
+                    (b) => String(b.categoryId) === String(opt.id),
+                  );
+
+                  setFilterBrands(categoryBrands);
+                  setFilterModels([]);
                 }}
                 placeholder="Search or select category..."
                 searchFields={["name"]}
               />
             </div>
+            <div className="flex flex-col gap-1">
+              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
+                Brand
+              </span>
+              <Combobox
+                data={brandFilterOptions}
+                displayField="name"
+                value={
+                  brandFilterOptions.find(
+                    (o) => o.id === selectedBrandFilter,
+                  ) || brandFilterOptions[0]
+                }
+                onChange={(opt: any) => {
+                  setSelectedBrandFilter(opt.id);
+                  setSelectedNameFilter("All");
+
+                  const brandModels = models.filter(
+                    (m) => String(m.brandId) === String(opt.id),
+                  );
+
+                  setFilterModels(brandModels);
+                }}
+                placeholder="Search or select brand..."
+                searchFields={["name"]}
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
+                Model Name
+              </span>
+              <Combobox
+                data={nameFilterOptions}
+                displayField="name"
+                value={
+                  nameFilterOptions.find((o) => o.id === selectedNameFilter) ||
+                  nameFilterOptions[0]
+                }
+                onChange={(opt: any) => {
+                  setSelectedNameFilter(opt.id);
+                }}
+                placeholder="Search or select model..."
+                searchFields={["name"]}
+              />
+            </div>
+
+            {/* Filter 2: Brand */}
+
+            {/* Filter 3: Category */}
 
             {/* Filter 4: Status */}
             <div className="flex flex-col gap-1">
@@ -1057,77 +1078,83 @@ export default function Model() {
                     <span className="mb-2 block text-sm font-medium">
                       Category
                     </span>
-                  <Controller
-  name="categoryId"
-  control={control}
-  rules={{
-    validate: (value) =>
-      value && Number(value) > 0 || "Category is required",
-  }}
-  render={({ field, fieldState }) => (
-    <Combobox
-      data={categoryOptions}
-      value={
-        categoryOptions.find(
-          (option) => String(option.id) === String(field.value)
-        ) || null
-      }
-      error={fieldState.error?.message}
-      displayField="name"
-      searchFields={["name"]}
-      placeholder="Select Category"
-      onChange={(selectedOption: any) => {
-        field.onChange(selectedOption.id);
+                    <Controller
+                      name="categoryId"
+                      control={control}
+                      rules={{
+                        validate: (value) =>
+                          (value && Number(value) > 0) ||
+                          "Category is required",
+                      }}
+                      render={({ field, fieldState }) => (
+                        <Combobox
+                          data={categoryOptions}
+                          value={
+                            categoryOptions.find(
+                              (option) =>
+                                String(option.id) === String(field.value),
+                            ) || null
+                          }
+                          error={fieldState.error?.message}
+                          displayField="name"
+                          searchFields={["name"]}
+                          placeholder="Select Category"
+                          onChange={(selectedOption: any) => {
+                            field.onChange(selectedOption.id);
 
-        setValue("category", selectedOption.name);
+                            setValue("category", selectedOption.name);
 
-        setValue("brand", "");
-        setValue("brandId", "");
+                            setValue("brand", "");
+                            setValue("brandId", "");
 
-        const categoryBrands = brands.filter(
-          (brand) =>
-            Number(brand.categoryId) === Number(selectedOption.id)
-        );
+                            const categoryBrands = brands.filter(
+                              (brand) =>
+                                Number(brand.categoryId) ===
+                                Number(selectedOption.id),
+                            );
 
-        setFilteredBrands(categoryBrands);
-      }}
-    />
-  )}
-/>
+                            setFilteredBrands(categoryBrands);
+                          }}
+                        />
+                      )}
+                    />
                   </div>
 
                   <div>
                     <span className="mb-2 block text-sm font-medium">
                       Brand
                     </span>
-                   <Controller
-  name="brandId"
-  control={control}
-  rules={{
-    validate: (value) =>
-      value && Number(value) > 0 || "Brand is required",
-  }}
-  render={({ field, fieldState }) => (
-    <Combobox
-      data={brandOptions}
-      value={
-        brandOptions.find(
-          (option) => String(option.id) === String(field.value)
-        ) || null
-      }
-      error={fieldState.error?.message}
-      displayField="name"
-      searchFields={["name"]}
-      placeholder={
-        formCategoryId ? "Select Brand" : "First select category"
-      }
-      onChange={(selectedOption: any) => {
-        field.onChange(selectedOption.id);
-        setValue("brand", selectedOption.name);
-      }}
-    />
-  )}
-/>
+                    <Controller
+                      name="brandId"
+                      control={control}
+                      rules={{
+                        validate: (value) =>
+                          (value && Number(value) > 0) || "Brand is required",
+                      }}
+                      render={({ field, fieldState }) => (
+                        <Combobox
+                          data={brandOptions}
+                          value={
+                            brandOptions.find(
+                              (option) =>
+                                String(option.id) === String(field.value),
+                            ) || null
+                          }
+                          error={fieldState.error?.message}
+                          displayField="name"
+                          searchFields={["name"]}
+                          placeholder={
+                            formCategoryId
+                              ? "Select Brand"
+                              : "First select category"
+                          }
+                          onChange={(selectedOption: any) => {
+                            field.onChange(selectedOption.id);
+                            setValue("brand", selectedOption.name);
+                          }}
+                        />
+                      )}
+                    />
                   </div>
                   <div>
                     <label className="mb-2 block text-sm font-medium">

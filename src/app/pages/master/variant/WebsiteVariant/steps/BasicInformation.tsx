@@ -45,7 +45,10 @@ const dealerOptions = [
   { label: "Dealer 2", value: "dealer2" },
   { label: "Dealer 3", value: "dealer3" },
 ];
-
+const driveTypeOptions = [
+  { label: "2WD", value: "2wd" },
+  { label: "4WD", value: "4wd" },
+];
 interface BasicInformationProps {
   setCurrentStep: React.Dispatch<React.SetStateAction<number>>;
 
@@ -122,7 +125,7 @@ export function BasicInformation({
       country: editData.country ?? "",
 
       tractorStatus: editData.tractorStatus ?? "",
-
+      driveType: editData.driveType ?? "",
       shortDescription: editData.shortDescription ?? "",
 
       highlights: {
@@ -203,6 +206,7 @@ export function BasicInformation({
           : null,
         country: data.country,
         tractorStatus: data.tractorStatus,
+        driveType: data.driveType,
         shortDescription: data.shortDescription,
         highlight1: data.highlights?.highlight1,
         highlight2: data.highlights?.highlight2,
@@ -648,6 +652,27 @@ export function BasicInformation({
               )}
             />
           </div>
+          <Controller
+  name="driveType"
+  control={control}
+  render={({ field }) => (
+    <Combobox
+      data={driveTypeOptions}
+      value={
+        driveTypeOptions.find(
+          (item) => item.value === field.value
+        ) || null
+      }
+      displayField="label"
+      placeholder="Select Drive Type"
+      label="Drive Type"
+      error={errors.driveType?.message}
+      onChange={(option: any) => {
+        field.onChange(option?.value ?? "");
+      }}
+    />
+  )}
+/>
         </div>
 
         {/* Short Description */}

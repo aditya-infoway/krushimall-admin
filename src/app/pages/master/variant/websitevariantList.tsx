@@ -106,6 +106,9 @@ const [selectedYearFilter, setSelectedYearFilter] = useState("All");
 type FilterOption = {
   id: string;
   name: string;
+  categoryId?: string;
+  brandId?: string;
+  modelId?: string;
 };
 
 const [categories, setCategories] = useState<FilterOption[]>([]);
@@ -133,12 +136,13 @@ const getBrands = async () => {
     const res = await apiHelper.get("/brand");
     const data = res?.data || res;
 
-    setBrands(
-      (Array.isArray(data) ? data : []).map((item: any) => ({
-        id: item.id,
-        name: item.brandName,
-      }))
-    );
+   setBrands(
+  (Array.isArray(data) ? data : []).map((item: any) => ({
+    id: String(item.id),
+    name: item.brandName,
+    categoryId: String(item.categoryId),
+  }))
+);
   } catch {
     setBrands([]);
   }
@@ -149,12 +153,13 @@ const getModels = async () => {
     const res = await apiHelper.get("/model");
     const data = res?.data || res;
 
-    setModels(
-      (Array.isArray(data) ? data : []).map((item: any) => ({
-        id: item.id,
-        name: item.modelName,
-      }))
-    );
+   setModels(
+  (Array.isArray(data) ? data : []).map((item: any) => ({
+    id: String(item.id),
+    name: item.modelName,
+    brandId: String(item.brandId),
+  }))
+);
   } catch {
     setModels([]);
   }
@@ -166,11 +171,12 @@ const getModelYears = async () => {
     const data = res?.data || res;
 
     setModelYears(
-      (Array.isArray(data) ? data : []).map((item: any) => ({
-        id: item.id,
-        name: item.modelYear,
-      }))
-    );
+  (Array.isArray(data) ? data : []).map((item: any) => ({
+    id: String(item.id),
+    name: String(item.modelYear),
+    modelId: String(item.modelId),
+  }))
+);
   } catch {
     setModelYears([]);
   }
@@ -210,26 +216,37 @@ useEffect(() => {
 
 const brandOptions = [
   { id: "All", name: "All Brands" },
-  ...brands.map((b: any) => ({
-    id: String(b.id),
-    name: b.name,
-  })),
+  ...(selectedCategoryFilter === "All"
+    ? []
+    : brands
+        .filter(b => b.categoryId === selectedCategoryFilter)
+        .map(b => ({
+          id: b.id,
+          name: b.name,
+        }))),
 ];
 
 const modelOptions = [
   { id: "All", name: "All Models" },
-  ...models.map((m: any) => ({
-    id: String(m.id),
-    name: m.name,
-  })),
+  ...(selectedBrandFilter === "All"
+    ? []
+    : models
+        .filter(m => m.brandId === selectedBrandFilter)
+        .map(m => ({
+          id: m.id,
+          name: m.name,
+        }))),
 ];
-
 const yearFilterOptions = [
   { id: "All", name: "All Years" },
-  ...modelYears.map((y: any) => ({
-    id: String(y.id),
-    name: String(y.name),
-  })),
+  ...(selectedModelFilter === "All"
+    ? []
+    : modelYears
+        .filter(y => y.modelId === selectedModelFilter)
+        .map(y => ({
+          id: y.id,
+          name: y.name,
+        }))),
 ];
 
 const statusFilterOptions = [
@@ -464,10 +481,13 @@ const matchesYearDropdown =
                     (opt) => opt.id === selectedCategoryFilter
                   ) || categoryOptions[0]
                 }
-                onChange={(opt: any) => {
-                  setSelectedCategoryFilter(opt.id);
-                  setCurrentPage(1);
-                }}
+              onChange={(opt: any) => {
+  setSelectedCategoryFilter(opt.id);
+  setSelectedBrandFilter("All");
+  setSelectedModelFilter("All");
+  setSelectedYearFilter("All");
+  setCurrentPage(1);
+}}
                 displayField="name"
               />
             </div>
@@ -483,10 +503,12 @@ const matchesYearDropdown =
                     (opt) => opt.id === selectedBrandFilter
                   ) || brandOptions[0]
                 }
-                onChange={(opt: any) => {
-                  setSelectedBrandFilter(opt.id);
-                  setCurrentPage(1);
-                }}
+              onChange={(opt: any) => {
+  setSelectedBrandFilter(opt.id);
+  setSelectedModelFilter("All");
+  setSelectedYearFilter("All");
+  setCurrentPage(1);
+}}
                 displayField="name"
               />
             </div>
@@ -502,10 +524,11 @@ const matchesYearDropdown =
                     (opt) => opt.id === selectedModelFilter
                   ) || modelOptions[0]
                 }
-                onChange={(opt: any) => {
-                  setSelectedModelFilter(opt.id);
-                  setCurrentPage(1);
-                }}
+              onChange={(opt: any) => {
+  setSelectedModelFilter(opt.id);
+  setSelectedYearFilter("All");
+  setCurrentPage(1);
+}}
                 displayField="name"
               />
             </div>

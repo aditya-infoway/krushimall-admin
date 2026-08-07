@@ -84,10 +84,10 @@ export default function ModelYear() {
   const [categories, setCategories] = useState<{ id: number; name: string }[]>(
     [],
   );
- const [brands, setBrands] = useState<BrandOption[]>([]);
-const [filteredBrands, setFilteredBrands] = useState<BrandOption[]>([]);
-const [modelsList, setModelsList] = useState<ModelOption[]>([]);
-const [filteredModels, setFilteredModels] = useState<ModelOption[]>([]);
+  const [brands, setBrands] = useState<BrandOption[]>([]);
+  const [filteredBrands, setFilteredBrands] = useState<BrandOption[]>([]);
+  const [modelsList, setModelsList] = useState<ModelOption[]>([]);
+  const [filteredModels, setFilteredModels] = useState<ModelOption[]>([]);
   const [models, setModels] = useState<{ id: number; name: string }[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -98,29 +98,29 @@ const [filteredModels, setFilteredModels] = useState<ModelOption[]>([]);
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
   const [isBulkDelete, setIsBulkDelete] = useState(false);
-type BrandOption = {
-  id: number;
-  name: string;
-  categoryId: number;
-};
+  type BrandOption = {
+    id: number;
+    name: string;
+    categoryId: number;
+  };
 
-type ModelOption = {
-  id: number;
-  name: string;
-  brandId: number;
-};
-const categoryOptions = categories.map((cat) => ({
-  id: String(cat.id),
-  name: cat.name,
-}));
-const brandOptions = filteredBrands.map((br) => ({
-  id: String(br.id),
-  name: br.name,
-}));
-const modelOptions = filteredModels.map((md) => ({
-  id: String(md.id),
-  name: md.name,
-}));
+  type ModelOption = {
+    id: number;
+    name: string;
+    brandId: number;
+  };
+  const categoryOptions = categories.map((cat) => ({
+    id: String(cat.id),
+    name: cat.name,
+  }));
+  const brandOptions = filteredBrands.map((br) => ({
+    id: String(br.id),
+    name: br.name,
+  }));
+  const modelOptions = filteredModels.map((md) => ({
+    id: String(md.id),
+    name: md.name,
+  }));
 
   const [search, setSearch] = useState("");
   const [showFilterBar, setShowFilterBar] = useState(false);
@@ -201,45 +201,45 @@ const modelOptions = filteredModels.map((md) => ({
     }
   };
 
-const getBrands = async () => {
-  try {
-    const response = await apiHelper.get("/brand");
-    const data = response?.data || response;
-    const list: BrandOption[] = (Array.isArray(data) ? data : []).map(
-      (item: any) => ({
-        id: Number(item.id || item._id),
-        name: item.brandName || item.name || "",
-        categoryId: Number(
-          typeof item.category === "object"
-            ? item.category?.id
-            : item.categoryId,
-        ),
-      }),
-    );
-    setBrands(list);
-  } catch (error) {
-    setBrands([]);
-  }
-};
+  const getBrands = async () => {
+    try {
+      const response = await apiHelper.get("/brand");
+      const data = response?.data || response;
+      const list: BrandOption[] = (Array.isArray(data) ? data : []).map(
+        (item: any) => ({
+          id: Number(item.id || item._id),
+          name: item.brandName || item.name || "",
+          categoryId: Number(
+            typeof item.category === "object"
+              ? item.category?.id
+              : item.categoryId,
+          ),
+        }),
+      );
+      setBrands(list);
+    } catch (error) {
+      setBrands([]);
+    }
+  };
 
-const getModels = async () => {
-  try {
-    const response = await apiHelper.get("/model");
-    const data = response?.data || response;
-    const list: ModelOption[] = (Array.isArray(data) ? data : []).map(
-      (item: any) => ({
-        id: Number(item.id || item._id),
-        name: item.modelName || item.name || "",
-        brandId: Number(
-          typeof item.brand === "object" ? item.brand?.id : item.brandId,
-        ),
-      }),
-    );
-    setModelsList(list);
-  } catch (error) {
-    setModelsList([]);
-  }
-};
+  const getModels = async () => {
+    try {
+      const response = await apiHelper.get("/model");
+      const data = response?.data || response;
+      const list: ModelOption[] = (Array.isArray(data) ? data : []).map(
+        (item: any) => ({
+          id: Number(item.id || item._id),
+          name: item.modelName || item.name || "",
+          brandId: Number(
+            typeof item.brand === "object" ? item.brand?.id : item.brandId,
+          ),
+        }),
+      );
+      setModelsList(list);
+    } catch (error) {
+      setModelsList([]);
+    }
+  };
 
   // React Hook Form implementation
   const {
@@ -278,26 +278,48 @@ const getModels = async () => {
   // Filter options
   const categoryFilterOptions = [
     { id: "All", name: "All Categories" },
-    ...categories.map((c) => ({ id: c, name: c })),
+    ...categories.map((c) => ({
+      id: String(c.id),
+      name: c.name,
+    })),
   ];
 
   const brandFilterOptions = [
     { id: "All", name: "All Brands" },
-    ...brands.map((b) => ({ id: b, name: b })),
+    ...filteredBrands.map((b) => ({
+      id: String(b.id),
+      name: b.name,
+    })),
   ];
 
   const modelFilterOptions = [
     { id: "All", name: "All Models" },
-    ...models.map((m) => ({ id: m, name: m })),
+    ...filteredModels.map((m) => ({
+      id: String(m.id),
+      name: m.name,
+    })),
   ];
 
   // Year filter options - dynamically generated from existing data
-  const yearFilterOptions = [
-    { id: "All", name: "All Years" },
-    ...Array.from(new Set(years.map((y) => y.year)))
-      .sort((a, b) => b - a)
-      .map((yr) => ({ id: yr.toString(), name: yr.toString() })),
-  ];
+const yearFilterOptions = [
+  { id: "All", name: "All Years" },
+  ...(selectedModelFilter === "All"
+    ? []
+    : Array.from(
+        new Set(
+          years
+            .filter(
+              (y) => String(y.modelId) === selectedModelFilter
+            )
+            .map((y) => y.year)
+        )
+      )
+        .sort((a, b) => b - a)
+        .map((yr) => ({
+          id: yr.toString(),
+          name: yr.toString(),
+        }))),
+];
 
   const statusFilterOptions = [
     { id: "All", name: "All Statuses" },
@@ -306,43 +328,43 @@ const getModels = async () => {
   ];
 
   const handleOpenAddDrawer = () => {
-  setEditId(null);
-  reset({
-    category: "",
-    categoryId: "",
-    brand: "",
-    brandId: "",
-    model: "",
-    modelId: "",
-    year: "",
-    status: "ACTIVE",
-  });
-  setFilteredBrands([]);
-  setFilteredModels([]);
-  setShowDrawer(true);
-};
+    setEditId(null);
+    reset({
+      category: "",
+      categoryId: "",
+      brand: "",
+      brandId: "",
+      model: "",
+      modelId: "",
+      year: "",
+      status: "ACTIVE",
+    });
+    setFilteredBrands([]);
+    setFilteredModels([]);
+    setShowDrawer(true);
+  };
 
-const handleOpenEditDrawer = (item: YearDataType) => {
-  setEditId(item.id);
-  reset({
-    category: item.category,
-    categoryId: item.categoryId || "",
-    brand: item.brand,
-    brandId: item.brandId || "",
-    model: item.model,
-    modelId: item.modelId || "",
-    year: item.year.toString(),
-    status: item.status,
-  });
-  // Pre-fill dependent dropdowns for edit mode
-  setFilteredBrands(
-    brands.filter((b) => Number(b.categoryId) === Number(item.categoryId)),
-  );
-  setFilteredModels(
-    modelsList.filter((m) => Number(m.brandId) === Number(item.brandId)),
-  );
-  setShowDrawer(true);
-};
+  const handleOpenEditDrawer = (item: YearDataType) => {
+    setEditId(item.id);
+    reset({
+      category: item.category,
+      categoryId: item.categoryId || "",
+      brand: item.brand,
+      brandId: item.brandId || "",
+      model: item.model,
+      modelId: item.modelId || "",
+      year: item.year.toString(),
+      status: item.status,
+    });
+    // Pre-fill dependent dropdowns for edit mode
+    setFilteredBrands(
+      brands.filter((b) => Number(b.categoryId) === Number(item.categoryId)),
+    );
+    setFilteredModels(
+      modelsList.filter((m) => Number(m.brandId) === Number(item.brandId)),
+    );
+    setShowDrawer(true);
+  };
 
   const handleDelete = (id: number) => {
     setDeleteTargetId(id);
@@ -449,17 +471,22 @@ const handleOpenEditDrawer = (item: YearDataType) => {
 
     const matchesCategoryDropdown =
       selectedCategoryFilter === "All" ||
-      item.category === selectedCategoryFilter;
+      String(item.categoryId) === selectedCategoryFilter;
+
     const matchesBrandDropdown =
-      selectedBrandFilter === "All" || item.brand === selectedBrandFilter;
+      selectedBrandFilter === "All" ||
+      String(item.brandId) === selectedBrandFilter;
+
     const matchesModelDropdown =
-      selectedModelFilter === "All" || item.model === selectedModelFilter;
+      selectedModelFilter === "All" ||
+      String(item.modelId) === selectedModelFilter;
+
     const matchesYearDropdown =
       selectedYearFilter === "All" ||
       item.year.toString() === selectedYearFilter;
+
     const matchesStatusDropdown =
-      selectedStatusFilter === "All" ||
-      String(item.status) === selectedStatusFilter;
+      selectedStatusFilter === "All" || item.status === selectedStatusFilter;
 
     return (
       matchesSearch &&
@@ -590,21 +617,35 @@ const handleOpenEditDrawer = (item: YearDataType) => {
                   validate: (value) =>
                     (value && Number(value) > 0) || "Category is required",
                 }}
-                render={({ field, fieldState }) => (
+                render={() => (
                   <Combobox
-                    data={categoryOptions}
-                    value={
-                      categoryOptions.find(
-                        (opt) => String(opt.id) === String(field.value),
-                      ) || null
-                    }
-                    error={fieldState.error?.message}
+                    data={categoryFilterOptions}
                     displayField="name"
-                    placeholder="Search or select category..."
+                    value={
+                      categoryFilterOptions.find(
+                        (o) => o.id === selectedCategoryFilter,
+                      ) || categoryFilterOptions[0]
+                    }
+                    placeholder="Select Category"
                     searchFields={["name"]}
                     onChange={(opt: any) => {
-                      field.onChange(opt.id);
-                      setValue("category", opt.name);
+                      setSelectedCategoryFilter(opt.id);
+                      setSelectedBrandFilter("All");
+                      setSelectedModelFilter("All");
+                      setCurrentPage(1);
+
+                      if (opt.id === "All") {
+                        setFilteredBrands(brands);
+                        setFilteredModels(modelsList);
+                        return;
+                      }
+
+                      const categoryBrands = brands.filter(
+                        (b) => String(b.categoryId) === String(opt.id),
+                      );
+
+                      setFilteredBrands(categoryBrands);
+                      setFilteredModels([]);
                     }}
                   />
                 )}
@@ -622,21 +663,32 @@ const handleOpenEditDrawer = (item: YearDataType) => {
                   validate: (value) =>
                     (value && Number(value) > 0) || "Brand is required",
                 }}
-                render={({ field, fieldState }) => (
+                render={() => (
                   <Combobox
-                    data={brandOptions}
-                    value={
-                      brandOptions.find(
-                        (opt) => String(opt.id) === String(field.value),
-                      ) || null
-                    }
-                    error={fieldState.error?.message}
+                    data={brandFilterOptions}
                     displayField="name"
-                    placeholder="Search or select brand..."
+                    value={
+                      brandFilterOptions.find(
+                        (o) => o.id === selectedBrandFilter,
+                      ) || brandFilterOptions[0]
+                    }
+                    placeholder="Select Brand"
                     searchFields={["name"]}
                     onChange={(opt: any) => {
-                      field.onChange(opt.id);
-                      setValue("brand", opt.name);
+                      setSelectedBrandFilter(opt.id);
+                      setSelectedModelFilter("All");
+                      setCurrentPage(1);
+
+                      if (opt.id === "All") {
+                        setFilteredModels(modelsList);
+                        return;
+                      }
+
+                      const brandModels = modelsList.filter(
+                        (m) => String(m.brandId) === String(opt.id),
+                      );
+
+                      setFilteredModels(brandModels);
                     }}
                   />
                 )}
@@ -654,21 +706,20 @@ const handleOpenEditDrawer = (item: YearDataType) => {
                   validate: (value) =>
                     (value && Number(value) > 0) || "Model is required",
                 }}
-                render={({ field, fieldState }) => (
+                render={() => (
                   <Combobox
-                    data={modelOptions}
-                    value={
-                      modelOptions.find(
-                        (opt) => String(opt.id) === String(field.value),
-                      ) || null
-                    }
-                    error={fieldState.error?.message}
+                    data={modelFilterOptions}
                     displayField="name"
-                    placeholder="Search or select model..."
+                    value={
+                      modelFilterOptions.find(
+                        (o) => o.id === selectedModelFilter,
+                      ) || modelFilterOptions[0]
+                    }
+                    placeholder="Select Model"
                     searchFields={["name"]}
                     onChange={(opt: any) => {
-                      field.onChange(opt.id);
-                      setValue("model", opt.name);
+                      setSelectedModelFilter(opt.id);
+                      setCurrentPage(1);
                     }}
                   />
                 )}
@@ -1098,88 +1149,97 @@ const handleOpenEditDrawer = (item: YearDataType) => {
                       Category
                     </span>
                     <Controller
-  name="categoryId"
-  control={control}
-  rules={{
-    validate: (value) =>
-      (value && Number(value) > 0) || "Category is required",
-  }}
-  render={({ field, fieldState }) => (
-    <Combobox
-      data={categoryOptions}
-      value={
-        categoryOptions.find(
-          (option) => String(option.id) === String(field.value),
-        ) || null
-      }
-      error={fieldState.error?.message}
-      displayField="name"
-      searchFields={["name"]}
-      placeholder="Select Category"
-      onChange={(selectedOption: any) => {
-        field.onChange(selectedOption.id);
-        setValue("category", selectedOption.name);
+                      name="categoryId"
+                      control={control}
+                      rules={{
+                        validate: (value) =>
+                          (value && Number(value) > 0) ||
+                          "Category is required",
+                      }}
+                      render={({ field, fieldState }) => (
+                        <Combobox
+                          data={categoryOptions}
+                          value={
+                            categoryOptions.find(
+                              (option) =>
+                                String(option.id) === String(field.value),
+                            ) || null
+                          }
+                          error={fieldState.error?.message}
+                          displayField="name"
+                          searchFields={["name"]}
+                          placeholder="Select Category"
+                          onChange={(selectedOption: any) => {
+                            field.onChange(selectedOption.id);
+                            setValue("category", selectedOption.name);
 
-        // Reset dependent fields
-        setValue("brand", "");
-        setValue("brandId", "");
-        setValue("model", "");
-        setValue("modelId", "");
+                            // Reset dependent fields
+                            setValue("brand", "");
+                            setValue("brandId", "");
+                            setValue("model", "");
+                            setValue("modelId", "");
 
-        const categoryBrands = brands.filter(
-          (b) => Number(b.categoryId) === Number(selectedOption.id),
-        );
-        setFilteredBrands(categoryBrands);
-        setFilteredModels([]); // clear models until brand is picked
-      }}
-    />
-  )}
-/>
+                            const categoryBrands = brands.filter(
+                              (b) =>
+                                Number(b.categoryId) ===
+                                Number(selectedOption.id),
+                            );
+                            setFilteredBrands(categoryBrands);
+                            setFilteredModels([]); // clear models until brand is picked
+                          }}
+                        />
+                      )}
+                    />
                   </div>
 
                   <div>
-                   <div>
-  <span className="mb-2 block text-sm font-medium">
-    Brand
-  </span>
-  <Controller
-    name="brandId"
-    control={control}
-    rules={{
-      validate: (value) =>
-        (value && Number(value) > 0) || "Brand is required",
-    }}
-    render={({ field, fieldState }) => (
-      <Combobox
-        data={brandOptions}
-        value={
-          brandOptions.find(
-            (option) => String(option.id) === String(field.value),
-          ) || null
-        }
-        error={fieldState.error?.message}
-        displayField="name"
-        searchFields={["name"]}
-        placeholder={
-          formCategoryValue ? "Select Brand" : "First select category"
-        }
-        onChange={(selectedOption: any) => {
-          field.onChange(selectedOption.id);
-          setValue("brand", selectedOption.name);
+                    <div>
+                      <span className="mb-2 block text-sm font-medium">
+                        Brand
+                      </span>
+                      <Controller
+                        name="brandId"
+                        control={control}
+                        rules={{
+                          validate: (value) =>
+                            (value && Number(value) > 0) || "Brand is required",
+                        }}
+                        render={({ field, fieldState }) => (
+                          <Combobox
+                            data={brandOptions}
+                            value={
+                              brandOptions.find(
+                                (option) =>
+                                  String(option.id) === String(field.value),
+                              ) || null
+                            }
+                            error={fieldState.error?.message}
+                            displayField="name"
+                            searchFields={["name"]}
+                            placeholder={
+                              formCategoryValue
+                                ? "Select Brand"
+                                : "First select category"
+                            }
+                            onChange={(selectedOption: any) => {
+                              field.onChange(selectedOption.id);
+                              setValue("brand", selectedOption.name);
 
-          // Reset dependent Model field
-          setValue("model", "");
-          setValue("modelId", "");
+                              // Reset dependent Model field
+                              setValue("model", "");
+                              setValue("modelId", "");
 
-          const brandModels = modelsList.filter(
-            (m) => Number(m.brandId) === Number(selectedOption.id),
-          );
-          setFilteredModels(brandModels);
-        }}
-      />
-    )}
-  />
-</div>
+                              const brandModels = modelsList.filter(
+                                (m) =>
+                                  Number(m.brandId) ===
+                                  Number(selectedOption.id),
+                              );
+                              setFilteredModels(brandModels);
+                            }}
+                          />
+                        )}
+                      />
+                    </div>
                   </div>
                   <div>
                     <span className="mb-2 block text-sm font-medium">
