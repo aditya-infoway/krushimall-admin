@@ -1,8 +1,9 @@
 // Import Dependencies
-import React, { useState,useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import clsx from "clsx";
 import apiHelper from "@/utils/apiHelper";
 // Local Imports
+import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { Page } from "@/components/shared/Page";
 import { Card } from "@/components/ui";
 import { KYCFormProvider } from "./KYCFormProvider.tsx";
@@ -14,10 +15,10 @@ import { Transmission } from "./steps/Transmission.tsx";
 import { BasicInformation } from "./steps/BasicInformation.tsx";
 import { FormState } from "./KYCFormContext.ts";
 import { PriceLocation } from "./steps/PriceLocation";
-import { MediaDocumnet } from "./steps/MediaDocumnet.tsx"
-import {PreviewSubmit } from "./steps/PreviewSubmit.tsx"
+import { MediaDocumnet } from "./steps/MediaDocumnet.tsx";
+import { PreviewSubmit } from "./steps/PreviewSubmit.tsx";
 // ----------------------------------------------------------------------
-import { useNavigate,useSearchParams, } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 export interface Step {
   key: keyof FormState["formData"];
   component: React.ComponentType<any>;
@@ -50,11 +51,10 @@ const steps: Step[] = [
     key: "HydraulicTyres",
     component: HydraulicTyres,
     label: "Hydraulic & Tyres",
-    description:
-      "   Add hydraulic system details of this tractor",
+    description: "   Add hydraulic system details of this tractor",
   },
-  
-   {
+
+  {
     key: "PriceLocation",
     component: PriceLocation,
     label: "Price & Location",
@@ -68,7 +68,7 @@ const steps: Step[] = [
     description:
       "Read and agree to the terms and conditions of the form. Check the box to confirm information and consent.",
   },
-   {
+  {
     key: "PreviewSubmit",
     component: PreviewSubmit,
     label: "Preview & Submit",
@@ -78,37 +78,27 @@ const steps: Step[] = [
 ];
 
 const KYCForm = () => {
-  const [currentStep, setCurrentStep] =
-    useState(0);
+  const [currentStep, setCurrentStep] = useState(0);
 
-  const [finished, setFinished] =
-    useState(false);
+  const [finished, setFinished] = useState(false);
 
-  const [loading, setLoading] =
-    useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const [editData, setEditData] =
-    useState<any>(null);
+  const [editData, setEditData] = useState<any>(null);
 
   const navigate = useNavigate();
 
-  const [searchParams] =
-    useSearchParams();
+  const [searchParams] = useSearchParams();
 
   // Dynamic ID from URL
-  const urlId =
-    searchParams.get("id");
+  const urlId = searchParams.get("id");
 
   // Used for both Create and Edit
-  const [
-    websiteVariantId,
-    setWebsiteVariantId,
-  ] = useState<string | null>(
+  const [websiteVariantId, setWebsiteVariantId] = useState<string | null>(
     urlId,
   );
 
-  const isEditMode =
-    Boolean(urlId);
+  const isEditMode = Boolean(urlId);
 
   // Keep state synchronized with URL
   useEffect(() => {
@@ -116,51 +106,48 @@ const KYCForm = () => {
   }, [urlId]);
 
   // Fetch complete record only one time
- // Fetch complete record only one time
-useEffect(() => {
-  if (!urlId) {
-    setEditData(null);
-    return;
-  }
-
-  const fetchWebsiteVariant = async () => {
-    try {
-      setLoading(true);
-
-      const response = await apiHelper.get(`/website-variants/${urlId}`);
-      const variant = response?.data?.data ?? response?.data;
-
-      console.log("Website Variant Edit Data:", variant);
-
-      setEditData(variant);
-
-      // ✅ No localStorage — direct state set
-      setWebsiteVariantId(String(variant?.id ?? urlId));
-
-      // ✅ Resume from the last saved step
-      if (typeof variant?.currentStep === "number") {
-        setCurrentStep(variant.currentStep);
-      }
-    } catch (error) {
-      console.error("Failed to fetch Website Variant:", error);
-    } finally {
-      setLoading(false);
+  // Fetch complete record only one time
+  useEffect(() => {
+    if (!urlId) {
+      setEditData(null);
+      return;
     }
-  };
 
-  fetchWebsiteVariant();
-}, [urlId]);
+    const fetchWebsiteVariant = async () => {
+      try {
+        setLoading(true);
 
-  const ActiveForm =
-    steps[currentStep].component;
+        const response = await apiHelper.get(`/website-variants/${urlId}`);
+        const variant = response?.data?.data ?? response?.data;
+
+        console.log("Website Variant Edit Data:", variant);
+
+        setEditData(variant);
+
+        // ✅ No localStorage — direct state set
+        setWebsiteVariantId(String(variant?.id ?? urlId));
+
+        // ✅ Resume from the last saved step
+        if (typeof variant?.currentStep === "number") {
+          setCurrentStep(variant.currentStep);
+        }
+      } catch (error) {
+        console.error("Failed to fetch Website Variant:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchWebsiteVariant();
+  }, [urlId]);
+
+  const ActiveForm = steps[currentStep].component;
 
   if (loading) {
     return (
       <Page title="Website Variant">
         <div className="flex min-h-100 items-center justify-center">
-          <p className="text-gray-500">
-            Loading website variant...
-          </p>
+          <p className="text-gray-500">Loading website variant...</p>
         </div>
       </Page>
     );
@@ -172,59 +159,34 @@ useEffect(() => {
         <Stepper
           steps={steps}
           currentStep={currentStep}
-          setCurrentStep={
-            setCurrentStep
-          }
+          setCurrentStep={setCurrentStep}
+          // ✅ Edit mode me sabhi steps checked + direct clickable
+          isEditMode={isEditMode}
         />
       </Card>
 
       <Card className="p-5">
         <h5 className="dark:text-dark-100 text-lg font-medium text-gray-800">
-          {
-            steps[currentStep]
-              .label
-          }
+          {steps[currentStep].label}
         </h5>
 
         <p className="dark:text-dark-200 mb-6 text-sm text-gray-500">
-          {
-            steps[currentStep]
-              .description
-          }
+          {steps[currentStep].description}
         </p>
 
         {!finished && (
           <ActiveForm
-            setCurrentStep={
-              setCurrentStep
-            }
-            setFinished={
-              setFinished
-            }
-
+            setCurrentStep={setCurrentStep}
+            setFinished={setFinished}
             // Same dynamic ID for all steps
-            websiteVariantId={
-              websiteVariantId
-            }
-
+            websiteVariantId={websiteVariantId}
             // Set ID after new record creation
-            setWebsiteVariantId={
-              setWebsiteVariantId
-            }
-
+            setWebsiteVariantId={setWebsiteVariantId}
             // Complete existing DB data
-            editData={
-              editData
-            }
-
+            editData={editData}
             // Update parent data after save
-            setEditData={
-              setEditData
-            }
-
-            isEditMode={
-              isEditMode
-            }
+            setEditData={setEditData}
+            isEditMode={isEditMode}
           />
         )}
       </Card>
@@ -236,21 +198,16 @@ useEffect(() => {
       <div className="transition-content grid w-full grid-rows-[auto_1fr] px-(--margin-x) pb-8">
         <div className="flex items-center justify-between py-5 lg:py-6">
           <h2 className="dark:text-dark-50 text-xl font-medium tracking-wide text-gray-800 lg:text-2xl">
-            {isEditMode
-              ? "Edit Website Variant"
-              : "Add Website Variant"}
+            {isEditMode ? "Edit Website Variant" : "Add Website Variant"}
           </h2>
 
           <button
             type="button"
-            onClick={() =>
-              navigate(
-                "/master/variant/website",
-              )
-            }
-            className="rounded-lg border border-gray-300 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-dark-600"
+            onClick={() => navigate("/master/variant/website")}
+            className="dark:hover:bg-dark-600 inline-flex cursor-pointer items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm hover:bg-gray-100"
           >
-            ← Back to List
+            <ArrowLeftIcon className="h-4 w-4" />
+            Back to List
           </button>
         </div>
 
@@ -259,8 +216,7 @@ useEffect(() => {
             className={clsx(
               "grid grid-cols-12 gap-4 sm:gap-5 lg:gap-6",
 
-              !finished &&
-                "grid-rows-[auto_1fr] sm:grid-rows-none",
+              !finished && "grid-rows-[auto_1fr] sm:grid-rows-none",
             )}
           >
             {finished ? (

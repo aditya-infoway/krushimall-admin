@@ -25,10 +25,12 @@ export function PreviewSubmit({
   setCurrentStep,
   setFinished,
   websiteVariantId,
+  isEditMode, // ✅ NEW: to know if we're editing an existing record
 }: {
   setCurrentStep: React.Dispatch<React.SetStateAction<number>>;
   setFinished: React.Dispatch<React.SetStateAction<boolean>>;
   websiteVariantId?: number | string;
+  isEditMode?: boolean;
 }) {
   // const kycFormCtx = useKYCFormContext();
   const [loading, setLoading] = useState(false);
@@ -60,22 +62,6 @@ export function PreviewSubmit({
     tractorData?.additionalImage5,
   ].filter(Boolean);
   const selectedImage = images[selectedIndex];
-  //   const images = [...new Set([
-  //   tractorData?.frontView,
-  //   tractorData?.leftView,
-  //   tractorData?.rightView,
-  //   tractorData?.rearView,
-  //   tractorData?.engineView,
-  //   tractorData?.dashboardView,
-  //   tractorData?.tyreView,
-  //   tractorData?.hydraulicView,
-  //   tractorData?.ptoView,
-  //   tractorData?.additionalImage1,
-  //   tractorData?.additionalImage2,
-  //   tractorData?.additionalImage3,
-  //   tractorData?.additionalImage4,
-  //   tractorData?.additionalImage5,
-  // ].filter(Boolean))];
   const documentFiles = [
     tractorData?.brochure,
     tractorData?.invoice,
@@ -96,7 +82,16 @@ export function PreviewSubmit({
       console.log("Full API Response =>", res.data);
       console.log("Variant Data =>", res.data.data);
 
+      const variant = res.data?.data ?? res.data;
+
       setTractorData(res.data);
+
+      // ✅ Edit mode: agar record pehle se agreed/submitted tha,
+      // to checkbox ko automatically checked kar do — dobara manually
+      // check karwane ki zaroorat nahi
+      if (isEditMode && variant?.agreed) {
+        setAgreed(true);
+      }
     } catch (error) {
       console.error(error);
     }
@@ -369,46 +364,6 @@ const handleSaveDraft = () => {
           <PreviewRow label="PTO Type" value={tractorData?.ptoType} />
 
           <PreviewRow label="PTO Position" value={tractorData?.ptoPosition} />
-
-          {/* <PreviewRow
-    label="Reverse PTO"
-    value={tractorData?.reversePto ? "Yes" : "No"}
-  />
-
-  <PreviewRow
-    label="Multi Speed PTO"
-    value={tractorData?.multiSpeedPto ? "Yes" : "No"}
-  />
-
-  <PreviewRow
-    label="Creeper Gears"
-    value={tractorData?.creeperGears ? "Yes" : "No"}
-  />
-
-  <PreviewRow
-    label="Hi-Lo Gears"
-    value={tractorData?.hiLoGears ? "Yes" : "No"}
-  />
-
-  <PreviewRow
-    label="Power Shuttle"
-    value={tractorData?.powerShuttle ? "Yes" : "No"}
-  />
-
-  <PreviewRow
-    label="Shuttle Shift"
-    value={tractorData?.shuttleShift ? "Yes" : "No"}
-  />
-
-  <PreviewRow
-    label="Side Shift Gear"
-    value={tractorData?.sideShiftGear ? "Yes" : "No"}
-  />
-
-  <PreviewRow
-    label="Super Reducer"
-    value={tractorData?.superReducer ? "Yes" : "No"}
-  /> */}
         </PreviewSection>
 
         {/* Hydraulic & Tyres */}
@@ -452,71 +407,21 @@ const handleSaveDraft = () => {
 
           <PreviewRow label="Top Link" value={tractorData?.topLink} />
 
-          {/* <PreviewRow
-    label="Load Sensing"
-    value={tractorData?.loadSensing ? "Yes" : "No"}
-  />
-
-  <PreviewRow
-    label="Flow Control"
-    value={tractorData?.flowControl ? "Yes" : "No"}
-  />
-
-  <PreviewRow
-    label="Position Control"
-    value={tractorData?.positionControl ? "Yes" : "No"}
-  />
-
-  <PreviewRow
-    label="Draft Control"
-    value={tractorData?.draftControl ? "Yes" : "No"}
-  /> */}
-
           <PreviewRow
             label="Draft Sensitivity"
             value={tractorData?.draftSensitivity}
           />
-
-          {/* <PreviewRow
-    label="Down Position Control"
-    value={tractorData?.downPositionControl ? "Yes" : "No"}
-  />
-
-  <PreviewRow
-    label="Return To Depth"
-    value={tractorData?.returnToDepth ? "Yes" : "No"}
-  />
-
-  <PreviewRow
-    label="Self Levelling"
-    value={tractorData?.selfLevelling ? "Yes" : "No"}
-  />
-
-  <PreviewRow
-    label="Quick Hitch"
-    value={tractorData?.quickHitch ? "Yes" : "No"}
-  />
-
-  <PreviewRow
-    label="External Hydraulic Cylinder"
-    value={tractorData?.externalHydraulicCylinder ? "Yes" : "No"}
-  />
-
-  <PreviewRow
-    label="Transport Lock"
-    value={tractorData?.transportLock ? "Yes" : "No"}
-  /> */}
         </PreviewSection>
 
         {/* Price & Location */}
         <PreviewSection title="Price &amp; Location">
           <PreviewRow
             label="Ex-Showroom Price"
-            value={`₹ ${tractorData?.exShowroomPrice.toLocaleString()}`}
+            value={`₹ ${tractorData?.exShowroomPrice?.toLocaleString()}`}
           />
           <PreviewRow
             label="On-Road Price"
-            value={`₹ ${tractorData?.onRoadPrice.toLocaleString()}`}
+            value={`₹ ${tractorData?.onRoadPrice?.toLocaleString()}`}
           />
           <PreviewRow
             label="Finance Available"
@@ -580,23 +485,6 @@ const handleSaveDraft = () => {
 )}
       </div>
     </div>
-
-    {/* Videos */}
-    {/* <div>
-      <h4 className="mb-2 text-sm font-medium text-gray-700">
-        Videos ({videoFiles.length})
-      </h4>
-
-      <div className="flex flex-wrap gap-2">
-        {videoFiles.slice(0, 2).map((video, index) => (
-          <video
-            key={index}
-            src={apiHelper.getImageUrl(video)}
-            className="h-16 w-24 rounded border object-cover"
-          />
-        ))}
-      </div>
-    </div> */}
 
     {/* Documents */}
     <div>
@@ -714,7 +602,11 @@ const handleSaveDraft = () => {
             onClick={handleSubmit}
           >
             <Send className="h-4 w-4" />
-            {loading ? "Submitting..." : "Submit for Review"}
+            {loading
+              ? "Submitting..."
+              : isEditMode
+                ? "Update"
+                : "Submit for Review"}
           </Button>
         </div>
       </div>

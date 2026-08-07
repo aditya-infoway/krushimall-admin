@@ -25,7 +25,7 @@ productName : Yup.string().required("Tractor Product Name is required"),
   .trim()
   .required("Country is required"),
   tractorStatus: Yup.string().trim().required("Tractor Status Required"),
-  
+    driveType: Yup.string().required("Drive Type is required"),
   // Short Description
   shortDescription: Yup.string().trim().max(200, "Maximum 200 characters allowed"),
   
@@ -347,7 +347,7 @@ isUpcoming?: boolean;
     modelYear?: string;
   country?: string;
   tractorStatus: string;
-  
+  driveType: string;
   // Short Description
   shortDescription?: string;
   
