@@ -9,7 +9,7 @@ import {
   BuildingOffice2Icon,
   ArrowLeftIcon
 } from "@heroicons/react/24/outline";
-import { Button, Input } from "@/components/ui";
+import {  Input } from "@/components/ui";
 import { Listbox } from "@/components/shared/form/StyledListbox";
 import { DatePicker } from "@/components/shared/form/Datepicker";
 import { Radio } from "@/components/ui";
@@ -357,7 +357,7 @@ const customSelectStyles = {
 
 const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
   onBack,
-  onSaved,
+ 
 }) => {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -560,15 +560,16 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
   };
 
   // Get Bill Number
-  const getBillNo = async () => {
-    try {
-      const res = await apiHelper.get("/accessories-purchase/generate-bill-no");
-
-      setBillNo(res.billNo);
-    } catch (error) {
-      console.error(error);
-    }
-  };
+const getBillNo = async () => {
+  try {
+    const res = await apiHelper.get(
+      `/accessories-purchase/generate-bill-no?companyId=${companyId}&financialYearId=${financialYearId}`
+    );
+    setBillNo(res.billNo);
+  } catch (error) {
+    console.error(error);
+  }
+};
   // Get Parties (Accounts)
   const getParties = async () => {
     try {
