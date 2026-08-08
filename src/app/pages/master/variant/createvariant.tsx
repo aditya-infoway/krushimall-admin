@@ -317,16 +317,42 @@ const getModelYears = async () => {
   //   ];
 
   // Year filter options - dynamically generated from existing data
-  const yearFilterOptions = [
-    { id: "All", name: "All Years" },
-    ...Array.from(new Set(variants.map((v) => v.modelYear)))
-      .filter(Boolean)
-      .map((yr) => ({
-        id: String(yr),
-        name: String(yr),
-      })),
-  ];
 
+const categoryFilterOptions = [
+  { id: "All", name: "All Categories" },
+  ...categories.map((c) => ({
+    id: String(c.id),
+    name: c.name,
+  })),
+];
+
+const brandFilterOptions = [
+  { id: "All", name: "All Brands" },
+  ...filteredBrands.map((b) => ({
+    id: String(b.id),
+    name: b.name,
+  })),
+];
+
+const modelFilterOptions = [
+  { id: "All", name: "All Models" },
+  ...filteredModels.map((m) => ({
+    id: String(m.id),
+    name: m.name,
+  })),
+];
+
+const modelYearFilterOptions = [
+  { id: "All", name: "All Years" },
+  
+  ...filteredModelYears.map((y) => ({
+    
+    id: String(y.id),
+    name: y.name,
+    
+  })),
+  
+];
   const statusFilterOptions = [
     { id: "All", name: "All Statuses" },
     { id: "ACTIVE", name: "On" },
@@ -533,16 +559,21 @@ const getModelYears = async () => {
       item.model.toLowerCase().includes(search.toLowerCase()) ||
       item.modelYear.toString().includes(search.toLowerCase());
 
-    const matchesCategoryDropdown =
-      selectedCategoryFilter === "All" ||
-      item.category === selectedCategoryFilter;
-    const matchesBrandDropdown =
-      selectedBrandFilter === "All" || item.brand === selectedBrandFilter;
-    const matchesModelDropdown =
-      selectedModelFilter === "All" || item.model === selectedModelFilter;
-    const matchesYearDropdown =
-      selectedYearFilter === "All" ||
-      item.modelYear.toString() === selectedYearFilter;
+   const matchesCategoryDropdown =
+  selectedCategoryFilter === "All" ||
+  String(item.categoryId) === selectedCategoryFilter;
+
+const matchesBrandDropdown =
+  selectedBrandFilter === "All" ||
+  String(item.brandId) === selectedBrandFilter;
+
+const matchesModelDropdown =
+  selectedModelFilter === "All" ||
+  String(item.modelId) === selectedModelFilter;
+
+const matchesYearDropdown =
+  selectedYearFilter === "All" ||
+  String(item.modelYearId) === selectedYearFilter;;
     const matchesStatusDropdown =
       selectedStatusFilter === "All" ||
       String(item.status) === selectedStatusFilter;
@@ -669,80 +700,100 @@ const getModelYears = async () => {
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
                 Category
               </span>
-              <Combobox
-                data={categoryOptions}
-                displayField="name"
-                value={
-                  categoryOptions.find(
-                    (opt) => opt.name === formCategoryValue,
-                  ) || null
-                }
-                onChange={(opt: any) => {
-                  setValue("category", opt?.name || "");
-                  setValue("categoryId", opt?.id || "");
-                }}
-                placeholder="Search or select category..."
-                searchFields={["name"]}
-              />
+            <Combobox
+  data={categoryFilterOptions}
+  value={
+    categoryFilterOptions.find(
+      o => o.id === selectedCategoryFilter
+    ) || categoryFilterOptions[0]
+  }
+  displayField="name"
+  searchFields={["name"]}
+  onChange={(opt:any)=>{
+    setSelectedCategoryFilter(opt.id);
+    setSelectedBrandFilter("All");
+    setSelectedModelFilter("All");
+    setSelectedYearFilter("All");
+
+    setFilteredBrands(
+      brands.filter(b => String(b.categoryId) === String(opt.id))
+    );
+
+    setFilteredModels([]);
+    setFilteredModelYears([]);
+  }}
+/>
             </div>
 
             <div className="flex flex-col gap-1">
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
                 Brand
               </span>
-              <Combobox
-                data={brandOptions}
-                displayField="name"
-                value={
-                  brandOptions.find((opt) => opt.name === formBrandValue) ||
-                  brandOptions[0]
-                }
-                onChange={(opt: any) => {
-                  setValue("brand", opt?.name || "");
-                  setValue("brandId", opt?.id || "");
-                }}
-                placeholder="Search or select brand..."
-                searchFields={["name"]}
-              />
+             <Combobox
+  data={brandFilterOptions}
+  value={
+    brandFilterOptions.find(
+      o => o.id === selectedBrandFilter
+    ) || brandFilterOptions[0]
+  }
+  displayField="name"
+  searchFields={["name"]}
+  onChange={(opt:any)=>{
+    setSelectedBrandFilter(opt.id);
+    setSelectedModelFilter("All");
+    setSelectedYearFilter("All");
+
+    setFilteredModels(
+      models.filter(m => String(m.brandId) === String(opt.id))
+    );
+
+    setFilteredModelYears([]);
+  }}
+/>
             </div>
 
             <div className="flex flex-col gap-1">
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
                 Model
               </span>
-              <Combobox
-                data={modelOptions}
-                displayField="name"
-                value={
-                  modelOptions.find((opt) => opt.name === formModelValue) ||
-                  modelOptions[0]
-                }
-                onChange={(opt: any) => {
-                  setValue("model", opt?.name || "");
-                  setValue("modelId", opt?.id || "");
-                }}
-                placeholder="Search or select model"
-                searchFields={["name"]}
-              />
+             <Combobox
+  data={modelFilterOptions}
+  value={
+    modelFilterOptions.find(
+      o => o.id === selectedModelFilter
+    ) || modelFilterOptions[0]
+  }
+  displayField="name"
+  searchFields={["name"]}
+  onChange={(opt:any)=>{
+    setSelectedModelFilter(opt.id);
+    setSelectedYearFilter("All");
+
+    setFilteredModelYears(
+      modelYears.filter(
+        y => String(y.modelId) === String(opt.id)
+      )
+    );
+  }}
+/>
             </div>
 
             {/* New Year Filter */}
             <div>
               <label className="mb-2 block text-sm font-medium">Year</label>
-              <Combobox
-                data={modelYearOptions}
-                displayField="name"
-                value={
-                  modelYearOptions.find((opt) => opt.name === formModelValue) ||
-                  modelYearOptions[0]
-                }
-                onChange={(opt: any) => {
-                  setValue("modelYear", opt?.name || "");
-                  setValue("modelYearId", opt?.id || "");
-                }}
-                placeholder="Search or select year"
-                searchFields={["name"]}
-              />
+             <Combobox
+  data={modelYearFilterOptions}
+  value={
+    modelYearFilterOptions.find(
+      o => o.id === selectedYearFilter
+    ) || modelYearFilterOptions[0]
+  }
+  displayField="name"
+  searchFields={["name"]}
+  onChange={(opt:any)=>{
+    setSelectedYearFilter(opt.id);
+  }}
+/>
             </div>
 
             <div className="flex flex-col gap-1">

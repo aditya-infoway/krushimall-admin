@@ -28,7 +28,7 @@ import { toast } from "sonner";
 import { ConfirmModal } from "@/components/shared/ConfirmModal";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 import { RiFileExcel2Fill, RiFilePdfFill } from "react-icons/ri";
-
+import { Combobox } from "@/components/shared/form/Combobox";
 // Local Imports
 import { Button, Checkbox, Input } from "@/components/ui";
 import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/Table";
@@ -37,7 +37,7 @@ import { Listbox } from "@/components/shared/form/StyledListbox";
 type Category = {
   id: number;
   categoryName: string;
-  name?: string; 
+  name?: string;
   status: string; // ✅ Changed from boolean to string (or keep as boolean if backend converts)
   createdAt: string;
   image: string;
@@ -46,8 +46,7 @@ type Category = {
 type FormValues = {
   name: string;
   status: string; // Changed to string
-    image: string 
-
+  image: string;
 };
 
 const statusOptions = [
@@ -141,7 +140,7 @@ export default function Category() {
         ...item,
         name: item.categoryName || item.name || "Unknown",
         id: item.id || item._id,
-         image: apiHelper.getImageUrl(item.image),
+        image: apiHelper.getImageUrl(item.image),
         createdAt: item.createdAt
           ? new Date(item.createdAt).toLocaleDateString("en-GB", {
               day: "numeric",
@@ -171,15 +170,15 @@ export default function Category() {
     defaultValues: {
       name: "",
       status: "ACTIVE",
-        image: "",
+      image: "",
     },
   });
 
   const formStatusValue = useWatch({ control, name: "status" });
- const formImageValue: string = useWatch({
-  control,
-  name: "image",
-});
+  const formImageValue: string = useWatch({
+    control,
+    name: "image",
+  });
 
   const formOption = {
     name: { required: "Category name is required" },
@@ -199,15 +198,15 @@ export default function Category() {
     { id: "INACTIVE", name: "Off" },
   ];
 
- const handleOpenAddDrawer = () => {
-  setEditId(null);
-  reset({ 
-    name: "", 
-    status: "ACTIVE",
-    image: ""  // 
-  });
-  setShowDrawer(true);
-};
+  const handleOpenAddDrawer = () => {
+    setEditId(null);
+    reset({
+      name: "",
+      status: "ACTIVE",
+      image: "", //
+    });
+    setShowDrawer(true);
+  };
 
   const handleOpenEditDrawer = (item: Category) => {
     setEditId(item.id);
@@ -285,68 +284,66 @@ export default function Category() {
     }
   };
 
-
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  const file = e.target.files?.[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setValue("image", reader.result as string);
-    };
-    reader.readAsDataURL(file);
-  }
-};
-
- const onFormSubmit = async (data: FormValues) => {
-  try {
-    const formData = new FormData();
-    formData.append("categoryName", data.name);
-    formData.append("status", data.status);
-
-    // Log FormData contents
-    console.log("FormData contents:");
-    for (let pair of formData.entries()) {
-      console.log(pair[0] + ': ' + pair[1]);
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setValue("image", reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
+  };
 
-    // Handle image upload
-   if (data.image && data.image.startsWith("data:")) {
-  const response = await fetch(data.image);
-  const blob = await response.blob();
-  const file = new File([blob], "category-image.jpg", {
-    type: blob.type,
-  });
+  const onFormSubmit = async (data: FormValues) => {
+    try {
+      const formData = new FormData();
+      formData.append("categoryName", data.name);
+      formData.append("status", data.status);
 
-  formData.append("image", file);
-}
+      // Log FormData contents
+      console.log("FormData contents:");
+      for (let pair of formData.entries()) {
+        console.log(pair[0] + ": " + pair[1]);
+      }
 
-    console.log("📤 Uploading with FormData (multipart)");
-    console.log("Fields:", {
-      categoryName: data.name,
-      status: data.status,
-      hasImage: !!data.image
-    });
+      // Handle image upload
+      if (data.image && data.image.startsWith("data:")) {
+        const response = await fetch(data.image);
+        const blob = await response.blob();
+        const file = new File([blob], "category-image.jpg", {
+          type: blob.type,
+        });
 
-    if (editId !== null) {
-      await apiHelper.put(`/category/${editId}`, formData);
-      toast.success("Category updated successfully!");
-    } else {
-      await apiHelper.post("/category", formData);
-      toast.success("Category created successfully!");
+        formData.append("image", file);
+      }
+
+      console.log("📤 Uploading with FormData (multipart)");
+      console.log("Fields:", {
+        categoryName: data.name,
+        status: data.status,
+        hasImage: !!data.image,
+      });
+
+      if (editId !== null) {
+        await apiHelper.put(`/category/${editId}`, formData);
+        toast.success("Category updated successfully!");
+      } else {
+        await apiHelper.post("/category", formData);
+        toast.success("Category created successfully!");
+      }
+
+      await getCategories();
+      setShowDrawer(false);
+      reset();
+    } catch (error: any) {
+      console.error("Failed to save category:", error);
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to save category. Please try again.",
+      );
     }
-
-    await getCategories();
-    setShowDrawer(false);
-    reset();
-  } catch (error: any) {
-    console.error("Failed to save category:", error);
-    toast.error(
-      error.response?.data?.message ||
-        "Failed to save category. Please try again.",
-    );
-  }
-};
-
+  };
 
   const filteredData = categories.filter((item) => {
     const itemName = item.categoryName || item.name || "";
@@ -409,52 +406,52 @@ export default function Category() {
     <div className="relative min-h-screen space-y-6 p-4 pb-28 text-gray-900 md:p-6 dark:text-gray-100">
       {/* Top Header Actions Layout Bar */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-  <div>
-    <h1 className="text-xl font-semibold text-gray-900 md:text-2xl dark:text-white">
-      Category List
-    </h1>
-    <p className="dark:text-dark-300 mt-1 text-sm text-gray-500">
-      Manage all categories from here
-    </p>
-  </div>
+        <div>
+          <h1 className="text-xl font-semibold text-gray-900 md:text-2xl dark:text-white">
+            Category List
+          </h1>
+          <p className="dark:text-dark-300 mt-1 text-sm text-gray-500">
+            Manage all categories from here
+          </p>
+        </div>
 
-  <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
-    <button
-      type="button"
-      onClick={() => setShowFilterBar(!showFilterBar)}
-      className={`inline-flex items-center gap-1.5 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
-        showFilterBar
-          ? "bg-primary-50 border-primary-200 text-primary-600 dark:bg-dark-600 dark:border-dark-500 dark:text-white"
-          : "dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
-      }`}
-    >
-      <FunnelIcon className="size-4.5" />
-      <span className="hidden sm:inline">Filter</span>
-    </button>
+        <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
+          <button
+            type="button"
+            onClick={() => setShowFilterBar(!showFilterBar)}
+            className={`inline-flex items-center gap-1.5 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
+              showFilterBar
+                ? "bg-primary-50 border-primary-200 text-primary-600 dark:bg-dark-600 dark:border-dark-500 dark:text-white"
+                : "dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+            }`}
+          >
+            <FunnelIcon className="size-4.5" />
+            <span className="hidden sm:inline">Filter</span>
+          </button>
 
-    <button
-      type="button"
-      className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
-    >
-      <RiFileExcel2Fill className="text-lg text-green-500" />
-    </button>
+          <button
+            type="button"
+            className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+          >
+            <RiFileExcel2Fill className="text-lg text-green-500" />
+          </button>
 
-    <button
-      type="button"
-      className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
-    >
-      <RiFilePdfFill className="text-lg text-red-500" />
-    </button>
+          <button
+            type="button"
+            className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+          >
+            <RiFilePdfFill className="text-lg text-red-500" />
+          </button>
 
-    <Button
-      color="primary"
-      onClick={handleOpenAddDrawer}
-      className="ml-auto whitespace-nowrap"
-    >
-      Add Category
-    </Button>
-  </div>
-</div>
+          <Button
+            color="primary"
+            onClick={handleOpenAddDrawer}
+            className="ml-auto whitespace-nowrap"
+          >
+            Add Category
+          </Button>
+        </div>
+      </div>
       {/* Global Filter Search Input field */}
       <div className="relative w-full max-w-md">
         <MagnifyingGlassIcon className="absolute top-1/2 left-3 size-4.5 -translate-y-1/2 text-gray-400" />
@@ -478,20 +475,21 @@ export default function Category() {
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
                 Category Name
               </span>
-              <Listbox
-                data={categoryFilterOptions}
-                value={
-                  categoryFilterOptions.find(
-                    (o) => o.id === selectedCategoryFilter,
-                  ) || categoryFilterOptions[0]
-                }
-                placeholder="All"
-                onChange={(opt: any) => {
-                  setSelectedCategoryFilter(opt.id);
-                  setCurrentPage(1);
-                }}
-                displayField="name"
-              />
+             <Combobox
+  data={categoryFilterOptions}
+  value={
+    categoryFilterOptions.find(
+      (o) => o.id === selectedCategoryFilter
+    ) || categoryFilterOptions[0]
+  }
+  placeholder="All"
+  displayField="name"
+  searchFields={["name"]}
+  onChange={(opt: any) => {
+    setSelectedCategoryFilter(opt.id);
+    setCurrentPage(1);
+  }}
+/>
             </div>
 
             <div className="flex flex-col gap-1">
@@ -533,8 +531,8 @@ export default function Category() {
                   S.No
                 </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-  Image
-</Th>
+                  Image
+                </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Category Name
                 </Th>
@@ -565,23 +563,24 @@ export default function Category() {
                       {indexOfFirstItem + index + 1}
                     </Td>
                     <Td className="py-4">
-  <div className="dark:border-dark-500 flex h-15 w-15 items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
-    {item.image ? (
-      <img
-        src={item.image}
-        alt={item.name}
-        className="h-full w-full object-contain"
-        onError={(e) => {
-          (e.target as HTMLImageElement).style.display = "none";
-        }}
-      />
-    ) : (
-      <span className="text-xs font-bold text-gray-400 uppercase">
-        {(item.name || "NA").substring(0, 2)}
-      </span>
-    )}
-  </div>
-</Td>
+                      <div className="dark:border-dark-500 flex h-15 w-15 items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
+                        {item.image ? (
+                          <img
+                            src={item.image}
+                            alt={item.name}
+                            className="h-full w-full object-contain"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display =
+                                "none";
+                            }}
+                          />
+                        ) : (
+                          <span className="text-xs font-bold text-gray-400 uppercase">
+                            {(item.name || "NA").substring(0, 2)}
+                          </span>
+                        )}
+                      </div>
+                    </Td>
                     <Td className="py-4 font-medium text-gray-900 dark:text-white">
                       {item.categoryName || item.name || "N/A"}
                     </Td>
@@ -904,36 +903,36 @@ export default function Category() {
                   </div>
 
                   <div>
-  <label className="mb-2 block text-sm font-medium">
-    Category Image
-  </label>
-  <input
-    type="file"
-    accept="image/*"
-    onChange={handleImageChange}
-    className="dark:file:bg-dark-800 dark:file:text-dark-200 block w-full text-sm file:mr-4 file:rounded-full file:border-0 file:bg-gray-100 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-gray-700 hover:file:bg-gray-200"
-  />
-  {formImageValue ? (
-    <div>
-      <img
-        src={formImageValue}
-        alt="Preview"
-        className="dark:border-dark-500 mt-3 h-20 w-20 rounded-xl border border-gray-200 object-contain"
-      />
-      {editId && (
-        <p className="mt-1 text-xs text-gray-400">
-          Current image (upload new to replace)
-        </p>
-      )}
-    </div>
-  ) : (
-    editId && (
-      <p className="mt-1 text-xs text-gray-400">
-        No image uploaded
-      </p>
-    )
-  )}
-</div>
+                    <label className="mb-2 block text-sm font-medium">
+                      Category Image
+                    </label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      className="dark:file:bg-dark-800 dark:file:text-dark-200 block w-full text-sm file:mr-4 file:rounded-full file:border-0 file:bg-gray-100 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-gray-700 hover:file:bg-gray-200"
+                    />
+                    {formImageValue ? (
+                      <div>
+                        <img
+                          src={formImageValue}
+                          alt="Preview"
+                          className="dark:border-dark-500 mt-3 h-20 w-20 rounded-xl border border-gray-200 object-contain"
+                        />
+                        {editId && (
+                          <p className="mt-1 text-xs text-gray-400">
+                            Current image (upload new to replace)
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      editId && (
+                        <p className="mt-1 text-xs text-gray-400">
+                          No image uploaded
+                        </p>
+                      )
+                    )}
+                  </div>
 
                   <div>
                     <span className="mb-2 block text-sm font-medium">
