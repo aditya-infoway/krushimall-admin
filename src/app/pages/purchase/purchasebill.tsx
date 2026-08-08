@@ -1088,15 +1088,16 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
       navigate("/purchase/tractor");
     }
   };
-  const getBillNo = async () => {
-    try {
-      const res = await apiHelper.get("/purchases/generate-bill-no");
-
-      setBillNo(res.billNo || "");
-    } catch (error) {
-      console.error(error);
-    }
-  };
+const getBillNo = async () => {
+  try {
+    const res = await apiHelper.get(
+      `/purchases/generate-bill-no?companyId=${companyId}&financialYearId=${financialYearId}`
+    );
+    setBillNo(res.billNo || "");
+  } catch (error) {
+    console.error(error);
+  }
+};
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="bg-white shadow-sm dark:bg-gray-800">

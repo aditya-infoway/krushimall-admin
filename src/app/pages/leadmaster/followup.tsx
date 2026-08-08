@@ -97,7 +97,7 @@ export default function Followup() {
   const [discussion, setDiscussion] = useState("");
   const [followups, setFollowups] = useState<any[]>([]);
   const [expectedPurchaseDate, setExpectedPurchaseDate] = useState<any>(null);
-const navigate = useNavigate();
+  const navigate = useNavigate();
   const [errors, setErrors] = useState({
     expectedPurchaseDate: "",
     nextDate: "",
@@ -271,13 +271,13 @@ const navigate = useNavigate();
           </p>
         </div>
 
-   <button
-  onClick={() => history.back()}
-  className="bg-primary-500 hover:bg-primary-600 cursor-pointer flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium text-white transition-colors"
->
-  <ArrowLeftIcon className="h-4 w-4" />
-  <span>Back</span>
-</button>
+        <button
+          onClick={() => history.back()}
+          className="bg-primary-500 hover:bg-primary-600 flex cursor-pointer items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium text-white transition-colors"
+        >
+          <ArrowLeftIcon className="h-4 w-4" />
+          <span>Back</span>
+        </button>
       </div>
 
       {/* Kanban Board */}
@@ -348,7 +348,6 @@ const navigate = useNavigate();
                       </button>
 
                       <button
-                      
                         className="hover:text-primary-500 dark:hover:text-primary-400 cursor-pointer transition-colors"
                         title="Transfer"
                       >
@@ -356,7 +355,9 @@ const navigate = useNavigate();
                       </button>
 
                       <button
-                      onClick={() => navigate(`/followups/history/${item.leadId}`)}
+                        onClick={() =>
+                          navigate(`/followups/history/${item.leadId}`)
+                        }
                         className="hover:text-primary-500 dark:hover:text-primary-400 cursor-pointer transition-colors"
                         title="Follow Up"
                       >
