@@ -183,18 +183,19 @@ const fetchContras = async () => {
 };
 const getVoucher = async () => {
   try {
-    const res = await apiHelper.get("/contra/voucher");
+    if (!companyId || !financialYearId) {
+      toast.error("Company or financial year is not selected");
+      return;
+    }
 
-    setVoucherNo(res.voucherNo);
+    const res = await apiHelper.get(
+      `/contra/voucher?companyId=${companyId}&financialYearId=${financialYearId}`
+    );
 
-    // OR if using form state
-    // setForm(prev => ({
-    //   ...prev,
-    //   voucherNo: res.voucherNo,
-    // }));
-
+    setVoucherNo(res.voucherNo || "");
   } catch (err) {
     console.error(err);
+    toast.error("Unable to generate voucher number");
   }
 };
   const openModal = () => {
