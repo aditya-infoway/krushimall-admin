@@ -258,22 +258,32 @@ export default function CashReceipt() {
   useEffect(() => {
     getCashReceipts();
   }, []);
-  const getVoucherNo = async () => {
-    try {
-      const res = await apiHelper.get("/cash-receipt/voucher");
-
-      console.log("Voucher API:", res);
-
-      const voucherNo = res?.data?.voucherNo ?? res?.voucherNo ?? "";
-
-      setForm((prev) => ({
-        ...prev,
-        voucherNo,
-      }));
-    } catch (err) {
-      console.log(err);
+ const getVoucherNo = async () => {
+  try {
+    if (!companyId || !financialYearId) {
+      toast.error("Company or financial year is not selected");
+      return;
     }
-  };
+
+    const res = await apiHelper.get(
+      `/cash-receipt/voucher?companyId=${companyId}&financialYearId=${financialYearId}`
+    );
+
+    console.log("Voucher API:", res);
+
+    const voucherNo =
+      res?.data?.voucherNo ??
+      res?.voucherNo ??
+      "";
+
+    setForm((prev) => ({
+      ...prev,
+      voucherNo,
+    }));
+  } catch (err) {
+    console.log(err);
+  }
+};
   const getAccounts = async () => {
     try {
       const res = await apiHelper.get("/accounts");
