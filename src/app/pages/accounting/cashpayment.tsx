@@ -208,18 +208,25 @@ export default function CashPayment() {
       console.log(err);
     }
   };
-  const getVoucherNo = async () => {
-    try {
-      const res = await apiHelper.get("/cash-payment/generate-voucher");
+const getVoucherNo = async () => {
+  try {
+    const res = await apiHelper.get(
+      `/cash-payment/generate-voucher?companyId=${companyId}&financialYearId=${financialYearId}`
+    );
 
-      setForm((prev) => ({
-        ...prev,
-        voucherNo: res.voucherNo,
-      }));
-    } catch (err) {
-      console.error(err);
-    }
-  };
+    const voucherNo =
+      res?.data?.voucherNo ??
+      res?.voucherNo ??
+      "";
+
+    setForm((prev) => ({
+      ...prev,
+      voucherNo,
+    }));
+  } catch (err) {
+    console.error(err);
+  }
+};
   const getCashPayments = async () => {
     try {
       const res = await apiHelper.get("/cash-payment");

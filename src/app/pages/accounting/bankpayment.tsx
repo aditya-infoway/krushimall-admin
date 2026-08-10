@@ -263,18 +263,20 @@ export default function BankPayment() {
       console.log(err);
     }
   };
-  const getVoucherNo = async () => {
-    try {
-      const res = await apiHelper.get("/bank-payment/voucher");
+const getVoucherNo = async () => {
+  try {
+    const res = await apiHelper.get(
+      `/bank-payment/voucher?companyId=${companyId}&financialYearId=${financialYearId}`
+    );
 
-      setForm((prev) => ({
-        ...prev,
-        voucherNo: res.voucherNo,
-      }));
-    } catch (err) {
-      console.log(err);
-    }
-  };
+    setForm((prev) => ({
+      ...prev,
+      voucherNo: res.voucherNo || "",
+    }));
+  } catch (err) {
+    console.log(err);
+  }
+};
   useEffect(() => {
     getAccounts();
     getPurchaseBills();
