@@ -126,7 +126,7 @@ const [branchOptions, setBranchOptions] = useState<any[]>([]);
     defaultValues: {
       department: "",
       teamLeadId: undefined,
-      branch: "",
+     branchId: "",
       role: "",
       employeeName: "",
       mobileNumber: "",
@@ -140,7 +140,7 @@ const [branchOptions, setBranchOptions] = useState<any[]>([]);
 
   // Add these useWatch hooks to track form values
   const formDepartmentValue = useWatch({ control, name: "department" });
-  const formBranchValue = useWatch({ control, name: "branch" });
+  const formBranchValue = useWatch({ control, name: "branchId" });
   const formRoleValue = useWatch({ control, name: "role" });
   const formStatusValue = useWatch({ control, name: "status" });
   const formTeamLeadValue = useWatch({
@@ -163,7 +163,7 @@ const [branchOptions, setBranchOptions] = useState<any[]>([]);
   };
   const formValidationRules = {
     department: { required: "Department is required" },
-    branch: { required: "Branch is required" },
+    branchId: { required: "Branch is required" },
     role: { required: "Role is required" },
     employeeName: { required: "Employee name is required" },
     mobileNumber: {
@@ -284,7 +284,7 @@ const getBranches = async () => {
     setEditId(null);
     reset({
       department: "",
-      branch: "",
+    branchId: "",
       role: "",
       teamLeadId: undefined,
       employeeName: "",
@@ -322,7 +322,7 @@ const getBranches = async () => {
 
       reset({
         department: employee.department,
-        branch: employee.branch,
+     branchId: employee.branchId,   
         role: employee.role,
         teamLeadId: employee.teamLeadId,
         employeeName: employee.employeeName,
@@ -420,7 +420,7 @@ const getBranches = async () => {
       setEditId(null);
       reset({
         department: "",
-        branch: "",
+      branchId: "",
         role: "",
         employeeName: "",
         mobileNumber: "",
@@ -702,7 +702,7 @@ const getBranches = async () => {
                       {item.department}
                     </Td>
                     <Td className="dark:text-dark-200 py-4 text-gray-600">
-                      {item.branch}
+                   {item.branchId}
                     </Td>
                     <Td className="dark:text-dark-200 py-4 text-gray-600">
                       {item.role}
