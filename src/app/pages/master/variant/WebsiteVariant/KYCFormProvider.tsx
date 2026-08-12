@@ -32,6 +32,7 @@ productName:"",
   country: "",
   tractorStatus: "",
   
+  driveType: "",
   // Short Description
   shortDescription: "",
   

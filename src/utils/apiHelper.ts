@@ -1,109 +1,14 @@
-// // src/utils/apiHelper.ts
-
-// import axios from "axios";
-// import { storage } from "./jwt";
-// const api = axios.create({
-//   baseURL: import.meta.env.VITE_API_URL,
-//   headers: {
-//     Accept: "application/json",
-//   },
-// });
-
-// // Automatically attach token
-// api.interceptors.request.use((config) => {
-//   const token = storage.getItem("authToken");
-
-//   if (token) {
-//     config.headers.Authorization = `Bearer ${token}`;
-//   }
-
-//   return config;
-// });
-
-// // ✅ Add this helper function
-// export const getBaseUrl = () => {
-//   const apiUrl = import.meta.env.VITE_API_URL || "http://192.168.1.49:5000/api";
-
-//   return apiUrl.replace(/\/api$/, "");
-// };
-
-// const apiHelper = {
-//   // ✅ Add image URL helper
-//   getImageUrl: (imagePath: string | null | undefined): string => {
-//     if (!imagePath) return "";
-
-//     // Already a full URL or base64
-//     if (imagePath.startsWith("http") || imagePath.startsWith("data:")) {
-//       return imagePath;
-//     }
-
-//     // Already has leading slash (like /uploads/file.jpg)
-//     if (imagePath.startsWith("/")) {
-//       return `${getBaseUrl()}${imagePath}`;
-//     }
-
-//     // Just filename
-//     return `${getBaseUrl()}/uploads/${imagePath}`;
-//   },
-
-//   // GET
-//   get: async (url: string, params?: Record<string, any>) => {
-//     const response = await api.get(url, { params });
-//     return response.data;
-//   },
-//   getBlob: async (url: string, params?: Record<string, any>) => {
-//     const response = await api.get(url, {
-//       params,
-//       responseType: "blob",
-//     });
-
-//     return response.data;
-//   },
-//   // POST
-//   post: async (url: string, data: Record<string, any>) => {
-//     const response = await api.post(url, data);
-//     return response.data;
-//   },
-
-//   // PUT
-//   put: async (url: string, data: any, config?: any) => {
-//     const response = await api.put(url, data, config);
-
-//     return response.data;
-//   },
-
-//   // PATCH
-//   patch: async (url: string, data?: Record<string, any>) => {
-//     const response = await api.patch(url, data);
-//     return response.data;
-//   },
-
-//   // DELETE
-//   delete: async (url: string) => {
-//     const response = await api.delete(url);
-//     return response.data;
-//   },
-
-//   // IMAGE / FILE UPLOAD
-//   upload: async (url: string, formData: FormData) => {
-//     const response = await api.post(url, formData, {
-//       headers: {
-//         "Content-Type": "multipart/form-data",
-//       },
-//     });
-
-//     return response.data;
-//   },
-// };
-
-// export default apiHelper;
-
-  
 import axios from "axios";
 import { storage, setSession } from "./jwt";
 
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  "http://31.97.237.210/krushimall-api/api";
+// const API_URL =
+//   import.meta.env.VITE_API_URL ||
+//   "http://localhost:5000/api";
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: API_URL,
   headers: {
     Accept: "application/json",
   },
@@ -123,7 +28,6 @@ api.interceptors.request.use((config) => {
 // 401 / 403 handling
 api.interceptors.response.use(
   (response) => {
-    // First code jaisa response.data.status check
     if (
       response.data?.status === 401 ||
       response.data?.status === 403
@@ -133,9 +37,7 @@ api.interceptors.response.use(
 
     return response;
   },
-
   (error) => {
-    // HTTP status check
     if (
       error.response?.status === 401 ||
       error.response?.status === 403
@@ -147,32 +49,28 @@ api.interceptors.response.use(
   },
 );
 
-// Logout function
+// Logout
 const Logout = () => {
   setSession(null);
 
   window.dispatchEvent(new Event("force-logout"));
 
-  window.location.href = "/login";
+  window.location.href = "/krushimall-admin/login";
 };
 
-// Base URL
+// Base URL without /api
 export const getBaseUrl = () => {
-  const apiUrl =
-    import.meta.env.VITE_API_URL ||
-    "http://192.168.1.49:5000/api";
-
-  return apiUrl.replace(/\/api$/, "");
+  return API_URL.replace(/\/api\/?$/, "");
 };
 
 const apiHelper = {
   // Image URL helper
   getImageUrl: (
-    imagePath: string | null | undefined
+    imagePath: string | null | undefined,
   ): string => {
     if (!imagePath) return "";
 
-    // Already full URL or base64
+    // Full URL or base64
     if (
       imagePath.startsWith("http") ||
       imagePath.startsWith("data:")
@@ -180,19 +78,19 @@ const apiHelper = {
       return imagePath;
     }
 
-    // Already has leading slash
+    // Leading slash
     if (imagePath.startsWith("/")) {
       return `${getBaseUrl()}${imagePath}`;
     }
 
-    // Just filename
+    // Filename only
     return `${getBaseUrl()}/uploads/${imagePath}`;
   },
 
   // GET
   get: async (
     url: string,
-    params?: Record<string, any>
+    params?: Record<string, any>,
   ) => {
     const response = await api.get(url, { params });
     return response.data;
@@ -201,7 +99,7 @@ const apiHelper = {
   // GET Blob
   getBlob: async (
     url: string,
-    params?: Record<string, any>
+    params?: Record<string, any>,
   ) => {
     const response = await api.get(url, {
       params,
@@ -214,7 +112,7 @@ const apiHelper = {
   // POST
   post: async (
     url: string,
-    data: Record<string, any>
+    data?: Record<string, any>,
   ) => {
     const response = await api.post(url, data);
     return response.data;
@@ -224,7 +122,7 @@ const apiHelper = {
   put: async (
     url: string,
     data: any,
-    config?: any
+    config?: any,
   ) => {
     const response = await api.put(url, data, config);
     return response.data;
@@ -233,7 +131,7 @@ const apiHelper = {
   // PATCH
   patch: async (
     url: string,
-    data?: Record<string, any>
+    data?: Record<string, any>,
   ) => {
     const response = await api.patch(url, data);
     return response.data;
@@ -245,10 +143,10 @@ const apiHelper = {
     return response.data;
   },
 
-  // IMAGE / FILE UPLOAD
+  // Upload
   upload: async (
     url: string,
-    formData: FormData
+    formData: FormData,
   ) => {
     const response = await api.post(url, formData, {
       headers: {
@@ -261,4 +159,3 @@ const apiHelper = {
 };
 
 export default apiHelper;
-

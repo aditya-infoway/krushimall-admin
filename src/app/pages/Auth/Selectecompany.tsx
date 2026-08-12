@@ -4,7 +4,7 @@ import Logo from "@/assets/appLogo.svg?react";
 import Select from "react-select";
 import { Country, State, City } from "country-state-city";
 import { Input } from "@/components/ui";
-import axios from "@/utils/axios";
+import apiHelper from "@/utils/apiHelper"; 
 interface Company {
   id: number;
   companyName: string;
@@ -166,38 +166,36 @@ accountNumber: !formData.accountNumber
     fetchCompanies();
   }, []);
 
-  const fetchCompanies = async () => {
-    try {
-      const response = await axios.get("/company");
+ const fetchCompanies = async () => {
+  try {
+    const response = await apiHelper.get("/company");   // response = response.data already
+    setCompanies(response.data);                         // agar backend { data: [...] } bhejta hai
+  } catch (error) {
+    console.error(error);
+  }
+};
 
-      setCompanies(response.data.data);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-  const handleSave = async () => {
-    if (!validateForm()) return;
+const handleSave = async () => {
+  if (!validateForm()) return;
 
-    try {
-      const payload = new FormData();
+  try {
+    const payload = new FormData();
 
-      Object.entries(formData).forEach(([key, value]) => {
-        if (value !== null && value !== undefined) {
-          payload.append(key, value as any);
-        }
-      });
+    Object.entries(formData).forEach(([key, value]) => {
+      if (value !== null && value !== undefined) {
+        payload.append(key, value as any);
+      }
+    });
 
-      await axios.post("/company", payload);
+    await apiHelper.post("/company", payload);   // ✅ badla
 
-      await fetchCompanies();
-
-      setShowForm(false);
-
-      alert("Company Created Successfully");
-    } catch (error) {
-      console.error(error);
-    }
-  };
+    await fetchCompanies();
+    setShowForm(false);
+    alert("Company Created Successfully");
+  } catch (error) {
+    console.error(error);
+  }
+};
  const customSelectStyles = {
   control: (provided: any, state: any) => ({
     ...provided,
