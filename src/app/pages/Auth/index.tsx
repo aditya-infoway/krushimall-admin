@@ -10,11 +10,11 @@ import { Button, Card, Input, InputErrorMsg } from "@/components/ui";
 import { useAuthContext } from "@/app/contexts/auth/context";
 import { AuthFormValues, schema } from "./schema";
 import { Page } from "@/components/shared/Page";
-// import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 // ----------------------------------------------------------------------
 
 export default function SignIn() {
-  // const navigate = useNavigate();
+  const navigate = useNavigate();
   const { login, errorMessage } = useAuthContext();
   const {
     register,
@@ -35,7 +35,18 @@ const onSubmit = async (data: AuthFormValues) => {
 });
 
 if (success) {
- window.location.assign("/select-company");
+ 
+
+  navigate("/select-company", {
+    replace: true,
+  });
+
+  // setTimeout(() => {
+  //   console.log(
+  //     "AFTER NAVIGATE:",
+  //     window.location.pathname,
+  //   );
+  // }, 500);
 }
 };
 

@@ -64,7 +64,10 @@ const entriesOptions = [
   { id: 50, name: "50" },
   { id: 100, name: "100" },
 ];
-
+interface BrandOption {
+  id: number | string;
+   name: string;
+}
 const statusOptions = [
   { id: "ACTIVE", name: "On" },
   { id: "INACTIVE", name: "Off" },
@@ -572,15 +575,20 @@ const filteredData = brands.filter((item) => {
   searchFields={["name"]}
   placeholder="All Categories"
   onChange={(opt: any) => {
-    setSelectedCategoryFilter(String(opt.id));
-    setSelectedBrandFilter("All");
+  setSelectedCategoryFilter(String(opt.id));
+  setSelectedBrandFilter("All");
 
-    const categoryBrands = brands.filter(
+  const categoryBrands = brands
+    .filter(
       (b) => String(b.categoryId) === String(opt.id)
-    );
+    )
+    .map((b) => ({
+      id: b.id,
+      name: b.name || b.brandName || "Unknown",
+    }));
 
-    setFilterBrands(categoryBrands);
-  }}
+  setFilterBrands(categoryBrands);
+}}
 />
             </div>
 

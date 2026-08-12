@@ -13,14 +13,23 @@ import { publicRoutes } from "./public";
  * Main application router configuration
  * Combines protected, ghost, and public routes under a common root
  */
-const router = createBrowserRouter([
+const router = createBrowserRouter(
+  [
+    {
+      id: "root",
+      Component: Root,
+      hydrateFallbackElement: <SplashScreen />,
+      ErrorBoundary: RootErrorBoundary,
+      children: [
+        protectedRoutes,
+        ghostRoutes,
+        publicRoutes,
+      ] as RouteObject[],
+    },
+  ],
   {
-    id: "root",
-    Component: Root,
-    hydrateFallbackElement: <SplashScreen />,
-    ErrorBoundary: RootErrorBoundary,
-    children: [protectedRoutes, ghostRoutes, publicRoutes] as RouteObject[],
-  },
-]);
+    basename: "/krushimall-admin",
+  }
+);
 
 export default router;
