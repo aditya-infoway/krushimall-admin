@@ -264,8 +264,12 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
 
   const isEdit = !!id;
   const [date, setDate] = useState(() => {
-    const d = new Date();
-    return d.toISOString().split("T")[0];
+    const today = new Date();
+
+    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(
+      2,
+      "0",
+    )}-${String(today.getDate()).padStart(2, "0")}`;
   });
   const [billNo, setBillNo] = useState("");
   const [terms, setTerms] = useState<TermsType>("Credit");
@@ -995,9 +999,9 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
       return;
     }
     if (!purchaseBillNo.trim()) {
-    toast.error("Purchase Bill No is required");
-    return;
-  }
+      toast.error("Purchase Bill No is required");
+      return;
+    }
     if (!partyId) {
       toast.error("Please select Party Name");
       return;
@@ -1088,16 +1092,16 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
       navigate("/purchase/tractor");
     }
   };
-const getBillNo = async () => {
-  try {
-    const res = await apiHelper.get(
-      `/purchases/generate-bill-no?companyId=${companyId}&financialYearId=${financialYearId}`
-    );
-    setBillNo(res.billNo || "");
-  } catch (error) {
-    console.error(error);
-  }
-};
+  const getBillNo = async () => {
+    try {
+      const res = await apiHelper.get(
+        `/purchases/generate-bill-no?companyId=${companyId}&financialYearId=${financialYearId}`,
+      );
+      setBillNo(res.billNo || "");
+    } catch (error) {
+      console.error(error);
+    }
+  };
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="bg-white shadow-sm dark:bg-gray-800">
@@ -1108,7 +1112,7 @@ const getBillNo = async () => {
           </h1>
           <button
             onClick={handleBack}
-            className="bg-primary-500 hover:bg-primary-600 cursor-pointer inline-flex w-full items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold text-white transition-colors sm:w-auto sm:px-5"
+            className="bg-primary-500 hover:bg-primary-600 inline-flex w-full cursor-pointer items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold text-white transition-colors sm:w-auto sm:px-5"
           >
             <ArrowLeftIcon className="mr-1.5 size-4" />
             Back
@@ -1122,17 +1126,22 @@ const getBillNo = async () => {
               Date
             </label>
             <DatePicker
-              value={date}
+              placeholder="Select Date"
               options={{ disableMobile: true }}
+              value={date ? [new Date(date)] : []}
               onChange={(selectedDates: Date[]) => {
-                const val = selectedDates[0];
-                setDate(
-                  typeof val === "string"
-                    ? val
-                    : val?.toISOString?.()?.split?.("T")?.[0] || "",
-                );
+                if (selectedDates && selectedDates[0]) {
+                  const selectedDate = selectedDates[0];
+
+                  setDate(
+                    `${selectedDate.getFullYear()}-${String(
+                      selectedDate.getMonth() + 1,
+                    ).padStart(2, "0")}-${String(
+                      selectedDate.getDate(),
+                    ).padStart(2, "0")}`,
+                  );
+                }
               }}
-              placeholder="Select date..."
               className="w-full"
             />
           </div>
@@ -1147,15 +1156,15 @@ const getBillNo = async () => {
                 termsOptions.find((t) => t.value === terms) || termsOptions[0]
               }
               onChange={(val: any) => {
-    const selectedTerm = val.value as TermsType;
+                const selectedTerm = val.value as TermsType;
 
-    setTerms(selectedTerm);
+                setTerms(selectedTerm);
 
-    // Clear Due Date for Cash and Bank
-    if (selectedTerm !== "Credit") {
-      setDueDate("");
-    }
-  }}
+                // Clear Due Date for Cash and Bank
+                if (selectedTerm !== "Credit") {
+                  setDueDate("");
+                }
+              }}
               displayField="label"
             />
           </div>
