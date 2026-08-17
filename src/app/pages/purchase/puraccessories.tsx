@@ -7,9 +7,9 @@ import {
   MagnifyingGlassIcon,
   PlusIcon,
   BuildingOffice2Icon,
-  ArrowLeftIcon
+  ArrowLeftIcon,
 } from "@heroicons/react/24/outline";
-import {  Input } from "@/components/ui";
+import { Input } from "@/components/ui";
 import { Listbox } from "@/components/shared/form/StyledListbox";
 import { DatePicker } from "@/components/shared/form/Datepicker";
 import { Radio } from "@/components/ui";
@@ -357,7 +357,6 @@ const customSelectStyles = {
 
 const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
   onBack,
- 
 }) => {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -365,7 +364,11 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
   // ── Main Bill State ────────────────────────────────────────────────────
   const [date, setDate] = useState(() => {
     const d = new Date();
-    return d.toISOString().split("T")[0];
+
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
+      2,
+      "0",
+    )}-${String(d.getDate()).padStart(2, "0")}`;
   });
   const [terms, setTerms] = useState<TermsType>("Credit");
   const [cashAccount, setCashAccount] = useState("");
@@ -560,16 +563,16 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
   };
 
   // Get Bill Number
-const getBillNo = async () => {
-  try {
-    const res = await apiHelper.get(
-      `/accessories-purchase/generate-bill-no?companyId=${companyId}&financialYearId=${financialYearId}`
-    );
-    setBillNo(res.billNo);
-  } catch (error) {
-    console.error(error);
-  }
-};
+  const getBillNo = async () => {
+    try {
+      const res = await apiHelper.get(
+        `/accessories-purchase/generate-bill-no?companyId=${companyId}&financialYearId=${financialYearId}`,
+      );
+      setBillNo(res.billNo);
+    } catch (error) {
+      console.error(error);
+    }
+  };
   // Get Parties (Accounts)
   const getParties = async () => {
     try {
@@ -581,19 +584,19 @@ const getBillNo = async () => {
           ? res.data
           : [];
 
-    const mapped = accounts
-  .filter(
-    (acc: any) =>
-      acc.group === "Supplier" ||
-      acc.group === "Sundry Creditors" ||
-      acc.group === "Sundry Creditor (internal)",
-  )
-  .map((acc: any) => ({
-    id: String(acc.id),
-    name: acc.accountName,
-    mobile: acc.mobile,
-    stateCode: acc.stateCode,
-  }));
+      const mapped = accounts
+        .filter(
+          (acc: any) =>
+            acc.group === "Supplier" ||
+            acc.group === "Sundry Creditors" ||
+            acc.group === "Sundry Creditor (internal)",
+        )
+        .map((acc: any) => ({
+          id: String(acc.id),
+          name: acc.accountName,
+          mobile: acc.mobile,
+          stateCode: acc.stateCode,
+        }));
 
       setParties(mapped);
 
@@ -634,23 +637,23 @@ const getBillNo = async () => {
       console.error("Error fetching accounts:", error);
     }
   };
-const groupOptions = [
-  {
-    label: "Supplier",
-    value: "Supplier",
-  },
-  {
-    label: "Sundry Creditors",
-    value: "Sundry Creditors",
-  },
-  {
-    label: "Sundry Creditor (internal)",
-    value: "Sundry Creditor (internal)",
-  },
-];
-const isCreditorGroup =
-  accountForm.group === "Sundry Creditors" ||
-  accountForm.group === "Sundry Creditor (internal)";
+  const groupOptions = [
+    {
+      label: "Supplier",
+      value: "Supplier",
+    },
+    {
+      label: "Sundry Creditors",
+      value: "Sundry Creditors",
+    },
+    {
+      label: "Sundry Creditor (internal)",
+      value: "Sundry Creditor (internal)",
+    },
+  ];
+  const isCreditorGroup =
+    accountForm.group === "Sundry Creditors" ||
+    accountForm.group === "Sundry Creditor (internal)";
   const drCrOptions = [
     { label: "Dr", value: "Dr" },
     { label: "Cr", value: "Cr" },
@@ -865,15 +868,14 @@ const isCreditorGroup =
         return !accountForm.group ? "Group is required" : "";
 
       case "openingBalance":
-  return isCreditorGroup &&
-    !accountForm.openingBalance.trim()
-    ? "Opening Balance is required"
-    : "";
+        return isCreditorGroup && !accountForm.openingBalance.trim()
+          ? "Opening Balance is required"
+          : "";
 
-case "drCr":
-  return isCreditorGroup && !accountForm.drCr
-    ? "Dr / Cr is required"
-    : "";
+      case "drCr":
+        return isCreditorGroup && !accountForm.drCr
+          ? "Dr / Cr is required"
+          : "";
 
       case "mobile":
         if (!accountForm.mobile.trim()) return "Mobile is required";
@@ -949,15 +951,15 @@ case "drCr":
 
       const missing = required.filter((k) => !String(accountForm[k]).trim());
 
-     if (isCreditorGroup) {
-  if (!accountForm.openingBalance.trim()) {
-    missing.push("openingBalance");
-  }
+      if (isCreditorGroup) {
+        if (!accountForm.openingBalance.trim()) {
+          missing.push("openingBalance");
+        }
 
-  if (!accountForm.drCr.trim()) {
-    missing.push("drCr");
-  }
-}
+        if (!accountForm.drCr.trim()) {
+          missing.push("drCr");
+        }
+      }
 
       setAccountTouched(true);
 
@@ -977,16 +979,16 @@ case "drCr":
         panCard: accountForm.panCard,
         aadharNo: accountForm.aadharCard,
         group: accountForm.group,
-      openingBalance: isCreditorGroup
-  ? Number(accountForm.openingBalance)
-  : 0,
+        openingBalance: isCreditorGroup
+          ? Number(accountForm.openingBalance)
+          : 0,
 
-drCr:
-  accountForm.group === "Supplier"
-    ? "Cr"
-    : isCreditorGroup
-      ? accountForm.drCr
-      : null,
+        drCr:
+          accountForm.group === "Supplier"
+            ? "Cr"
+            : isCreditorGroup
+              ? accountForm.drCr
+              : null,
       });
 
       const account = res.data;
@@ -1296,41 +1298,41 @@ drCr:
 
   const handleSave = async () => {
     try {
-        // Company validation
-  if (!companyId || !financialYearId) {
-    toast.error("Company or financial year is not selected");
-    return;
-  }
+      // Company validation
+      if (!companyId || !financialYearId) {
+        toast.error("Company or financial year is not selected");
+        return;
+      }
 
-  // Purchase Bill No validation
-  if (!purchaseBillNo.trim()) {
-    toast.error("Purchase Bill No is required");
-    return;
-  }
+      // Purchase Bill No validation
+      if (!purchaseBillNo.trim()) {
+        toast.error("Purchase Bill No is required");
+        return;
+      }
 
-  // Supplier validation
-  if (!partyId) {
-    toast.error("Please select Supplier Name");
-    return;
-  }
+      // Supplier validation
+      if (!partyId) {
+        toast.error("Please select Supplier Name");
+        return;
+      }
 
-  // Item validation
-  if (rows.length === 0) {
-    toast.error("Please add at least one accessory");
-    return;
-  }
+      // Item validation
+      if (rows.length === 0) {
+        toast.error("Please add at least one accessory");
+        return;
+      }
 
-  // Cash account validation
-  if (terms === "Cash" && !cashAccount) {
-    toast.error("Please select Cash Account");
-    return;
-  }
+      // Cash account validation
+      if (terms === "Cash" && !cashAccount) {
+        toast.error("Please select Cash Account");
+        return;
+      }
 
-  // Bank account validation
-  if (terms === "Bank" && !bankAccount) {
-    toast.error("Please select Bank Account");
-    return;
-  }
+      // Bank account validation
+      if (terms === "Bank" && !bankAccount) {
+        toast.error("Please select Bank Account");
+        return;
+      }
       const payload = {
         companyId: Number(companyId),
 
@@ -1422,7 +1424,7 @@ drCr:
           </h1>
           <button
             onClick={handleBack}
-            className="bg-primary-500 hover:bg-primary-600 cursor-pointer inline-flex w-full items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold text-white transition-colors sm:w-auto sm:px-5"
+            className="bg-primary-500 hover:bg-primary-600 inline-flex w-full cursor-pointer items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold text-white transition-colors sm:w-auto sm:px-5"
           >
             <ArrowLeftIcon className="mr-1.5 size-4" />
             Back
@@ -1436,17 +1438,22 @@ drCr:
               Date
             </label>
             <DatePicker
-              value={date}
+              placeholder="Select Date"
               options={{ disableMobile: true }}
+              value={date ? [new Date(date)] : []}
               onChange={(selectedDates: Date[]) => {
-                const val = selectedDates[0];
-                setDate(
-                  typeof val === "string"
-                    ? val
-                    : val?.toISOString?.()?.split?.("T")?.[0] || "",
-                );
+                if (selectedDates && selectedDates[0]) {
+                  const selectedDate = selectedDates[0];
+
+                  setDate(
+                    `${selectedDate.getFullYear()}-${String(
+                      selectedDate.getMonth() + 1,
+                    ).padStart(2, "0")}-${String(
+                      selectedDate.getDate(),
+                    ).padStart(2, "0")}`,
+                  );
+                }
               }}
-              placeholder="Select date..."
               className="w-full"
             />
           </div>
@@ -1461,15 +1468,15 @@ drCr:
                 termsOptions.find((t) => t.value === terms) || termsOptions[0]
               }
               onChange={(val: any) => {
-    const selectedTerm = val.value as TermsType;
+                const selectedTerm = val.value as TermsType;
 
-    setTerms(selectedTerm);
+                setTerms(selectedTerm);
 
-    // Clear Due Date for Cash and Bank
-    if (selectedTerm !== "Credit") {
-      setDueDate("");
-    }
-  }}
+                // Clear Due Date for Cash and Bank
+                if (selectedTerm !== "Credit") {
+                  setDueDate("");
+                }
+              }}
               displayField="label"
             />
           </div>
@@ -1678,27 +1685,27 @@ drCr:
               displayField="label"
             />
           </div>
-         {terms === "Credit" && (
-  <div>
-    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-      Due Date
-    </label>
+          {terms === "Credit" && (
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Due Date
+              </label>
 
-    <DatePicker
-      value={dueDate ? parseLocalDate(dueDate) : undefined}
-      onChange={(selectedDates: Date[]) => {
-        const val = selectedDates[0];
+              <DatePicker
+                value={dueDate ? parseLocalDate(dueDate) : undefined}
+                onChange={(selectedDates: Date[]) => {
+                  const val = selectedDates[0];
 
-        if (val instanceof Date && !isNaN(val.getTime())) {
-          setDueDate(formatLocalDate(val));
-        }
-      }}
-      placeholder="Select date..."
-      className="w-full"
-      options={{ disableMobile: true }}
-    />
-  </div>
-)}
+                  if (val instanceof Date && !isNaN(val.getTime())) {
+                    setDueDate(formatLocalDate(val));
+                  }
+                }}
+                placeholder="Select date..."
+                className="w-full"
+                options={{ disableMobile: true }}
+              />
+            </div>
+          )}
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
               Narration
