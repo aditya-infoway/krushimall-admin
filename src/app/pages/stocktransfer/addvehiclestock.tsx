@@ -500,11 +500,7 @@ const getCompany = async () => {
           Number(savedCompanyId),
       );
 
-    console.log(
-      "SELECTED COMPANY:",
-      selectedCompany,
-    );
-
+   
     setCompanyStateCode(
       selectedCompany?.stateCode || "",
     );
@@ -548,7 +544,7 @@ const taxableValue = (selectedVehicles || []).reduce(
         (item: any) => item.status === "Present",
       );
 
-      console.log("Present Vehicles =>", presentVehicles);
+    
 
       setVehicleOptions(presentVehicles);
     } catch (err) {
@@ -652,7 +648,7 @@ useEffect(() => {
       (item: any) => item.chassisNo === watchedChassisNo,
     );
 
-    console.log("Selected Vehicle =>", vehicleData);
+ 
 
     if (!vehicleData) return;
 
@@ -776,7 +772,7 @@ const handleSave = async () => {
       vehicles: selectedVehicles,
     };
 
-    console.log("Payload =>", payload);
+   
 
     let res;
 
