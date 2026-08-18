@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 
 import {
   ArrowLeftIcon,
-  ArrowDownTrayIcon,
+  MagnifyingGlassIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
 } from "@heroicons/react/24/outline";
@@ -81,7 +81,7 @@ interface HistoryItem {
 
 export default function TestDriveHistoryDetails() {
   const navigate = useNavigate();
-
+  const [search, setSearch] = useState("");
   const { id } = useParams();
 
   const [customer, setCustomer] = useState<CustomerDetails>({
@@ -135,15 +135,48 @@ export default function TestDriveHistoryDetails() {
   // PAGINATION
   // ------------------------------------------
 
-  const totalItems = history.length;
+ // ------------------------------------------
+// SEARCH
+// ------------------------------------------
 
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
+const searchText = search.trim().toLowerCase();
 
-  const indexOfLastItem = currentPage * itemsPerPage;
+const filteredHistory = history.filter((item) => {
+  return (
+    String(item.model?.modelName ?? "")
+      .toLowerCase()
+      .includes(searchText) ||
+    String(item.showroomVariant?.variantName ?? "")
+      .toLowerCase()
+      .includes(searchText) ||
+    String(item.colour?.colourName ?? "")
+      .toLowerCase()
+      .includes(searchText) ||
+    String(item.licenceNo ?? "")
+      .toLowerCase()
+      .includes(searchText) ||
+    String(item.placeOfTestDrive ?? "")
+      .toLowerCase()
+      .includes(searchText)
+  );
+});
 
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+// ------------------------------------------
+// PAGINATION
+// ------------------------------------------
 
-  const currentItems = history.slice(indexOfFirstItem, indexOfLastItem);
+const totalItems = filteredHistory.length;
+
+const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+const indexOfLastItem = currentPage * itemsPerPage;
+
+const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+
+const currentItems = filteredHistory.slice(
+  indexOfFirstItem,
+  indexOfLastItem,
+);
   // ------------------------------------------
   // VIEW QUOTATION
   // ------------------------------------------
@@ -168,20 +201,20 @@ export default function TestDriveHistoryDetails() {
   //       "_blank",
   //     );
   //   };
-const formatIndianTime = (time?: string) => {
-  if (!time) return "-";
+  const formatIndianTime = (time?: string) => {
+    if (!time) return "-";
 
-  const [hour, minute] = time.split(":").map(Number);
+    const [hour, minute] = time.split(":").map(Number);
 
-  const date = new Date();
-  date.setHours(hour, minute, 0);
+    const date = new Date();
+    date.setHours(hour, minute, 0);
 
-  return date.toLocaleTimeString("en-IN", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,
-  });
-};
+    return date.toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
   return (
     <Page title="Quotation Revision History">
       <div className="transition-content px-(--margin-x) pb-6">
@@ -236,10 +269,21 @@ const formatIndianTime = (time?: string) => {
         </Card>
 
         {/* HISTORY TABLE */}
-
+        <div className="relative mb-5 w-full max-w-md">
+          <MagnifyingGlassIcon className="absolute top-1/2 left-3 size-4.5 -translate-y-1/2 text-gray-400" />
+          <input
+            placeholder="Search leads..."
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="dark:border-dark-500 dark:bg-dark-800 w-full rounded-lg border border-gray-300 bg-white py-2.5 pr-4 pl-10 text-sm outline-none"
+          />
+        </div>
         <Card className="overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-left ">
+            <table className="w-full text-left">
               <thead>
                 <tr className="dark:border-dark-500 dark:bg-dark-800 border-b border-gray-200 bg-gray-50 whitespace-nowrap">
                   <th className="px-4 py-3 font-semibold">Sr. No.</th>
@@ -300,7 +344,9 @@ const formatIndianTime = (time?: string) => {
                     >
                       {/* SR NO */}
 
-                      <td className="px-4 py-3">{indexOfFirstItem + index + 1}</td>
+                      <td className="px-4 py-3">
+                        {indexOfFirstItem + index + 1}
+                      </td>
 
                       <td className="px-4 py-3">
                         {new Date(item.testDriveDate).toLocaleDateString(
@@ -308,25 +354,34 @@ const formatIndianTime = (time?: string) => {
                         )}
                       </td>
 
-                     <td className="px-4 py-3">
-  {formatIndianTime(item.testDriveFromTime)}
-</td>
+                      <td className="px-4 py-3">
+                        {formatIndianTime(item.testDriveFromTime)}
+                      </td>
 
-<td className="px-4 py-3">
-  {formatIndianTime(item.testDriveToTime)}
-</td>
+                      <td className="px-4 py-3">
+                        {formatIndianTime(item.testDriveToTime)}
+                      </td>
 
                       <td className="px-4 py-3">{item.duration}</td>
 
-                      <td className="px-4 py-3"> {item.model?.modelName ?? "-"}</td>
+                      <td className="px-4 py-3">
+                        {" "}
+                        {item.model?.modelName ?? "-"}
+                      </td>
 
-                      <td className="px-4 py-3">{item.showroomVariant?.variantName ?? "-"}</td>
+                      <td className="px-4 py-3">
+                        {item.showroomVariant?.variantName ?? "-"}
+                      </td>
 
-                      <td className="px-4 py-3">{item.colour?.colourName ?? "-"}</td>
+                      <td className="px-4 py-3">
+                        {item.colour?.colourName ?? "-"}
+                      </td>
 
                       <td className="px-4 py-3">{item.licenceNo}</td>
 
-                      <td className="px-4 py-3">{item.vehicleSpeedometerRunning}</td>
+                      <td className="px-4 py-3">
+                        {item.vehicleSpeedometerRunning}
+                      </td>
 
                       <td className="px-4 py-3">{item.placeOfTestDrive}</td>
 
@@ -334,7 +389,7 @@ const formatIndianTime = (time?: string) => {
 
                       <td className="px-4 py-3">{item.remarks || "-"}</td>
 
-                      <td className="px-4 py-3">{ item.createdBy}</td>
+                      <td className="px-4 py-3">{item.createdBy}</td>
 
                       {/* CREATED DATE */}
 

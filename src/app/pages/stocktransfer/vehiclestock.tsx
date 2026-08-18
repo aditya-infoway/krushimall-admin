@@ -25,7 +25,7 @@ import { Fragment } from "react";
 import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/Table";
 import { Button, Checkbox } from "@/components/ui";
 import { Listbox } from "@/components/shared/form/StyledListbox";
-
+import { Combobox } from "@/components/shared/form/Combobox";
 type VehicleStock = {
   id: number;
   transferNo: string;
@@ -96,13 +96,32 @@ const VehicleStock = () => {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  
+  
+
   const [selectedBranchFilter, setSelectedBranchFilter] = useState("All");
   const [selectedChassisFilter, setSelectedChassisFilter] = useState("All");
   const [selectedVehicle, setSelectedVehicle] = useState<VehicleStock | null>(
     null,
   );
   const [showDetails, setShowDetails] = useState(false);
+const branchOptions = [
+  { id: "All", name: "All Branches" },
 
+  ...Array.from(
+    new Map(
+      vehicleStocks
+        .filter((item: any) => item.branch?.branchName)
+        .map((item: any) => [
+          String(item.branch?.id ?? item.branch?.branchName),
+          {
+            id: String(item.branch?.id ?? item.branch?.branchName),
+            name: String(item.branch?.branchName),
+          },
+        ]),
+    ).values(),
+  ),
+];
   const getVehicleStocks = async () => {
     try {
       const response = await apiHelper.get("/vehicle-stock-transfer");
@@ -172,25 +191,74 @@ const VehicleStock = () => {
     ...vehicleStocks.map((v) => ({ id: v.chassisNo, name: v.chassisNo })),
   ];
 
-  const filteredData = vehicleStocks.filter((item: any) => {
-    const matchesSearch =
-      (item.transferNo ?? "").toLowerCase().includes(search.toLowerCase()) ||
-      (item.chassisNo ?? "").toLowerCase().includes(search.toLowerCase()) ||
-      (item.modelName ?? "").toLowerCase().includes(search.toLowerCase()) ||
-      (item.branch?.branchName ?? "")
-        .toLowerCase()
-        .includes(search.toLowerCase());
+  const searchText = search.trim().toLowerCase();
 
-    const matchesBranch =
-      selectedBranchFilter === "All" ||
-      item.branch?.branchName === selectedBranchFilter;
+const filteredData = vehicleStocks.filter((item: any) => {
+  const branchName =
+    item.branch?.branchName ??
+    item.branchName ??
+    item.branch?.name ??
+    "";
 
-    const matchesChassis =
-      selectedChassisFilter === "All" ||
-      item.chassisNo === selectedChassisFilter;
+  const modelName =
+    item.model?.modelName ??
+    item.modelName ??
+    "";
 
-    return matchesSearch && matchesBranch && matchesChassis;
-  });
+  const variantName =
+    item.variant?.variantName ??
+    item.variant?.name ??
+    item.variantName ??
+    "";
+
+  const colourName =
+    item.colour?.colourName ??
+    item.colour?.name ??
+    item.colourName ??
+    "";
+
+ const matchesSearch =
+  !searchText ||
+  String(item.transferNo ?? "")     // <-- FIX: yeh hi actual Stock ID field hai
+    .toLowerCase()
+    .includes(searchText) ||
+  String(item.stockId ?? "")
+    .toLowerCase()
+    .includes(searchText) ||
+  String(item.stockNo ?? "")
+    .toLowerCase()
+    .includes(searchText) ||
+  String(item.chassisNo ?? "")
+    .toLowerCase()
+    .includes(searchText) ||
+  String(modelName)
+    .toLowerCase()
+    .includes(searchText) ||
+  String(variantName)
+    .toLowerCase()
+    .includes(searchText) ||
+  String(colourName)
+    .toLowerCase()
+    .includes(searchText) ||
+  String(branchName)
+    .toLowerCase()
+    .includes(searchText);
+
+const matchesBranch =
+  selectedBranchFilter === "All" ||
+  String(item.branch?.id ?? item.branch?.branchName) ===
+    String(selectedBranchFilter);
+  const matchesChassis =
+    selectedChassisFilter === "All" ||
+    String(item.chassisNo ?? "") ===
+      String(selectedChassisFilter);
+
+  return (
+    matchesSearch &&
+    matchesBranch &&
+    matchesChassis
+  );
+});
 
   const totalItems = filteredData.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
@@ -298,20 +366,22 @@ const VehicleStock = () => {
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
                 Branch
               </span>
-              <Listbox
-                data={branchFilterOptions}
-                value={
-                  branchFilterOptions.find(
-                    (o) => o.id === selectedBranchFilter,
-                  ) || branchFilterOptions[0]
-                }
-                placeholder="All Branches"
-                onChange={(opt: any) => {
-                  setSelectedBranchFilter(opt.id);
-                  setCurrentPage(1);
-                }}
-                displayField="name"
-              />
+             <Combobox
+    data={branchOptions}
+    value={
+      branchOptions.find(
+        (option: any) =>
+          String(option.id) === String(selectedBranchFilter),
+      ) || branchOptions[0]
+    }
+    onChange={(option: any) => {
+      setSelectedBranchFilter(option?.id || "All");
+      setCurrentPage(1);
+    }}
+    displayField="name"
+    searchFields={["name"]}
+    placeholder="Select Branch"
+  />
             </div>
             <div className="flex flex-col gap-1">
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">

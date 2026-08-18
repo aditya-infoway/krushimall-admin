@@ -221,6 +221,7 @@ export default function ShowroomVariantPage() {
   const [search, setSearch] = useState("");
   const [showFilterBar, setShowFilterBar] = useState(false);
   const [selectedModelFilter, setSelectedModelFilter] = useState("All");
+  const [selectedVariantFilter, setSelectedVariantFilter] = useState("All");
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [accessoryOptions, setAccessoryOptions] = useState<any[]>([]);
   const [accessories, setAccessories] = useState<Accessory[]>([
@@ -246,12 +247,7 @@ export default function ShowroomVariantPage() {
       modelId: number;
     }[]
   >([]);
-  useEffect(() => {
-    getVariants();
-    getCreateVariants();
-    getModels();
-    getAccessories();
-  }, []);
+  
   const getCreateVariants = async () => {
     try {
       const response = await apiHelper.get("/variant");
@@ -315,6 +311,12 @@ export default function ShowroomVariantPage() {
       console.error(error);
     }
   };
+  useEffect(() => {
+    getVariants();
+    getCreateVariants();
+    getModels();
+    getAccessories();
+  }, []);
   // ─── Validation Rules ──────────────────────────────────────────────
   const validationRules = {
     modelId: {
@@ -753,14 +755,17 @@ export default function ShowroomVariantPage() {
     console.log(errors);
   }, [errors]);
 
-  const filteredData = variants.filter((item) => {
-    const matchesSearch =
-      item.variantName?.toLowerCase().includes(search.toLowerCase()) ||
-      item.model?.toLowerCase().includes(search.toLowerCase());
-    const matchesModel =
-      selectedModelFilter === "All" || item.model === selectedModelFilter;
-    return matchesSearch && matchesModel;
-  });
+ const filteredData = variants.filter((item) => {
+  const matchesSearch =
+    item.variantName?.toLowerCase().includes(search.toLowerCase()) ||
+    item.model?.toLowerCase().includes(search.toLowerCase());
+  const matchesModel =
+    selectedModelFilter === "All" || item.model === selectedModelFilter;
+  const matchesVariant =
+    selectedVariantFilter === "All" ||
+    item.variantName === selectedVariantFilter; // NEW
+  return matchesSearch && matchesModel && matchesVariant;
+});
 
   const totalItems = filteredData.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
@@ -773,7 +778,20 @@ export default function ShowroomVariantPage() {
     { id: "All", name: "All Models" },
     ...models.map((m) => ({ id: m.name, name: m.name })),
   ];
-
+const variantFilterOptions = [
+  { id: "All", name: "All Variants" },
+  ...Array.from(
+    new Set(
+      variants
+        .filter(
+          (v) =>
+            selectedModelFilter === "All" || v.model === selectedModelFilter,
+        )
+        .map((v) => v.variantName)
+        .filter(Boolean),
+    ),
+  ).map((name) => ({ id: name, name })),
+];
   const isAllPageSelected =
     currentItems.length > 0 &&
     currentItems.every((item) => selectedIds.includes(item.id));
@@ -822,29 +840,49 @@ export default function ShowroomVariantPage() {
       {/* Filters - Only Model filter */}
       {/* Filters - Only Model filter */}
       {showFilterBar && (
-        <div className="dark:bg-dark-700 dark:border-dark-500 rounded-xl border border-gray-200 bg-white p-4">
-          <div className="flex flex-col gap-1">
-            <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
-              Filter by Model
-            </span>
-            <div className="max-w-md">
-              <Listbox
-                data={modelFilterOptions}
-                value={
-                  modelFilterOptions.find(
-                    (o) => o.id === selectedModelFilter,
-                  ) || modelFilterOptions[0]
-                }
-                onChange={(opt: any) => {
-                  setSelectedModelFilter(opt.id);
-                  setCurrentPage(1);
-                }}
-                displayField="name"
-              />
-            </div>
-          </div>
-        </div>
-      )}
+  <div className="dark:bg-dark-700 dark:border-dark-500 rounded-xl border border-gray-200 bg-white p-4">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className="flex flex-col gap-1">
+        <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
+          Filter by Model
+        </span>
+        <Listbox
+          data={modelFilterOptions}
+          value={
+            modelFilterOptions.find((o) => o.id === selectedModelFilter) ||
+            modelFilterOptions[0]
+          }
+          onChange={(opt: any) => {
+            setSelectedModelFilter(opt.id);
+            setSelectedVariantFilter("All"); // reset variant when model changes
+            setCurrentPage(1);
+          }}
+          displayField="name"
+        />
+      </div>
+
+      {/* NEW: Variant filter, dependent on selected model */}
+      <div className="flex flex-col gap-1">
+        <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
+          Filter by Variant
+        </span>
+        <Listbox
+          data={variantFilterOptions}
+          value={
+            variantFilterOptions.find(
+              (o) => o.id === selectedVariantFilter,
+            ) || variantFilterOptions[0]
+          }
+          onChange={(opt: any) => {
+            setSelectedVariantFilter(opt.id);
+            setCurrentPage(1);
+          }}
+          displayField="name"
+        />
+      </div>
+    </div>
+  </div>
+)}
 
       {/* Table - Removed Status column */}
       <div className="dark:bg-dark-800 dark:border-dark-700 rounded-xl border border-gray-200 bg-white shadow-sm">

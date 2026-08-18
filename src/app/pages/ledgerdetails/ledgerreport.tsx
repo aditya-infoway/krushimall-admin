@@ -9,6 +9,7 @@ import {
   FiChevronLeft,
   FiChevronRight,
 } from "react-icons/fi";
+import { Search } from "lucide-react";
 import { RiFileExcel2Fill, RiFilePdfFill } from "react-icons/ri";
 import { DatePicker } from "@/components/shared/form/Datepicker";
 import { useEffect } from "react";
@@ -39,61 +40,74 @@ const LedgerReport: React.FC = () => {
   );
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [showFilterBar, setShowFilterBar] = useState(false);
-  const [filterType, setFilterType] = useState("All");
-  const [filterDateFrom, setFilterDateFrom] = useState<any>(null);
-  const [filterDateTo, setFilterDateTo] = useState<any>(null);
-const [selectedAccount, setSelectedAccount] = useState<any>(null);
-const formatDate = (date: Date) => {
-  const day = String(date.getDate()).padStart(2, "0");
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const year = date.getFullYear();
+ 
+  const [selectedAccount, setSelectedAccount] = useState<any>(null);
+  const [search, setSearch] = useState("");
+  const formatDate = (date: Date) => {
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
 
-  return `${day}-${month}-${year}`;
-};
+    return `${day}-${month}-${year}`;
+  };
 
-const today = new Date();
+  const today = new Date();
 
-const [filterData, setFilterData] = useState<FilterData>({
-  fromDate: "01-04-2026", // or make this dynamic if needed
-  toDate: formatDate(today),
-  displayType: "",
+  const [filterData, setFilterData] = useState<FilterData>({
+    fromDate: "01-04-2026", // or make this dynamic if needed
+    toDate: formatDate(today),
+    displayType: "",
+  });
+const [ledgerData, setLedgerData] = useState<LedgerAccount[]>([]);
+
+// NEW: filter ledgerData by the search box before paginating
+const filteredData = ledgerData.filter((item) => {
+  const q = search.toLowerCase();
+  return (
+    item.accountName?.toLowerCase().includes(q) ||
+    item.group?.toLowerCase().includes(q) ||
+    item.address?.toLowerCase().includes(q) ||
+    item.city?.toLowerCase().includes(q) ||
+    item.state?.toLowerCase().includes(q)
+  );
 });
- const [ledgerData, setLedgerData] = useState<LedgerAccount[]>([]);
-  const totalPages = Math.ceil(ledgerData.length / rowsPerPage);
-  const startIndex = (currentPage - 1) * rowsPerPage;
-  const endIndex = startIndex + rowsPerPage;
-  const currentData = ledgerData.slice(startIndex, endIndex);
 
-  const getLedgerAccounts = async () => {
-  try {
-    const res = await apiHelper.get("/accounts");
-
-    console.log("Accounts:", res);
-
-    setLedgerData(
-      (res.data || res).map((item: any) => ({
-        id: item.id,
-        accountName: item.accountName,
-        group: item.group,
-        address: item.address1 || "",
-        city: item.city || "",
-        state: item.state || "",
-        closingBalance: Number(item.closingBalance || 0),
-        drCr: item.drCr || "",
-      }))
-    );
-  } catch (err) {
-    console.log(err);
-  }
-};
+const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+const startIndex = (currentPage - 1) * rowsPerPage;
+const endIndex = startIndex + rowsPerPage;
+const currentData = filteredData.slice(startIndex, endIndex);
 useEffect(() => {
-  getLedgerAccounts();
-}, []);
-const handleViewClick = (account: any) => {
-  setSelectedAccount(account);
-  setIsDrawerOpen(true);
-};
+  setCurrentPage(1);
+}, [search]);
+  const getLedgerAccounts = async () => {
+    try {
+      const res = await apiHelper.get("/accounts");
+
+      console.log("Accounts:", res);
+
+      setLedgerData(
+        (res.data || res).map((item: any) => ({
+          id: item.id,
+          accountName: item.accountName,
+          group: item.group,
+          address: item.address1 || "",
+          city: item.city || "",
+          state: item.state || "",
+          closingBalance: Number(item.closingBalance || 0),
+          drCr: item.drCr || "",
+        })),
+      );
+    } catch (err) {
+      console.log(err);
+    }
+  };
+  useEffect(() => {
+    getLedgerAccounts();
+  }, []);
+  const handleViewClick = (account: any) => {
+    setSelectedAccount(account);
+    setIsDrawerOpen(true);
+  };
 
   const handleDrawerClose = () => {
     setIsDrawerOpen(false);
@@ -101,13 +115,13 @@ const handleViewClick = (account: any) => {
 
   const handleDrawerOk = () => {
     setIsDrawerOpen(false);
-   navigate("/ledgerdetails/ledgerdetails", {
-  state: {
-    accountId: selectedAccount.id,
-    accountName: selectedAccount.accountName,
-    filterData,
-  },
-});
+    navigate("/ledgerdetails/ledgerdetails", {
+      state: {
+        accountId: selectedAccount.id,
+        accountName: selectedAccount.accountName,
+        filterData,
+      },
+    });
   };
 
   // Get page numbers for pagination
@@ -138,20 +152,20 @@ const handleViewClick = (account: any) => {
     }
     return pages;
   };
-const downloadExcel = async () => {
-  const blob = await apiHelper.getBlob("/ledger/export");
+  const downloadExcel = async () => {
+    const blob = await apiHelper.getBlob("/ledger/export");
 
-  const url = window.URL.createObjectURL(blob);
+    const url = window.URL.createObjectURL(blob);
 
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = "LedgerReport.xlsx";
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "LedgerReport.xlsx";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
 
-  window.URL.revokeObjectURL(url);
-};
+    window.URL.revokeObjectURL(url);
+  };
   return (
     <div className="dark:bg-dark-800 min-h-screen bg-gray-50 p-4 md:p-6">
       {/* Header */}
@@ -201,7 +215,10 @@ const downloadExcel = async () => {
             <button className="dark:border-dark-600 dark:bg-dark-700 dark:hover:bg-dark-600 flex h-9.5 w-9.5 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 dark:text-gray-300">
               <RiFilePdfFill className="text-lg text-red-500" />
             </button>
-            <button onClick={downloadExcel} className="dark:border-dark-600 dark:bg-dark-700 dark:hover:bg-dark-600 flex h-9.5 w-9.5 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 dark:text-gray-300 cursor-pointer">
+            <button
+              onClick={downloadExcel}
+              className="dark:border-dark-600 dark:bg-dark-700 dark:hover:bg-dark-600 flex h-9.5 w-9.5 cursor-pointer items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 dark:text-gray-300"
+            >
               <RiFileExcel2Fill className="text-lg text-green-500" />
             </button>
             <button className="dark:border-dark-600 dark:bg-dark-700 dark:hover:bg-dark-600 flex h-9.5 w-9.5 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 dark:text-gray-300">
@@ -212,24 +229,22 @@ const downloadExcel = async () => {
       </div>
 
       {/* Filters */}
-      <div className="mb-5 flex flex-col items-end justify-end gap-4 sm:flex-row sm:items-center">
-        <div className="relative w-full sm:w-48">
-          <input
-            type="text"
-            placeholder="Search"
-            className="dark:border-dark-600 dark:bg-dark-700 focus:ring-primary-500 w-full rounded-lg border border-gray-300 bg-white px-4 py-1.5 text-sm text-gray-900 placeholder-gray-400 focus:ring-2 focus:outline-none dark:text-white dark:placeholder-gray-500"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
+      <div className="relative mb-5 w-full max-w-md">
+        <Search className="absolute top-1/2 left-3 size-4.5 -translate-y-1/2 text-gray-400" />
+        <input
+          type="text"
+          placeholder="Search contra entries..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="dark:border-dark-500 dark:bg-dark-800 w-full rounded-lg border border-gray-300 bg-white py-2.5 pr-4 pl-10 text-sm outline-none"
+        />
       </div>
 
-      {/* Table */}
       <div className="dark:bg-dark-700 dark:border-dark-600 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="dark:bg-dark-600 bg-gray-50">
-              <tr className=" whitespace-nowrap">
+              <tr className="whitespace-nowrap">
                 <th className="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Sr No.
                 </th>
@@ -257,13 +272,13 @@ const downloadExcel = async () => {
               </tr>
             </thead>
             <tbody className="dark:divide-dark-600 divide-y divide-gray-100">
-             {currentData.map((item, index) => (
+              {currentData.map((item, index) => (
                 <tr
-                   key={index}
-                  className="dark:hover:bg-dark-600 transition-colors hover:bg-gray-50 whitespace-nowrap"
+                  key={index}
+                  className="dark:hover:bg-dark-600 whitespace-nowrap transition-colors hover:bg-gray-50"
                 >
                   <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
-                   {startIndex + index + 1}
+                    {startIndex + index + 1}
                   </td>
                   <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">
                     {item.accountName}
@@ -281,12 +296,12 @@ const downloadExcel = async () => {
                     {item.state}
                   </td>
                   <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
-                   ₹{Number(item.closingBalance).toFixed(2)} {item.drCr}
+                    ₹{Number(item.closingBalance).toFixed(2)} {item.drCr}
                   </td>
                   <td className="px-4 py-3 text-center">
                     <button
-                      className="dark:border-dark-500 dark:bg-dark-700 hover:border-primary-500 dark:hover:bg-dark-600 flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 bg-white transition-all hover:bg-gray-50 cursor-pointer"
-                    onClick={() => handleViewClick(item)}
+                      className="dark:border-dark-500 dark:bg-dark-700 hover:border-primary-500 dark:hover:bg-dark-600 flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-gray-300 bg-white transition-all hover:bg-gray-50"
+                      onClick={() => handleViewClick(item)}
                     >
                       <FiEye className="text-primary-500" size={16} />
                     </button>
