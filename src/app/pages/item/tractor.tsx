@@ -147,7 +147,9 @@ const [confirmState, setConfirmState] = useState<"pending" | "success" | "error"
 const [confirmLoading, setConfirmLoading] = useState(false);
 const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
 const [isBulkDelete, setIsBulkDelete] = useState(false);
-
+const [selectedModelFilter, setSelectedModelFilter] = useState("All");
+const [selectedVariantFilter, setSelectedVariantFilter] = useState("All");
+const [selectedColourFilter, setSelectedColourFilter] = useState("All");
 
   // ─── Form State ─────────────────────────────────────────────────────────
   const [formData, setFormData] = useState<FormValues>({
@@ -463,19 +465,119 @@ const handleToggleStatus = async (id: number) => {
 };
 
   // ─── Filter Data ────────────────────────────────────────────────────────
-  const filteredData = tractors.filter((item) => {
-    const matchesSearch =
-      item.itemName.toLowerCase().includes(search.toLowerCase()) ||
-      item.model?.modelName?.toLowerCase().includes(search.toLowerCase()) ||
-   item.showroomVariant?.variantName
-  ?.toLowerCase()
-  .includes(search.toLowerCase())
+ const filteredData = tractors.filter((item: any) => {
+  const searchText = search.trim().toLowerCase();
 
-    const matchesStatus =
-      selectedStatusFilter === "All" || item.status === selectedStatusFilter;
+  const matchesSearch =
+    !searchText ||
+    String(item.model?.modelName ?? "")
+      .toLowerCase()
+      .includes(searchText) ||
+    String(item.showroomVariant?.variantName ?? "")
+      .toLowerCase()
+      .includes(searchText) ||
+    String(item.colour?.colourName ?? "")
+      .toLowerCase()
+      .includes(searchText) ||
+    String(item.itemName ?? "")
+      .toLowerCase()
+      .includes(searchText) ||
+    String(item.codeNo ?? "")
+      .toLowerCase()
+      .includes(searchText);
 
-    return matchesSearch && matchesStatus;
-  });
+  const matchesModel =
+    selectedModelFilter === "All" ||
+    String(item.model?.id) === String(selectedModelFilter);
+
+  const matchesVariant =
+    selectedVariantFilter === "All" ||
+    String(item.showroomVariant?.id) === String(selectedVariantFilter);
+
+  const matchesColour =
+    selectedColourFilter === "All" ||
+    String(item.colour?.id) === String(selectedColourFilter);
+
+  const matchesStatus =
+    selectedStatusFilter === "All" ||
+    String(item.status) === String(selectedStatusFilter);
+
+  return (
+    matchesSearch &&
+    matchesModel &&
+    matchesVariant &&
+    matchesColour &&
+    matchesStatus
+  );
+});
+  const modelOptions = [
+  { id: "All", name: "All Models" },
+
+  ...Array.from(
+    new Map(
+      tractors
+        .filter((item: any) => item.model?.id)
+        .map((item: any) => [
+          String(item.model.id),
+          {
+            id: String(item.model.id),
+            name: item.model.modelName,
+          },
+        ]),
+    ).values(),
+  ),
+];
+const variantOptions = [
+  { id: "All", name: "All Variants" },
+
+  ...Array.from(
+    new Map(
+      tractors
+        .filter((item: any) => {
+          return (
+            selectedModelFilter === "All" ||
+            String(item.model?.id) === String(selectedModelFilter)
+          );
+        })
+        .filter((item: any) => item.showroomVariant?.id)
+        .map((item: any) => [
+          String(item.showroomVariant.id),
+          {
+            id: String(item.showroomVariant.id),
+            name: item.showroomVariant.variantName,
+          },
+        ]),
+    ).values(),
+  ),
+];
+const colourOptions = [
+  { id: "All", name: "All Colours" },
+
+  ...Array.from(
+    new Map(
+      tractors
+        .filter((item: any) => {
+          const modelMatch =
+            selectedModelFilter === "All" ||
+            String(item.model?.id) === String(selectedModelFilter);
+
+          const variantMatch =
+            selectedVariantFilter === "All" ||
+            String(item.variant?.id) === String(selectedVariantFilter);
+
+          return modelMatch && variantMatch;
+        })
+        .filter((item: any) => item.colour?.id)
+        .map((item: any) => [
+          String(item.colour.id),
+          {
+            id: String(item.colour.id),
+            name: item.colour.colourName,
+          },
+        ]),
+    ).values(),
+  ),
+];
   const groupOptions = [
     { id: "TRACTOR", name: "Tractor" },
     { id: "IMPLEMENT", name: "Implement" },
@@ -591,7 +693,81 @@ const handleToggleStatus = async (id: number) => {
       {/* Filter Bar */}
       {showFilterBar && (
         <div className="dark:bg-dark-700 dark:border-dark-500 animate-in fade-in slide-in-from-top-2 rounded-xl border border-gray-200 bg-white p-4 transition-all duration-150">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
+             <div>
+    <label className="mb-1 block text-sm font-medium">
+      Model
+    </label>
+
+    <Combobox
+      data={modelOptions}
+      searchFields={["name"]}
+      value={
+        modelOptions.find(
+          (item) => item.id === selectedModelFilter,
+        ) || modelOptions[0]
+      }
+      onChange={(option: any) => {
+        const value = option?.id ?? "All";
+
+        setSelectedModelFilter(value);
+
+        // Reset dependent filters
+        setSelectedVariantFilter("All");
+        setSelectedColourFilter("All");
+
+        setCurrentPage(1);
+      }}
+      displayField="name"
+    />
+  </div>
+   <div>
+    <label className="mb-1 block text-sm font-medium">
+      Variant
+    </label>
+
+    <Combobox
+      data={variantOptions}
+      searchFields={["name"]}
+      value={
+        variantOptions.find(
+          (item) => item.id === selectedVariantFilter,
+        ) || variantOptions[0]
+      }
+      onChange={(option: any) => {
+        const value = option?.id ?? "All";
+
+        setSelectedVariantFilter(value);
+
+        // Reset colour
+        setSelectedColourFilter("All");
+
+        setCurrentPage(1);
+      }}
+      displayField="name"
+    />
+  </div>
+
+   <div>
+    <label className="mb-1 block text-sm font-medium">
+      Colour
+    </label>
+
+    <Combobox
+      data={colourOptions}
+      searchFields={["name"]}
+      value={
+        colourOptions.find(
+          (item) => item.id === selectedColourFilter,
+        ) || colourOptions[0]
+      }
+      onChange={(option: any) => {
+        setSelectedColourFilter(option?.id ?? "All");
+        setCurrentPage(1);
+      }}
+      displayField="name"
+    />
+  </div>
             <div className="flex flex-col gap-1">
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
                 Status
@@ -620,7 +796,7 @@ const handleToggleStatus = async (id: number) => {
         <div className="overflow-x-auto">
           <Table
             hoverable
-            className="w-full min-w-[900px] text-left [&_.table-th]:font-semibold"
+            className="w-full min-w-225 text-left [&_.table-th]:font-semibold"
           >
             <THead className="dark:bg-dark-700/60 dark:border-dark-600 border-b border-gray-200 bg-gray-100">
               <Tr>
@@ -741,7 +917,7 @@ const handleToggleStatus = async (id: number) => {
                         >
                           <MenuItems
                             anchor="bottom end"
-                            className="dark:bg-dark-800 dark:ring-dark-500 dark:border-dark-500 z-[100] w-36 rounded-lg border border-gray-100 bg-white p-1 shadow-lg ring-1 ring-black/5 [--anchor-gap:4px] focus:outline-none"
+                            className="dark:bg-dark-800 dark:ring-dark-500 dark:border-dark-500 z-100 w-36 rounded-lg border border-gray-100 bg-white p-1 shadow-lg ring-1 ring-black/5 [--anchor-gap:4px] focus:outline-none"
                           >
                             <MenuItem>
                               {({ active }) => (
@@ -828,7 +1004,7 @@ const handleToggleStatus = async (id: number) => {
                   >
                     <MenuItems
                       anchor="top start"
-                      className="dark:bg-dark-700 dark:border-dark-600 z-[200] w-20 space-y-0.5 rounded-lg border border-gray-200 bg-white p-1 shadow-xl ring-1 ring-black/5 [--anchor-gap:6px] focus:outline-none"
+                      className="dark:bg-dark-700 dark:border-dark-600 z-200 w-20 space-y-0.5 rounded-lg border border-gray-200 bg-white p-1 shadow-xl ring-1 ring-black/5 [--anchor-gap:6px] focus:outline-none"
                     >
                       {entriesOptions.map((opt) => (
                         <MenuItem key={opt.id}>
@@ -949,7 +1125,7 @@ const handleToggleStatus = async (id: number) => {
       <Transition appear show={showDrawer} as={Fragment}>
         <Dialog
           as="div"
-          className="relative z-[100]"
+          className="relative z-100"
           onClose={() => setShowDrawer(false)}
         >
           <TransitionChild
