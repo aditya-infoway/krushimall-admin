@@ -555,22 +555,42 @@ const CreateBranch = () => {
       );
     }
   };
-  const filteredData = branches.filter((item: any) => {
-    const matchesSearch =
-      item.branchName.toLowerCase().includes(search.toLowerCase()) ||
-      item.branchCode.toLowerCase().includes(search.toLowerCase()) ||
-      item.managerName.toLowerCase().includes(search.toLowerCase()) ||
-      item.gmailId.toLowerCase().includes(search.toLowerCase()) ||
-      item.mobileNo.includes(search);
+const searchText = search.trim().toLowerCase();
 
-    const matchesBranchType =
-      selectedBranchTypeFilter === "All" ||
-      item.branchType === selectedBranchTypeFilter;
-    const matchesCountry =
-      selectedCountryFilter === "All" || item.country === selectedCountryFilter;
+const filteredData = branches.filter((item: any) => {
+  const matchesSearch =
+    String(item.branchName ?? "")
+      .toLowerCase()
+      .includes(searchText) ||
+    String(item.branchCode ?? "")
+      .toLowerCase()
+      .includes(searchText) ||
+    String(item.managerName ?? "")
+      .toLowerCase()
+      .includes(searchText) ||
+    String(item.gmailId ?? "")
+      .toLowerCase()
+      .includes(searchText) ||
+    String(item.mobileNo ?? "")
+      .toLowerCase()
+      .includes(searchText);
 
-    return matchesSearch && matchesBranchType && matchesCountry;
-  });
+  const matchesBranchType =
+    selectedBranchTypeFilter === "All" ||
+    String(item.branchType ?? "") ===
+      String(selectedBranchTypeFilter);
+
+  const matchesCountry =
+    selectedCountryFilter === "All" ||
+    String(item.country ?? "") ===
+      String(selectedCountryFilter);
+
+  return (
+    matchesSearch &&
+    matchesBranchType &&
+    matchesCountry
+  );
+});
 
   const totalItems = filteredData.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
@@ -745,7 +765,7 @@ const CreateBranch = () => {
                 displayField="name"
               />
             </div>
-            <div className="flex flex-col gap-1">
+            {/* <div className="flex flex-col gap-1">
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
                 Country
               </span>
@@ -763,7 +783,7 @@ const CreateBranch = () => {
                 }}
                 displayField="name"
               />
-            </div>
+            </div> */}
           </div>
         </div>
       )}
@@ -864,9 +884,7 @@ const CreateBranch = () => {
                     <Td className="py-4 font-mono text-sm font-medium text-gray-900 dark:text-gray-400">
                       {item.branchCode}
                     </Td>
-                    <Td className="py-4 font-mono text-sm font-medium text-gray-900 dark:text-gray-400">
-                      {item.branchCode}
-                    </Td>
+                  
                     <Td className="py-4 font-medium text-gray-900 dark:text-gray-400">
                       {item.branchName}
                     </Td>

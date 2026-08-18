@@ -40,6 +40,7 @@ type Employee = {
   id: number;
   department: string;
   branchId: string;
+  branch:string;
   role: string;
   employeeName: string;
   mobileNumber: string;
@@ -59,7 +60,7 @@ type FormValues = {
   department: string;
   branchId: string;
   role: string;
-
+branch:string;
   employeeName: string;
   mobileNumber: string;
   alternateNumber: string;
@@ -127,6 +128,7 @@ const [branchOptions, setBranchOptions] = useState<any[]>([]);
       department: "",
       teamLeadId: undefined,
      branchId: "",
+     branch:"",
       role: "",
       employeeName: "",
       mobileNumber: "",
@@ -285,6 +287,7 @@ const getBranches = async () => {
     reset({
       department: "",
     branchId: "",
+    branch:"",
       role: "",
       teamLeadId: undefined,
       employeeName: "",
@@ -439,12 +442,32 @@ const getBranches = async () => {
     }
   };
   // Filter data
+  const searchText = search.trim().toLowerCase();
   const filteredData = employees.filter((item) => {
     const matchesSearch =
-      item.employeeName.toLowerCase().includes(search.toLowerCase()) ||
-      item.email.toLowerCase().includes(search.toLowerCase()) ||
-      item.mobileNumber.includes(search) ||
-      item.department.toLowerCase().includes(search.toLowerCase());
+     String(item.employeeName ?? "")
+      .toLowerCase()
+      .includes(searchText) ||
+
+    String(item.department ?? "")
+      .toLowerCase()
+      .includes(searchText) ||
+
+    String(item.branch ?? "")
+      .toLowerCase()
+      .includes(searchText) ||
+
+    String(item.role ?? "")
+      .toLowerCase()
+      .includes(searchText) ||
+
+    String(item.mobileNumber ?? "")
+      .toLowerCase()
+      .includes(searchText) ||
+
+    String(item.email ?? "")
+      .toLowerCase()
+      .includes(searchText);
 
     const matchesDepartment =
       selectedDepartmentFilter === "All" ||
@@ -702,7 +725,7 @@ const getBranches = async () => {
                       {item.department}
                     </Td>
                     <Td className="dark:text-dark-200 py-4 text-gray-600">
-                   {item.branchId}
+                   {item.branch}
                     </Td>
                     <Td className="dark:text-dark-200 py-4 text-gray-600">
                       {item.role}

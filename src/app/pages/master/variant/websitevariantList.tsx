@@ -3,10 +3,10 @@ import { useEffect, useState } from "react";
 import apiHelper from "@/utils/apiHelper";
 import { useNavigate } from "react-router";
 import {
-  Dialog,
-  DialogPanel,
+  // Dialog,
+  // DialogPanel,
   Transition,
-  TransitionChild,
+  // TransitionChild,
   Menu,
   MenuButton,
   MenuItems,
@@ -15,11 +15,11 @@ import {
 import { Fragment } from "react";
 import { RiFileExcel2Fill, RiFilePdfFill } from "react-icons/ri";
 import {
-  XMarkIcon,
+  // XMarkIcon,
   PencilSquareIcon,
   TrashIcon,
   FunnelIcon,
-  DocumentArrowDownIcon,
+  // DocumentArrowDownIcon,
   EllipsisHorizontalIcon,
   MagnifyingGlassIcon,
   ChevronLeftIcon,
@@ -30,9 +30,9 @@ import { ConfirmModal } from "@/components/shared/ConfirmModal";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 
 // Local UI Imports
-import { Button, Checkbox, Input } from "@/components/ui";
+import { Button, Checkbox } from "@/components/ui";
 import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/Table";
-import { Listbox } from "@/components/shared/form/StyledListbox";
+// import { Listbox } from "@/components/shared/form/StyledListbox";
 import { Combobox } from "@/components/shared/form/Combobox";
 // Dummy data structure matching the table design
 type WebsiteVariantType = {
@@ -78,8 +78,8 @@ const entriesOptions = [
 
 export default function WebsiteVariantList() {
   const navigate = useNavigate();
-  const [showDrawer, setShowDrawer] = useState(false);
-  const [editId, setEditId] = useState<number | null>(null);
+  // const [showDrawer, setShowDrawer] = useState(false);
+  // const [editId, setEditId] = useState<number | null>(null);
   const [variants, setVariants] = useState<WebsiteVariantType[]>([]);
   const [loading, setLoading] = useState(false);
   // Pagination states
@@ -257,11 +257,13 @@ const statusFilterOptions = [
   // Filter logic
   const filteredData = variants.filter((item) => {
     const matchesSearch =
+     item.category?.categoryName.toLowerCase().includes(search.toLowerCase()) ||
       item.productName?.toLowerCase().includes(search.toLowerCase()) ||
       item.variant?.variantName?.toLowerCase().includes(search.toLowerCase()) ||
       item.variantCode?.toLowerCase().includes(search.toLowerCase()) ||
       item.brand?.brandName?.toLowerCase().includes(search.toLowerCase()) ||
-      item.model?.modelName?.toLowerCase().includes(search.toLowerCase());
+      item.model?.modelName?.toLowerCase().includes(search.toLowerCase()) ||
+         item.modelYear?.modelYear.toString().includes(search.toLowerCase());
 const matchesCategoryDropdown =
   selectedCategoryFilter === "All" ||
   String(item.category?.id) === selectedCategoryFilter;

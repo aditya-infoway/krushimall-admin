@@ -24,8 +24,8 @@ import { Fragment } from "react";
 import { DatePicker } from "@/components/shared/form/Datepicker";
 import apiHelper from "@/utils/apiHelper";
 import { toast } from "sonner";
-import { ConfirmModal } from "@/components/shared/ConfirmModal";
-import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
+// import { ConfirmModal } from "@/components/shared/ConfirmModal";
+// import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 
 // ---------- Types ----------
 export interface PurchaseItemRow {
@@ -55,8 +55,8 @@ export interface PurchaseItemRow {
   grnNumber?: string;
   grnDate?: string;
   grnRecordDate?: string;
-     createdBy?: string; 
-    createdType?: string 
+  createdBy?: string;
+  createdType?: string;
 }
 
 export interface InwardDrawerData {
@@ -129,8 +129,8 @@ const columns = [
   "Status",
   "columns",
   "Action",
-    "CreatedBy",
-    "CreatedType"
+  "CreatedBy",
+  "CreatedType",
 ];
 
 const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
@@ -144,11 +144,11 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
   const [loading, setLoading] = useState(false);
   const [isView, setIsView] = useState(false);
 
-//   const [showConfirmModal, setShowConfirmModal] = useState(false);
-// const [confirmState, setConfirmState] = useState<"pending" | "success" | "error">("pending");
-// const [confirmLoading, setConfirmLoading] = useState(false);
-// const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
-// const [isBulkDelete, setIsBulkDelete] = useState(false);
+  //   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  // const [confirmState, setConfirmState] = useState<"pending" | "success" | "error">("pending");
+  // const [confirmLoading, setConfirmLoading] = useState(false);
+  // const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  // const [isBulkDelete, setIsBulkDelete] = useState(false);
 
   // Drawer states
   const [showDrawer, setShowDrawer] = useState(false);
@@ -234,8 +234,8 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
           grnNumber: item.grnNumber || "",
           grnDate: item.grnDate || "",
           grnRecordDate: item.grnRecordDate || "",
-             createdBy: item.createdBy || "",
-    createdType: item.createdType || "",
+          createdBy: item.createdBy || "",
+          createdType: item.createdType || "",
         })),
       );
     } catch (error) {
@@ -391,36 +391,38 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
     return Object.keys(errors).length === 0;
   };
 
+  const handleTransportSave = async () => {
+    if (!validateTransport()) return;
+    try {
+      await apiHelper.put(`/purchases/${id}/transport`, transportData);
+      setTransportSaved(true);
+      toast.success("Transport details saved successfully!");
+      setShowTransportModal(false);
+    } catch (error: any) {
+      console.error(error);
+      toast.error(
+        error.response?.data?.message || "Failed to save transport details.",
+      );
+    }
+  };
 
- const handleTransportSave = async () => {
-  if (!validateTransport()) return;
-  try {
-    await apiHelper.put(`/purchases/${id}/transport`, transportData);
-    setTransportSaved(true);
-    toast.success("Transport details saved successfully!");
-    setShowTransportModal(false);
-  } catch (error: any) {
-    console.error(error);
-    toast.error(error.response?.data?.message || "Failed to save transport details.");
-  }
-};
-
-
-const handleInwardSubmit = async () => {
-  if (!validateInward()) return;
-  try {
-    await apiHelper.put(
-      `/purchases/purchase-items/${selectedItem?.id}/inward`,
-      inwardData,
-    );
-    toast.success("Inward details saved successfully!");
-    await fetchPurchaseItems();
-    setShowDrawer(false);
-  } catch (error: any) {
-    console.log(error);
-    toast.error(error.response?.data?.message || "Failed to save inward details.");
-  }
-};
+  const handleInwardSubmit = async () => {
+    if (!validateInward()) return;
+    try {
+      await apiHelper.put(
+        `/purchases/purchase-items/${selectedItem?.id}/inward`,
+        inwardData,
+      );
+      toast.success("Inward details saved successfully!");
+      await fetchPurchaseItems();
+      setShowDrawer(false);
+    } catch (error: any) {
+      console.log(error);
+      toast.error(
+        error.response?.data?.message || "Failed to save inward details.",
+      );
+    }
+  };
 
   const handleInwardChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -469,15 +471,12 @@ const handleInwardSubmit = async () => {
     setShowDrawer(true);
   };
 
-
-
-
-const toLocalDateString = (date: Date): string => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-};
+  const toLocalDateString = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
 
   return (
     <div className="relative min-h-screen space-y-6 p-4 pb-28 text-gray-900 md:p-6 dark:text-gray-100">
@@ -634,7 +633,7 @@ const toLocalDateString = (date: Date): string => {
                   Created By
                 </Th>
                 <Th className="w-20 py-3.5 text-center text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                Created Type
+                  Created Type
                 </Th>
                 <Th className="w-20 py-3.5 text-center text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Inward
@@ -696,8 +695,8 @@ const toLocalDateString = (date: Date): string => {
                         {item.status}
                       </span>
                     </Td>
-                     <Td className="py-4 text-right">{item.createdBy }</Td>
-                    <Td className="py-4 text-right">{item.createdType  }</Td>
+                    <Td className="py-4 text-right">{item.createdBy}</Td>
+                    <Td className="py-4 text-right">{item.createdType}</Td>
                     <Td className="py-4 text-center">
                       {item.status === "Pending" ? (
                         <button
@@ -726,25 +725,25 @@ const toLocalDateString = (date: Date): string => {
                         </button>
                       )}
                     </Td>
-                   <Td className="py-4 text-center">
-  {["Inward", "Booked"].includes(item.status) ? (
-    <button
-      onClick={() => handleViewClick(item)}
-      title="View"
-      className="cursor-pointer text-blue-500 transition-colors hover:text-blue-700"
-    >
-      <EyeIcon className="size-5" />
-    </button>
-  ) : (
-    <button
-      disabled
-      title="View Disabled"
-      className="cursor-not-allowed text-gray-400"
-    >
-      <EyeIcon className="size-5" />
-    </button>
-  )}
-</Td>
+                    <Td className="py-4 text-center">
+                      {["Inward", "Booked"].includes(item.status) ? (
+                        <button
+                          onClick={() => handleViewClick(item)}
+                          title="View"
+                          className="cursor-pointer text-blue-500 transition-colors hover:text-blue-700"
+                        >
+                          <EyeIcon className="size-5" />
+                        </button>
+                      ) : (
+                        <button
+                          disabled
+                          title="View Disabled"
+                          className="cursor-not-allowed text-gray-400"
+                        >
+                          <EyeIcon className="size-5" />
+                        </button>
+                      )}
+                    </Td>
                   </Tr>
                 );
               })}
@@ -1076,10 +1075,10 @@ const toLocalDateString = (date: Date): string => {
                       onChange={(selectedDates: Date[]) => {
                         if (selectedDates && selectedDates.length > 0) {
                           const date = selectedDates[0];
-                         const formattedDate =
-  date instanceof Date
-    ? toLocalDateString(date)
-    : date;
+                          const formattedDate =
+                            date instanceof Date
+                              ? toLocalDateString(date)
+                              : date;
                           setInwardData({
                             ...inwardData,
                             mfgDate: formattedDate as string,
@@ -1278,9 +1277,9 @@ const toLocalDateString = (date: Date): string => {
                         if (selectedDates && selectedDates.length > 0) {
                           const date = selectedDates[0];
                           const formattedDate =
-  date instanceof Date
-    ? toLocalDateString(date)
-    : date;
+                            date instanceof Date
+                              ? toLocalDateString(date)
+                              : date;
                           setInwardData({
                             ...inwardData,
                             grnDate: formattedDate as string,
@@ -1307,10 +1306,10 @@ const toLocalDateString = (date: Date): string => {
                       onChange={(selectedDates: Date[]) => {
                         if (selectedDates && selectedDates.length > 0) {
                           const date = selectedDates[0];
-const formattedDate =
-  date instanceof Date
-    ? toLocalDateString(date)
-    : date;
+                          const formattedDate =
+                            date instanceof Date
+                              ? toLocalDateString(date)
+                              : date;
                           setInwardData({
                             ...inwardData,
                             grnRecordDate: formattedDate as string,
