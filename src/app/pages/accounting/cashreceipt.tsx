@@ -476,7 +476,7 @@ const typeFilterOptions = [
         amount: Number(form.amount),
         narration: form.narration,
       };
-      console.log("CASH RECEIPT PAYLOAD:", payload);
+    
       if (editId) {
         await apiHelper.put(`/cash-receipt/${editId}`, payload);
         toast.success("Cash receipt updated successfully!");
