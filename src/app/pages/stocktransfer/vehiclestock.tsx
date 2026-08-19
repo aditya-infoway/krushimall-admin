@@ -181,10 +181,10 @@ const branchOptions = [
     navigate(`/stocktransfer/vehiclestock/view/${item.id}`);
   };
 
-  const branchFilterOptions = [
-    { id: "All", name: "All Branches" },
-    ...branchOptions.map((b) => ({ id: b.value, name: b.label })),
-  ];
+  // const branchFilterOptions = [
+  //   { id: "All", name: "All Branches" },
+  //   ...branchOptions.map((b) => ({ id: b.value, name: b.label })),
+  // ];
 
   const chassisFilterOptions = [
     { id: "All", name: "All Chassis" },
