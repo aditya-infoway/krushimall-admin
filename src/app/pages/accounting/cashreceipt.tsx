@@ -158,9 +158,9 @@ export default function CashReceipt() {
 
   return matchesSearch && matchesType && matchesDateFrom && matchesDateTo;
 });
-  const companyId = Number(sessionStorage.getItem("companyId"));
+  const companyId = Number(localStorage.getItem("companyId"));
 
-  const financialYearId = Number(sessionStorage.getItem("financialYearId"));
+  const financialYearId = Number(localStorage.getItem("financialYearId"));
   const totalItems = filteredRows.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;

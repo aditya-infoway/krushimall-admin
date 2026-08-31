@@ -1,10 +1,7 @@
-import { Capacitor } from "@capacitor/core";
 import { jwtDecode } from "jwt-decode";
 import axiosInstance from "./axios";
 
-const storage = Capacitor.isNativePlatform()
-  ? localStorage
-  : sessionStorage;
+const storage = localStorage;
 
 const LOGIN_PATH = "/krushimall-admin/login";
 

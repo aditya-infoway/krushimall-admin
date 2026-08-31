@@ -83,7 +83,7 @@ useEffect(() => {
     try {
       const res = await apiHelper.get("/accounts");
 
-      console.log("Accounts:", res);
+
 
       setLedgerData(
         (res.data || res).map((item: any) => ({
