@@ -160,8 +160,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   setSession(null);
 
   // Remove selected company/session values if required
-  sessionStorage.removeItem("companyId");
-  sessionStorage.removeItem("financialYearId");
+  localStorage.removeItem("companyId");
+  localStorage.removeItem("financialYearId");
 
   dispatch({ type: "LOGOUT" });
 };

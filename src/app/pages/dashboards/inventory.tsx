@@ -110,7 +110,7 @@ export default function Dashboard() {
   const [rowsPerPage] = React.useState(10);
 const today = new Date();
 
-const fyStartDate = sessionStorage.getItem("fyStartDate");
+const fyStartDate = localStorage.getItem("fyStartDate");
 
 const [fromDate, setFromDate] = useState<Date | string>(
   fyStartDate ? new Date(fyStartDate) : today

@@ -306,9 +306,9 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
     useState<BankDetailsData>(emptyBankDetails);
   const [bankDetailsTouched, setBankDetailsTouched] = useState(false);
   const [vehicleOptions, setVehicleOptions] = useState<VehicleOption[]>([]);
-  const companyId = Number(sessionStorage.getItem("companyId"));
+  const companyId = Number(localStorage.getItem("companyId"));
 
-  const financialYearId = Number(sessionStorage.getItem("financialYearId"));
+  const financialYearId = Number(localStorage.getItem("financialYearId"));
   const updateBankDetails = (key: keyof BankDetailsData, value: string) =>
     setBankDetails((b) => ({ ...b, [key]: value }));
   const [accountErrors, setAccountErrors] = useState<
@@ -783,7 +783,7 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
 
   const handleCreateAccount = async () => {
     try {
-      console.log("1️⃣ Selected Group:", accountForm.group);
+    
       const required: (keyof NewAccountData)[] = [
         "accountName",
         "mobile",
@@ -838,7 +838,7 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
               ? accountForm.drCr
               : null,
       });
-      console.log("2️⃣ Created Account Response:", res.data);
+  
       const account = res.data;
 
       if (!account?.id) {
@@ -877,7 +877,7 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
         : Array.isArray(res.data)
           ? res.data
           : [];
-      console.log("3️⃣ All Accounts:", accounts);
+
       const list = accounts
         .filter(
           (acc: any) =>
@@ -922,7 +922,7 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
       const res = await apiHelper.get(`/purchases/${id}`);
 
       const purchase = res.data;
-      console.log(res.data);
+
       setBillNo(purchase.billNo);
       setPartyId(String(purchase.accountId));
       setPurchaseBillNo(purchase.purchaseBillNo || "");

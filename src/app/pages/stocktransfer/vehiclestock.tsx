@@ -126,7 +126,7 @@ const branchOptions = [
     try {
       const response = await apiHelper.get("/vehicle-stock-transfer");
 
-      console.log("Response Data:", response.data);
+   
 
       setVehicleStocks(response.data);
     } catch (error) {

@@ -209,9 +209,9 @@ const paymentTypeFilterOptions = [
   const currentItems = filteredRows.slice(indexOfFirstItem, indexOfLastItem);
   const [bankAccounts, setBankAccounts] = useState<any[]>([]);
   const [oppAccounts, setOppAccounts] = useState<any[]>([]);
-  const companyId = Number(sessionStorage.getItem("companyId"));
+  const companyId = Number(localStorage.getItem("companyId"));
 
-  const financialYearId = Number(sessionStorage.getItem("financialYearId"));
+  const financialYearId = Number(localStorage.getItem("financialYearId"));
   const [leadOptions, setLeadOptions] = useState([]);
   const validateForm = () => {
     const newErrors: Record<string, string> = {};

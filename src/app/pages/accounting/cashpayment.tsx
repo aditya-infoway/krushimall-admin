@@ -170,9 +170,9 @@ const filteredRows = rows.filter((r) => {
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredRows.slice(indexOfFirstItem, indexOfLastItem);
-  const companyId = Number(sessionStorage.getItem("companyId"));
+  const companyId = Number(localStorage.getItem("companyId"));
 
-  const financialYearId = Number(sessionStorage.getItem("financialYearId"));
+  const financialYearId = Number(localStorage.getItem("financialYearId"));
   // NEW: build Type filter options from actual rows data, no hardcoding
 // Type filter options — dynamically built from actual rows data
 const typeFilterOptions = [
