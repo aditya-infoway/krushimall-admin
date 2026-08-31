@@ -54,7 +54,7 @@ const BankBook: React.FC = () => {
     try {
       const res = await apiHelper.get("/accounts");
 
-      console.log("Account API Response:", res);
+      
 
       const accounts = res.data || [];
 
@@ -62,7 +62,7 @@ const BankBook: React.FC = () => {
         (item: any) => item.group === "Bank Accounts",
       );
 
-      console.log("Filtered Bank Accounts:", banks);
+ 
 
       setBankAccountOptions([
         {

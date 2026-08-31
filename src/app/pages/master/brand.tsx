@@ -10,7 +10,7 @@ import {
   MenuItem,
 } from "@headlessui/react";
 import { Fragment, useState, useEffect } from "react";
-import { useForm, useWatch,Controller } from "react-hook-form";
+import { useForm, useWatch, Controller } from "react-hook-form";
 import { RiFileExcel2Fill, RiFilePdfFill } from "react-icons/ri";
 import {
   XMarkIcon,
@@ -39,7 +39,7 @@ type Brand = {
   _id?: string;
   image: string;
   brandName: string;
-  brandId:number;
+  brandId: number;
   name?: string;
   category: string;
   categoryId?: number;
@@ -66,7 +66,7 @@ const entriesOptions = [
 ];
 interface BrandOption {
   id: number | string;
-   name: string;
+  name: string;
 }
 const statusOptions = [
   { id: "ACTIVE", name: "On" },
@@ -95,9 +95,9 @@ export default function Brand() {
   // Three distinct filter dropdown states
   const [selectedNameFilter, setSelectedNameFilter] = useState("All");
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState("All");
-const [selectedBrandFilter, setSelectedBrandFilter] = useState("All");
+  const [selectedBrandFilter, setSelectedBrandFilter] = useState("All");
 
-const [filterBrands, setFilterBrands] = useState<BrandOption[]>([]);
+  const [filterBrands, setFilterBrands] = useState<BrandOption[]>([]);
   const [selectedStatusFilter, setSelectedStatusFilter] = useState("All");
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
@@ -110,13 +110,13 @@ const [filterBrands, setFilterBrands] = useState<BrandOption[]>([]);
     id: cat.id,
     name: cat.name,
   }));
-const brandFilterOptions = [
-  { id: "All", name: "All Brands" },
-  ...filterBrands.map((b) => ({
-    id: String(b.id),
-    name: b.name,
-  })),
-];
+  const brandFilterOptions = [
+    { id: "All", name: "All Brands" },
+    ...filterBrands.map((b) => ({
+      id: String(b.id),
+      name: b.name,
+    })),
+  ];
   useEffect(() => {
     getBrands();
     getCategories();
@@ -196,7 +196,7 @@ const brandFilterOptions = [
     setValue,
     control,
     reset,
-     
+
     formState: { errors },
   } = useForm<FormValues>({
     defaultValues: {
@@ -212,15 +212,15 @@ const brandFilterOptions = [
 
   const formImageValue = useWatch({ control, name: "image" });
 
-const formValidationRules = {
-  name: {
-    required: "Brand name is required",
-  },
-  categoryId: {
-    validate: (value: any) =>
-      value && Number(value) > 0 || "Category is required",
-  },
-};
+  const formValidationRules = {
+    name: {
+      required: "Brand name is required",
+    },
+    categoryId: {
+      validate: (value: any) =>
+        (value && Number(value) > 0) || "Category is required",
+    },
+  };
 
   // Dropdown list arrays for the 3 data model filters
   const nameFilterOptions = [
@@ -231,13 +231,13 @@ const formValidationRules = {
     })),
   ];
 
- const categoryFilterOptions = [
-  { id: "All", name: "All Categories" },
-  ...categories.map((c) => ({
-    id: String(c.id),
-    name: c.name,
-  })),
-];
+  const categoryFilterOptions = [
+    { id: "All", name: "All Categories" },
+    ...categories.map((c) => ({
+      id: String(c.id),
+      name: c.name,
+    })),
+  ];
 
   const statusFilterOptions = [
     { id: "All", name: "All Statuses" },
@@ -369,13 +369,13 @@ const formValidationRules = {
         const blob = await response.blob();
         formData.append("image", blob, "brand-image.jpg");
 
-        console.log("📤 Uploading with FormData (multipart)");
+     
         console.log("Fields:", {
           brandName: data.name,
           categoryId: data.categoryId,
           status: data.status,
         });
-        console.log("Image blob size:", blob.size);
+       
 
         let result;
         if (editId !== null) {
@@ -399,7 +399,7 @@ const formValidationRules = {
           payload.image = data.image;
         }
 
-        console.log("📤 Sending JSON (no new image):", payload);
+    
 
         if (editId !== null) {
           await apiHelper.put(`/brand/${editId}`, payload);
@@ -423,32 +423,25 @@ const formValidationRules = {
   };
 
   // Filter evaluation layer targeting Brand fields: Name, Category, and Status
-const filteredData = brands.filter((item) => {
-  const itemName = item.brandName || item.name || "";
+  const filteredData = brands.filter((item) => {
+    const itemName = item.brandName || item.name || "";
 
-  const matchesSearch =
-    itemName.toLowerCase().includes(search.toLowerCase()) ||
-    item.category.toLowerCase().includes(search.toLowerCase());
+    const matchesSearch =
+      itemName.toLowerCase().includes(search.toLowerCase()) ||
+      item.category.toLowerCase().includes(search.toLowerCase());
 
-  const matchesCategory =
-    selectedCategoryFilter === "All" ||
-    String(item.categoryId) === selectedCategoryFilter;
+    const matchesCategory =
+      selectedCategoryFilter === "All" ||
+      String(item.categoryId) === selectedCategoryFilter;
 
-  const matchesBrand =
-    selectedBrandFilter === "All" ||
-    String(item.id) === selectedBrandFilter;
+    const matchesBrand =
+      selectedBrandFilter === "All" || String(item.id) === selectedBrandFilter;
 
-  const matchesStatus =
-    selectedStatusFilter === "All" ||
-    item.status === selectedStatusFilter;
+    const matchesStatus =
+      selectedStatusFilter === "All" || item.status === selectedStatusFilter;
 
-  return (
-    matchesSearch &&
-    matchesCategory &&
-    matchesBrand &&
-    matchesStatus
-  );
-});
+    return matchesSearch && matchesCategory && matchesBrand && matchesStatus;
+  });
 
   const totalItems = filteredData.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
@@ -559,60 +552,57 @@ const filteredData = brands.filter((item) => {
         <div className="dark:bg-dark-700 dark:border-dark-500 animate-in fade-in slide-in-from-top-2 rounded-xl border border-gray-200 bg-white p-4 transition-all duration-150">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             {/* Filter 1: Brand Name Criteria */}
-             {/* Filter 2: Category Criteria */}
+            {/* Filter 2: Category Criteria */}
             <div className="flex flex-col gap-1">
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
-                 Category
+                Category
               </span>
-             <Combobox
-     data={categoryFilterOptions}
-  value={
-    categoryOptions.find(
-      (o) => String(o.id) === selectedCategoryFilter
-    ) || null
-  }
-  displayField="name"
-  searchFields={["name"]}
-  placeholder="All Categories"
-  onChange={(opt: any) => {
-  setSelectedCategoryFilter(String(opt.id));
-  setSelectedBrandFilter("All");
+              <Combobox
+                data={categoryFilterOptions}
+                value={
+                  categoryOptions.find(
+                    (o) => String(o.id) === selectedCategoryFilter,
+                  ) || null
+                }
+                displayField="name"
+                searchFields={["name"]}
+                placeholder="All Categories"
+                onChange={(opt: any) => {
+                  setSelectedCategoryFilter(String(opt.id));
+                  setSelectedBrandFilter("All");
 
-  const categoryBrands = brands
-    .filter(
-      (b) => String(b.categoryId) === String(opt.id)
-    )
-    .map((b) => ({
-      id: b.id,
-      name: b.name || b.brandName || "Unknown",
-    }));
+                  const categoryBrands = brands
+                    .filter((b) => String(b.categoryId) === String(opt.id))
+                    .map((b) => ({
+                      id: b.id,
+                      name: b.name || b.brandName || "Unknown",
+                    }));
 
-  setFilterBrands(categoryBrands);
-}}
-/>
+                  setFilterBrands(categoryBrands);
+                }}
+              />
             </div>
 
             <div className="flex flex-col gap-1">
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
                 Brand Name
               </span>
-             <Combobox
-  data={brandFilterOptions}
-  value={
-    brandFilterOptions.find(
-      (o) => o.id === selectedBrandFilter
-    ) || brandFilterOptions[0]
-  }
-  displayField="name"
-  searchFields={["name"]}
-  placeholder="All Brands"
-  onChange={(opt: any) => {
-    setSelectedBrandFilter(opt.id);
-  }}
-/>
+              <Combobox
+                data={brandFilterOptions}
+                value={
+                  brandFilterOptions.find(
+                    (o) => o.id === selectedBrandFilter,
+                  ) || brandFilterOptions[0]
+                }
+                displayField="name"
+                searchFields={["name"]}
+                placeholder="All Brands"
+                onChange={(opt: any) => {
+                  setSelectedBrandFilter(opt.id);
+                }}
+              />
             </div>
 
-           
             {/* Filter 3: Status Criteria */}
             <div className="flex flex-col gap-1">
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
@@ -1034,27 +1024,29 @@ const filteredData = brands.filter((item) => {
                   <label className="mb-2 block text-sm font-medium">
                     Category Name
                   </label>
-                <Controller
-  name="categoryId"
-  control={control}
-  rules={formValidationRules.categoryId}
-  render={({ field, fieldState }) => (
-    <Combobox
-      data={categoryOptions}
-      value={
-        categoryOptions.find((opt) => opt.id === Number(field.value)) || null
-      }
-      placeholder="Select Category"
-      error={fieldState.error?.message}
-      onChange={(selectedOpt: any) => {
-        setValue("category", selectedOpt.name);
-        field.onChange(selectedOpt.id);
-      }}
-      displayField="name"
-      searchFields={["name"]}
-    />
-  )}
-/>
+                  <Controller
+                    name="categoryId"
+                    control={control}
+                    rules={formValidationRules.categoryId}
+                    render={({ field, fieldState }) => (
+                      <Combobox
+                        data={categoryOptions}
+                        value={
+                          categoryOptions.find(
+                            (opt) => opt.id === Number(field.value),
+                          ) || null
+                        }
+                        placeholder="Select Category"
+                        error={fieldState.error?.message}
+                        onChange={(selectedOpt: any) => {
+                          setValue("category", selectedOpt.name);
+                          field.onChange(selectedOpt.id);
+                        }}
+                        displayField="name"
+                        searchFields={["name"]}
+                      />
+                    )}
+                  />
                   <div>
                     <label className="mb-2 block text-sm font-medium">
                       Brand Name

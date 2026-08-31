@@ -202,7 +202,7 @@ export default function Model() {
         }),
       );
 
-      console.log("All Brands:", list);
+     
 
       setBrands(list);
       setFilteredBrands([]);

@@ -108,7 +108,7 @@ const AccessoriesAllotDetail: React.FC = () => {
     try {
       setLoading(true);
       const res = await apiHelper.get(`/orders/accessories-allot/${id}`);
-      console.log("Accessory items detail:", res.data);
+     
       setDetailData(res.data || null);
       // Pre-fill invoice data if exists
     if (res.data?.invoiceNo) {

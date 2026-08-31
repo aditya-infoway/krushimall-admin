@@ -3,10 +3,11 @@ import { useNavigate, useParams } from "react-router-dom";
 import apiHelper from "@/utils/apiHelper";
 import {
   ArrowLeftIcon,
-  PencilIcon,
-  TrashIcon,
+  // PencilIcon,
+  // TrashIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+    MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
 import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/Table";
 import { Button } from "@/components/ui";
@@ -89,7 +90,7 @@ const ViewVehicleStock = () => {
   const [data, setData] = useState<VehicleStockDetail | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-
+const [search, setSearch] = useState("");
   const formatDate = (dateStr: string) => {
     if (!dateStr) return "-";
     const date = new Date(dateStr);
@@ -149,13 +150,32 @@ const ViewVehicleStock = () => {
   };
 
   // Pagination logic
-  const vehicles = data?.vehicles || [];
-  const totalItems = vehicles.length;
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = vehicles.slice(indexOfFirstItem, indexOfLastItem);
+// Pagination logic
+const vehicles = data?.vehicles || [];
 
+// NEW: filter vehicles by the search box
+const filteredVehicles = vehicles.filter((v) => {
+  const q = search.toLowerCase();
+  return (
+    v.chassisNo?.toLowerCase().includes(q) ||
+    v.engineNo?.toLowerCase().includes(q) ||
+    v.itemName?.toLowerCase().includes(q) ||
+    v.itemCode?.toLowerCase().includes(q) ||
+    v.modelName?.toLowerCase().includes(q) ||
+    v.variantName?.toLowerCase().includes(q) ||
+    v.colour?.toLowerCase().includes(q) ||
+    v.serialNo?.toLowerCase().includes(q)
+  );
+});
+
+const totalItems = filteredVehicles.length;
+const totalPages = Math.ceil(totalItems / itemsPerPage);
+const indexOfLastItem = currentPage * itemsPerPage;
+const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+const currentItems = filteredVehicles.slice(indexOfFirstItem, indexOfLastItem);
+useEffect(() => {
+  setCurrentPage(1);
+}, [search]);
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
@@ -267,10 +287,25 @@ const ViewVehicleStock = () => {
       </div>
 
       {/* Vehicles Table with Pagination */}
-      <div className="mb-6">
-        <h3 className="mb-4 text-lg font-semibold text-gray-800 dark:text-white">
-          Vehicles ({totalItems})
-        </h3>
+   {/* Vehicles Table with Pagination */}
+<div className="mb-6">
+  <h3 className="mb-4 text-lg font-semibold text-gray-800 dark:text-white">
+    Vehicles ({totalItems})
+  </h3>
+
+  {/* Search */}
+  <div className="relative mb-4 w-full max-w-md">
+    <MagnifyingGlassIcon className="absolute top-1/2 left-3 size-4.5 -translate-y-1/2 text-gray-400" />
+    <input
+      type="text"
+      placeholder="Search chassis, engine, model, item..."
+      value={search}
+      onChange={(e) => setSearch(e.target.value)}
+      className="dark:border-dark-500 dark:bg-dark-800 w-full rounded-lg border border-gray-300 bg-white py-2.5 pr-4 pl-10 text-sm outline-none"
+    />
+  </div>
+
+
 
         <div className="dark:bg-dark-800 dark:border-dark-700 rounded-xl border border-gray-200 bg-white shadow-sm">
           <div className="overflow-x-auto">

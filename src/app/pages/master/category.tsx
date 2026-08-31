@@ -125,7 +125,7 @@ export default function Category() {
     try {
       setLoading(true);
       const response = await apiHelper.get("/category");
-      console.log("API Response:", response);
+     
 
       let categoriesData = [];
 
@@ -302,7 +302,7 @@ export default function Category() {
       formData.append("status", data.status);
 
       // Log FormData contents
-      console.log("FormData contents:");
+     
       for (let pair of formData.entries()) {
         console.log(pair[0] + ": " + pair[1]);
       }
@@ -318,13 +318,7 @@ export default function Category() {
         formData.append("image", file);
       }
 
-      console.log("📤 Uploading with FormData (multipart)");
-      console.log("Fields:", {
-        categoryName: data.name,
-        status: data.status,
-        hasImage: !!data.image,
-      });
-
+     
       if (editId !== null) {
         await apiHelper.put(`/category/${editId}`, formData);
         toast.success("Category updated successfully!");
@@ -475,21 +469,21 @@ export default function Category() {
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
                 Category Name
               </span>
-             <Combobox
-  data={categoryFilterOptions}
-  value={
-    categoryFilterOptions.find(
-      (o) => o.id === selectedCategoryFilter
-    ) || categoryFilterOptions[0]
-  }
-  placeholder="All"
-  displayField="name"
-  searchFields={["name"]}
-  onChange={(opt: any) => {
-    setSelectedCategoryFilter(opt.id);
-    setCurrentPage(1);
-  }}
-/>
+              <Combobox
+                data={categoryFilterOptions}
+                value={
+                  categoryFilterOptions.find(
+                    (o) => o.id === selectedCategoryFilter,
+                  ) || categoryFilterOptions[0]
+                }
+                placeholder="All"
+                displayField="name"
+                searchFields={["name"]}
+                onChange={(opt: any) => {
+                  setSelectedCategoryFilter(opt.id);
+                  setCurrentPage(1);
+                }}
+              />
             </div>
 
             <div className="flex flex-col gap-1">

@@ -81,7 +81,7 @@ const VehicleVerifyAccessories: React.FC = () => {
     try {
       setLoading(true);
       const res = await apiHelper.get(`/orders/vehicle-verify-accessories`);
-      console.log("Vehicle verify accessories detail:", res.data);
+    
       setOrders(res.data || []);
     } catch (error: any) {
       console.error(

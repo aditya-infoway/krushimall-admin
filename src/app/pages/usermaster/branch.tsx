@@ -358,7 +358,7 @@ const CreateBranch = () => {
   const getBranches = async () => {
     try {
       const response = await apiHelper.get("/branch");
-      console.log("Branches:", response);
+   
       setBranches(response);
     } catch (error) {
       console.log(error);
@@ -398,47 +398,53 @@ const CreateBranch = () => {
     setExistingLogo(null);
   };
 
-  const handleOpenEditDrawer = async (item: Branch) => {
-    console.log("Clicked item:", item);
+const handleOpenEditDrawer = async (item: Branch) => {
+  if (!item) {
+    return;
+  }
 
-    if (!item) {
-      console.log("Item is undefined");
-      return;
-    }
+  try {
+    const response = await apiHelper.get(`/branch/${item.id}`);
 
-    try {
-      const branch = await apiHelper.get(`/branch/${item.id}`);
+    const branch = response.data;
 
-      setEditId(branch.id);
+    setEditId(branch.id);
 
-      reset({
-        branchCode: branch.branchCode,
-        branchName: branch.branchName,
-        branchType: branch.branchType,
-        managerId: branch.managerId,
-        managerName: branch.manager?.accountName,
-        mobileNo: branch.mobileNo,
-        gmailId: branch.gmailId,
-        gstNo: branch.gstNo,
-        panCardNo: branch.panCardNo,
-        address1: branch.address1,
-        address2: branch.address2,
-        country: branch.country,
-        countryCode: branch.countryCode,
-        state: branch.state,
-        stateCode: branch.stateCode,
-        district: branch.district,
-        city: branch.city,
-        pinCode: branch.pinCode,
-      });
+    reset({
+      branchCode: branch.branchCode || "",
+      branchName: branch.branchName || "",
+      branchType: branch.branchType || "",
+      managerId: branch.managerId || branch.manager?.id,
+      managerName: branch.manager?.accountName || "",
+      mobileNo: branch.mobileNo || "",
+      gmailId: branch.gmailId || "",
+      password: "",
+      confirmPassword: "",
+      gstNo: branch.gstNo || "",
+      panCardNo: branch.panCardNo || "",
+      address1: branch.address1 || "",
+      address2: branch.address2 || "",
+      country: branch.country || "",
+      countryCode: branch.countryCode || "",
+      state: branch.state || "",
+      stateCode: branch.stateCode || "",
+      district: branch.district || "",
+      city: branch.city || "",
+      pinCode: branch.pinCode || "",
+    });
 
-      setShowDrawer(true);
-      setExistingLogo(branch.logo || null);
-      setLogoFile(null);
-    } catch (err) {
-      console.log(err);
-    }
-  };
+    setExistingLogo(branch.logo || null);
+    setLogoFile(null);
+    setShowDrawer(true);
+  } catch (error: any) {
+    console.error("Failed to fetch branch:", error);
+
+    toast.error(
+      error.response?.data?.message ||
+        "Failed to load branch details",
+    );
+  }
+};
 
   const handleDelete = async (id: number) => {
     try {
@@ -1209,39 +1215,44 @@ const filteredData = branches.filter((item: any) => {
                 </div>
 
                 {/* Content */}
-                <div className="grow space-y-5 overflow-y-auto p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="dark:border-dark-500 dark:bg-dark-800 flex size-20 items-center justify-center overflow-hidden rounded-xl border border-gray-200 bg-gray-50">
-                      {logoFile ? (
-                        <img
-                          src={URL.createObjectURL(logoFile)}
-                          alt="Branch logo"
-                          className="size-full object-cover"
-                        />
-                      ) : existingLogo ? (
-                        <img
-                          src={apiHelper.getImageUrl(existingLogo)}
-                          alt="Branch logo"
-                          className="size-full object-cover"
-                        />
-                      ) : (
-                        <span className="text-xs text-gray-400">No logo</span>
-                      )}
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <label className="dark:text-dark-200 text-sm font-medium text-gray-700">
-                        Branch Logo
-                      </label>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) =>
-                          setLogoFile(e.target.files?.[0] || null)
-                        }
-                        className="dark:text-dark-200 text-sm text-gray-600 file:mr-3 file:rounded-lg file:border-0 file:bg-blue-50 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-blue-700 hover:file:bg-blue-100"
-                      />
-                    </div>
-                  </div>
+                {/* Content */}
+<div className="grow space-y-5 overflow-y-auto p-6">
+  <div className="flex items-center gap-4">
+    {/* ✅ shrink-0 added — box ab kabhi squish nahi hoga */}
+    <div className="dark:border-dark-500 dark:bg-dark-800 flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-gray-200 bg-gray-50">
+      {logoFile ? (
+        <img
+          src={URL.createObjectURL(logoFile)}
+          alt="Branch logo"
+          className="size-full object-cover"
+        />
+      ) : existingLogo ? (
+        <img
+          src={apiHelper.getImageUrl(existingLogo)}
+          alt="Branch logo"
+          className="size-full object-cover"
+          onError={(e) => {
+            // fallback agar image 404 ho jaye (jaisa console me dikh raha hai)
+            (e.target as HTMLImageElement).style.display = "none";
+          }}
+        />
+      ) : (
+        <span className="text-xs text-gray-400">No logo</span>
+      )}
+    </div>
+    <div className="flex min-w-0 flex-col gap-1">
+      <label className="dark:text-dark-200 text-sm font-medium text-gray-700">
+        Branch Logo
+      </label>
+      <input
+        type="file"
+        accept="image/*"
+        onChange={(e) => setLogoFile(e.target.files?.[0] || null)}
+        className="dark:text-dark-200 text-sm text-gray-600 file:mr-3 file:rounded-lg file:border-0 file:bg-blue-50 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-blue-700 hover:file:bg-blue-100"
+      />
+    </div>
+  </div>
+  
 
                   <div className="border-primary-600 dark:border-primary-500 border-b border-dashed"></div>
                   {/* Row 1: Branch Code, Name, Type - 3 columns */}

@@ -456,9 +456,9 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
   const [accountForm, setAccountForm] = useState<NewAccountData>(emptyAccount);
   const [accountTouched, setAccountTouched] = useState(false);
   const [accessories, setAccessories] = useState<any[]>([]);
-  const companyId = sessionStorage.getItem("companyId");
+  const companyId = localStorage.getItem("companyId");
 
-  const financialYearId = sessionStorage.getItem("financialYearId");
+  const financialYearId = localStorage.getItem("financialYearId");
   const getPurchase = async () => {
     try {
       const res = await apiHelper.get(`/accessories-purchase/${id}`);
@@ -547,8 +547,7 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
     try {
       const res = await apiHelper.get("/accessories");
 
-      console.log("Accessories API:", res);
-
+   
       setAccessories(
         Array.isArray(res.data?.data)
           ? res.data.data
@@ -1038,7 +1037,7 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
       toast.warning("Please fill all required fields");
       return;
     }
-    console.log("Tractor saved:", tractorForm);
+
     setAddTractorModalOpen(false);
     setTractorForm(emptyTractor);
     setTractorTouched(false);

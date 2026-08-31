@@ -43,7 +43,7 @@ import { TestDriveModal } from "./testdrive";
 import { toast } from "sonner";
 import { ConfirmModal } from "@/components/shared/ConfirmModal";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
-import {PaymentDrawer} from "./payment";
+import { PaymentDrawer } from "./payment";
 
 type Lead = {
   id: number;
@@ -99,10 +99,10 @@ export default function LeadBuilder() {
   const [selectedLeadId, setSelectedLeadId] = useState<number | undefined>(
     undefined,
   );
-const [showPaymentDrawer, setShowPaymentDrawer] = useState(false);
-const [selectedPaymentLeadId, setSelectedPaymentLeadId] = useState<number | undefined>(
-  undefined,
-);
+  const [showPaymentDrawer, setShowPaymentDrawer] = useState(false);
+  const [selectedPaymentLeadId, setSelectedPaymentLeadId] = useState<
+    number | undefined
+  >(undefined);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [confirmState, setConfirmState] = useState<
     "pending" | "success" | "error"
@@ -112,58 +112,42 @@ const [selectedPaymentLeadId, setSelectedPaymentLeadId] = useState<number | unde
 
   // Filter leads based on search
   const navigate = useNavigate();
- const filteredData = leadData.filter((lead: any) => {
-  const searchLower = search.trim().toLowerCase();
+  const filteredData = leadData.filter((lead: any) => {
+    const searchLower = search.trim().toLowerCase();
 
-  return (
-    // Customer Name
-    String(lead.customer?.accountName ?? "")
-      .toLowerCase()
-      .includes(searchLower) ||
-
-    // Mobile
-    String(lead.customer?.mobile ?? "")
-      .toLowerCase()
-      .includes(searchLower) ||
-
-    // City
-    String(lead.customer?.city ?? lead.city ?? "")
-      .toLowerCase()
-      .includes(searchLower) ||
-
-    // Model
-    String(lead.model?.modelName ?? "")
-      .toLowerCase()
-      .includes(searchLower) ||
-
-    // Variant
-    String(
-      lead.variant?.variantName ??
-      lead.showroomVariant?.variantName ??
-      ""
-    )
-      .toLowerCase()
-      .includes(searchLower) ||
-
-    // Colour
-    String(
-      lead.colour?.colourName ??
-      lead.color?.colourName ??
-      ""
-    )
-      .toLowerCase()
-      .includes(searchLower) ||
-
-    // Executive
-    String(
-      lead.executive?.employeeName ??
-      lead.executiveName ??
-      ""
-    )
-      .toLowerCase()
-      .includes(searchLower)
-  );
-});
+    return (
+      // Customer Name
+      String(lead.customer?.accountName ?? "")
+        .toLowerCase()
+        .includes(searchLower) ||
+      // Mobile
+      String(lead.customer?.mobile ?? "")
+        .toLowerCase()
+        .includes(searchLower) ||
+      // City
+      String(lead.customer?.city ?? lead.city ?? "")
+        .toLowerCase()
+        .includes(searchLower) ||
+      // Model
+      String(lead.model?.modelName ?? "")
+        .toLowerCase()
+        .includes(searchLower) ||
+      // Variant
+      String(
+        lead.variant?.variantName ?? lead.showroomVariant?.variantName ?? "",
+      )
+        .toLowerCase()
+        .includes(searchLower) ||
+      // Colour
+      String(lead.colour?.colourName ?? lead.color?.colourName ?? "")
+        .toLowerCase()
+        .includes(searchLower) ||
+      // Executive
+      String(lead.executive?.employeeName ?? lead.executiveName ?? "")
+        .toLowerCase()
+        .includes(searchLower)
+    );
+  });
 
   // Pagination
   const totalItems = filteredData.length;
@@ -227,10 +211,10 @@ const [selectedPaymentLeadId, setSelectedPaymentLeadId] = useState<number | unde
   const handleFollowUp = (id: number) => {
     navigate(`/leadmaster/Followup/${id}`);
   };
- const handlePayment = (id: number) => {
-  setSelectedPaymentLeadId(id);
-  setShowPaymentDrawer(true);
-};
+  const handlePayment = (id: number) => {
+    setSelectedPaymentLeadId(id);
+    setShowPaymentDrawer(true);
+  };
 
   // const handleSendQuotation = (id: number) => {
   //   console.log(`Send quotation for lead ${id}...`);
@@ -314,13 +298,16 @@ const [selectedPaymentLeadId, setSelectedPaymentLeadId] = useState<number | unde
                 <Th className="w-45 min-w-45 text-center">Process / Billing</Th>
                 <Th className="w-45 min-w-45 text-center">Print</Th>
                 <Th className="w-40 min-w-40">Status</Th>
-                <Th className="w-20 text-center">Action</Th>
+                {/* <Th className="w-20 text-center">Action</Th> */}
               </Tr>
             </THead>
             <TBody>
-              {currentItems.map((lead,index) => (
+              {currentItems.map((lead, index) => (
                 <Tr key={lead.id} className="dark:border-dark-700 border-b">
-                  <Td className="font-bold">     {(currentPage - 1) * itemsPerPage + index + 1}</Td>
+                  <Td className="font-bold">
+                    {" "}
+                    {(currentPage - 1) * itemsPerPage + index + 1}
+                  </Td>
                   <Td className="font-bold">{lead.quotationNo}</Td>
                   <Td className="text-xs">
                     <div className="space-y-1">
@@ -425,10 +412,10 @@ const [selectedPaymentLeadId, setSelectedPaymentLeadId] = useState<number | unde
                         <button
                           onClick={() => handleEditQuotation(lead.id)}
                           disabled={!!lead.order}
-                          className={`flex h-8 w-8 items-center justify-center rounded-full border ${
+                          className={`flex h-7 w-7 items-center justify-center rounded border ${
                             lead.order
-                              ? "cursor-not-allowed border-gray-500 bg-gray-500 text-gray-400"
-                              : "cursor-pointer border-blue-500 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                              ? "dark:border-dark-500 dark:bg-dark-600 dark:text-dark-300 cursor-not-allowed border-gray-300 bg-gray-300 text-gray-500"
+                              : "cursor-pointer border-blue-500 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20"
                           }`}
                           title={
                             lead.order
@@ -436,7 +423,7 @@ const [selectedPaymentLeadId, setSelectedPaymentLeadId] = useState<number | unde
                               : "Edit Quotation"
                           }
                         >
-                          <PencilSquareIcon className="h-4 w-4" />
+                          <PencilSquareIcon className="h-3 w-3" />
                         </button>
                       </div>
                       {/* Test Drive: Red border */}
@@ -570,7 +557,7 @@ const [selectedPaymentLeadId, setSelectedPaymentLeadId] = useState<number | unde
                   </Td>
 
                   {/* Action Column */}
-                  <Td>
+                  {/* <Td>
                     <div className="flex items-center justify-center gap-2">
                       <button
                         onClick={() => handleEdit(lead.id)}
@@ -587,7 +574,7 @@ const [selectedPaymentLeadId, setSelectedPaymentLeadId] = useState<number | unde
                         <TrashIcon className="size-4" />
                       </button>
                     </div>
-                  </Td>
+                  </Td> */}
                 </Tr>
               ))}
               {currentItems.length === 0 && (
@@ -743,18 +730,18 @@ const [selectedPaymentLeadId, setSelectedPaymentLeadId] = useState<number | unde
         isOpen={showLeadModal}
         onClose={() => setShowLeadModal(false)}
       />
-<PaymentDrawer
-  isOpen={showPaymentDrawer}
-  onClose={() => {
-    setShowPaymentDrawer(false);
-    setSelectedPaymentLeadId(undefined);
-  }}
-  leadId={selectedPaymentLeadId}
-  customerName={
-    leadData.find((lead) => lead.id === selectedPaymentLeadId)
-      ?.customer?.accountName
-  }
-/>
+      <PaymentDrawer
+        isOpen={showPaymentDrawer}
+        onClose={() => {
+          setShowPaymentDrawer(false);
+          setSelectedPaymentLeadId(undefined);
+        }}
+        leadId={selectedPaymentLeadId}
+        customerName={
+          leadData.find((lead) => lead.id === selectedPaymentLeadId)?.customer
+            ?.accountName
+        }
+      />
       {/* Add Test Drive Modal */}
       <TestDriveModal
         isOpen={showTestDriveModal}

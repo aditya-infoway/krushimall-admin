@@ -1034,7 +1034,7 @@ function ReviewLeadSummaryStep({
   const fetchProfessions = async () => {
     const res = await apiHelper.get("/professions");
 
-    console.log("Profession Response:", res.data);
+
 
     const data = Array.isArray(res.data?.data)
       ? res.data.data
@@ -1389,11 +1389,10 @@ function ReviewLeadSummaryStep({
           </label>
           <DatePicker
             value={form.dmsEnquiryDate}
-          
             onChange={(val) => handleChange("dmsEnquiryDate", val)}
             placeholder="DD-MM-YYYY"
             options={{
-              dateFormat: "d-m-Y", 
+              dateFormat: "d-m-Y",
               disableMobile: true,
             }}
           />
@@ -1736,16 +1735,11 @@ function FinanceDetailsStep({
 }: {
   financeDetails: FinanceDetailsType;
 
-  setFinanceDetails: React.Dispatch<
-    React.SetStateAction<FinanceDetailsType>
-  >;
+  setFinanceDetails: React.Dispatch<React.SetStateAction<FinanceDetailsType>>;
 
   financeOptions: any[];
 }) {
-  const handleChange = (
-    field: keyof FinanceDetailsType,
-    value: string,
-  ) => {
+  const handleChange = (field: keyof FinanceDetailsType, value: string) => {
     setFinanceDetails((prev) => ({
       ...prev,
       [field]: value,
@@ -1770,42 +1764,33 @@ function FinanceDetailsStep({
             Finance Done By
           </label>
 
-    <Combobox
-  data={financeOptions}
-  value={
-    financeOptions.find(
-      (item: any) =>
-        String(item.id) ===
-        String(financeDetails.financeDoneBy),
-    ) || null
-  }
-  onChange={(item: any) => {
-    handleChange(
-      "financeDoneBy",
-      item?.id
-        ? String(item.id)
-        : "",
-    );
-  }}
-  displayField="name"
-  placeholder="Select Finance"
-  searchFields={[
-    "name",
-    "employeeName",
-  ]}
-  columns={[
-    {
-      header: "Finance Name",
-      field: "name",
-      width: "2fr",
-    },
-    {
-      header: "Employee Name",
-      field: "employeeName",
-      width: "1.5fr",
-    },
-  ]}
-/>
+          <Combobox
+            data={financeOptions}
+            value={
+              financeOptions.find(
+                (item: any) =>
+                  String(item.id) === String(financeDetails.financeDoneBy),
+              ) || null
+            }
+            onChange={(item: any) => {
+              handleChange("financeDoneBy", item?.id ? String(item.id) : "");
+            }}
+            displayField="name"
+            placeholder="Select Finance"
+            searchFields={["name", "employeeName"]}
+            columns={[
+              {
+                header: "Finance Name",
+                field: "name",
+                width: "2fr",
+              },
+              {
+                header: "Employee Name",
+                field: "employeeName",
+                width: "1.5fr",
+              },
+            ]}
+          />
         </div>
 
         {/* Finance Amount */}
@@ -1819,30 +1804,21 @@ function FinanceDetailsStep({
             min="0"
             placeholder="0"
             value={financeDetails.financeAmount}
-            onChange={(e) =>
-              handleChange(
-                "financeAmount",
-                e.target.value,
-              )
-            }
+            onChange={(e) => handleChange("financeAmount", e.target.value)}
             className={inputClass}
           />
         </div>
 
         {/* EMI */}
         <div className="flex flex-col gap-1">
-          <label className="dark:text-dark-200 text-sm font-medium">
-            EMI
-          </label>
+          <label className="dark:text-dark-200 text-sm font-medium">EMI</label>
 
           <input
             type="number"
             min="0"
             placeholder="0"
             value={financeDetails.emi}
-            onChange={(e) =>
-              handleChange("emi", e.target.value)
-            }
+            onChange={(e) => handleChange("emi", e.target.value)}
             className={inputClass}
           />
         </div>
@@ -1858,12 +1834,7 @@ function FinanceDetailsStep({
             min="0"
             placeholder="0"
             value={financeDetails.tenureMonths}
-            onChange={(e) =>
-              handleChange(
-                "tenureMonths",
-                e.target.value,
-              )
-            }
+            onChange={(e) => handleChange("tenureMonths", e.target.value)}
             className={inputClass}
           />
         </div>
@@ -1878,15 +1849,8 @@ function FinanceDetailsStep({
             type="number"
             min="0"
             placeholder="0"
-            value={
-              financeDetails.processingCharge
-            }
-            onChange={(e) =>
-              handleChange(
-                "processingCharge",
-                e.target.value,
-              )
-            }
+            value={financeDetails.processingCharge}
+            onChange={(e) => handleChange("processingCharge", e.target.value)}
             className={inputClass}
           />
         </div>
@@ -1903,12 +1867,7 @@ function FinanceDetailsStep({
             step="0.01"
             placeholder="0"
             value={financeDetails.loanROI}
-            onChange={(e) =>
-              handleChange(
-                "loanROI",
-                e.target.value,
-              )
-            }
+            onChange={(e) => handleChange("loanROI", e.target.value)}
             className={inputClass}
           />
         </div>
@@ -1924,12 +1883,7 @@ function FinanceDetailsStep({
             min="0"
             placeholder="0"
             value={financeDetails.marginMoney}
-            onChange={(e) =>
-              handleChange(
-                "marginMoney",
-                e.target.value,
-              )
-            }
+            onChange={(e) => handleChange("marginMoney", e.target.value)}
             className={inputClass}
           />
         </div>
@@ -1968,7 +1922,6 @@ export function LeadDetailsModal({
   const leadInfoValidateRef = useRef<(() => boolean) | null>(null);
   const reviewSummaryValidateRef = useRef<(() => boolean) | null>(null);
 
-
   const [models, setModels] = useState([]);
   // const [variants, setVariants] = useState([]);
   const [colors, setColors] = useState([]);
@@ -1978,15 +1931,9 @@ export function LeadDetailsModal({
   const [customers, setCustomers] = useState<OptionType[]>([]);
 
   const [executives, setExecutives] = useState<OptionType[]>([]);
- const companyId = Number(
-  sessionStorage.getItem("companyId"),
-);
+  const companyId = Number(localStorage.getItem("companyId"));
 
-const financialYearId = Number(
-  sessionStorage.getItem(
-    "financialYearId",
-  ),
-);
+  const financialYearId = Number(localStorage.getItem("financialYearId"));
   const fetchExecutives = async () => {
     try {
       const res = await apiHelper.get("/employees");
@@ -1999,9 +1946,7 @@ const financialYearId = Number(
 
       setExecutives(
         data
-          .filter((item: any) =>
-  item.role?.toLowerCase().includes("executive"),
-)
+          .filter((item: any) => item.role?.toLowerCase().includes("executive"))
           .map((item: any) => ({
             id: item.id,
             name: item.employeeName,
@@ -2015,7 +1960,6 @@ const financialYearId = Number(
 
   useEffect(() => {
     fetchExecutives();
-   
   }, []);
   const [financeData, setFinanceData] = useState<FinanceType>({
     wantsFinance: false,
@@ -2063,8 +2007,7 @@ const financialYearId = Number(
     chequeDate: "",
     chequeClearDate: "",
   });
-  const [financeDetails, setFinanceDetails] =
-  useState<FinanceDetailsType>({
+  const [financeDetails, setFinanceDetails] = useState<FinanceDetailsType>({
     financeDoneBy: "",
     financeAmount: "",
     emi: "",
@@ -2073,11 +2016,9 @@ const financialYearId = Number(
     loanROI: "",
     marginMoney: "",
   });
-  const isFinancePurchase =
-  reviewData.purchaseType === "Finance";
-const [financeOptions, setFinanceOptions] =
-  useState<any[]>([]);
-const totalSteps = isFinancePurchase ? 5 : 4;
+  const isFinancePurchase = reviewData.purchaseType === "Finance";
+  const [financeOptions, setFinanceOptions] = useState<any[]>([]);
+  const totalSteps = isFinancePurchase ? 5 : 4;
   const validateStep1And2 = (currentStep: number) => {
     const newErrors: Record<string, string> = {};
     if (currentStep === 1) {
@@ -2095,180 +2036,148 @@ const totalSteps = isFinancePurchase ? 5 : 4;
     return Object.keys(newErrors).length === 0;
   };
 
- const handleNext = () => {
-  if (step === 1 || step === 2) {
-    if (!validateStep1And2(step)) return;
-  }
+  const handleNext = () => {
+    if (step === 1 || step === 2) {
+      if (!validateStep1And2(step)) return;
+    }
 
-  if (
-    step === 3 &&
-    leadInfoValidateRef.current
-  ) {
-    const isValid =
-      leadInfoValidateRef.current();
+    if (step === 3 && leadInfoValidateRef.current) {
+      const isValid = leadInfoValidateRef.current();
 
-    if (!isValid) return;
-  }
+      if (!isValid) return;
+    }
 
-  // Step 4 validation
-  if (
-    step === 4 &&
-    reviewSummaryValidateRef.current
-  ) {
-    const isValid =
-      reviewSummaryValidateRef.current();
+    // Step 4 validation
+    if (step === 4 && reviewSummaryValidateRef.current) {
+      const isValid = reviewSummaryValidateRef.current();
 
-    if (!isValid) return;
-  }
+      if (!isValid) return;
+    }
 
-  if (step < totalSteps) {
-    setStep((prev) => prev + 1);
-  }
-};
+    if (step < totalSteps) {
+      setStep((prev) => prev + 1);
+    }
+  };
 
   const handlePrevious = () => {
     if (step > 1) setStep(step - 1);
   };
 
-  const handleSubmit = async () => {
-    console.log("SUBMIT CLICKED");
-  if (
-    !companyId ||
-    !financialYearId
-  ) {
-    toast.error(
-      "Company or financial year is not selected",
-    );
+const handleSubmit = async () => {
+
+  if (!companyId || !financialYearId) {
+    toast.error("Company or financial year is not selected");
     return;
   }
-    if (reviewSummaryValidateRef.current) {
-      const isValid = reviewSummaryValidateRef.current();
-      console.log("VALID:", isValid);
-      if (!isValid) return;
-    }
+  if (reviewSummaryValidateRef.current) {
+    const isValid = reviewSummaryValidateRef.current();
 
-   
+    if (!isValid) return;
+  }
 
-    try {
-      const payload = {
-        companyId,
-        financialYearId,
-        modelId: selectedModel?.id,
-        showroomVariantId: selectedShowroomVariant?.id,
-        colourId: selectedColor?.id,
-        customerId: selectedCustomer?.id,
-        executiveId: selectedExecutive?.id,
-        ...financeData,
-        ...reviewData,
-        
-        customerExpectedPrice: financeData.customerExpectedPrice
-          ? Number(financeData.customerExpectedPrice)
-          : null,
-        marketPrice: financeData.marketPrice
-          ? Number(financeData.marketPrice)
-          : null,
-        chassisNo: financeData.chassisNo || null,
-        companyShare: financeData.companyShare
-          ? Number(financeData.companyShare)
-          : null,
-        dealerShares: financeData.dealerShares
-          ? Number(financeData.dealerShares)
-          : null,
-        rcNo: financeData.rcNo || null,
-        insurance: financeData.insurance ? Number(financeData.insurance) : null,
-        vehicleNo: financeData.vehicleNo || null,
-        expectedPurchaseDate: reviewData.expectedPurchaseDate?.[0] || null,
-        expectedDeliveryDate: reviewData.expectedDeliveryDate?.[0] || null,
-        bookingDate: reviewData.bookingDate?.[0] || null,
-        followUpDate: reviewData.followUpDate?.[0] || null,
-        dmsEnquiryDate: reviewData.dmsEnquiryDate?.[0] || null,
-        chequeNo: reviewData.chequeNo,
-        chequeDate: reviewData.chequeDate?.[0] || null,
-        chequeClearDate: reviewData.chequeClearDate?.[0] || null,
-        financeDoneBy:
-  financeDetails.financeDoneBy || null,
+  try {
+    const payload = {
+      companyId,
+      financialYearId,
+      modelId: selectedModel?.id,
+      showroomVariantId: selectedShowroomVariant?.id,
+      colourId: selectedColor?.id,
+      customerId: selectedCustomer?.id,
+      executiveId: selectedExecutive?.id,
+      ...financeData,
+      ...reviewData,
 
-financeAmount:
-  financeDetails.financeAmount
-    ? Number(financeDetails.financeAmount)
-    : null,
+      customerExpectedPrice: financeData.customerExpectedPrice
+        ? Number(financeData.customerExpectedPrice)
+        : null,
+      marketPrice: financeData.marketPrice
+        ? Number(financeData.marketPrice)
+        : null,
+      chassisNo: financeData.chassisNo || null,
+      companyShare: financeData.companyShare
+        ? Number(financeData.companyShare)
+        : null,
+      dealerShares: financeData.dealerShares
+        ? Number(financeData.dealerShares)
+        : null,
+      rcNo: financeData.rcNo || null,
+      insurance: financeData.insurance ? Number(financeData.insurance) : null,
+      vehicleNo: financeData.vehicleNo || null,
+      expectedPurchaseDate: reviewData.expectedPurchaseDate?.[0] || null,
+      expectedDeliveryDate: reviewData.expectedDeliveryDate?.[0] || null,
+      bookingDate: reviewData.bookingDate?.[0] || null,
+      followUpDate: reviewData.followUpDate?.[0] || null,
+      dmsEnquiryDate: reviewData.dmsEnquiryDate?.[0] || null,
+      chequeNo: reviewData.chequeNo,
+      chequeDate: reviewData.chequeDate?.[0] || null,
+      chequeClearDate: reviewData.chequeClearDate?.[0] || null,
+      financeDoneBy: financeDetails.financeDoneBy || null,
 
-emi:
-  financeDetails.emi
-    ? Number(financeDetails.emi)
-    : null,
+      financeAmount: financeDetails.financeAmount
+        ? Number(financeDetails.financeAmount)
+        : null,
 
-tenureMonths:
-  financeDetails.tenureMonths
-    ? Number(financeDetails.tenureMonths)
-    : null,
+      emi: financeDetails.emi ? Number(financeDetails.emi) : null,
 
-processingCharge:
-  financeDetails.processingCharge
-    ? Number(financeDetails.processingCharge)
-    : null,
+      tenureMonths: financeDetails.tenureMonths
+        ? Number(financeDetails.tenureMonths)
+        : null,
 
-loanROI:
-  financeDetails.loanROI
-    ? Number(financeDetails.loanROI)
-    : null,
+      processingCharge: financeDetails.processingCharge
+        ? Number(financeDetails.processingCharge)
+        : null,
 
-marginMoney:
-  financeDetails.marginMoney
-    ? Number(financeDetails.marginMoney)
-    : null,
-      };
+      loanROI: financeDetails.loanROI ? Number(financeDetails.loanROI) : null,
 
-      console.log("PAYLOAD", payload);
+      marginMoney: financeDetails.marginMoney
+        ? Number(financeDetails.marginMoney)
+        : null,
+    };
 
-      const res = await apiHelper.post("/leads", payload);
-      console.log("SUCCESS", res.data);
+    await apiHelper.post("/leads", payload);
 
-      toast.success("Lead created successfully!");
-      onClose();
-    } catch (error: any) {
-      console.error("API ERROR", error);
-      toast.error(
-        error.response?.data?.message ||
-          "Failed to create lead. Please try again.",
-      );
-    }
-  };
+    toast.success("Lead created successfully!");
+    onClose();
+  } catch (error: any) {
+    console.error("API ERROR", error);
+    toast.error(
+      error.response?.data?.message ||
+        "Failed to create lead. Please try again.",
+    );
+  }
+};
 
-  const handleCreateAccount = async (formData: AccountForm) => {
-    try {
-      const res = await apiHelper.post("/accounts", {
-        accountName: formData.accountName,
-        printName: formData.accountName,
-        mobile: formData.mobile,
-        country: formData.countryName,
-        countryCode: formData.countryCode,
-        state: formData.stateName,
-        stateCode: formData.stateCode,
-        district: formData.district,
-        city: formData.city,
-        address1: formData.address,
-        panCard: formData.panCard,
-        aadharNo: formData.aadharCard,
-        group: "Customer",
-        drCr: "Dr",
-      });
+const handleCreateAccount = async (formData: AccountForm) => {
+  try {
+    await apiHelper.post("/accounts", {
+      accountName: formData.accountName,
+      printName: formData.accountName,
+      mobile: formData.mobile,
+      country: formData.countryName,
+      countryCode: formData.countryCode,
+      state: formData.stateName,
+      stateCode: formData.stateCode,
+      district: formData.district,
+      city: formData.city,
+      address1: formData.address,
+      panCard: formData.panCard,
+      aadharNo: formData.aadharCard,
+      group: "Customer",
+      drCr: "Dr",
+    });
 
-      console.log("Create Response:", res.data);
+    toast.success("Account created successfully!");
 
-      toast.success("Account created successfully!");
-
-      await fetchCustomers();
-      setIsCreateAccountOpen(false);
-    } catch (error: any) {
-      console.error(error);
-      toast.error(
-        error.response?.data?.message ||
-          "Failed to create account. Please try again.",
-      );
-    }
-  };
-
+    await fetchCustomers();
+    setIsCreateAccountOpen(false);
+  } catch (error: any) {
+    console.error(error);
+    toast.error(
+      error.response?.data?.message ||
+        "Failed to create account. Please try again.",
+    );
+  }
+};
   const fetchCustomers = async () => {
     try {
       const res = await apiHelper.get("/accounts");
@@ -2306,34 +2215,34 @@ marginMoney:
       })),
     );
   };
-const fetchFinances = async () => {
-  try {
-    const res = await apiHelper.get("/finances");
+  const fetchFinances = async () => {
+    try {
+      const res = await apiHelper.get("/finances");
 
-    const data = Array.isArray(res.data)
-      ? res.data
-      : Array.isArray(res.data?.data)
-        ? res.data.data
-        : [];
+      const data = Array.isArray(res.data)
+        ? res.data
+        : Array.isArray(res.data?.data)
+          ? res.data.data
+          : [];
 
-    const activeFinances = data
-      .filter((item: any) => item.status === "ACTIVE")
-      .map((item: any) => ({
-        id: item.id,
+      const activeFinances = data
+        .filter((item: any) => item.status === "ACTIVE")
+        .map((item: any) => ({
+          id: item.id,
 
-        // Finance company/account name
-        name: item.account?.accountName || "",
+          // Finance company/account name
+          name: item.account?.accountName || "",
 
-        // Employee/person handling finance
-        employeeName: item.employeeName || "",
-      }));
+          // Employee/person handling finance
+          employeeName: item.employeeName || "",
+        }));
 
-    setFinanceOptions(activeFinances);
-  } catch (error) {
-    console.error("Failed to fetch finances:", error);
-    setFinanceOptions([]);
-  }
-};
+      setFinanceOptions(activeFinances);
+    } catch (error) {
+      console.error("Failed to fetch finances:", error);
+      setFinanceOptions([]);
+    }
+  };
   const fetchShowroomVariants = async () => {
     try {
       const res = await apiHelper.get("/showroom-variant");
@@ -2344,7 +2253,7 @@ const fetchFinances = async () => {
           ? res.data
           : [];
 
-      console.log("API Response:", data);
+  
 
       setShowroomVariants(data);
     } catch (err) {
@@ -2368,7 +2277,7 @@ const fetchFinances = async () => {
     fetchShowroomVariants();
     fetchColors();
     fetchCustomers();
-      fetchFinances();
+    fetchFinances();
   }, []);
   const handleModelChange = (model: any) => {
     setSelectedModel(model);
@@ -2377,7 +2286,7 @@ const fetchFinances = async () => {
       (v: any) => Number(v.modelId) === Number(model.id),
     );
 
-    console.log("Filtered Showroom Variants:", filtered);
+
 
     setFilteredShowroomVariants(
       filtered.map((item: any) => ({
@@ -2415,27 +2324,27 @@ const fetchFinances = async () => {
     }
   };
 
- const getStepTitle = () => {
-  switch (step) {
-    case 1:
-      return "Vehicle Selection";
+  const getStepTitle = () => {
+    switch (step) {
+      case 1:
+        return "Vehicle Selection";
 
-    case 2:
-      return "Customer Detail";
+      case 2:
+        return "Customer Detail";
 
-    case 3:
-      return "Lead Info";
+      case 3:
+        return "Lead Info";
 
-    case 4:
-      return "Review Lead Summary";
+      case 4:
+        return "Review Lead Summary";
 
-    case 5:
-      return "Finance Details";
+      case 5:
+        return "Finance Details";
 
-    default:
-      return "";
-  }
-};
+      default:
+        return "";
+    }
+  };
 
   return (
     <>
@@ -2557,7 +2466,7 @@ const fetchFinances = async () => {
                         data={customers}
                         value={selectedCustomer}
                         onChange={(val: any) => {
-                          console.log(val);
+                       
                           setSelectedCustomer(val);
 
                           if (errors.customer) {
@@ -2660,12 +2569,12 @@ const fetchFinances = async () => {
                 />
               )}
               {step === 5 && (
-  <FinanceDetailsStep
-    financeDetails={financeDetails}
-    setFinanceDetails={setFinanceDetails}
-      financeOptions={financeOptions}
-  />
-)}
+                <FinanceDetailsStep
+                  financeDetails={financeDetails}
+                  setFinanceDetails={setFinanceDetails}
+                  financeOptions={financeOptions}
+                />
+              )}
             </div>
 
             {/* Footer */}
@@ -2677,51 +2586,49 @@ const fetchFinances = async () => {
               >
                 Previous
               </button>
-             {/* Step 1, 2 and 3 */}
-{step < 4 && (
-  <button
-    type="button"
-    onClick={handleNext}
-    className="rounded-lg bg-blue-600 px-6 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-  >
-    Next
-  </button>
-)}
+              {/* Step 1, 2 and 3 */}
+              {step < 4 && (
+                <button
+                  type="button"
+                  onClick={handleNext}
+                  className="rounded-lg bg-blue-600 px-6 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+                >
+                  Next
+                </button>
+              )}
 
-{/* Step 4 + Finance = Next */}
-{step === 4 &&
-  reviewData.purchaseType === "Finance" && (
-    <button
-      type="button"
-      onClick={handleNext}
-      className="rounded-lg bg-blue-600 px-6 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-    >
-      Next
-    </button>
-  )}
+              {/* Step 4 + Finance = Next */}
+              {step === 4 && reviewData.purchaseType === "Finance" && (
+                <button
+                  type="button"
+                  onClick={handleNext}
+                  className="rounded-lg bg-blue-600 px-6 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+                >
+                  Next
+                </button>
+              )}
 
-{/* Step 4 + Cash/Bank = Submit */}
-{step === 4 &&
-  reviewData.purchaseType !== "Finance" && (
-    <button
-      type="button"
-      onClick={handleSubmit}
-      className="rounded-lg bg-blue-600 px-6 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-    >
-      Submit
-    </button>
-  )}
+              {/* Step 4 + Cash/Bank = Submit */}
+              {step === 4 && reviewData.purchaseType !== "Finance" && (
+                <button
+                  type="button"
+                  onClick={handleSubmit}
+                  className="rounded-lg bg-blue-600 px-6 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+                >
+                  Submit
+                </button>
+              )}
 
-{/* Step 5 Finance Details = Submit */}
-{step === 5 && (
-  <button
-    type="button"
-    onClick={handleSubmit}
-    className="rounded-lg bg-blue-600 px-6 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-  >
-    Submit
-  </button>
-)}
+              {/* Step 5 Finance Details = Submit */}
+              {step === 5 && (
+                <button
+                  type="button"
+                  onClick={handleSubmit}
+                  className="rounded-lg bg-blue-600 px-6 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+                >
+                  Submit
+                </button>
+              )}
             </div>
           </DialogPanel>
         </div>

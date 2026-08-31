@@ -448,10 +448,10 @@ const getCompany = async () => {
   try {
     // Get selected IDs only from sessionStorage
     const savedCompanyId =
-      sessionStorage.getItem("companyId");
+      localStorage.getItem("companyId");
 
     const savedFinancialYearId =
-      sessionStorage.getItem(
+      localStorage.getItem(
         "financialYearId",
       );
 
@@ -459,14 +459,14 @@ const getCompany = async () => {
 
     if (!savedCompanyId) {
       console.error(
-        "Company ID not found in sessionStorage",
+        "Company ID not found in localStorage",
       );
       return;
     }
 
     if (!savedFinancialYearId) {
       console.error(
-        "Financial Year ID not found in sessionStorage",
+        "Financial Year ID not found in localStorage",
       );
       return;
     }

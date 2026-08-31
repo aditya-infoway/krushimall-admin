@@ -65,7 +65,7 @@ const AccessoriesAllot: React.FC = () => {
   const fetchAccessoriesAllot = async () => {
     try {
       const res = await apiHelper.get("/orders/accessories-allot");
-      console.log("Accessories allot list:", res.data);
+    
       setRows(res.data || []);
     } catch (error: any) {
       console.error(

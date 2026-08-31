@@ -106,9 +106,9 @@ const VehicleIncharge: React.FC<VehicleInchargeProps> = ({
   // const navigate = useNavigate();
   const fetchInventory = async () => {
     try {
-      const res = await apiHelper.get("/orders/vehicle-incharge"); // ✅ /accessories → /orders/vehicle-incharge
+      const res = await apiHelper.get("/orders/vehicle-incharge");
 
-      console.log("Vehicle incharge list:", res.data);
+    
 
       setRows(res.data || []);
     } catch (error: any) {
