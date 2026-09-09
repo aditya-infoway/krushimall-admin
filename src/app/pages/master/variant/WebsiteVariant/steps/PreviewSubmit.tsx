@@ -70,12 +70,9 @@ export function PreviewSubmit({
     tractorData?.warrantyCard,
     tractorData?.others,
   ].filter(Boolean);
-
-
   const loadData = async () => {
     try {
-   
-        if (!websiteVariantId) return;
+      if (!websiteVariantId) return;
 
       const res = await apiHelper.get(`/website-variants/${websiteVariantId}`);
 
@@ -96,54 +93,52 @@ export function PreviewSubmit({
       console.error(error);
     }
   };
- useEffect(() => {
+  useEffect(() => {
     loadData();
   }, [websiteVariantId]);
 
- const handleSubmit = async () => {
-  try {
-    setLoading(true);
+  const handleSubmit = async () => {
+    try {
+      setLoading(true);
 
-  
+      if (!websiteVariantId) {
+        toast.warning("Website Variant ID not found");
+        return;
+      }
 
-    if (!websiteVariantId) {
-      toast.warning("Website Variant ID not found");
-      return;
+      await apiHelper.put(`/website-variants/${websiteVariantId}/submit`, {
+        agreed,
+      });
+
+      toast.success("Tractor submitted successfully for review!");
+      setFinished(true);
+    } catch (error: any) {
+      console.error("Submit Error:", error);
+      toast.error(
+        error.response?.data?.message || "Failed to submit. Please try again.",
+      );
+    } finally {
+      setLoading(false);
     }
+  };
 
-    await apiHelper.put(`/website-variants/${websiteVariantId}/submit`, {
-      agreed,
-    });
-
-    toast.success("Tractor submitted successfully for review!");
-    setFinished(true);
-  
-  } catch (error: any) {
-    console.error("Submit Error:", error);
-    toast.error(error.response?.data?.message || "Failed to submit. Please try again.");
-  } finally {
-    setLoading(false);
-  }
-};
-
-const handleSaveDraft = () => {
-  
-  toast.success("Draft saved successfully!");
-};
+  const handleSaveDraft = () => {
+    toast.success("Draft saved successfully!");
+  };
 
   return (
     <div className="mt-6">
       {/* Breadcrumb */}
-      <div className="mb-6 text-sm text-gray-500">
+      {/* <div className="mb-6 text-sm text-gray-500">
         Dashboard &gt; New Tractor &gt; Add New Tractor &gt;{" "}
         <span className="text-primary-600 font-medium">
           Preview &amp; Submit
         </span>
-      </div>
+      </div> */}
 
       {/* Tractor Overview Header - Redesigned to match image */}
-      <div className="mb-8 rounded-xl border border-gray-200 p-6 shadow-sm">
-        <h3 className="mb-6 text-lg font-semibold text-gray-800">
+      <div className="mb-8 rounded-xl border border-gray-200 p-6 shadow-sm dark:border-gray-700">
+        <h3 className="mb-6 text-lg font-semibold text-gray-800 dark:text-gray-100">
           Tractor Overview
         </h3>
 
@@ -151,14 +146,14 @@ const handleSaveDraft = () => {
           {/* Left - Images */}
           <div className="lg:col-span-4">
             <div
-              className="relative overflow-hidden rounded-lg bg-gray-100"
+              className="relative overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800"
               style={{ minHeight: "250px" }}
             >
               {selectedImage ? (
                 <img
                   src={apiHelper.getImageUrl(selectedImage)}
                   alt="Tractor"
-                  className="h-65 w-full object-cover"
+                  className="h-65 w-full object-contain"
                 />
               ) : (
                 <div className="flex h-65 w-full items-center justify-center">
@@ -173,33 +168,33 @@ const handleSaveDraft = () => {
                   src={apiHelper.getImageUrl(img)}
                   alt={`thumb-${index}`}
                   onClick={() => setSelectedIndex(index)}
-                  className={`h-14 w-14 cursor-pointer rounded object-cover transition-all ${
+                  className={`h-14 w-14 cursor-pointer rounded bg-gray-100 object-contain p-0.5 transition-all dark:bg-gray-800 ${
                     selectedIndex === index
-                      ? "border-2 border-blue-500 ring-2 ring-blue-200"
-                      : "border border-gray-300 hover:border-blue-300"
+                      ? "border-2 border-blue-500 ring-2 ring-blue-200 dark:ring-blue-900"
+                      : "border border-gray-300 hover:border-blue-300 dark:border-gray-600"
                   }`}
                 />
               ))}
 
-             {images.length > 5 && (
-  <button
-    type="button"
-    onClick={() => setShowGallery(true)}
-    className="flex h-14 w-14 items-center justify-center rounded border border-gray-300 text-sm font-medium"
-  >
-    +{images.length - 5}
-  </button>
-)}
+              {images.length > 5 && (
+                <button
+                  type="button"
+                  onClick={() => setShowGallery(true)}
+                  className="flex h-14 w-14 items-center justify-center rounded border border-gray-300 text-sm font-medium text-gray-700 dark:border-gray-600 dark:text-gray-200"
+                >
+                  +{images.length - 5}
+                </button>
+              )}
             </div>
           </div>
 
           {/* Center - Details */}
           <div className="lg:col-span-5">
             <div className="flex items-center gap-3">
-              <h2 className="text-2xl font-bold text-gray-800">
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
                 {tractorData?.productName || "Swaraj"}
               </h2>
-              <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700">
+              <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700 dark:bg-green-900/40 dark:text-green-300">
                 New Tractor
               </span>
             </div>
@@ -207,27 +202,29 @@ const handleSaveDraft = () => {
             <div className="mt-4 flex flex-wrap gap-5 text-sm">
               <div className="flex items-center gap-1.5">
                 <Gauge className="h-4 w-4 text-gray-500" />
-                <span className="text-gray-700">
+                <span className="text-gray-700 dark:text-gray-300">
                   {tractorData?.horsePower} HP
                 </span>
               </div>
               <div className="flex items-center gap-1.5">
                 <Tractor className="h-4 w-4 text-gray-500" />
-                <span className="text-gray-700">2WD</span>
+                <span className="text-gray-700 dark:text-gray-300">2WD</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <Fuel className="h-4 w-4 text-gray-500" />
-                <span className="text-gray-700">{tractorData?.fuelType}</span>
+                <span className="text-gray-700 dark:text-gray-300">
+                  {tractorData?.fuelType}
+                </span>
               </div>
               <div className="flex items-center gap-1.5">
                 <CalendarDays className="h-4 w-4 text-gray-500" />
-                <span className="text-gray-700">
+                <span className="text-gray-700 dark:text-gray-300">
                   {tractorData?.modelYear?.modelYear}
                 </span>
               </div>
             </div>
 
-            <div className="mt-6 border-t border-gray-100 pt-4">
+            <div className="mt-6 border-t border-gray-100 pt-4 dark:border-gray-700">
               <p className="text-xs font-medium tracking-wider text-gray-400 uppercase">
                 Ex-Showroom Price
               </p>
@@ -239,11 +236,11 @@ const handleSaveDraft = () => {
 
           {/* Right - Highlights */}
           <div className="lg:col-span-3">
-            <div className="rounded-lg border border-gray-100 bg-gray-50 p-4">
-              <h4 className="mb-3 text-sm font-semibold text-gray-700">
+            <div className="rounded-lg border border-gray-100 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800">
+              <h4 className="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-200">
                 Key Highlights
               </h4>
-              <ul className="space-y-2 text-sm text-gray-600">
+              <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
                 <ul className="space-y-2 text-sm">
                   {[
                     tractorData?.highlight1,
@@ -441,85 +438,83 @@ const handleSaveDraft = () => {
         </PreviewSection>
 
         {/* Media & Documents - Redesigned to match image */}
-       <div className="rounded-xl border border-gray-200 p-6 shadow-sm">
-  <div className="mb-4 flex items-center justify-between">
-    <h3 className="text-lg font-semibold text-gray-800">
-      Media & Documents
-    </h3>
+        <div className="rounded-xl border border-gray-200 p-6 shadow-sm dark:border-gray-700">
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
+              Media & Documents
+            </h3>
 
-    <button
-      type="button"
-      className="text-primary-600 text-sm font-medium"
-      onClick={() => setCurrentStep(5)}
-    >
-      Edit
-    </button>
-  </div>
-
-  <div className="grid gap-6 md:grid-cols-3">
-    
-    {/* Images */}
-    <div>
-      <h4 className="mb-2 text-sm font-medium text-gray-700">
-        Images ({images.length})
-      </h4>
-
-      <div className="flex flex-wrap gap-2">
-        {images.slice(0, 5).map((img, index) => (
-          <img
-            key={index}
-            src={apiHelper.getImageUrl(img)}
-            alt={`img-${index}`}
-            className="h-16 w-16 rounded border object-cover"
-          />
-        ))}
-
-       {images.length > 5 && (
-  <button
-    type="button"
-    onClick={() => setShowGallery(true)}
-    className="flex h-16 w-14 items-center justify-center rounded border border-gray-300 text-sm font-medium"
-  >
-    +{images.length - 5}
-  </button>
-)}
-      </div>
-    </div>
-
-    {/* Documents */}
-    <div>
-      <h4 className="mb-2 text-sm font-medium text-gray-700">
-        Documents ({documentFiles.length})
-      </h4>
-
-      <div className="flex flex-wrap gap-2">
-        {documentFiles.slice(0, 3).map((doc, index) => (
-          <a
-            key={index}
-            href={apiHelper.getImageUrl(doc)}
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center gap-2 rounded border px-3 py-2 text-sm"
-          >
-            <FileText className="h-4 w-4" />
-            PDF
-          </a>
-        ))}
-
-        {documentFiles.length > 3 && (
-          <div className="flex items-center rounded border px-3 py-2">
-            +{documentFiles.length - 3}
+            <button
+              type="button"
+              className="text-primary-600 text-sm font-medium"
+              onClick={() => setCurrentStep(5)}
+            >
+              Edit
+            </button>
           </div>
-        )}
-      </div>
-    </div>
 
-  </div>
-</div>
+          <div className="grid gap-6 md:grid-cols-3">
+            {/* Images */}
+            <div>
+              <h4 className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-200">
+                Images ({images.length})
+              </h4>
+
+              <div className="flex flex-wrap gap-2">
+                {images.slice(0, 5).map((img, index) => (
+                  <img
+                    key={index}
+                    src={apiHelper.getImageUrl(img)}
+                    alt={`img-${index}`}
+                    className="h-16 w-16 rounded border border-gray-200 bg-gray-100 object-contain p-0.5 dark:border-gray-600 dark:bg-gray-800"
+                  />
+                ))}
+
+                {images.length > 5 && (
+                  <button
+                    type="button"
+                    onClick={() => setShowGallery(true)}
+                    className="flex h-16 w-14 items-center justify-center rounded border border-gray-300 text-sm font-medium text-gray-700 dark:border-gray-600 dark:text-gray-200"
+                  >
+                    +{images.length - 5}
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Documents */}
+            <div>
+              <h4 className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-200">
+                Documents ({documentFiles.length})
+              </h4>
+
+              <div className="flex flex-wrap gap-2">
+                {documentFiles.slice(0, 3).map((doc, index) => (
+                  <a
+                    key={index}
+                    href={apiHelper.getImageUrl(doc)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-2 rounded border border-gray-200 px-3 py-2 text-sm text-gray-700 dark:border-gray-600 dark:text-gray-200"
+                  >
+                    <FileText className="h-4 w-4" />
+                    PDF
+                  </a>
+                ))}
+
+                {documentFiles.length > 3 && (
+                  <div className="flex items-center rounded border border-gray-200 px-3 py-2 text-gray-700 dark:border-gray-600 dark:text-gray-200">
+                    +{documentFiles.length - 3}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Confirmation Section - Redesigned */}
-      <div className="mt-8 rounded-xl border border-gray-200 p-5">
+      <div className="mt-8 rounded-xl border border-gray-200 p-5 dark:border-gray-700">
         <label className="flex cursor-pointer items-start gap-3">
           <input
             type="checkbox"
@@ -527,7 +522,7 @@ const handleSaveDraft = () => {
             onChange={(e) => setAgreed(e.target.checked)}
             className="text-primary-600 focus:ring-primary-500 mt-0.5 h-4 w-4 rounded border-gray-300"
           />
-          <span className="text-sm text-gray-700">
+          <span className="text-sm text-gray-700 dark:text-gray-300">
             I confirm that all the information provided is correct to the best
             of my knowledge. I agree to the{" "}
             <a href="#" className="text-primary-600 hover:underline">
@@ -541,33 +536,43 @@ const handleSaveDraft = () => {
           </span>
         </label>
       </div>
-{showGallery && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-    <div className="max-h-[80vh] w-[50vw] overflow-auto rounded-lg bg-dark-600 p-4">
-      <div className="mb-4 flex justify-between">
-        <h3 className="text-lg font-semibold">All Images</h3>
-        <button onClick={() => setShowGallery(false)} className=" cursor-pointer">✕</button>
-      </div>
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-6">
-        {images.map((img, index) => (
-          <img
-            key={index}
-            src={apiHelper.getImageUrl(img)}
-            alt={`image-${index}`}
-            className="h-32 w-full cursor-pointer rounded border object-cover"
-            onClick={() => {
-              setSelectedIndex(index);
-              setShowGallery(false);
-            }}
-          />
-        ))}
-      </div>
-    </div>
-  </div>
-)}
+      {/* Image Gallery Modal - theme aware (light bg in light mode, dark bg in dark mode) */}
+      {showGallery && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="max-h-[80vh] w-full max-w-3xl overflow-auto rounded-lg border border-gray-200 bg-white p-4 shadow-xl dark:border-gray-700 dark:bg-gray-900">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
+                All Images
+              </h3>
+              <button
+                onClick={() => setShowGallery(false)}
+                className="cursor-pointer text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-100"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-6">
+              {images.map((img, index) => (
+                <img
+                  key={index}
+                  src={apiHelper.getImageUrl(img)}
+                  alt={`image-${index}`}
+                  className="h-32 w-full cursor-pointer rounded border border-gray-200 bg-gray-100 object-contain p-1 dark:border-gray-700 dark:bg-gray-800"
+                  onClick={() => {
+                    setSelectedIndex(index);
+                    setShowGallery(false);
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Info Note - Redesigned */}
-      <div className="mt-4 rounded-xl border border-blue-100 bg-blue-50 p-4 text-center text-sm text-blue-700">
+      <div className="mt-4 rounded-xl border border-blue-100 bg-blue-50 p-4 text-center text-sm text-blue-700 dark:border-blue-900/40 dark:bg-blue-900/20 dark:text-blue-300">
         <CheckCircleIcon className="mr-2 inline h-5 w-5" />
         Once submitted, our team will review your tractor details. You will get
         notified via email / SMS.
@@ -623,8 +628,8 @@ function PreviewSection({
   children: React.ReactNode;
 }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-gray-200 shadow-sm">
-      <h3 className="border-b border-gray-100 px-5 py-3 text-sm font-semibold tracking-wider text-gray-700 uppercase">
+    <div className="overflow-hidden rounded-xl border border-gray-200 shadow-sm dark:border-gray-700">
+      <h3 className="border-b border-gray-100 px-5 py-3 text-sm font-semibold tracking-wider text-gray-700 uppercase dark:border-gray-700 dark:text-gray-200">
         {title}
       </h3>
       <div className="grid gap-4 p-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -640,7 +645,9 @@ function PreviewRow({ label, value }: { label: string; value: string }) {
       <p className="text-xs font-medium tracking-wider text-gray-400 uppercase">
         {label}
       </p>
-      <p className="text-sm font-medium text-gray-800">{value}</p>
+      <p className="text-sm font-medium text-gray-800 dark:text-gray-100">
+        {value}
+      </p>
     </div>
   );
 }
