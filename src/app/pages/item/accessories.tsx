@@ -43,7 +43,9 @@ const CheckboxOption = (props: any) => {
           <span>{props.data.variantName}</span>
         </div>
 
-        <span className="text-xs text-white">{props.data.model}</span>
+        <span className="dark:text-dark-200 text-xs text-gray-500">
+          {props.data.model}
+        </span>
       </div>
     </components.Option>
   );
@@ -67,7 +69,7 @@ interface AccessoryItem {
   barCode: string;
   status: "ACTIVE" | "INACTIVE";
   createdAt: string;
-   createdBy?: string;
+  createdBy?: string;
   createdById?: number;
   createdType?: string;
 }
@@ -85,7 +87,7 @@ interface FormValues {
   salesPrice: string;
   mrp: string;
   opStock: string;
-    barCode: string;
+  barCode: string;
   variant: string;
   status: "ACTIVE" | "INACTIVE";
 }
@@ -218,7 +220,7 @@ const Accessories = () => {
     salesPrice: "",
     mrp: "",
     opStock: "",
-    barCode:"",
+    barCode: "",
     variant: "",
     status: "ACTIVE",
   });
@@ -283,7 +285,7 @@ const Accessories = () => {
       salesPrice: "",
       mrp: "",
       opStock: "",
-        barCode: "",
+      barCode: "",
       variant: "",
       status: "ACTIVE",
     });
@@ -308,7 +310,7 @@ const Accessories = () => {
       salesPrice: String(item.salesPrice ?? ""),
       mrp: String(item.mrp ?? ""),
       opStock: String(item.opStock ?? ""),
-  barCode: item.barCode,
+      barCode: item.barCode,
       variant: "",
       status: item.status || "ACTIVE",
     });
@@ -500,83 +502,36 @@ const Accessories = () => {
     { id: "Accessories", name: "Accessories" },
     { id: "Parts", name: "Parts" },
   ];
-  const customSelectStyles = {
-    control: (provided: any, state: any) => ({
-      ...provided,
-      backgroundColor: "transparent",
-      borderColor: state.isFocused
-        ? "var(--color-primary-600)"
-        : "var(--color-gray-700)",
-      borderRadius: "7px",
-      boxShadow: state.isFocused
-        ? "0 0 0 1px var(--color-primary-600)"
-        : "none",
-      minHeight: "30px",
-
-      "&:hover": {
-        borderColor: "var(--color-primary-500)",
-      },
-    }),
-
-    valueContainer: (provided: any) => ({
-      ...provided,
-      color: "var(--color-dark-100)",
-    }),
-
-    singleValue: (provided: any) => ({
-      ...provided,
-      color: "var(--color-dark-100)",
-    }),
-
-    input: (provided: any) => ({
-      ...provided,
-      color: "var(--color-dark-100)",
-    }),
-
-    placeholder: (provided: any) => ({
-      ...provided,
-      color: "var(--color-gray-400)",
-    }),
-
-    menu: (provided: any) => ({
-      ...provided,
-      backgroundColor: "var(--color-dark-700)",
-      border: "1px solid var(--color-primary-600)",
-      borderRadius: "12px",
-      overflow: "hidden",
-    }),
-
-    menuList: (provided: any) => ({
-      ...provided,
-      padding: 0,
-    }),
-
-    option: (provided: any, state: any) => ({
-      ...provided,
-      backgroundColor: state.isSelected
-        ? "var(--color-primary-600)"
-        : state.isFocused
-          ? "var(--color-primary-500)"
-          : "var(--color-dark-700)",
-      color: "#fff",
-      cursor: "pointer",
-    }),
-
-    dropdownIndicator: (provided: any, state: any) => ({
-      ...provided,
-      color: state.isFocused
-        ? "var(--color-primary-600)"
-        : "var(--color-gray-400)",
-    }),
-
-    clearIndicator: (provided: any) => ({
-      ...provided,
-      color: "var(--color-gray-400)",
-    }),
-
-    indicatorSeparator: () => ({
-      display: "none",
-    }),
+  const selectClassNames = {
+    control: ({ isFocused }: any) =>
+      `min-h-[42px] rounded-lg border bg-white px-1 text-sm dark:bg-transparent ${
+        isFocused
+          ? "border-primary-600 ring-1 ring-primary-600"
+          : "dark:border-dark-500 border-gray-300 hover:border-primary-500"
+      }`,
+    valueContainer: () => "gap-1 px-2 py-1",
+    placeholder: () => "text-gray-400",
+    input: () => "text-gray-900 dark:text-dark-100",
+    multiValue: () => "bg-primary-50 dark:bg-dark-600 rounded-md px-1.5 py-0.5",
+    multiValueLabel: () =>
+      "text-primary-700 dark:text-dark-100 text-xs font-medium",
+    multiValueRemove: () =>
+      "ml-1 rounded text-gray-500 hover:bg-red-100 hover:text-red-600 dark:text-dark-200",
+    menu: () =>
+      "dark:bg-dark-700 dark:border-dark-500 absolute z-50 mt-1 w-full overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg",
+    menuList: () => "p-1",
+    option: ({ isFocused, isSelected }: any) =>
+      `cursor-pointer rounded-md px-3 py-2 text-sm ${
+        isSelected
+          ? "bg-primary-50 text-primary-700 dark:bg-primary-600 dark:text-white"
+          : isFocused
+            ? "dark:bg-dark-600 bg-gray-100 text-gray-900 dark:text-white"
+            : "dark:text-dark-100 text-gray-700"
+      }`,
+    noOptionsMessage: () => "py-3 text-sm text-gray-400",
+    dropdownIndicator: () => "px-2 text-gray-400",
+    clearIndicator: () => "px-2 text-gray-400 hover:text-red-500",
+    indicatorSeparator: () => "hidden",
   };
   return (
     <div className="relative min-h-screen space-y-6 p-4 pb-28 text-gray-900 md:p-6 dark:text-gray-100">
@@ -591,47 +546,47 @@ const Accessories = () => {
           </p>
         </div>
 
-       <div className="flex flex-wrap items-center justify-between gap-2 md:flex-nowrap">
-  {/* Left side - Filter and icons */}
-  <div className="flex items-center gap-2">
-    <button
-      type="button"
-      onClick={() => setShowFilterBar(!showFilterBar)}
-      className={`inline-flex items-center gap-1.5 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
-        showFilterBar
-          ? "bg-primary-50 border-primary-200 text-primary-600 dark:bg-dark-600 dark:border-dark-500 dark:text-white"
-          : "dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
-      }`}
-    >
-      <FunnelIcon className="size-4.5" />
-      <span className="hidden sm:inline">Filter</span>
-    </button>
+        <div className="flex flex-wrap items-center justify-between gap-2 md:flex-nowrap">
+          {/* Left side - Filter and icons */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowFilterBar(!showFilterBar)}
+              className={`inline-flex items-center gap-1.5 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
+                showFilterBar
+                  ? "bg-primary-50 border-primary-200 text-primary-600 dark:bg-dark-600 dark:border-dark-500 dark:text-white"
+                  : "dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              <FunnelIcon className="size-4.5" />
+              <span className="hidden sm:inline">Filter</span>
+            </button>
 
-    <button
-      type="button"
-      className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
-    >
-      <RiFileExcel2Fill className="text-lg text-green-500" />
-    </button>
+            <button
+              type="button"
+              className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            >
+              <RiFileExcel2Fill className="text-lg text-green-500" />
+            </button>
 
-    <button
-      type="button"
-      className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
-    >
-      <RiFilePdfFill className="text-lg text-red-500" />
-    </button>
-  </div>
+            <button
+              type="button"
+              className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            >
+              <RiFilePdfFill className="text-lg text-red-500" />
+            </button>
+          </div>
 
-  {/* Right side - Add Accessories Item button */}
-  <Button
-    color="primary"
-    onClick={handleOpenAddDrawer}
-    className="whitespace-nowrap"
-  >
-    <PlusIcon className="mr-1.5 size-4.5" />
-    Add Accessories Item
-  </Button>
-</div>
+          {/* Right side - Add Accessories Item button */}
+          <Button
+            color="primary"
+            onClick={handleOpenAddDrawer}
+            className="whitespace-nowrap"
+          >
+            <PlusIcon className="mr-1.5 size-4.5" />
+            Add Accessories Item
+          </Button>
+        </div>
       </div>
 
       {/* Search */}
@@ -752,11 +707,11 @@ const Accessories = () => {
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Status
                 </Th>
-                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                 Created Type
+                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                  Created Type
                 </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                 Created By
+                  Created By
                 </Th>
                 <Th className="w-20 py-3.5 text-center text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Actions
@@ -845,9 +800,13 @@ const Accessories = () => {
                         />
                       </button>
                     </Td>
-                     <Td className="dark:text-dark-200 py-4 text-center text-gray-600">{item.createdType || "-"}</Td>
+                    <Td className="dark:text-dark-200 py-4 text-center text-gray-600">
+                      {item.createdType || "-"}
+                    </Td>
 
-<Td className="dark:text-dark-200 py-4 text-center text-gray-600">{item.createdBy || "-"}</Td>
+                    <Td className="dark:text-dark-200 py-4 text-center text-gray-600">
+                      {item.createdBy || "-"}
+                    </Td>
                     <Td className="py-4 text-center">
                       <Menu
                         as="div"
@@ -1120,7 +1079,7 @@ const Accessories = () => {
                 </div>
 
                 {/* Content */}
-                <div className="grow space-y-4 overflow-y-auto p-4 sm:space-y-5 sm:p-5">
+           <div className="grow space-y-4 overflow-y-auto p-4 pb-40 sm:space-y-5 sm:p-5 sm:pb-40">
                   {/* Type */}
                   {/* Type - Using Radio buttons */}
                   {/* Type - Using Radio buttons */}
@@ -1362,7 +1321,7 @@ const Accessories = () => {
                         </span>
                       )}
                     </div>
- <div>
+                    <div>
                       <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
                         Bar Code
                       </label>
@@ -1381,17 +1340,18 @@ const Accessories = () => {
                       </label>
                       <Select
                         isMulti
+                        unstyled
                         closeMenuOnSelect={false}
                         hideSelectedOptions={false}
-                        styles={customSelectStyles}
+                        menuPlacement="auto"
+                        maxMenuHeight={220}
+                        classNames={selectClassNames}
                         options={variantOptions}
                         value={selectedVariants}
                         onChange={(selected) =>
                           setSelectedVariants(selected as any[])
                         }
-                        components={{
-                          Option: CheckboxOption,
-                        }}
+                        components={{ Option: CheckboxOption }}
                         placeholder="Select Variant"
                       />
                       {errors.variant && (

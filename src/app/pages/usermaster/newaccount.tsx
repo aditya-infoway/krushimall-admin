@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Input } from "@/components/ui";
 import { Combobox } from "@/components/shared/form/StyledCombobox";
@@ -6,7 +6,6 @@ import { DatePicker } from "@/components/shared/form/Datepicker";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { useForm, Controller } from "react-hook-form";
 import { Country, State, City } from "country-state-city";
-import Select from "react-select";
 import apiHelper from "@/utils/apiHelper";
 import { Listbox } from "@/components/shared/form/StyledListbox";
 import { GroupCombobox } from "@/components/shared/form/GroupCombobox";
@@ -44,14 +43,108 @@ type FormValues = {
   aadharNo: string;
 };
 
+type Option = { value: string; label: string };
+
+const groupOptions = [
+  {
+    label: "Bank Accounts (Bank)",
+    value: "Bank Accounts",
+    effect: "Balance Sheet",
+  },
+  { label: "Bank OCC A/C", value: "Bank OCC A/C", effect: "Balance Sheet" },
+  {
+    label: "Capital Account",
+    value: "Capital Account",
+    effect: "Balance Sheet",
+  },
+  { label: "Cash-in-Hand", value: "Cash-in-Hand", effect: "Balance Sheet" },
+  {
+    label: "Currant Assets",
+    value: "Currant Assets",
+    effect: "Balance Sheet",
+  },
+  {
+    label: "Duites & Taxes",
+    value: "Duites & Taxes",
+    effect: "Balance Sheet",
+  },
+  {
+    label: "Expense Account",
+    value: "Expense Account",
+    effect: "Profit & Loss",
+  },
+  { label: "Purchase Account", value: "Purchase Account", effect: "Trading" },
+  { label: "Sales Account", value: "Sales Account", effect: "Trading" },
+  { label: "Stock in Hand", value: "Stock in Hand", effect: "Balance Sheet" },
+  {
+    label: "Sundry Creditors",
+    value: "Sundry Creditors",
+    effect: "Balance Sheet",
+  },
+  {
+    label: "Sundry Debitors",
+    value: "Sundry Debtors",
+    effect: "Balance Sheet",
+  },
+  { label: "Supplier", value: "Supplier", effect: "Balance Sheet" },
+  { label: "Customer", value: "Customer", effect: "Balance Sheet" },
+  {
+    label: "Sundry Debitor (finance)",
+    value: "Sundry Debitor (finance)",
+    effect: "Balance Sheet",
+  },
+  {
+    label: "Sundry Credito (finance)",
+    value: "Sundry Credito (finance)",
+    effect: "Balance Sheet",
+  },
+  {
+    label: "Sundry Debitor (internal)",
+    value: "Sundry Debitor (internal)",
+    effect: "Balance Sheet",
+  },
+  {
+    label: "Sundry Creditor (internal)",
+    value: "Sundry Creditor (internal)",
+    effect: "Balance Sheet",
+  },
+];
+
+const drCrOptions = [
+  { label: "Dr", value: "Dr" },
+  { label: "Cr", value: "Cr" },
+];
+
+const formValidationRules = {
+  accountName: { required: "Account name is required" },
+  printName: { required: "Print name is required" },
+  openingBalance: { required: "Opening balance is required" },
+  group: { required: "Group is required" },
+  drCr: { required: "Dr./Cr. is required" },
+  country: { required: "Country is required" },
+  state: { required: "State is required" },
+  city: { required: "City is required" },
+  mobile: {
+    required: "Mobile number is required",
+    pattern: {
+      value: /^[0-9]{10}$/,
+      message: "Mobile number must be 10 digits",
+    },
+  },
+  email: {
+    required: "Email is required",
+    pattern: {
+      value: /\S+@\S+\.\S+/,
+      message: "Email is invalid",
+    },
+  },
+};
+
 const NewAccount = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const isEditMode = location.state?.item ? true : false;
   const editData = location.state?.item || null;
-
-  const [countryCode, setCountryCode] = useState("");
-  const [stateCode, setStateCode] = useState("");
 
   const {
     register,
@@ -59,7 +152,6 @@ const NewAccount = () => {
     setValue,
     control,
     watch,
-    reset,
     formState: { errors },
   } = useForm<FormValues>({
     defaultValues: {
@@ -98,107 +190,16 @@ const NewAccount = () => {
   // Watch values
   const watchedCountryCode = watch("countryCode");
   const watchedStateCode = watch("stateCode");
-  const groupOptions = [
-    {
-      label: "Bank Accounts (Bank)",
-      value: "Bank Accounts",
-      effect: "Balance Sheet",
-    },
-    { label: "Bank OCC A/C", value: "Bank OCC A/C", effect: "Balance Sheet" },
-    {
-      label: "Capital Account",
-      value: "Capital Account",
-      effect: "Balance Sheet",
-    },
-    { label: "Cash-in-Hand", value: "Cash-in-Hand", effect: "Balance Sheet" },
-    {
-      label: "Currant Assets",
-      value: "Currant Assets",
-      effect: "Balance Sheet",
-    },
-    {
-      label: "Duites & Taxes",
-      value: "Duites & Taxes",
-      effect: "Balance Sheet",
-    },
-    {
-      label: "Expense Account",
-      value: "Expense Account",
-      effect: "Profit & Loss",
-    },
-    { label: "Purchase Account", value: "Purchase Account", effect: "Trading" },
-    { label: "Sales Account", value: "Sales Account", effect: "Trading" },
-    { label: "Stock in Hand", value: "Stock in Hand", effect: "Balance Sheet" },
-    {
-      label: "Sundry Creditors",
-      value: "Sundry Creditors",
-      effect: "Balance Sheet",
-    },
-    {
-      label: "Sundry Debitors",
-      value: "Sundry Debtors",
-      effect: "Balance Sheet",
-    },
-    { label: "Supplier", value: "Supplier", effect: "Balance Sheet" },
-    { label: "Customer", value: "Customer", effect: "Balance Sheet" },
-    {
-      label: "Sundry Debitor (finance)",
-      value: "Sundry Debitor (finance)",
-      effect: "Balance Sheet",
-    },
-    {
-      label: "Sundry Credito (finance)",
-      value: "Sundry Credito (finance)",
-      effect: "Balance Sheet",
-    },
-    {
-      label: "Sundry Debitor (internal)",
-      value: "Sundry Debitor (internal)",
-      effect: "Balance Sheet",
-    },
-    {
-      label: "Sundry Creditor (internal)",
-      value: "Sundry Creditor (internal)",
-      effect: "Balance Sheet",
-    },
-  ];
-  const drCrOptions = [
-    { label: "Dr", value: "Dr" },
-    { label: "Cr", value: "Cr" },
-  ];
+  const watchedBirthday = watch("birthday");
+  const watchedAnniversary = watch("anniversary");
+
   useEffect(() => {
     if (isEditMode && editData) {
-      // Reset form with edit data
       Object.keys(editData).forEach((key) => {
         setValue(key as keyof FormValues, editData[key]);
       });
     }
   }, [isEditMode, editData, setValue]);
-
-  const formValidationRules = {
-    accountName: { required: "Account name is required" },
-    printName: { required: "Print name is required" },
-    openingBalance: { required: "Opening balance is required" },
-    group: { required: "Group is required" },
-    drCr: { required: "Dr./Cr. is required" },
-    country: { required: "Country is required" },
-    state: { required: "State is required" },
-    city: { required: "City is required" },
-    mobile: {
-      required: "Mobile number is required",
-      pattern: {
-        value: /^[0-9]{10}$/,
-        message: "Mobile number must be 10 digits",
-      },
-    },
-    email: {
-      required: "Email is required",
-      pattern: {
-        value: /\S+@\S+\.\S+/,
-        message: "Email is invalid",
-      },
-    },
-  };
 
   const handleBack = () => {
     navigate("/usermaster/account");
@@ -231,15 +232,15 @@ const NewAccount = () => {
     }
   };
 
-  // ─── Dynamic Location Data ──────────────────────────────────────────────────
-  const countryOptions = useMemo(() => {
+  // ─── Dynamic Location Data ──────────────────────────────────────────────
+  const countryOptions: Option[] = useMemo(() => {
     return Country.getAllCountries().map((c) => ({
       value: c.isoCode,
       label: c.name,
     }));
   }, []);
 
-  const stateOptions = useMemo(() => {
+  const stateOptions: Option[] = useMemo(() => {
     if (!watchedCountryCode) return [];
     return State.getStatesOfCountry(watchedCountryCode).map((s) => ({
       value: s.isoCode,
@@ -247,7 +248,7 @@ const NewAccount = () => {
     }));
   }, [watchedCountryCode]);
 
-  const cityOptions = useMemo(() => {
+  const cityOptions: Option[] = useMemo(() => {
     if (!watchedCountryCode || !watchedStateCode) return [];
     return City.getCitiesOfState(watchedCountryCode, watchedStateCode).map(
       (c) => ({
@@ -257,80 +258,17 @@ const NewAccount = () => {
     );
   }, [watchedCountryCode, watchedStateCode]);
 
-  // Use cityOptions for both district and city
+  // Use cityOptions for district, taluka and city
   const districtOptions = cityOptions;
   const talukaOptions = cityOptions;
 
-  // ─── react-select custom styles ──────────────────────────────────────────
-  const customSelectStyles = {
-    control: (provided: any, state: any) => ({
-      ...provided,
-      backgroundColor: "transparent",
-      borderColor: state.isFocused
-        ? "var(--color-primary-600)"
-        : "var(--color-gray-700)",
-      boxShadow: state.isFocused
-        ? "0 0 0 1px var(--color-primary-600)"
-        : "none",
-      minHeight: "42px",
-      "&:hover": {
-        borderColor: "var(--color-primary-500)",
-      },
-    }),
-    valueContainer: (provided: any) => ({
-      ...provided,
-      color: "var(--color-dark-100)",
-    }),
-    singleValue: (provided: any) => ({
-      ...provided,
-      color: "var(--color-dark-100)",
-    }),
-    input: (provided: any) => ({
-      ...provided,
-      color: "var(--color-dark-100)",
-    }),
-    placeholder: (provided: any) => ({
-      ...provided,
-      color: "var(--color-gray-400)",
-    }),
-    menu: (provided: any) => ({
-      ...provided,
-      backgroundColor: "var(--color-dark-700)",
-      border: "1px solid var(--color-primary-600)",
-      borderRadius: "12px",
-      overflow: "hidden",
-    }),
-    menuList: (provided: any) => ({
-      ...provided,
-      padding: 0,
-    }),
-    option: (provided: any, state: any) => ({
-      ...provided,
-      backgroundColor: state.isSelected
-        ? "var(--color-primary-600)"
-        : state.isFocused
-          ? "var(--color-primary-500)"
-          : "var(--color-dark-700)",
-      color: "#fff",
-      cursor: "pointer",
-    }),
-    dropdownIndicator: (provided: any, state: any) => ({
-      ...provided,
-      color: state.isFocused
-        ? "var(--color-primary-600)"
-        : "var(--color-gray-400)",
-    }),
-    clearIndicator: (provided: any) => ({
-      ...provided,
-      color: "var(--color-gray-400)",
-    }),
-    indicatorSeparator: () => ({
-      display: "none",
-    }),
-  };
+  // Parent field select nahi hua to child combobox disabled dikhe
+  const disabledClass = (disabled: boolean) =>
+    disabled ? "pointer-events-none opacity-60" : "";
 
+  const labelClass =
+    "dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700";
 
-  
   return (
     <div className="min-h-screen bg-white p-6 transition-colors duration-200 dark:bg-gray-900">
       {/* Header with Back Button */}
@@ -339,6 +277,7 @@ const NewAccount = () => {
           {isEditMode ? "Edit Account" : "Add New Account"}
         </h2>
         <button
+          type="button"
           onClick={handleBack}
           className="bg-primary-600 hover:bg-primary-700 dark:bg-primary-800 dark:hover:bg-primary-700 flex cursor-pointer items-center gap-2 rounded-lg px-4 py-2 text-white transition-colors dark:text-white"
         >
@@ -379,6 +318,7 @@ const NewAccount = () => {
                 className="cursor-not-allowed bg-gray-50 text-gray-700 dark:bg-gray-900 dark:text-gray-300"
               />
             </div>
+
             <div>
               <label className="mb-2 block text-sm font-medium">
                 Group <span className="text-red-500">*</span>
@@ -398,22 +338,21 @@ const NewAccount = () => {
                     }
                     onChange={(val: any) => field.onChange(val?.value || "")}
                     placeholder="Search Group"
-                    
                   />
                 )}
               />
-
               {errors.group && (
                 <span className="text-xs text-red-500">
                   {errors.group.message}
                 </span>
               )}
             </div>
+
             <div>
               <Input
                 label={
                   <span>
-                    Openin Balance <span className="text-red-500">*</span>
+                    Opening Balance <span className="text-red-500">*</span>
                   </span>
                 }
                 placeholder="100000"
@@ -429,7 +368,6 @@ const NewAccount = () => {
               <label className="mb-2 block text-sm font-medium">
                 Dr / Cr <span className="text-red-500">*</span>
               </label>
-
               <Controller
                 name="drCr"
                 control={control}
@@ -446,7 +384,6 @@ const NewAccount = () => {
                   />
                 )}
               />
-
               {errors.drCr && (
                 <span className="text-xs text-red-500">
                   {errors.drCr.message}
@@ -456,24 +393,23 @@ const NewAccount = () => {
 
             {/* Country */}
             <div>
-              <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
+              <label className={labelClass}>
                 Country <span className="text-red-500">*</span>
               </label>
               <Controller
                 name="countryCode"
                 control={control}
                 render={({ field }) => (
-                  <Select
-                    options={countryOptions}
-                    styles={customSelectStyles}
-                    classNamePrefix="react-select"
+                  <Combobox
+                    data={countryOptions}
+                    displayField="label"
+                    searchFields={["label"]}
                     placeholder="Search Country"
                     value={
-                      countryOptions.find(
-                        (option) => option.value === field.value,
-                      ) || null
+                      countryOptions.find((o) => o.value === field.value) ||
+                      null
                     }
-                    onChange={(selected) => {
+                    onChange={(selected: Option | null) => {
                       field.onChange(selected?.value || "");
                       setValue("country", selected?.label || "");
                       setValue("stateCode", "");
@@ -494,34 +430,34 @@ const NewAccount = () => {
 
             {/* State */}
             <div>
-              <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
+              <label className={labelClass}>
                 State <span className="text-red-500">*</span>
               </label>
-              <Controller
-                name="stateCode"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    options={stateOptions}
-                    styles={customSelectStyles}
-                    classNamePrefix="react-select"
-                    placeholder="Search State"
-                    isDisabled={!watchedCountryCode}
-                    value={
-                      stateOptions.find(
-                        (option) => option.value === field.value,
-                      ) || null
-                    }
-                    onChange={(selected) => {
-                      field.onChange(selected?.value || "");
-                      setValue("state", selected?.label || "");
-                      setValue("district", "");
-                      setValue("taluka", "");
-                      setValue("city", "");
-                    }}
-                  />
-                )}
-              />
+              <div className={disabledClass(!watchedCountryCode)}>
+                <Controller
+                  name="stateCode"
+                  control={control}
+                  render={({ field }) => (
+                    <Combobox
+                      data={stateOptions}
+                      displayField="label"
+                      searchFields={["label"]}
+                      placeholder="Search State"
+                      value={
+                        stateOptions.find((o) => o.value === field.value) ||
+                        null
+                      }
+                      onChange={(selected: Option | null) => {
+                        field.onChange(selected?.value || "");
+                        setValue("state", selected?.label || "");
+                        setValue("district", "");
+                        setValue("taluka", "");
+                        setValue("city", "");
+                      }}
+                    />
+                  )}
+                />
+              </div>
               {errors.stateCode && (
                 <span className="text-xs text-orange-500">
                   {errors.stateCode.message}
@@ -542,30 +478,30 @@ const NewAccount = () => {
 
             {/* District */}
             <div>
-              <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
+              <label className={labelClass}>
                 District <span className="text-red-500">*</span>
               </label>
-              <Controller
-                name="district"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    options={districtOptions}
-                    styles={customSelectStyles}
-                    classNamePrefix="react-select"
-                    placeholder="Search District"
-                    isDisabled={!watchedStateCode}
-                    value={
-                      districtOptions.find(
-                        (option) => option.value === field.value,
-                      ) || null
-                    }
-                    onChange={(selected) => {
-                      field.onChange(selected?.value || "");
-                    }}
-                  />
-                )}
-              />
+              <div className={disabledClass(!watchedStateCode)}>
+                <Controller
+                  name="district"
+                  control={control}
+                  render={({ field }) => (
+                    <Combobox
+                      data={districtOptions}
+                      displayField="label"
+                      searchFields={["label"]}
+                      placeholder="Search District"
+                      value={
+                        districtOptions.find((o) => o.value === field.value) ||
+                        null
+                      }
+                      onChange={(selected: Option | null) =>
+                        field.onChange(selected?.value || "")
+                      }
+                    />
+                  )}
+                />
+              </div>
               {errors.district && (
                 <span className="text-xs text-orange-500">
                   {errors.district.message}
@@ -575,62 +511,58 @@ const NewAccount = () => {
 
             {/* Taluka */}
             <div>
-              <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
-                Taluka
-              </label>
-              <Controller
-                name="taluka"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    options={talukaOptions}
-                    styles={customSelectStyles}
-                    classNamePrefix="react-select"
-                    placeholder="Search Taluka"
-                    isDisabled={!watchedStateCode}
-                    value={
-                      talukaOptions.find(
-                        (option) => option.value === field.value,
-                      ) || null
-                    }
-                    onChange={(selected) => {
-                      field.onChange(selected?.value || "");
-                    }}
-                  />
-                )}
-              />
+              <label className={labelClass}>Taluka</label>
+              <div className={disabledClass(!watchedStateCode)}>
+                <Controller
+                  name="taluka"
+                  control={control}
+                  render={({ field }) => (
+                    <Combobox
+                      data={talukaOptions}
+                      displayField="label"
+                      searchFields={["label"]}
+                      placeholder="Search Taluka"
+                      value={
+                        talukaOptions.find((o) => o.value === field.value) ||
+                        null
+                      }
+                      onChange={(selected: Option | null) =>
+                        field.onChange(selected?.value || "")
+                      }
+                    />
+                  )}
+                />
+              </div>
             </div>
-
-            {/* City */}
           </div>
 
           {/* Column 2 */}
           <div className="space-y-4">
+            {/* City */}
             <div>
-              <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
+              <label className={labelClass}>
                 City <span className="text-red-500">*</span>
               </label>
-              <Controller
-                name="city"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    options={cityOptions}
-                    styles={customSelectStyles}
-                    classNamePrefix="react-select"
-                    placeholder="Search City"
-                    isDisabled={!watchedStateCode}
-                    value={
-                      cityOptions.find(
-                        (option) => option.value === field.value,
-                      ) || null
-                    }
-                    onChange={(selected) => {
-                      field.onChange(selected?.value || "");
-                    }}
-                  />
-                )}
-              />
+              <div className={disabledClass(!watchedStateCode)}>
+                <Controller
+                  name="city"
+                  control={control}
+                  render={({ field }) => (
+                    <Combobox
+                      data={cityOptions}
+                      displayField="label"
+                      searchFields={["label"]}
+                      placeholder="Search City"
+                      value={
+                        cityOptions.find((o) => o.value === field.value) || null
+                      }
+                      onChange={(selected: Option | null) =>
+                        field.onChange(selected?.value || "")
+                      }
+                    />
+                  )}
+                />
+              </div>
               {errors.city && (
                 <span className="text-xs text-orange-500">
                   {errors.city.message}
@@ -719,6 +651,7 @@ const NewAccount = () => {
               <DatePicker
                 label="Birthday On"
                 placeholder="Select Date"
+                value={watchedBirthday || ""}
                 options={{ disableMobile: true }}
                 onChange={(val: Date[]) =>
                   setValue("birthday", val[0]?.toISOString() || "")
@@ -730,13 +663,13 @@ const NewAccount = () => {
               <DatePicker
                 label="Anniversary"
                 placeholder="Select Date"
+                value={watchedAnniversary || ""}
                 options={{ disableMobile: true }}
                 onChange={(val: Date[]) =>
                   setValue("anniversary", val[0]?.toISOString() || "")
                 }
               />
             </div>
-
             <div>
               <Input
                 label="Bank Account No."
@@ -777,7 +710,10 @@ const NewAccount = () => {
                   {...register("gstNo")}
                 />
               </div>
-              <button className="mt-7 h-[42px] rounded border border-blue-500 px-4 text-blue-500 transition-colors hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-900/20">
+              <button
+                type="button"
+                className="mt-7 h-[42px] rounded border border-blue-500 px-4 text-blue-500 transition-colors hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-900/20"
+              >
                 Verify
               </button>
             </div>
@@ -805,13 +741,13 @@ const NewAccount = () => {
           <button
             type="button"
             onClick={handleBack}
-            className="rounded border cursor-pointer border-gray-300 px-6 py-2 text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+            className="cursor-pointer rounded border border-gray-300 px-6 py-2 text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="rounded bg-blue-600 cursor-pointer px-6 py-2 text-white transition-colors hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+            className="cursor-pointer rounded bg-blue-600 px-6 py-2 text-white transition-colors hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
           >
             {isEditMode ? "Update" : "Save"}
           </button>
