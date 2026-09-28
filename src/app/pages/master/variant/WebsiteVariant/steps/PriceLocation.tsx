@@ -16,7 +16,7 @@ import { Country, State, City } from "country-state-city";
 // Options for select fields
 import apiHelper from "@/utils/apiHelper";
 import { toast } from "sonner";
-
+import { Combobox } from "@/components/shared/form/StyledCombobox";
 
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -209,83 +209,83 @@ export function PriceLocation({
     { label: "Yes", value: "yes" },
     { label: "No", value: "no" },
   ];
-  const customSelectStyles = {
-    control: (provided: any, state: any) => ({
-      ...provided,
-      backgroundColor: "transparent",
-      borderColor: state.isFocused
-        ? "var(--color-primary-600)"
-        : "var(--color-gray-300)",
-      boxShadow: state.isFocused
-        ? "0 0 0 1px var(--color-primary-600)"
-        : "none",
-      minHeight: "42px",
+  // const customSelectStyles = {
+  //   control: (provided: any, state: any) => ({
+  //     ...provided,
+  //     backgroundColor: "transparent",
+  //     borderColor: state.isFocused
+  //       ? "var(--color-primary-600)"
+  //       : "var(--color-gray-300)",
+  //     boxShadow: state.isFocused
+  //       ? "0 0 0 1px var(--color-primary-600)"
+  //       : "none",
+  //     minHeight: "42px",
 
-      "&:hover": {
-        borderColor: "var(--color-primary-500)",
-      },
-    }),
+  //     "&:hover": {
+  //       borderColor: "var(--color-primary-500)",
+  //     },
+  //   }),
 
-    valueContainer: (provided: any) => ({
-      ...provided,
-      color: "var(--color-dark-100)",
-    }),
+  //   valueContainer: (provided: any) => ({
+  //     ...provided,
+  //     color: "var(--color-dark-100)",
+  //   }),
 
-    singleValue: (provided: any) => ({
-      ...provided,
-      color: "var(--color-dark-100)",
-    }),
+  //   singleValue: (provided: any) => ({
+  //     ...provided,
+  //     color: "var(--color-dark-100)",
+  //   }),
 
-    input: (provided: any) => ({
-      ...provided,
-      color: "var(--color-dark-100)",
-    }),
+  //   input: (provided: any) => ({
+  //     ...provided,
+  //     color: "var(--color-dark-100)",
+  //   }),
 
-    placeholder: (provided: any) => ({
-      ...provided,
-      color: "var(--color-gray-400)",
-    }),
+  //   placeholder: (provided: any) => ({
+  //     ...provided,
+  //     color: "var(--color-gray-400)",
+  //   }),
 
-    menu: (provided: any) => ({
-      ...provided,
-      backgroundColor: "var(--color-dark-700)",
-      border: "1px solid var(--color-primary-600)",
-      borderRadius: "12px",
-      overflow: "hidden",
-    }),
+  //   menu: (provided: any) => ({
+  //     ...provided,
+  //     backgroundColor: "var(--color-dark-700)",
+  //     border: "1px solid var(--color-primary-600)",
+  //     borderRadius: "12px",
+  //     overflow: "hidden",
+  //   }),
 
-    menuList: (provided: any) => ({
-      ...provided,
-      padding: 0,
-    }),
+  //   menuList: (provided: any) => ({
+  //     ...provided,
+  //     padding: 0,
+  //   }),
 
-    option: (provided: any, state: any) => ({
-      ...provided,
-      backgroundColor: state.isSelected
-        ? "var(--color-primary-600)"
-        : state.isFocused
-          ? "var(--color-primary-500)"
-          : "var(--color-dark-700)",
-      color: "#fff",
-      cursor: "pointer",
-    }),
+  //   option: (provided: any, state: any) => ({
+  //     ...provided,
+  //     backgroundColor: state.isSelected
+  //       ? "var(--color-primary-600)"
+  //       : state.isFocused
+  //         ? "var(--color-primary-500)"
+  //         : "var(--color-dark-700)",
+  //     color: "#fff",
+  //     cursor: "pointer",
+  //   }),
 
-    dropdownIndicator: (provided: any, state: any) => ({
-      ...provided,
-      color: state.isFocused
-        ? "var(--color-primary-600)"
-        : "var(--color-gray-400)",
-    }),
+  //   dropdownIndicator: (provided: any, state: any) => ({
+  //     ...provided,
+  //     color: state.isFocused
+  //       ? "var(--color-primary-600)"
+  //       : "var(--color-gray-400)",
+  //   }),
 
-    clearIndicator: (provided: any) => ({
-      ...provided,
-      color: "var(--color-gray-400)",
-    }),
+  //   clearIndicator: (provided: any) => ({
+  //     ...provided,
+  //     color: "var(--color-gray-400)",
+  //   }),
 
-    indicatorSeparator: () => ({
-      display: "none",
-    }),
-  };
+  //   indicatorSeparator: () => ({
+  //     display: "none",
+  //   }),
+  // };
   return (
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
       <div className="mt-6 space-y-8">
@@ -595,173 +595,170 @@ export function PriceLocation({
             </div>
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div>
-              <label className="mb-1 inline-block">Country</label>
-              <Controller
-                name="country"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    options={countryOptions}
-                    classNamePrefix="react-select"
-                    styles={customSelectStyles}
-                    placeholder="Search Country"
-                    value={
-                      countryOptions.find(
-                        (option) => option.value === field.value,
-                      ) || null
-                    }
-                    onChange={(selected) => {
-                      field.onChange(selected?.value || "");
-                      setCountry(selected?.value || "");
-                      setState("");
-                      setCity("");
-                    }}
-                  />
-                )}
-              />
-              {errors.country && (
-                <p className="text-error dark:text-error-lighter mt-1 text-xs">
-                  {errors.country.message}
-                </p>
-              )}
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium">
-                State <span className="text-red-500">*</span>
-              </label>
-              <Controller
-                name="state"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    options={stateOptions}
-                    styles={customSelectStyles}
-                    classNamePrefix="react-select"
-                    placeholder="Search State"
-                    isDisabled={!country}
-                    value={
-                      stateOptions.find(
-                        (option) => option.value === field.value,
-                      ) || null
-                    }
-                    onChange={(selected: any) => {
-                      field.onChange(selected?.value || "");
+            {/* Country */}
+<div>
+  <label className="mb-1 inline-block">Country</label>
+  <Controller
+    name="country"
+    control={control}
+    render={({ field }) => (
+      <Combobox
+        data={countryOptions}
+        displayField="label"
+        searchFields={["label"]}
+        placeholder="Search Country"
+        value={
+          countryOptions.find((option) => option.value === field.value) ||
+          null
+        }
+        onChange={(selected: any) => {
+          field.onChange(selected?.value || "");
+          setCountry(selected?.value || "");
+          setState("");
+          setCity("");
+        }}
+      />
+    )}
+  />
+  {errors.country && (
+    <p className="text-error dark:text-error-lighter mt-1 text-xs">
+      {errors.country.message}
+    </p>
+  )}
+</div>
 
-                      setState(selected?.value || "");
-                      setDistrict("");
-                    }}
-                  />
-                )}
-              />
+{/* State */}
+<div>
+  <label className="mb-1 block text-sm font-medium">
+    State <span className="text-red-500">*</span>
+  </label>
+  <div className={!country ? "pointer-events-none opacity-60" : ""}>
+    <Controller
+      name="state"
+      control={control}
+      render={({ field }) => (
+        <Combobox
+          data={stateOptions}
+          displayField="label"
+          searchFields={["label"]}
+          placeholder="Search State"
+          value={
+            stateOptions.find((option) => option.value === field.value) ||
+            null
+          }
+          onChange={(selected: any) => {
+            field.onChange(selected?.value || "");
+            setState(selected?.value || "");
+            setDistrict("");
+          }}
+        />
+      )}
+    />
+  </div>
+  {errors?.state && (
+    <p className="text-error dark:text-error-lighter mt-1 text-xs">
+      {errors.state.message}
+    </p>
+  )}
+</div>
 
-              {errors?.state && (
-            <p className="text-error dark:text-error-lighter mt-1 text-xs">
-                  {errors.state.message}
-                </p>
-              )}
-            </div>
+{/* District */}
+<div>
+  <label className="mb-1 block text-sm font-medium">
+    District <span className="text-red-500">*</span>
+  </label>
+  <div className={!state ? "pointer-events-none opacity-60" : ""}>
+    <Controller
+      name="district"
+      control={control}
+      render={({ field }) => (
+        <Combobox
+          data={cityOptions}
+          displayField="label"
+          searchFields={["label"]}
+          placeholder="Search District"
+          value={
+            cityOptions.find((option) => option.value === field.value) ||
+            null
+          }
+          onChange={(selected: any) => {
+            field.onChange(selected?.value || "");
+            setDistrict(selected?.value || "");
+          }}
+        />
+      )}
+    />
+  </div>
+  {errors?.district && (
+    <p className="text-error dark:text-error-lighter mt-1 text-xs">
+      {errors.district.message}
+    </p>
+  )}
+</div>
 
-            <div>
-              <label className="mb-1 block text-sm font-medium">
-                District <span className="text-red-500">*</span>
-              </label>
-              <Controller
-                name="district"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    options={cityOptions}
-                    styles={customSelectStyles}
-                    classNamePrefix="react-select"
-                    placeholder="Search District"
-                    isDisabled={!state}
-                    value={
-                      cityOptions.find(
-                        (option) => option.value === field.value,
-                      ) || null
-                    }
-                    onChange={(selected: any) => {
-                      field.onChange(selected?.value || "");
-                      setDistrict(selected?.value || "");
-                    }}
-                  />
-                )}
-              />
+{/* Taluka */}
+<div>
+  <label className="mb-1 block text-sm font-medium">Taluka / Tehsil</label>
+  <div className={!district ? "pointer-events-none opacity-60" : ""}>
+    <Controller
+      name="taluka"
+      control={control}
+      render={({ field }) => (
+        <Combobox
+          data={cityOptions}
+          displayField="label"
+          searchFields={["label"]}
+          placeholder="Search Taluka"
+          value={
+            cityOptions.find((option) => option.value === field.value) ||
+            null
+          }
+          onChange={(selected: any) =>
+            field.onChange(selected?.value || "")
+          }
+        />
+      )}
+    />
+  </div>
+  {errors?.taluka && (
+    <p className="text-error dark:text-error-lighter mt-1 text-xs">
+      {errors.taluka.message}
+    </p>
+  )}
+</div>
 
-              {errors?.district && (
-                 <p className="text-error dark:text-error-lighter mt-1 text-xs">
-                  {errors.district.message}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label className="mb-1 block text-sm font-medium">
-                Taluka / Tehsil
-              </label>
-
-              <Controller
-                name="taluka"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    options={cityOptions}
-                    styles={customSelectStyles}
-                    classNamePrefix="react-select"
-                    placeholder="Search Taluka"
-                    isDisabled={!district}
-                    value={
-                      cityOptions.find(
-                        (option) => option.value === field.value,
-                      ) || null
-                    }
-                    onChange={(selected: any) => {
-                      field.onChange(selected?.value || "");
-                    }}
-                  />
-                )}
-              />
-
-              {errors?.taluka && (
-               <p className="text-error dark:text-error-lighter mt-1 text-xs">
-                  {errors.taluka.message}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label className="mb-1 block text-sm font-medium">
-                Village / City <span className="text-red-500">*</span>
-              </label>
-              <Controller
-                name="city"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    options={cityOptions}
-                    styles={customSelectStyles}
-                    classNamePrefix="react-select"
-                    placeholder="Search Village / City"
-                    isDisabled={!state}
-                    value={
-                      cityOptions.find(
-                        (option) => option.value === field.value,
-                      ) || null
-                    }
-                    onChange={(selected: any) => {
-                      field.onChange(selected?.value || "");
-                    }}
-                  />
-                )}
-              />
-
-              {errors?.city && (
-                <p className="text-error dark:text-error-lighter mt-1 text-xs">
-                  {errors.city.message}
-                </p>
-              )}
-            </div>
+{/* Village / City */}
+<div>
+  <label className="mb-1 block text-sm font-medium">
+    Village / City <span className="text-red-500">*</span>
+  </label>
+  <div className={!state ? "pointer-events-none opacity-60" : ""}>
+    <Controller
+      name="city"
+      control={control}
+      render={({ field }) => (
+        <Combobox
+          data={cityOptions}
+          displayField="label"
+          searchFields={["label"]}
+          placeholder="Search Village / City"
+          value={
+            cityOptions.find((option) => option.value === field.value) ||
+            null
+          }
+          onChange={(selected: any) =>
+            field.onChange(selected?.value || "")
+          }
+        />
+      )}
+    />
+  </div>
+  {errors?.city && (
+    <p className="text-error dark:text-error-lighter mt-1 text-xs">
+      {errors.city.message}
+    </p>
+  )}
+</div>
 
             <div>
               <label className="mb-1 block text-sm font-medium">

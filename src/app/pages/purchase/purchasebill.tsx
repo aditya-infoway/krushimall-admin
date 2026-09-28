@@ -15,7 +15,7 @@ import { DatePicker } from "@/components/shared/form/Datepicker";
 // import { Combobox } from "@/components/shared/form/StyledCombobox";
 import emptyStateImage from "@/assets/notfound.png";
 import { Country, State, City } from "country-state-city";
-import Select from "react-select";
+// import Select from "react-select";
 import { Radio } from "@/components/ui";
 import apiHelper from "@/utils/apiHelper";
 import { toast } from "sonner";
@@ -190,70 +190,70 @@ const emptyAccount: NewAccountData = {
 };
 
 // ─── react-select custom styles ──────────────────────────────────────────
-const customSelectStyles = {
-  control: (provided: any, state: any) => ({
-    ...provided,
-    backgroundColor: "transparent",
-    borderColor: state.isFocused
-      ? "var(--color-primary-600)"
-      : "var(--color-gray-300)",
-    boxShadow: state.isFocused ? "0 0 0 1px var(--color-primary-600)" : "none",
-    minHeight: "42px",
-    "&:hover": {
-      borderColor: "var(--color-primary-500)",
-    },
-  }),
-  valueContainer: (provided: any) => ({
-    ...provided,
-    color: "var(--color-dark-100)",
-  }),
-  singleValue: (provided: any) => ({
-    ...provided,
-    color: "var(--color-dark-100)",
-  }),
-  input: (provided: any) => ({
-    ...provided,
-    color: "var(--color-gray-100)",
-  }),
-  placeholder: (provided: any) => ({
-    ...provided,
-    color: "var(--color-gray-400)",
-  }),
-  menu: (provided: any) => ({
-    ...provided,
-    backgroundColor: "var(--color-dark-700)",
-    border: "1px solid var(--color-primary-600)",
-    borderRadius: "12px",
-    overflow: "hidden",
-  }),
-  menuList: (provided: any) => ({
-    ...provided,
-    padding: 0,
-  }),
-  option: (provided: any, state: any) => ({
-    ...provided,
-    backgroundColor: state.isSelected
-      ? "var(--color-primary-600)"
-      : state.isFocused
-        ? "var(--color-primary-500)"
-        : "var(--color-dark-700)",
-    color: "#fff",
-    cursor: "pointer",
-  }),
-  dropdownIndicator: (provided: any, state: any) => ({
-    ...provided,
-    color: state.isFocused
-      ? "var(--color-primary-600)"
-      : "var(--color-gray-400)",
-  }),
-  clearIndicator: (provided: any) => ({
-    ...provided,
-    color: "var(--color-gray-400)",
-  }),
-  indicatorSeparator: () => ({
-    display: "none",
-  }),
-};
+// const customSelectStyles = {
+//   control: (provided: any, state: any) => ({
+//     ...provided,
+//     backgroundColor: "transparent",
+//     borderColor: state.isFocused
+//       ? "var(--color-primary-600)"
+//       : "var(--color-gray-300)",
+//     boxShadow: state.isFocused ? "0 0 0 1px var(--color-primary-600)" : "none",
+//     minHeight: "42px",
+//     "&:hover": {
+//       borderColor: "var(--color-primary-500)",
+//     },
+//   }),
+//   valueContainer: (provided: any) => ({
+//     ...provided,
+//     color: "var(--color-dark-100)",
+//   }),
+//   singleValue: (provided: any) => ({
+//     ...provided,
+//     color: "var(--color-dark-100)",
+//   }),
+//   input: (provided: any) => ({
+//     ...provided,
+//     color: "var(--color-gray-100)",
+//   }),
+//   placeholder: (provided: any) => ({
+//     ...provided,
+//     color: "var(--color-gray-400)",
+//   }),
+//   menu: (provided: any) => ({
+//     ...provided,
+//     backgroundColor: "var(--color-dark-700)",
+//     border: "1px solid var(--color-primary-600)",
+//     borderRadius: "12px",
+//     overflow: "hidden",
+//   }),
+//   menuList: (provided: any) => ({
+//     ...provided,
+//     padding: 0,
+//   }),
+//   option: (provided: any, state: any) => ({
+//     ...provided,
+//     backgroundColor: state.isSelected
+//       ? "var(--color-primary-600)"
+//       : state.isFocused
+//         ? "var(--color-primary-500)"
+//         : "var(--color-dark-700)",
+//     color: "#fff",
+//     cursor: "pointer",
+//   }),
+//   dropdownIndicator: (provided: any, state: any) => ({
+//     ...provided,
+//     color: state.isFocused
+//       ? "var(--color-primary-600)"
+//       : "var(--color-gray-400)",
+//   }),
+//   clearIndicator: (provided: any) => ({
+//     ...provided,
+//     color: "var(--color-gray-400)",
+//   }),
+//   indicatorSeparator: () => ({
+//     display: "none",
+//   }),
+// };
 
 const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
   onBack,
@@ -2250,120 +2250,123 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
                   </div>
 
                   {/* Country - Dynamic with react-select */}
-                  <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
-                      Country <span className="text-red-500">*</span>
-                    </label>
-                    <Select
-                      options={countryOptions}
-                      styles={customSelectStyles}
-                      classNamePrefix="react-select"
-                      placeholder="Search Country"
-                      value={
-                        countryOptions.find(
-                          (option) => option.value === accountForm.countryCode,
-                        ) || null
-                      }
-                      onChange={(selected) => {
-                        updateAccountForm("countryCode", selected?.value || "");
-                        updateAccountForm("country", selected?.label || "");
-                        updateAccountForm("stateCode", "");
-                        updateAccountForm("state", "");
-                        updateAccountForm("district", "");
-                        updateAccountForm("city", "");
-                      }}
-                    />
-                    {getAccountError("countryCode") && (
-                      <p className="mt-1 text-xs text-red-500">
-                        {getAccountError("countryCode")}
-                      </p>
-                    )}
-                  </div>
+                 {/* Country */}
+<div>
+  <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+    Country <span className="text-red-500">*</span>
+  </label>
+  <Combobox
+    data={countryOptions}
+    displayField="label"
+    searchFields={["label"]}
+    placeholder="Search Country"
+    value={
+      countryOptions.find((o) => o.value === accountForm.countryCode) ||
+      null
+    }
+    onChange={(selected: { value: string; label: string } | null) => {
+      updateAccountForm("countryCode", selected?.value || "");
+      updateAccountForm("country", selected?.label || "");
+      updateAccountForm("stateCode", "");
+      updateAccountForm("state", "");
+      updateAccountForm("district", "");
+      updateAccountForm("city", "");
+    }}
+  />
+  {getAccountError("countryCode") && (
+    <p className="mt-1 text-xs text-red-500">
+      {getAccountError("countryCode")}
+    </p>
+  )}
+</div>
 
-                  {/* State - Dynamic with react-select */}
-                  <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
-                      State <span className="text-red-500">*</span>
-                    </label>
-                    <Select
-                      options={stateOptions}
-                      styles={customSelectStyles}
-                      classNamePrefix="react-select"
-                      placeholder="Search State"
-                      isDisabled={!accountForm.countryCode}
-                      value={
-                        stateOptions.find(
-                          (option) => option.value === accountForm.stateCode,
-                        ) || null
-                      }
-                      onChange={(selected) => {
-                        updateAccountForm("stateCode", selected?.value || "");
-                        updateAccountForm("state", selected?.label || "");
-                        updateAccountForm("district", "");
-                        updateAccountForm("city", "");
-                      }}
-                    />
-                    {getAccountError("stateCode") && (
-                      <p className="mt-1 text-xs text-red-500">
-                        {getAccountError("stateCode")}
-                      </p>
-                    )}
-                  </div>
+{/* State */}
+<div>
+  <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+    State <span className="text-red-500">*</span>
+  </label>
+  <div
+    className={!accountForm.countryCode ? "pointer-events-none opacity-60" : ""}
+  >
+    <Combobox
+      data={stateOptions}
+      displayField="label"
+      searchFields={["label"]}
+      placeholder="Search State"
+      value={
+        stateOptions.find((o) => o.value === accountForm.stateCode) || null
+      }
+      onChange={(selected: { value: string; label: string } | null) => {
+        updateAccountForm("stateCode", selected?.value || "");
+        updateAccountForm("state", selected?.label || "");
+        updateAccountForm("district", "");
+        updateAccountForm("city", "");
+      }}
+    />
+  </div>
+  {getAccountError("stateCode") && (
+    <p className="mt-1 text-xs text-red-500">
+      {getAccountError("stateCode")}
+    </p>
+  )}
+</div>
 
-                  {/* District - Dynamic with react-select */}
-                  <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
-                      District <span className="text-red-500">*</span>
-                    </label>
-                    <Select
-                      options={districtOptions}
-                      styles={customSelectStyles}
-                      classNamePrefix="react-select"
-                      placeholder="Search District"
-                      isDisabled={!accountForm.stateCode}
-                      value={
-                        districtOptions.find(
-                          (option) => option.value === accountForm.district,
-                        ) || null
-                      }
-                      onChange={(selected) => {
-                        updateAccountForm("district", selected?.value || "");
-                      }}
-                    />
-                    {getAccountError("district") && (
-                      <p className="mt-1 text-xs text-red-500">
-                        {getAccountError("district")}
-                      </p>
-                    )}
-                  </div>
+{/* District */}
+<div>
+  <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+    District <span className="text-red-500">*</span>
+  </label>
+  <div
+    className={!accountForm.stateCode ? "pointer-events-none opacity-60" : ""}
+  >
+    <Combobox
+      data={districtOptions}
+      displayField="label"
+      searchFields={["label"]}
+      placeholder="Search District"
+      value={
+        districtOptions.find((o) => o.value === accountForm.district) ||
+        null
+      }
+      onChange={(selected: { value: string; label: string } | null) =>
+        updateAccountForm("district", selected?.value || "")
+      }
+    />
+  </div>
+  {getAccountError("district") && (
+    <p className="mt-1 text-xs text-red-500">
+      {getAccountError("district")}
+    </p>
+  )}
+</div>
 
-                  {/* City - Dynamic with react-select */}
-                  <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
-                      City <span className="text-red-500">*</span>
-                    </label>
-                    <Select
-                      options={cityOptions}
-                      styles={customSelectStyles}
-                      classNamePrefix="react-select"
-                      placeholder="Search City"
-                      isDisabled={!accountForm.stateCode}
-                      value={
-                        cityOptions.find(
-                          (option) => option.value === accountForm.city,
-                        ) || null
-                      }
-                      onChange={(selected) => {
-                        updateAccountForm("city", selected?.value || "");
-                      }}
-                    />
-                    {getAccountError("city") && (
-                      <p className="mt-1 text-xs text-red-500">
-                        {getAccountError("city")}
-                      </p>
-                    )}
-                  </div>
-
+{/* City */}
+<div>
+  <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+    City <span className="text-red-500">*</span>
+  </label>
+  <div
+    className={!accountForm.stateCode ? "pointer-events-none opacity-60" : ""}
+  >
+    <Combobox
+      data={cityOptions}
+      displayField="label"
+      searchFields={["label"]}
+      placeholder="Search City"
+      value={
+        cityOptions.find((o) => o.value === accountForm.city) || null
+      }
+      onChange={(selected: { value: string; label: string } | null) =>
+        updateAccountForm("city", selected?.value || "")
+      }
+    />
+  </div>
+  {getAccountError("city") && (
+    <p className="mt-1 text-xs text-red-500">
+      {getAccountError("city")}
+    </p>
+  )}
+</div>
                   {/* Address */}
                   <div className="sm:col-span-2">
                     <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">

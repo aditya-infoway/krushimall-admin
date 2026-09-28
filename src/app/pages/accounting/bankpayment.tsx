@@ -756,9 +756,9 @@ export default function BankPayment() {
                 <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
                   Created By
                 </th>
-                <th className="w-16 px-3 py-3.5 text-center text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                {/* <th className="w-16 px-3 py-3.5 text-center text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
                   Actions
-                </th>
+                </th> */}
               </tr>
             </thead>
 
@@ -840,7 +840,7 @@ export default function BankPayment() {
                     <td className="px-3 py-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
                       {item.createdBy}
                     </td>
-                    <td className="px-3 py-3 text-center whitespace-nowrap">
+                    {/* <td className="px-3 py-3 text-center whitespace-nowrap">
                       <Menu
                         as="div"
                         className="relative inline-block text-left"
@@ -896,7 +896,7 @@ export default function BankPayment() {
                           </MenuItems>
                         </Transition>
                       </Menu>
-                    </td>
+                    </td> */}
                   </tr>
                 );
               })}

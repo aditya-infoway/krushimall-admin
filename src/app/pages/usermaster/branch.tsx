@@ -358,7 +358,7 @@ const CreateBranch = () => {
   const getBranches = async () => {
     try {
       const response = await apiHelper.get("/branch");
-   
+
       setBranches(response);
     } catch (error) {
       console.log(error);
@@ -398,53 +398,52 @@ const CreateBranch = () => {
     setExistingLogo(null);
   };
 
-const handleOpenEditDrawer = async (item: Branch) => {
-  if (!item) {
-    return;
-  }
+  const handleOpenEditDrawer = async (item: Branch) => {
+    if (!item) {
+      return;
+    }
 
-  try {
-    const response = await apiHelper.get(`/branch/${item.id}`);
+    try {
+      const response = await apiHelper.get(`/branch/${item.id}`);
 
-    const branch = response.data;
+      const branch = response.data;
 
-    setEditId(branch.id);
+      setEditId(branch.id);
 
-    reset({
-      branchCode: branch.branchCode || "",
-      branchName: branch.branchName || "",
-      branchType: branch.branchType || "",
-      managerId: branch.managerId || branch.manager?.id,
-      managerName: branch.manager?.accountName || "",
-      mobileNo: branch.mobileNo || "",
-      gmailId: branch.gmailId || "",
-      password: "",
-      confirmPassword: "",
-      gstNo: branch.gstNo || "",
-      panCardNo: branch.panCardNo || "",
-      address1: branch.address1 || "",
-      address2: branch.address2 || "",
-      country: branch.country || "",
-      countryCode: branch.countryCode || "",
-      state: branch.state || "",
-      stateCode: branch.stateCode || "",
-      district: branch.district || "",
-      city: branch.city || "",
-      pinCode: branch.pinCode || "",
-    });
+      reset({
+        branchCode: branch.branchCode || "",
+        branchName: branch.branchName || "",
+        branchType: branch.branchType || "",
+        managerId: branch.managerId || branch.manager?.id,
+        managerName: branch.manager?.accountName || "",
+        mobileNo: branch.mobileNo || "",
+        gmailId: branch.gmailId || "",
+        password: "",
+        confirmPassword: "",
+        gstNo: branch.gstNo || "",
+        panCardNo: branch.panCardNo || "",
+        address1: branch.address1 || "",
+        address2: branch.address2 || "",
+        country: branch.country || "",
+        countryCode: branch.countryCode || "",
+        state: branch.state || "",
+        stateCode: branch.stateCode || "",
+        district: branch.district || "",
+        city: branch.city || "",
+        pinCode: branch.pinCode || "",
+      });
 
-    setExistingLogo(branch.logo || null);
-    setLogoFile(null);
-    setShowDrawer(true);
-  } catch (error: any) {
-    console.error("Failed to fetch branch:", error);
+      setExistingLogo(branch.logo || null);
+      setLogoFile(null);
+      setShowDrawer(true);
+    } catch (error: any) {
+      console.error("Failed to fetch branch:", error);
 
-    toast.error(
-      error.response?.data?.message ||
-        "Failed to load branch details",
-    );
-  }
-};
+      toast.error(
+        error.response?.data?.message || "Failed to load branch details",
+      );
+    }
+  };
 
   const handleDelete = async (id: number) => {
     try {
@@ -561,42 +560,36 @@ const handleOpenEditDrawer = async (item: Branch) => {
       );
     }
   };
-const searchText = search.trim().toLowerCase();
+  const searchText = search.trim().toLowerCase();
 
-const filteredData = branches.filter((item: any) => {
-  const matchesSearch =
-    String(item.branchName ?? "")
-      .toLowerCase()
-      .includes(searchText) ||
-    String(item.branchCode ?? "")
-      .toLowerCase()
-      .includes(searchText) ||
-    String(item.managerName ?? "")
-      .toLowerCase()
-      .includes(searchText) ||
-    String(item.gmailId ?? "")
-      .toLowerCase()
-      .includes(searchText) ||
-    String(item.mobileNo ?? "")
-      .toLowerCase()
-      .includes(searchText);
+  const filteredData = branches.filter((item: any) => {
+    const matchesSearch =
+      String(item.branchName ?? "")
+        .toLowerCase()
+        .includes(searchText) ||
+      String(item.branchCode ?? "")
+        .toLowerCase()
+        .includes(searchText) ||
+      String(item.managerName ?? "")
+        .toLowerCase()
+        .includes(searchText) ||
+      String(item.gmailId ?? "")
+        .toLowerCase()
+        .includes(searchText) ||
+      String(item.mobileNo ?? "")
+        .toLowerCase()
+        .includes(searchText);
 
-  const matchesBranchType =
-    selectedBranchTypeFilter === "All" ||
-    String(item.branchType ?? "") ===
-      String(selectedBranchTypeFilter);
+    const matchesBranchType =
+      selectedBranchTypeFilter === "All" ||
+      String(item.branchType ?? "") === String(selectedBranchTypeFilter);
 
-  const matchesCountry =
-    selectedCountryFilter === "All" ||
-    String(item.country ?? "") ===
-      String(selectedCountryFilter);
+    const matchesCountry =
+      selectedCountryFilter === "All" ||
+      String(item.country ?? "") === String(selectedCountryFilter);
 
-  return (
-    matchesSearch &&
-    matchesBranchType &&
-    matchesCountry
-  );
-});
+    return matchesSearch && matchesBranchType && matchesCountry;
+  });
 
   const totalItems = filteredData.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
@@ -890,7 +883,7 @@ const filteredData = branches.filter((item: any) => {
                     <Td className="py-4 font-mono text-sm font-medium text-gray-900 dark:text-gray-400">
                       {item.branchCode}
                     </Td>
-                  
+
                     <Td className="py-4 font-medium text-gray-900 dark:text-gray-400">
                       {item.branchName}
                     </Td>
@@ -1216,43 +1209,45 @@ const filteredData = branches.filter((item: any) => {
 
                 {/* Content */}
                 {/* Content */}
-<div className="grow space-y-5 overflow-y-auto p-6">
-  <div className="flex items-center gap-4">
-    {/* ✅ shrink-0 added — box ab kabhi squish nahi hoga */}
-    <div className="dark:border-dark-500 dark:bg-dark-800 flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-gray-200 bg-gray-50">
-      {logoFile ? (
-        <img
-          src={URL.createObjectURL(logoFile)}
-          alt="Branch logo"
-          className="size-full object-cover"
-        />
-      ) : existingLogo ? (
-        <img
-          src={apiHelper.getImageUrl(existingLogo)}
-          alt="Branch logo"
-          className="size-full object-cover"
-          onError={(e) => {
-            // fallback agar image 404 ho jaye (jaisa console me dikh raha hai)
-            (e.target as HTMLImageElement).style.display = "none";
-          }}
-        />
-      ) : (
-        <span className="text-xs text-gray-400">No logo</span>
-      )}
-    </div>
-    <div className="flex min-w-0 flex-col gap-1">
-      <label className="dark:text-dark-200 text-sm font-medium text-gray-700">
-        Branch Logo
-      </label>
-      <input
-        type="file"
-        accept="image/*"
-        onChange={(e) => setLogoFile(e.target.files?.[0] || null)}
-        className="dark:text-dark-200 text-sm text-gray-600 file:mr-3 file:rounded-lg file:border-0 file:bg-blue-50 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-blue-700 hover:file:bg-blue-100"
-      />
-    </div>
-  </div>
-  
+                <div className="grow space-y-5 overflow-y-auto p-6">
+                  <div className="flex items-center gap-4">
+                    {/* ✅ shrink-0 added — box ab kabhi squish nahi hoga */}
+                    <div className="dark:border-dark-500 dark:bg-dark-800 flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-gray-200 bg-gray-50">
+                      {logoFile ? (
+                        <img
+                          src={URL.createObjectURL(logoFile)}
+                          alt="Branch logo"
+                          className="size-full object-cover"
+                        />
+                      ) : existingLogo ? (
+                        <img
+                          src={apiHelper.getImageUrl(existingLogo)}
+                          alt="Branch logo"
+                          className="size-full object-cover"
+                          onError={(e) => {
+                            // fallback agar image 404 ho jaye (jaisa console me dikh raha hai)
+                            (e.target as HTMLImageElement).style.display =
+                              "none";
+                          }}
+                        />
+                      ) : (
+                        <span className="text-xs text-gray-400">No logo</span>
+                      )}
+                    </div>
+                    <div className="flex min-w-0 flex-col gap-1">
+                      <label className="dark:text-dark-200 text-sm font-medium text-gray-700">
+                        Branch Logo
+                      </label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) =>
+                          setLogoFile(e.target.files?.[0] || null)
+                        }
+                        className="dark:text-dark-200 text-sm text-gray-600 file:mr-3 file:rounded-lg file:border-0 file:bg-blue-50 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-blue-700 hover:file:bg-blue-100"
+                      />
+                    </div>
+                  </div>
 
                   <div className="border-primary-600 dark:border-primary-500 border-b border-dashed"></div>
                   {/* Row 1: Branch Code, Name, Type - 3 columns */}
@@ -1458,26 +1453,32 @@ const filteredData = branches.filter((item: any) => {
                       />
                     </div>
 
+                    {/* Country */}
                     <div>
-                      <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
-                        Country <span className="text-red-500">*</span>
-                      </label>
                       <Controller
                         name="countryCode"
                         control={control}
                         rules={{ required: "Country is required" }}
-                        render={({ field }) => (
-                          <Select
-                            options={countryOptions}
-                            styles={customSelectStyles}
-                            classNamePrefix="react-select"
+                        render={({ field, fieldState }) => (
+                          <Combobox
+                            label={
+                              <span>
+                                Country <span className="text-red-500">*</span>
+                              </span>
+                            }
                             placeholder="Search Country"
+                            data={countryOptions}
+                            displayField="label"
+                            searchFields={["label"]}
                             value={
                               countryOptions.find(
-                                (option) => option.value === field.value,
+                                (o) => o.value === field.value,
                               ) || null
                             }
-                            onChange={(selected) => {
+                            error={fieldState.error?.message}
+                            onChange={(
+                              selected: { value: string; label: string } | null,
+                            ) => {
                               field.onChange(selected?.value || "");
                               setValue("country", selected?.label || "");
                               setValue("stateCode", "");
@@ -1488,34 +1489,40 @@ const filteredData = branches.filter((item: any) => {
                           />
                         )}
                       />
-                      {errors.countryCode && (
-                        <span className="text-xs text-red-500">
-                          {errors.countryCode.message}
-                        </span>
-                      )}
                     </div>
 
-                    <div>
-                      <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
-                        State <span className="text-red-500">*</span>
-                      </label>
+                    {/* State */}
+                    <div
+                      className={
+                        !watchedCountryCode
+                          ? "pointer-events-none opacity-60"
+                          : ""
+                      }
+                    >
                       <Controller
                         name="stateCode"
                         control={control}
                         rules={{ required: "State is required" }}
-                        render={({ field }) => (
-                          <Select
-                            options={stateOptions}
-                            styles={customSelectStyles}
-                            classNamePrefix="react-select"
+                        render={({ field, fieldState }) => (
+                          <Combobox
+                            label={
+                              <span>
+                                State <span className="text-red-500">*</span>
+                              </span>
+                            }
                             placeholder="Search State"
-                            isDisabled={!watchedCountryCode}
+                            data={stateOptions}
+                            displayField="label"
+                            searchFields={["label"]}
                             value={
                               stateOptions.find(
-                                (option) => option.value === field.value,
+                                (o) => o.value === field.value,
                               ) || null
                             }
-                            onChange={(selected) => {
+                            error={fieldState.error?.message}
+                            onChange={(
+                              selected: { value: string; label: string } | null,
+                            ) => {
                               field.onChange(selected?.value || "");
                               setValue("state", selected?.label || "");
                               setValue("district", "");
@@ -1524,80 +1531,83 @@ const filteredData = branches.filter((item: any) => {
                           />
                         )}
                       />
-                      {errors.stateCode && (
-                        <span className="text-xs text-red-500">
-                          {errors.stateCode.message}
-                        </span>
-                      )}
                     </div>
                   </div>
 
                   {/* Row 3: District, City, PIN Code - 3 columns */}
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                    <div>
-                      <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
-                        District <span className="text-red-500">*</span>
-                      </label>
+                    {/* District */}
+                    <div
+                      className={
+                        !watchedStateCode
+                          ? "pointer-events-none opacity-60"
+                          : ""
+                      }
+                    >
                       <Controller
                         name="district"
                         control={control}
                         rules={{ required: "District is required" }}
-                        render={({ field }) => (
-                          <Select
-                            options={districtOptions}
-                            styles={customSelectStyles}
-                            classNamePrefix="react-select"
+                        render={({ field, fieldState }) => (
+                          <Combobox
+                            label={
+                              <span>
+                                District <span className="text-red-500">*</span>
+                              </span>
+                            }
                             placeholder="Search District"
-                            isDisabled={!watchedStateCode}
+                            data={districtOptions}
+                            displayField="label"
+                            searchFields={["label"]}
                             value={
                               districtOptions.find(
-                                (option) => option.value === field.value,
+                                (o) => o.value === field.value,
                               ) || null
                             }
-                            onChange={(selected) => {
-                              field.onChange(selected?.value || "");
-                            }}
+                            error={fieldState.error?.message}
+                            onChange={(
+                              selected: { value: string; label: string } | null,
+                            ) => field.onChange(selected?.value || "")}
                           />
                         )}
                       />
-                      {errors.district && (
-                        <span className="text-xs text-red-500">
-                          {errors.district.message}
-                        </span>
-                      )}
                     </div>
 
-                    <div>
-                      <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
-                        City <span className="text-red-500">*</span>
-                      </label>
+                    {/* City */}
+                    <div
+                      className={
+                        !watchedStateCode
+                          ? "pointer-events-none opacity-60"
+                          : ""
+                      }
+                    >
                       <Controller
                         name="city"
                         control={control}
                         rules={{ required: "City is required" }}
-                        render={({ field }) => (
-                          <Select
-                            options={cityOptions}
-                            styles={customSelectStyles}
-                            classNamePrefix="react-select"
+                        render={({ field, fieldState }) => (
+                          <Combobox
+                            label={
+                              <span>
+                                City <span className="text-red-500">*</span>
+                              </span>
+                            }
                             placeholder="Search City"
-                            isDisabled={!watchedStateCode}
+                            data={cityOptions}
+                            displayField="label"
+                            searchFields={["label"]}
                             value={
                               cityOptions.find(
-                                (option) => option.value === field.value,
+                                (o) => o.value === field.value,
                               ) || null
                             }
-                            onChange={(selected) => {
-                              field.onChange(selected?.value || "");
-                            }}
+                            error={fieldState.error?.message}
+                            onChange={(
+                              selected: { value: string; label: string } | null,
+                            ) => field.onChange(selected?.value || "")}
                           />
                         )}
                       />
-                      {errors.city && (
-                        <span className="text-xs text-red-500">
-                          {errors.city.message}
-                        </span>
-                      )}
                     </div>
 
                     <div>
