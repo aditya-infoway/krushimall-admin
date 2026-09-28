@@ -14,7 +14,7 @@ import { Country, State, City } from "country-state-city";
 import TextEditor from "@/components/shared/TextEditor";
 import Quill from "quill";
 import { toast } from "sonner";
-
+import { Combobox } from "@/components/shared/form/StyledCombobox";
 const Delta = Quill.import("delta");
 export default function General() {
   const [avatar, setAvatar] = useState<File | null>(null);
@@ -387,45 +387,53 @@ export default function General() {
 
         <div>
           <label className="mb-1 inline-block">Country</label>
-          <Select
-            isDisabled={!isEditing}
-            classNamePrefix="react-select"
-            options={countryOptions}
-            styles={customSelectStyles}
-            value={countryOptions.find((c) => c.value === company?.country)}
-            onChange={(selected: any) => {
-              setCountry(selected?.value || "");
+          <div className={!isEditing ? "pointer-events-none" : ""}>
+            <Combobox
+              data={countryOptions}
+              displayField="label"
+              searchFields={["label"]}
+              placeholder="Select Country"
+              value={
+                countryOptions.find((c) => c.value === company?.country) || null
+              }
+              onChange={(selected: any) => {
+                setCountry(selected?.value || "");
 
-              setCompany({
-                ...company,
-                country: selected?.value || "",
-                state: "",
-                district: "",
-                city: "",
-              });
-            }}
-          />
+                setCompany({
+                  ...company,
+                  country: selected?.value || "",
+                  state: "",
+                  district: "",
+                  city: "",
+                });
+              }}
+            />
+          </div>
         </div>
 
         <div>
           <label className="mb-1 inline-block">State</label>
-          <Select
-            isDisabled={!isEditing}
-            classNamePrefix="react-select"
-            options={stateOptions}
-            styles={customSelectStyles}
-            value={stateOptions.find((s) => s.value === company?.state)}
-            onChange={(selected: any) => {
-              setState(selected?.value || "");
-              setStateCode(selected?.state?.isoCode || "");
+          <div className={!isEditing ? "pointer-events-none" : ""}>
+            <Combobox
+              data={stateOptions}
+              displayField="label"
+              searchFields={["label"]}
+              placeholder="Select State"
+              value={
+                stateOptions.find((s) => s.value === company?.state) || null
+              }
+              onChange={(selected: any) => {
+                setState(selected?.value || "");
+                setStateCode(selected?.state?.isoCode || "");
 
-              setCompany({
-                ...company,
-                state: selected?.value || "",
-                stateCode: selected?.state?.isoCode || "",
-              });
-            }}
-          />
+                setCompany({
+                  ...company,
+                  state: selected?.value || "",
+                  stateCode: selected?.state?.isoCode || "",
+                });
+              }}
+            />
+          </div>
         </div>
 
         <Input
@@ -437,40 +445,46 @@ export default function General() {
 
         <div>
           <label className="mb-1 inline-block">District</label>
-          <Select
-            isDisabled={!isEditing}
-            classNamePrefix="react-select"
-            options={cityOptions}
-            styles={customSelectStyles}
-            value={cityOptions.find((d) => d.value === company?.district)}
-            onChange={(selected: any) => {
-              setDistrict(selected?.value || "");
+          <div className={!isEditing ? "pointer-events-none" : ""}>
+            <Combobox
+              data={cityOptions}
+              displayField="label"
+              searchFields={["label"]}
+              placeholder="Select District"
+              value={
+                cityOptions.find((d) => d.value === company?.district) || null
+              }
+              onChange={(selected: any) => {
+                setDistrict(selected?.value || "");
 
-              setCompany({
-                ...company,
-                district: selected?.value || "",
-              });
-            }}
-          />
+                setCompany({
+                  ...company,
+                  district: selected?.value || "",
+                });
+              }}
+            />
+          </div>
         </div>
 
         <div>
           <label className="mb-1 inline-block">City</label>
-          <Select
-            isDisabled={!isEditing}
-            classNamePrefix="react-select"
-            options={cityOptions}
-            styles={customSelectStyles}
-            value={cityOptions.find((c) => c.value === company?.city)}
-            onChange={(selected: any) => {
-              setCity(selected?.value || "");
+          <div className={!isEditing ? "pointer-events-none" : ""}>
+            <Combobox
+              data={cityOptions}
+              displayField="label"
+              searchFields={["label"]}
+              placeholder="Select City"
+              value={cityOptions.find((c) => c.value === company?.city) || null}
+              onChange={(selected: any) => {
+                setCity(selected?.value || "");
 
-              setCompany({
-                ...company,
-                city: selected?.value || "",
-              });
-            }}
-          />
+                setCompany({
+                  ...company,
+                  city: selected?.value || "",
+                });
+              }}
+            />
+          </div>
         </div>
         <Input
           label="Pincode"
@@ -637,20 +651,22 @@ export default function General() {
           <div>
             <label className="mb-1 inline-block">Prefix For</label>
 
-            <Select
-              classNamePrefix="react-select"
-              styles={customSelectStyles}
-              options={prefixForOptions}
-              value={prefixForOptions.find(
-                (item) => item.value === newPrefix.prefixFor,
-              )}
+            <Combobox
+              data={prefixForOptions}
+              displayField="label"
+              searchFields={["label"]}
+              placeholder="Select Prefix"
+              value={
+                prefixForOptions.find(
+                  (item) => item.value === newPrefix.prefixFor,
+                ) || null
+              }
               onChange={(selected: any) =>
                 setNewPrefix({
                   ...newPrefix,
                   prefixFor: selected?.value || "",
                 })
               }
-              placeholder="Select Prefix"
             />
           </div>
 
@@ -673,7 +689,7 @@ export default function General() {
           </div>
         </div>
       </div>
-      <div className="mt-6 max-h-125 overflow-auto rounded-lg border border-gray-700">
+      <div className="mt-6 max-h-125 overflow-auto  border border-gray-100">
         <table className="w-full border-collapse">
           <thead className="sticky top-0 z-0 bg-white dark:bg-gray-900">
             <tr>
