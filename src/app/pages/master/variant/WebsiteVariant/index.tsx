@@ -117,7 +117,7 @@ const KYCForm = () => {
       try {
         setLoading(true);
 
-        const response = await apiHelper.get(`/website-variants/${urlId}`);
+       const response = await apiHelper.get(`/website-variants/admin/${urlId}`);
         const variant = response?.data?.data ?? response?.data;
 
         console.log("Website Variant Edit Data:", variant);
