@@ -193,7 +193,7 @@ useEffect(() => {
     try {
       setLoading(true);
 
-      const res = await apiHelper.get("/website-variants");
+    const res = await apiHelper.get("/website-variants?hideVendorAdmin=true");
 
       setVariants(res.data.data || res.data);
     } catch (error) {
