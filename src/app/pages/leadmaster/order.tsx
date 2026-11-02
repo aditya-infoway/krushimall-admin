@@ -357,8 +357,6 @@ const Order: React.FC = () => {
       localStorage.getItem("financialYearId") ||
       localStorage.getItem("financialYearId");
 
- 
-
     if (savedCompanyId) {
       setCompanyId(Number(savedCompanyId));
     }
@@ -376,8 +374,6 @@ const Order: React.FC = () => {
         : Array.isArray(response.data)
           ? response.data
           : [];
-
-    
 
       const cashAccounts = accounts
         .filter((item: any) => {
@@ -410,8 +406,6 @@ const Order: React.FC = () => {
       setCashAccountOptions(cashAccounts);
 
       setBankAccountOptions(bankAccounts);
-
-   
     } catch (error) {
       console.error("GET ACCOUNT ERROR:", error);
     }
@@ -437,65 +431,59 @@ const Order: React.FC = () => {
     getBankers();
     fetchPaymentAccounts();
   }, []);
- const fetchVehicleInventory = async () => {
-  try {
- 
+  const fetchVehicleInventory = async () => {
+    try {
+      const res = await apiHelper.get("/tractor-inventory");
 
-    const res = await apiHelper.get("/tractor-inventory");
+      const data = Array.isArray(res.data?.data)
+        ? res.data.data
+        : Array.isArray(res.data)
+          ? res.data
+          : [];
 
-  
-
-    const data = Array.isArray(res.data?.data)
-      ? res.data.data
-      : Array.isArray(res.data)
-        ? res.data
-        : [];
-
-  
-
-    const verifiedVehicles = data.filter(
-      (item: any) =>
-        String(item.status ?? "").trim().toUpperCase() === "VERIFIED",
-    );
-
-   
-
-    const mappedVehicles = verifiedVehicles
-      .filter(
+      const verifiedVehicles = data.filter(
         (item: any) =>
-          String(item.status ?? "").trim().toLowerCase() !== "booked",
-      )
-      .map((item: any) => ({
-        id: String(item.id ?? item.tractorId ?? item.purchaseItemId),
+          String(item.status ?? "")
+            .trim()
+            .toUpperCase() === "VERIFIED",
+      );
 
-        chassisNo: String(item.chassisNo ?? "").trim(),
+      const mappedVehicles = verifiedVehicles
+        .filter(
+          (item: any) =>
+            String(item.status ?? "")
+              .trim()
+              .toLowerCase() !== "booked",
+        )
+        .map((item: any) => ({
+          id: String(item.id ?? item.tractorId ?? item.purchaseItemId),
 
-        batteryNo: item.batteryNo ?? "",
+          chassisNo: String(item.chassisNo ?? "").trim(),
 
-        keyNo: item.keyNo ?? item.keyNumber ?? "",
+          batteryNo: item.batteryNo ?? "",
 
-        engineNo: item.engineNo ?? item.motorNo ?? "",
+          keyNo: item.keyNo ?? item.keyNumber ?? "",
 
-        inwardDate: item.inwardDate ?? item.inWardDate ?? "",
+          engineNo: item.engineNo ?? item.motorNo ?? "",
 
-        ageDay: item.ageDay ?? item.ageday ?? null,
+          inwardDate: item.inwardDate ?? item.inWardDate ?? "",
 
-        model: item.model ?? item.modelName ?? "",
+          ageDay: item.ageDay ?? item.ageday ?? null,
 
-        variant: item.variant ?? item.variantName ?? "",
+          model: item.model ?? item.modelName ?? "",
 
-        colour: item.colour ?? item.color ?? "",
+          variant: item.variant ?? item.variantName ?? "",
 
-        status: item.status ?? "",
-      }));
+          colour: item.colour ?? item.color ?? "",
 
-   
+          status: item.status ?? "",
+        }));
 
-    setVehicleOptions(mappedVehicles);
-  } catch (error) {
-    console.error("❌ GET TRACTOR INVENTORY ERROR:", error);
-  }
-};
+      setVehicleOptions(mappedVehicles);
+    } catch (error) {
+      console.error("❌ GET TRACTOR INVENTORY ERROR:", error);
+    }
+  };
   const totalValue = 0;
   const fetchFinances = async () => {
     try {
@@ -519,8 +507,6 @@ const Order: React.FC = () => {
         status: item.status ?? "",
       }));
 
-    
-
       setFinanceOptions(mappedFinances);
     } catch (error) {
       console.error("GET FINANCE ERROR:", error);
@@ -540,8 +526,6 @@ const Order: React.FC = () => {
         setLoading(true);
 
         const response = await apiHelper.get(`/leads/${id}`);
-
-       
 
         const lead = response.data?.data || response.data;
         setGrandTotal(String(Number(lead?.quotationGrandTotal) || 0));
@@ -589,9 +573,9 @@ const Order: React.FC = () => {
         // ==========================================
         // SELECTED ACCESSORIES
         // ==========================================
-     const accessories = lead?.hasQuotationHistory
-  ? (lead?.selectedAccessories || [])
-  : (lead?.showroomVariant?.accessories || []);
+        const accessories = lead?.hasQuotationHistory
+          ? lead?.selectedAccessories || []
+          : lead?.showroomVariant?.accessories || [];
         setSelectedAccessories(
           Array.isArray(accessories)
             ? accessories.map((item: any) => {
@@ -983,15 +967,11 @@ const Order: React.FC = () => {
         selectedAccessories,
       };
 
-    
-
       // =====================================
       // CREATE ORDER API
       // =====================================
 
       const response = await apiHelper.post("/orders", payload);
-
-    
 
       // Success toaster
       toast.success(response.data?.message || "Order created successfully");
@@ -1221,9 +1201,9 @@ const Order: React.FC = () => {
                 </label>
 
                 <Select
-                 options={vehicleOptions}
+                  options={vehicleOptions}
                   value={
-                    matchingVehicleOptions.find(
+                    vehicleOptions.find(
                       (vehicle: any) =>
                         String(vehicle.chassisNo) ===
                         String(allotment.chassisNo),
@@ -1239,7 +1219,6 @@ const Order: React.FC = () => {
                   onChange={(vehicle: any) => {
                     setAllotment((prev) => ({
                       ...prev,
-
                       chassisNo: vehicle?.chassisNo ?? "",
                     }));
                   }}
@@ -1254,12 +1233,10 @@ const Order: React.FC = () => {
                       ...base,
                       zIndex: 99999,
                     }),
-
                     menu: (base: any) => ({
                       ...base,
                       overflow: "hidden",
                     }),
-
                     menuList: (base: any) => ({
                       ...base,
                       maxHeight: "300px",

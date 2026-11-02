@@ -11,7 +11,7 @@ import {
 } from "@headlessui/react";
 import { Fragment, useState, useEffect, useRef } from "react";
 import { RiFileExcel2Fill, RiFilePdfFill } from "react-icons/ri";
-import { useForm, useWatch ,Controller } from "react-hook-form";
+import { useForm, useWatch, Controller } from "react-hook-form";
 import {
   XMarkIcon,
   PencilSquareIcon,
@@ -82,24 +82,6 @@ const RTO_TAX_MAP: Record<string, string> = {
   Agriculture: "1",
   Commercial: "10",
 };
-
-const accessoryOptions = [
-  "Alloy Wheels",
-  "Sunroof",
-  "Leather Seats",
-  "Navigation System",
-  "Premium Audio",
-  "Parking Sensors",
-  "Rear Camera",
-  "Ambient Lighting",
-  "Keyless Entry",
-  "Push Start",
-  "Floor Mats",
-  "Roof Rails",
-  "Tow Bar",
-  "Running Boards",
-  "Spoiler",
-];
 
 const statusOptions = [
   { id: "ACTIVE", name: "On" },
@@ -247,7 +229,7 @@ export default function ShowroomVariantPage() {
       modelId: number;
     }[]
   >([]);
-  
+
   const getCreateVariants = async () => {
     try {
       const response = await apiHelper.get("/variant");
@@ -438,10 +420,9 @@ export default function ShowroomVariantPage() {
     Number(rtoCharge || 0) +
     (Number(rtoCharge || 0) * Number(rtoTaxPercent || 0)) / 100
   ).toFixed(2);
-  // Auto-calculate Sales Price
+
+  // Auto-calculate Sales Price (Purchase price is NOT included)
   useEffect(() => {
-    const pur = Number(purPrice || 0);
-    const purTax = Number(purTaxPercent || 0);
     const ex = Number(exShowroomPrice || 0);
     const exTax = Number(exShowroomTaxPercent || 0);
     const ins = Number(insurance || 0);
@@ -449,7 +430,6 @@ export default function ShowroomVariantPage() {
     const rto = Number(rtoCharge || 0);
     const rtoTax = Number(rtoTaxPercent || 0);
 
-    const purTotal = calcWithTax(pur, purTax);
     const exTotal = calcWithTax(ex, exTax);
     const insTotal = calcWithTax(ins, insTax);
     const rtoTotal = calcWithTax(rto, rtoTax);
@@ -458,11 +438,9 @@ export default function ShowroomVariantPage() {
       0,
     );
 
-    const total = purTotal + exTotal + insTotal + rtoTotal + accTotal;
+    const total = exTotal + insTotal + rtoTotal + accTotal;
     setValue("salesPrice", total > 0 ? total.toFixed(2) : "");
   }, [
-    purPrice,
-    purTaxPercent,
     exShowroomPrice,
     exShowroomTaxPercent,
     insurance,
@@ -472,6 +450,7 @@ export default function ShowroomVariantPage() {
     accessories,
     setValue,
   ]);
+
   const filteredVariantOptions = variantOptions
     .filter((variant) => Number(variant.modelId) === Number(selectedModelId))
     .map((variant) => ({
@@ -485,11 +464,6 @@ export default function ShowroomVariantPage() {
 
   const handleOpenAddDrawer = () => {
     setEditId(null);
-
-    const firstModel = models[0] || {
-      id: "",
-      name: "",
-    };
 
     setAccessories([
       {
@@ -538,7 +512,7 @@ export default function ShowroomVariantPage() {
             taxPercent: Number(acc.taxPercent) || 0,
             totalPrice: Number(acc.totalPrice) || 0,
           }))
-        : [{ name: "", price: 0, taxPercent: 0, totalPrice: 0 }],
+        : [{ name: "", qty: 0, price: 0, taxPercent: 0, totalPrice: 0 }],
     );
 
     setAccessoryErrors({});
@@ -755,17 +729,17 @@ export default function ShowroomVariantPage() {
     console.log(errors);
   }, [errors]);
 
- const filteredData = variants.filter((item) => {
-  const matchesSearch =
-    item.variantName?.toLowerCase().includes(search.toLowerCase()) ||
-    item.model?.toLowerCase().includes(search.toLowerCase());
-  const matchesModel =
-    selectedModelFilter === "All" || item.model === selectedModelFilter;
-  const matchesVariant =
-    selectedVariantFilter === "All" ||
-    item.variantName === selectedVariantFilter; // NEW
-  return matchesSearch && matchesModel && matchesVariant;
-});
+  const filteredData = variants.filter((item) => {
+    const matchesSearch =
+      item.variantName?.toLowerCase().includes(search.toLowerCase()) ||
+      item.model?.toLowerCase().includes(search.toLowerCase());
+    const matchesModel =
+      selectedModelFilter === "All" || item.model === selectedModelFilter;
+    const matchesVariant =
+      selectedVariantFilter === "All" ||
+      item.variantName === selectedVariantFilter;
+    return matchesSearch && matchesModel && matchesVariant;
+  });
 
   const totalItems = filteredData.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
@@ -778,20 +752,20 @@ export default function ShowroomVariantPage() {
     { id: "All", name: "All Models" },
     ...models.map((m) => ({ id: m.name, name: m.name })),
   ];
-const variantFilterOptions = [
-  { id: "All", name: "All Variants" },
-  ...Array.from(
-    new Set(
-      variants
-        .filter(
-          (v) =>
-            selectedModelFilter === "All" || v.model === selectedModelFilter,
-        )
-        .map((v) => v.variantName)
-        .filter(Boolean),
-    ),
-  ).map((name) => ({ id: name, name })),
-];
+  const variantFilterOptions = [
+    { id: "All", name: "All Variants" },
+    ...Array.from(
+      new Set(
+        variants
+          .filter(
+            (v) =>
+              selectedModelFilter === "All" || v.model === selectedModelFilter,
+          )
+          .map((v) => v.variantName)
+          .filter(Boolean),
+      ),
+    ).map((name) => ({ id: name, name })),
+  ];
   const isAllPageSelected =
     currentItems.length > 0 &&
     currentItems.every((item) => selectedIds.includes(item.id));
@@ -837,52 +811,52 @@ const variantFilterOptions = [
         />
       </div>
 
-      {/* Filters - Only Model filter */}
-      {/* Filters - Only Model filter */}
+      {/* Filters - Model + Variant */}
       {showFilterBar && (
-  <div className="dark:bg-dark-700 dark:border-dark-500 rounded-xl border border-gray-200 bg-white p-4">
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-      <div className="flex flex-col gap-1">
-        <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
-          Filter by Model
-        </span>
-        <Listbox
-          data={modelFilterOptions}
-          value={
-            modelFilterOptions.find((o) => o.id === selectedModelFilter) ||
-            modelFilterOptions[0]
-          }
-          onChange={(opt: any) => {
-            setSelectedModelFilter(opt.id);
-            setSelectedVariantFilter("All"); // reset variant when model changes
-            setCurrentPage(1);
-          }}
-          displayField="name"
-        />
-      </div>
+        <div className="dark:bg-dark-700 dark:border-dark-500 rounded-xl border border-gray-200 bg-white p-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="flex flex-col gap-1">
+              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
+                Filter by Model
+              </span>
+              <Listbox
+                data={modelFilterOptions}
+                value={
+                  modelFilterOptions.find(
+                    (o) => o.id === selectedModelFilter,
+                  ) || modelFilterOptions[0]
+                }
+                onChange={(opt: any) => {
+                  setSelectedModelFilter(opt.id);
+                  setSelectedVariantFilter("All"); // reset variant when model changes
+                  setCurrentPage(1);
+                }}
+                displayField="name"
+              />
+            </div>
 
-      {/* NEW: Variant filter, dependent on selected model */}
-      <div className="flex flex-col gap-1">
-        <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
-          Filter by Variant
-        </span>
-        <Listbox
-          data={variantFilterOptions}
-          value={
-            variantFilterOptions.find(
-              (o) => o.id === selectedVariantFilter,
-            ) || variantFilterOptions[0]
-          }
-          onChange={(opt: any) => {
-            setSelectedVariantFilter(opt.id);
-            setCurrentPage(1);
-          }}
-          displayField="name"
-        />
-      </div>
-    </div>
-  </div>
-)}
+            {/* Variant filter, dependent on selected model */}
+            <div className="flex flex-col gap-1">
+              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
+                Filter by Variant
+              </span>
+              <Listbox
+                data={variantFilterOptions}
+                value={
+                  variantFilterOptions.find(
+                    (o) => o.id === selectedVariantFilter,
+                  ) || variantFilterOptions[0]
+                }
+                onChange={(opt: any) => {
+                  setSelectedVariantFilter(opt.id);
+                  setCurrentPage(1);
+                }}
+                displayField="name"
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Table - Removed Status column */}
       <div className="dark:bg-dark-800 dark:border-dark-700 rounded-xl border border-gray-200 bg-white shadow-sm">
@@ -1136,38 +1110,38 @@ const variantFilterOptions = [
                       Model
                     </span>
                     <div className="w-full">
-                     <Controller
-  name="modelId"
-  control={control}
-  rules={{
-    validate: (value) =>
-      value && Number(value) > 0 || "Model is required",
-  }}
-  render={({ field, fieldState }) => (
-    <Combobox
-      data={modelOptions}
-      value={
-        modelOptions.find(
-          (option) => String(option.id) === String(field.value)
-        ) || null
-      }
-      error={fieldState.error?.message}
-      displayField="name"
-      placeholder="Search or select model"
-      onChange={(option: any) => {
-        if (!option) return;
+                      <Controller
+                        name="modelId"
+                        control={control}
+                        rules={{
+                          validate: (value) =>
+                            (value && Number(value) > 0) || "Model is required",
+                        }}
+                        render={({ field, fieldState }) => (
+                          <Combobox
+                            data={modelOptions}
+                            value={
+                              modelOptions.find(
+                                (option) =>
+                                  String(option.id) === String(field.value),
+                              ) || null
+                            }
+                            error={fieldState.error?.message}
+                            displayField="name"
+                            placeholder="Search or select model"
+                            onChange={(option: any) => {
+                              if (!option) return;
 
-        field.onChange(option.id);
+                              field.onChange(option.id);
 
-        setValue("modelName", option.name);
+                              setValue("modelName", option.name);
 
-        setValue("variantId", "");
-        setValue("variantName", "");
-      }}
-    />
-  )}
-/>
-                    
+                              setValue("variantId", "");
+                              setValue("variantName", "");
+                            }}
+                          />
+                        )}
+                      />
                     </div>
                   </div>
 
@@ -1179,38 +1153,38 @@ const variantFilterOptions = [
                     </label>
 
                     <Controller
-  name="variantId"
-  control={control}
-  rules={{
-    validate: (value) =>
-      value && Number(value) > 0 || "Variant is required",
-  }}
-  render={({ field, fieldState }) => (
-    <Combobox
-      data={filteredVariantOptions}
-      value={
-        filteredVariantOptions.find(
-          (option) => String(option.id) === String(field.value)
-        ) || null
-      }
-      error={fieldState.error?.message}
-      displayField="name"
-      placeholder={
-        selectedModelId
-          ? "Search or select variant"
-          : "Select model first"
-      }
-      onChange={(option: any) => {
-        if (!option) return;
+                      name="variantId"
+                      control={control}
+                      rules={{
+                        validate: (value) =>
+                          (value && Number(value) > 0) || "Variant is required",
+                      }}
+                      render={({ field, fieldState }) => (
+                        <Combobox
+                          data={filteredVariantOptions}
+                          value={
+                            filteredVariantOptions.find(
+                              (option) =>
+                                String(option.id) === String(field.value),
+                            ) || null
+                          }
+                          error={fieldState.error?.message}
+                          displayField="name"
+                          placeholder={
+                            selectedModelId
+                              ? "Search or select variant"
+                              : "Select model first"
+                          }
+                          onChange={(option: any) => {
+                            if (!option) return;
 
-        field.onChange(option.id);
+                            field.onChange(option.id);
 
-        setValue("variantName", option.name);
-      }}
-    />
-  )}
-/>
-                 
+                            setValue("variantName", option.name);
+                          }}
+                        />
+                      )}
+                    />
                   </div>
                   {/* Pur Price + Tax */}
                   <div className="grid grid-cols-2 gap-4">
