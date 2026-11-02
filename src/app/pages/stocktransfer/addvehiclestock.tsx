@@ -116,69 +116,27 @@ modelName?: string;
 //   { label: "CH-2024-005 - Tata Nexon", value: "CH-2024-005" },
 // ];
 
-const customSelectStyles = {
-  control: (provided: any, state: any) => ({
-    ...provided,
-    backgroundColor: "transparent",
-    borderColor: state.isFocused
-      ? "var(--color-primary-600)"
-      : "var(--color-gray-700)",
-    boxShadow: state.isFocused ? "0 0 0 1px var(--color-primary-600)" : "none",
-    minHeight: "42px",
-    "&:hover": {
-      borderColor: "var(--color-primary-500)",
-    },
-  }),
-  valueContainer: (provided: any) => ({
-    ...provided,
-    color: "var(--color-dark-100)",
-  }),
-  singleValue: (provided: any) => ({
-    ...provided,
-    color: "var(--color-dark-100)",
-  }),
-  input: (provided: any) => ({
-    ...provided,
-    color: "var(--color-dark-100)",
-  }),
-  placeholder: (provided: any) => ({
-    ...provided,
-    color: "var(--color-gray-400)",
-  }),
-  menu: (provided: any) => ({
-    ...provided,
-    backgroundColor: "var(--color-dark-700)",
-    border: "1px solid var(--color-primary-600)",
-    borderRadius: "12px",
-    overflow: "hidden",
-  }),
-  menuList: (provided: any) => ({
-    ...provided,
-    padding: 0,
-  }),
-  option: (provided: any, state: any) => ({
-    ...provided,
-    backgroundColor: state.isSelected
-      ? "var(--color-primary-600)" // <-- this causes blue background
-      : state.isFocused
-        ? "var(--color-primary-500)"
-        : "var(--color-dark-700)",
-    color: "#fff",
-    cursor: "pointer",
-  }),
-  dropdownIndicator: (provided: any, state: any) => ({
-    ...provided,
-    color: state.isFocused
-      ? "var(--color-primary-600)"
-      : "var(--color-gray-400)",
-  }),
-  clearIndicator: (provided: any) => ({
-    ...provided,
-    color: "var(--color-gray-400)",
-  }),
-  indicatorSeparator: () => ({
-    display: "none",
-  }),
+// Theme-aware react-select styling (light + dark) via Tailwind classes.
+// Use with the `unstyled` prop on <Select />.
+const selectClassNames = {
+  control: ({ isFocused }: any) =>
+    `min-h-[42px] rounded-lg border bg-white px-1 text-sm dark:bg-transparent ${
+      isFocused
+        ? "border-primary-600 ring-1 ring-primary-600"
+        : "dark:border-dark-500 border-gray-300 hover:border-primary-500"
+    }`,
+  valueContainer: () => "gap-1 px-2 py-1",
+  singleValue: () => "text-gray-900 dark:text-dark-100",
+  placeholder: () => "text-gray-400",
+  input: () => "text-gray-900 dark:text-dark-100",
+  menu: () =>
+    "dark:bg-dark-700 dark:border-dark-500 absolute z-50 mt-1 w-full overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg",
+  menuList: () => "p-0",
+  noOptionsMessage: () => "py-3 text-sm text-gray-400",
+  dropdownIndicator: ({ isFocused }: any) =>
+    `px-2 ${isFocused ? "text-primary-600" : "text-gray-400"}`,
+  clearIndicator: () => "px-2 text-gray-400 hover:text-red-500",
+  indicatorSeparator: () => "hidden",
 };
 
 const mockData: any = {
@@ -320,8 +278,10 @@ const VehicleOption = (props: any) => {
     <div
       ref={innerRef}
       {...innerProps}
-      className={`flex cursor-pointer items-center justify-between border-b px-4 py-2 last:border-b-0 ${
-        isFocused ? "bg-primary-600 text-white" : "bg-white text-black"
+      className={`flex cursor-pointer items-center justify-between border-b border-gray-200 px-4 py-2 last:border-b-0 dark:border-dark-500 ${
+        isFocused
+          ? "bg-primary-600 text-white"
+          : "bg-white text-gray-900 dark:bg-dark-700 dark:text-dark-100"
       }`}
     >
       <div className="text-xs leading-5">
@@ -1055,11 +1015,12 @@ const handleSave = async () => {
             rules={{ required: "Chassis number is required" }}
             render={({ field }) => (
               <Select
+                unstyled
                 options={vehicleOptions}
                 components={{ Option: VehicleOption }}
                 getOptionLabel={(o: any) => o.chassisNo}
                 getOptionValue={(o: any) => o.chassisNo}
-                styles={customSelectStyles}
+                classNames={selectClassNames}
                 classNamePrefix="react-select"
                 placeholder="Select Vehicle"
                 value={

@@ -73,6 +73,7 @@ interface OptionType {
   id: number;
   name: string;
   modelId?: number;
+  variantId?: number;
 }
 
 // ─── Helper Functions ──────────────────────────────────────────────────────
@@ -128,11 +129,11 @@ const Colour = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [selectedStatusFilter, setSelectedStatusFilter] = useState("All");
   const [loading, setLoading] = useState(false);
-const [selectedModelFilter, setSelectedModelFilter] = useState("All");
-const [selectedVariantFilter, setSelectedVariantFilter] = useState("All");
-const [selectedShowroomVariantFilter, setSelectedShowroomVariantFilter] =
-  useState("All");
-const [selectedColourFilter, setSelectedColourFilter] = useState("All");
+  const [selectedModelFilter, setSelectedModelFilter] = useState("All");
+  const [selectedVariantFilter, setSelectedVariantFilter] = useState("All");
+  const [selectedShowroomVariantFilter, setSelectedShowroomVariantFilter] =
+    useState("All");
+  const [selectedColourFilter, setSelectedColourFilter] = useState("All");
   // ─── Dynamic Data from API ─────────────────────────────────────────────
   const [models, setModels] = useState<OptionType[]>([]);
   const [variants, setVariants] = useState<OptionType[]>([]);
@@ -141,20 +142,22 @@ const [selectedColourFilter, setSelectedColourFilter] = useState("All");
   const [filteredShowroomVariants, setFilteredShowroomVariants] = useState<
     OptionType[]
   >([]);
-const [filteredVariantFilterOptions, setFilteredVariantFilterOptions] =
-  useState<OptionType[]>([]);
+  const [filteredVariantFilterOptions, setFilteredVariantFilterOptions] =
+    useState<OptionType[]>([]);
 
-const [
-  filteredShowroomVariantFilterOptions,
-  setFilteredShowroomVariantFilterOptions,
-] = useState<OptionType[]>([]);
-const [filteredColourFilterOptions, setFilteredColourFilterOptions] =
-  useState<{ id: string; name: string }[]>([]);
+  const [
+    filteredShowroomVariantFilterOptions,
+    setFilteredShowroomVariantFilterOptions,
+  ] = useState<OptionType[]>([]);
+  const [filteredColourFilterOptions, setFilteredColourFilterOptions] =
+    useState<{ id: string; name: string }[]>([]);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-const [confirmState, setConfirmState] = useState<"pending" | "success" | "error">("pending");
-const [confirmLoading, setConfirmLoading] = useState(false);
-const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
-const [isBulkDelete, setIsBulkDelete] = useState(false);
+  const [confirmState, setConfirmState] = useState<
+    "pending" | "success" | "error"
+  >("pending");
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+  const [isBulkDelete, setIsBulkDelete] = useState(false);
   // ─── Form State ─────────────────────────────────────────────────────────
   const [formData, setFormData] = useState<FormValues>({
     model: "",
@@ -182,44 +185,44 @@ const [isBulkDelete, setIsBulkDelete] = useState(false);
   });
 
   // ─── Fetch Models ──────────────────────────────────────────────────────
- const modelFilterOptions = [
-  { id: "All", name: "All Models" },
-  ...models.map((m) => ({
-    id: String(m.id),
-    name: m.name,
-  })),
-];
+  const modelFilterOptions = [
+    { id: "All", name: "All Models" },
+    ...models.map((m) => ({
+      id: String(m.id),
+      name: m.name,
+    })),
+  ];
 
-const variantFilterOptions = [
-  { id: "All", name: "All Variants" },
-  ...variants.map((v) => ({
-    id: String(v.id),
-    name: v.name,
-  })),
-];
+  const variantFilterOptions = [
+    { id: "All", name: "All Variants" },
+    ...variants.map((v) => ({
+      id: String(v.id),
+      name: v.name,
+    })),
+  ];
 
-const showroomVariantFilterOptions = [
-  { id: "All", name: "All Showroom Variants" },
-  ...showroomVariants.map((v) => ({
-    id: String(v.id),
-    name: v.name,
-  })),
-];
+  const showroomVariantFilterOptions = [
+    { id: "All", name: "All Showroom Variants" },
+    ...showroomVariants.map((v) => ({
+      id: String(v.id),
+      name: v.name,
+    })),
+  ];
 
-const colourFilterOptions = [
-  { id: "All", name: "All Colours" },
-  ...Array.from(
-    new Map(
-      colours.map((c) => [
-        c.colourName,
-        {
-          id: c.colourName,
-          name: c.colourName,
-        },
-      ])
-    ).values()
-  ),
-];
+  const colourFilterOptions = [
+    { id: "All", name: "All Colours" },
+    ...Array.from(
+      new Map(
+        colours.map((c) => [
+          c.colourName,
+          {
+            id: c.colourName,
+            name: c.colourName,
+          },
+        ]),
+      ).values(),
+    ),
+  ];
 
   const getShowroomVariants = async () => {
     try {
@@ -232,6 +235,7 @@ const colourFilterOptions = [
           id: item.id,
           name: item.variantName,
           modelId: item.modelId,
+          variantId: item.variantId,
         })),
       );
     } catch (error) {
@@ -296,23 +300,27 @@ const colourFilterOptions = [
       setLoading(false);
     }
   };
-   useEffect(() => {
+  useEffect(() => {
     getModels();
     getVariants();
     getColours();
     getShowroomVariants();
   }, []);
+  // ─── Filter Showroom Variants by Model (and by Variant, if selected) ──
   useEffect(() => {
     if (formData.modelId) {
       setFilteredShowroomVariants(
         showroomVariants.filter(
-          (item) => item.modelId === Number(formData.modelId),
+          (item) =>
+            item.modelId === Number(formData.modelId) &&
+            (!formData.variantId ||
+              item.variantId === Number(formData.variantId)),
         ),
       );
     } else {
       setFilteredShowroomVariants([]);
     }
-  }, [formData.modelId, showroomVariants]);
+  }, [formData.modelId, formData.variantId, showroomVariants]);
   // ─── Filter Variants by Model ─────────────────────────────────────────
   useEffect(() => {
     if (formData.modelId) {
@@ -397,46 +405,50 @@ const colourFilterOptions = [
     setShowDrawer(true);
   };
 
-const handleDelete = (id: number) => {
-  setDeleteTargetId(id);
-  setIsBulkDelete(false);
-  setConfirmState("pending");
-  setShowConfirmModal(true);
-};
+  const handleDelete = (id: number) => {
+    setDeleteTargetId(id);
+    setIsBulkDelete(false);
+    setConfirmState("pending");
+    setShowConfirmModal(true);
+  };
 
- const handleBulkDelete = () => {
-  setIsBulkDelete(true);
-  setConfirmState("pending");
-  setShowConfirmModal(true);
-};
+  const handleBulkDelete = () => {
+    setIsBulkDelete(true);
+    setConfirmState("pending");
+    setShowConfirmModal(true);
+  };
 
-const performDelete = async () => {
-  setConfirmLoading(true);
-  try {
-    if (isBulkDelete) {
-      await Promise.all(selectedIds.map((id) => apiHelper.delete(`/colours/${id}`)));
-      toast.success(`${selectedIds.length} colours deleted successfully!`);
-      await getColours();
-      setSelectedIds([]);
-      setCurrentPage(1);
-      setConfirmState("success");
-    } else {
-      if (deleteTargetId === null) return;
-      await apiHelper.delete(`/colours/${deleteTargetId}`);
-      toast.success("Colour deleted successfully!");
-      await getColours();
-      setDeleteTargetId(null);
-      setConfirmState("success");
+  const performDelete = async () => {
+    setConfirmLoading(true);
+    try {
+      if (isBulkDelete) {
+        await Promise.all(
+          selectedIds.map((id) => apiHelper.delete(`/colours/${id}`)),
+        );
+        toast.success(`${selectedIds.length} colours deleted successfully!`);
+        await getColours();
+        setSelectedIds([]);
+        setCurrentPage(1);
+        setConfirmState("success");
+      } else {
+        if (deleteTargetId === null) return;
+        await apiHelper.delete(`/colours/${deleteTargetId}`);
+        toast.success("Colour deleted successfully!");
+        await getColours();
+        setDeleteTargetId(null);
+        setConfirmState("success");
+      }
+      setTimeout(() => setShowConfirmModal(false), 1500);
+    } catch (error: any) {
+      console.error("Delete failed:", error);
+      setConfirmState("error");
+      toast.error(
+        error.response?.data?.message || "Failed to delete. Please try again.",
+      );
+    } finally {
+      setConfirmLoading(false);
     }
-    setTimeout(() => setShowConfirmModal(false), 1500);
-  } catch (error: any) {
-    console.error("Delete failed:", error);
-    setConfirmState("error");
-    toast.error(error.response?.data?.message || "Failed to delete. Please try again.");
-  } finally {
-    setConfirmLoading(false);
-  }
-};
+  };
 
   const handleToggleStatus = async (id: number) => {
     const colour = colours.find((item) => item.id === id);
@@ -523,7 +535,7 @@ const performDelete = async () => {
 
     if (!formData.modelId) newErrors.model = "Model is required";
 
-    // Either Variant OR Showroom Variant required
+    // At least one of Variant / Showroom Variant is required (both allowed)
     if (!formData.variantId && !formData.showroomVariantId) {
       newErrors.variant = "Select Variant or Showroom Variant";
     }
@@ -538,74 +550,77 @@ const performDelete = async () => {
     return Object.keys(newErrors).length === 0;
   };
   const handleSave = async () => {
-  if (!validate()) return;
+    if (!validate()) return;
 
-  try {
-    const payload = {
-      modelId: Number(formData.modelId),
-      variantId: Number(formData.variantId),
-      showroomVariantId: Number(formData.showroomVariantId),
-      colourName: formData.colourName,
-      colourCode: formData.colourCode,
-      status: formData.status,
-    };
+    try {
+      const payload = {
+        modelId: Number(formData.modelId),
+        variantId: formData.variantId ? Number(formData.variantId) : null,
+        showroomVariantId: formData.showroomVariantId
+          ? Number(formData.showroomVariantId)
+          : null,
+        colourName: formData.colourName,
+        colourCode: formData.colourCode,
+        status: formData.status,
+      };
 
-    if (editId) {
-      await apiHelper.put(`/colours/${editId}`, payload);
-      toast.success("Colour updated successfully!");
-    } else {
-      await apiHelper.post("/colours", payload);
-      toast.success("Colour created successfully!");
+      if (editId) {
+        await apiHelper.put(`/colours/${editId}`, payload);
+        toast.success("Colour updated successfully!");
+      } else {
+        await apiHelper.post("/colours", payload);
+        toast.success("Colour created successfully!");
+      }
+
+      await getColours();
+      setShowDrawer(false);
+    } catch (error: any) {
+      console.error("Save failed:", error);
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to save colour. Please try again.",
+      );
     }
-
-    await getColours();
-    setShowDrawer(false);
-  } catch (error: any) {
-    console.error("Save failed:", error);
-    toast.error(error.response?.data?.message || "Failed to save colour. Please try again.");
-  }
-};
+  };
 
   // ─── Filter Data ────────────────────────────────────────────────────────
-const filteredData = colours.filter((item) => {
-  const searchText = search.toLowerCase();
+  const filteredData = colours.filter((item) => {
+    const searchText = search.toLowerCase();
 
-  const matchesSearch =
-    item.colourName.toLowerCase().includes(searchText) ||
-    item.model?.modelName?.toLowerCase().includes(searchText) ||
-    item.variant?.variantName?.toLowerCase().includes(searchText) ||
-    item.showroomVariant?.variantName?.toLowerCase().includes(searchText);
+    const matchesSearch =
+      item.colourName.toLowerCase().includes(searchText) ||
+      item.model?.modelName?.toLowerCase().includes(searchText) ||
+      item.variant?.variantName?.toLowerCase().includes(searchText) ||
+      item.showroomVariant?.variantName?.toLowerCase().includes(searchText);
 
-  const matchesModel =
-    selectedModelFilter === "All" ||
-    String(item.modelId) === selectedModelFilter;
+    const matchesModel =
+      selectedModelFilter === "All" ||
+      String(item.modelId) === selectedModelFilter;
 
-  const matchesVariant =
-    selectedVariantFilter === "All" ||
-    String(item.variantId) === selectedVariantFilter;
+    const matchesVariant =
+      selectedVariantFilter === "All" ||
+      String(item.variantId) === selectedVariantFilter;
 
-  const matchesShowroomVariant =
-    selectedShowroomVariantFilter === "All" ||
-    String(item.showroomVariantId) ===
-      selectedShowroomVariantFilter;
+    const matchesShowroomVariant =
+      selectedShowroomVariantFilter === "All" ||
+      String(item.showroomVariantId) === selectedShowroomVariantFilter;
 
-  const matchesColour =
-    selectedColourFilter === "All" ||
-    item.colourName === selectedColourFilter;
+    const matchesColour =
+      selectedColourFilter === "All" ||
+      item.colourName === selectedColourFilter;
 
-  const matchesStatus =
-    selectedStatusFilter === "All" ||
-    item.status === selectedStatusFilter;
+    const matchesStatus =
+      selectedStatusFilter === "All" || item.status === selectedStatusFilter;
 
-  return (
-    matchesSearch &&
-    matchesModel &&
-    matchesVariant &&
-    matchesShowroomVariant &&
-    matchesColour &&
-    matchesStatus
-  );
-});
+    return (
+      matchesSearch &&
+      matchesModel &&
+      matchesVariant &&
+      matchesShowroomVariant &&
+      matchesColour &&
+      matchesStatus
+    );
+  });
 
   const totalItems = filteredData.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
@@ -648,47 +663,47 @@ const filteredData = colours.filter((item) => {
           </p>
         </div>
 
-       <div className="flex flex-wrap items-center justify-between gap-2 md:flex-nowrap">
-  {/* Left side - Filter and icon */}
-  <div className="flex items-center gap-2">
-    <button
-      type="button"
-      onClick={() => setShowFilterBar(!showFilterBar)}
-      className={`inline-flex items-center gap-1.5 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
-        showFilterBar
-          ? "bg-primary-50 border-primary-200 text-primary-600 dark:bg-dark-600 dark:border-dark-500 dark:text-white"
-          : "dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
-      }`}
-    >
-      <FunnelIcon className="size-4.5" />
-      <span className="hidden sm:inline">Filter</span>
-    </button>
+        <div className="flex flex-wrap items-center justify-between gap-2 md:flex-nowrap">
+          {/* Left side - Filter and icon */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowFilterBar(!showFilterBar)}
+              className={`inline-flex items-center gap-1.5 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
+                showFilterBar
+                  ? "bg-primary-50 border-primary-200 text-primary-600 dark:bg-dark-600 dark:border-dark-500 dark:text-white"
+                  : "dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              <FunnelIcon className="size-4.5" />
+              <span className="hidden sm:inline">Filter</span>
+            </button>
 
-    <button
-      type="button"
-      className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
-    >
-      <RiFileExcel2Fill className="text-lg text-green-500" />
-    </button>
+            <button
+              type="button"
+              className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            >
+              <RiFileExcel2Fill className="text-lg text-green-500" />
+            </button>
 
-    <button
-      type="button"
-      className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
-    >
-      <RiFilePdfFill className="text-lg text-red-500" />
-    </button>
-  </div>
+            <button
+              type="button"
+              className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            >
+              <RiFilePdfFill className="text-lg text-red-500" />
+            </button>
+          </div>
 
-  {/* Right side - Add Colour button */}
-  <Button
-    color="primary"
-    onClick={handleOpenAddDrawer}
-    className="whitespace-nowrap"
-  >
-    <PlusIcon className="mr-1.5 size-4.5" />
-    Add Colour
-  </Button>
-</div>
+          {/* Right side - Add Colour button */}
+          <Button
+            color="primary"
+            onClick={handleOpenAddDrawer}
+            className="whitespace-nowrap"
+          >
+            <PlusIcon className="mr-1.5 size-4.5" />
+            Add Colour
+          </Button>
+        </div>
       </div>
 
       {/* Search */}
@@ -709,173 +724,176 @@ const filteredData = colours.filter((item) => {
       {/* Filter Bar */}
       {showFilterBar && (
         <div className="dark:bg-dark-700 dark:border-dark-500 animate-in fade-in slide-in-from-top-2 rounded-xl border border-gray-200 bg-white p-4 transition-all duration-150">
-         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            {/* Model */}
+            <div className="flex flex-col gap-1">
+              <span className="text-sm font-medium">Model</span>
+              <Combobox
+                data={modelFilterOptions}
+                displayField="name"
+                value={
+                  modelFilterOptions.find(
+                    (o) => o.id === selectedModelFilter,
+                  ) || modelFilterOptions[0]
+                }
+                placeholder="All Models"
+                searchFields={["name"]}
+                onChange={(opt: any) => {
+                  const modelId = opt?.id || "All";
 
-  {/* Model */}
-  <div className="flex flex-col gap-1">
-    <span className="text-sm font-medium">Model</span>
-    <Combobox
-      data={modelFilterOptions}
-      displayField="name"
-      value={
-        modelFilterOptions.find(
-          (o) => o.id === selectedModelFilter
-        ) || modelFilterOptions[0]
-      }
-      placeholder="All Models"
-      searchFields={["name"]}
-     onChange={(opt: any) => {
-  const modelId = opt?.id || "All";
+                  setSelectedModelFilter(modelId);
+                  setSelectedVariantFilter("All");
+                  setSelectedShowroomVariantFilter("All");
+                  setCurrentPage(1);
 
-  setSelectedModelFilter(modelId);
-  setSelectedVariantFilter("All");
-  setSelectedShowroomVariantFilter("All");
-  setCurrentPage(1);
+                  if (modelId === "All") {
+                    setFilteredVariantFilterOptions(variants);
+                    setFilteredShowroomVariantFilterOptions(showroomVariants);
+                    return;
+                  }
 
-  if (modelId === "All") {
-    setFilteredVariantFilterOptions(variants);
-    setFilteredShowroomVariantFilterOptions(showroomVariants);
-    return;
-  }
+                  setFilteredVariantFilterOptions(
+                    variants.filter((v) => String(v.modelId) === String(modelId)),
+                  );
 
-  setFilteredVariantFilterOptions(
-    variants.filter(v => String(v.modelId) === String(modelId))
-  );
+                  setFilteredShowroomVariantFilterOptions(
+                    showroomVariants.filter(
+                      (v) => String(v.modelId) === String(modelId),
+                    ),
+                  );
+                }}
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <span className="text-sm font-medium">Variant</span>
+              <Combobox
+                data={[
+                  { id: "All", name: "All Variants" },
+                  ...filteredVariantFilterOptions.map((v) => ({
+                    id: String(v.id),
+                    name: v.name,
+                  })),
+                ]}
+                displayField="name"
+                value={
+                  variantFilterOptions.find(
+                    (o) => o.id === selectedVariantFilter,
+                  ) || variantFilterOptions[0]
+                }
+                placeholder="All Variants"
+                searchFields={["name"]}
+                onChange={(opt: any) => {
+                  setSelectedVariantFilter(opt.id);
+                  setSelectedShowroomVariantFilter("All");
+                  setSelectedColourFilter("All");
 
-  setFilteredShowroomVariantFilterOptions(
-    showroomVariants.filter(v => String(v.modelId) === String(modelId))
-  );
-}}
-    />
-  </div>
- <div className="flex flex-col gap-1">
-    <span className="text-sm font-medium">Variant</span>
-    <Combobox
-     data={[
-  { id: "All", name: "All Variants" },
-  ...filteredVariantFilterOptions.map(v => ({
-    id: String(v.id),
-    name: v.name,
-  })),
-]}
-      displayField="name"
-      value={
-        variantFilterOptions.find(
-          (o) => o.id === selectedVariantFilter
-        ) || variantFilterOptions[0]
-      }
-      placeholder="All Variants"
-      searchFields={["name"]}
-     onChange={(opt:any)=>{
-    setSelectedVariantFilter(opt.id);
-    setSelectedShowroomVariantFilter("All");
-    setSelectedColourFilter("All");
+                  if (opt.id === "All") {
+                    return;
+                  }
 
-    if(opt.id==="All"){
-        return;
-    }
+                  const colourList = colours
+                    .filter((c) => String(c.variantId) === String(opt.id))
+                    .map((c) => ({
+                      id: c.colourName,
+                      name: c.colourName,
+                    }));
 
-    const colourList = colours
-        .filter(c=>String(c.variantId)===String(opt.id))
-        .map(c=>({
-            id:c.colourName,
-            name:c.colourName
-        }));
+                  setFilteredColourFilterOptions(
+                    Array.from(
+                      new Map(colourList.map((c) => [c.id, c])).values(),
+                    ),
+                  );
+                }}
+              />
+            </div>
+            {/* Showroom Variant */}
+            <div className="flex flex-col gap-1">
+              <span className="text-sm font-medium">Showroom Variant</span>
+              <Combobox
+                data={[
+                  { id: "All", name: "All Showroom Variants" },
+                  ...filteredShowroomVariantFilterOptions.map((v) => ({
+                    id: String(v.id),
+                    name: v.name,
+                  })),
+                ]}
+                displayField="name"
+                value={
+                  showroomVariantFilterOptions.find(
+                    (o) => o.id === selectedShowroomVariantFilter,
+                  ) || showroomVariantFilterOptions[0]
+                }
+                placeholder="All Showroom Variants"
+                searchFields={["name"]}
+                onChange={(opt: any) => {
+                  setSelectedShowroomVariantFilter(opt.id);
+                  setSelectedVariantFilter("All");
+                  setSelectedColourFilter("All");
 
-    setFilteredColourFilterOptions(
-        Array.from(new Map(colourList.map(c=>[c.id,c])).values())
-    );
-}}
-    />
-  </div>
-  {/* Showroom Variant */}
-  <div className="flex flex-col gap-1">
-    <span className="text-sm font-medium">Showroom Variant</span>
-    <Combobox
-   data={[
-  { id: "All", name: "All Showroom Variants" },
-  ...filteredShowroomVariantFilterOptions.map(v => ({
-    id: String(v.id),
-    name: v.name,
-  })),
-]}
-      displayField="name"
-      value={
-        showroomVariantFilterOptions.find(
-          (o) => o.id === selectedShowroomVariantFilter
-        ) || showroomVariantFilterOptions[0]
-      }
-      placeholder="All Showroom Variants"
-      searchFields={["name"]}
-    onChange={(opt:any)=>{
-    setSelectedShowroomVariantFilter(opt.id);
-    setSelectedVariantFilter("All");
-    setSelectedColourFilter("All");
+                  if (opt.id === "All") {
+                    return;
+                  }
 
-    if(opt.id==="All"){
-        return;
-    }
+                  const colourList = colours
+                    .filter(
+                      (c) => String(c.showroomVariantId) === String(opt.id),
+                    )
+                    .map((c) => ({
+                      id: c.colourName,
+                      name: c.colourName,
+                    }));
 
-    const colourList = colours
-        .filter(c=>String(c.showroomVariantId)===String(opt.id))
-        .map(c=>({
-            id:c.colourName,
-            name:c.colourName
-        }));
+                  setFilteredColourFilterOptions(
+                    Array.from(
+                      new Map(colourList.map((c) => [c.id, c])).values(),
+                    ),
+                  );
+                }}
+              />
+            </div>
 
-    setFilteredColourFilterOptions(
-        Array.from(new Map(colourList.map(c=>[c.id,c])).values())
-    );
-}}
-    />
-  </div>
+            {/* Colour */}
+            <div className="flex flex-col gap-1">
+              <span className="text-sm font-medium">Colour</span>
+              <Combobox
+                data={[
+                  { id: "All", name: "All Colours" },
+                  ...filteredColourFilterOptions,
+                ]}
+                displayField="name"
+                value={
+                  colourFilterOptions.find(
+                    (o) => o.id === selectedColourFilter,
+                  ) || colourFilterOptions[0]
+                }
+                placeholder="All Colours"
+                searchFields={["name"]}
+                onChange={(opt: any) => {
+                  setSelectedColourFilter(opt?.id || "All");
+                  setCurrentPage(1);
+                }}
+              />
+            </div>
 
-  {/* Variant */}
- 
-
-  {/* Colour */}
-  <div className="flex flex-col gap-1">
-    <span className="text-sm font-medium">Colour</span>
-    <Combobox
-      data={[
-    { id:"All", name:"All Colours" },
-    ...filteredColourFilterOptions
-]}
-      displayField="name"
-      value={
-        colourFilterOptions.find(
-          (o) => o.id === selectedColourFilter
-        ) || colourFilterOptions[0]
-      }
-      placeholder="All Colours"
-      searchFields={["name"]}
-      onChange={(opt: any) => {
-        setSelectedColourFilter(opt?.id || "All");
-        setCurrentPage(1);
-      }}
-    />
-  </div>
-
-  {/* Status */}
-  <div className="flex flex-col gap-1">
-    <span className="text-sm font-medium">Status</span>
-    <Listbox
-      data={statusFilterOptions}
-      displayField="name"
-      value={
-        statusFilterOptions.find(
-          (o) => o.id === selectedStatusFilter
-        ) || statusFilterOptions[0]
-      }
-      placeholder="All Statuses"
-      onChange={(opt: any) => {
-        setSelectedStatusFilter(opt.id);
-        setCurrentPage(1);
-      }}
-    />
-  </div>
-
-</div>
+            {/* Status */}
+            <div className="flex flex-col gap-1">
+              <span className="text-sm font-medium">Status</span>
+              <Listbox
+                data={statusFilterOptions}
+                displayField="name"
+                value={
+                  statusFilterOptions.find(
+                    (o) => o.id === selectedStatusFilter,
+                  ) || statusFilterOptions[0]
+                }
+                placeholder="All Statuses"
+                onChange={(opt: any) => {
+                  setSelectedStatusFilter(opt.id);
+                  setCurrentPage(1);
+                }}
+              />
+            </div>
+          </div>
         </div>
       )}
 
@@ -1052,7 +1070,7 @@ const filteredData = colours.filter((item) => {
               {currentItems.length === 0 && (
                 <Tr>
                   <Td
-                    colSpan={9}
+                    colSpan={10}
                     className="py-12 text-center text-gray-400 dark:text-gray-500"
                   >
                     No colours found
@@ -1355,7 +1373,7 @@ const filteredData = colours.filter((item) => {
                   {/* Select Variant */}
                   <div>
                     <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
-                      Select Variant <span className="text-red-500">*</span>
+                      Select Variant
                     </label>
                     <Combobox
                       data={filteredVariants}
@@ -1369,16 +1387,21 @@ const filteredData = colours.filter((item) => {
                         handleInputChange("variant", val?.name || "");
                         handleInputChange("variantId", val?.id || "");
 
-                        // Reset showroom variant
-                        if (val?.id) {
+                        // Clear showroom variant if it doesn't belong to the new variant
+                        const currentShowroom = showroomVariants.find(
+                          (s) => s.id === Number(formData.showroomVariantId),
+                        );
+                        if (
+                          val?.id &&
+                          currentShowroom &&
+                          currentShowroom.variantId !== Number(val.id)
+                        ) {
                           handleInputChange("showroomVariantId", "");
                         }
                       }}
                       placeholder="Select Variant"
                       searchFields={["name"]}
-                      disabled={
-                        !formData.modelId || !!formData.showroomVariantId
-                      }
+                      disabled={!formData.modelId}
                     />
                     {errors.variant && (
                       <span className="text-xs text-orange-500">
@@ -1386,8 +1409,10 @@ const filteredData = colours.filter((item) => {
                       </span>
                     )}
                   </div>
+
+                  {/* Select Showroom Variant */}
                   <div>
-                    <label className="mb-1 block text-sm font-medium">
+                    <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
                       Select Showroom Variant
                     </label>
 
@@ -1401,16 +1426,10 @@ const filteredData = colours.filter((item) => {
                       }
                       onChange={(val: any) => {
                         handleInputChange("showroomVariantId", val?.id || "");
-
-                        // Reset variant
-                        if (val?.id) {
-                          handleInputChange("variant", "");
-                          handleInputChange("variantId", "");
-                        }
                       }}
                       placeholder="Select Showroom Variant"
                       searchFields={["name"]}
-                      disabled={!formData.modelId || !!formData.variantId}
+                      disabled={!formData.modelId}
                     />
                     {errors.showroomVariantId && (
                       <span className="text-xs text-orange-500">
@@ -1418,6 +1437,7 @@ const filteredData = colours.filter((item) => {
                       </span>
                     )}
                   </div>
+
                   {/* Colour Name */}
                   <div>
                     <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
@@ -1514,41 +1534,40 @@ const filteredData = colours.filter((item) => {
         </Dialog>
       </Transition>
 
-
       {/* Confirmation Modal */}
-<ConfirmModal
-  show={showConfirmModal}
-  onClose={() => {
-    setShowConfirmModal(false);
-    setDeleteTargetId(null);
-    setConfirmState("pending");
-  }}
-  onOk={performDelete}
-  confirmLoading={confirmLoading}
-  state={confirmState}
-  messages={{
-    pending: {
-      Icon: ExclamationTriangleIcon,
-      title: isBulkDelete ? "Delete Selected Colours?" : "Are you sure?",
-      description: isBulkDelete 
-        ? `Are you sure you want to delete ${selectedIds.length} selected colours? This action cannot be undone.`
-        : "Are you sure you want to delete this colour? Once deleted, it cannot be restored.",
-      actionText: isBulkDelete ? "Delete All" : "Delete",
-    },
-    success: {
-      title: "Deleted Successfully",
-      description: isBulkDelete 
-        ? `${selectedIds.length} colours have been deleted.`
-        : "The colour has been deleted.",
-      actionText: "Done",
-    },
-    error: {
-      title: "Delete Failed",
-      description: "Failed to delete. Please try again.",
-      actionText: "Try Again",
-    },
-  }}
-/>
+      <ConfirmModal
+        show={showConfirmModal}
+        onClose={() => {
+          setShowConfirmModal(false);
+          setDeleteTargetId(null);
+          setConfirmState("pending");
+        }}
+        onOk={performDelete}
+        confirmLoading={confirmLoading}
+        state={confirmState}
+        messages={{
+          pending: {
+            Icon: ExclamationTriangleIcon,
+            title: isBulkDelete ? "Delete Selected Colours?" : "Are you sure?",
+            description: isBulkDelete
+              ? `Are you sure you want to delete ${selectedIds.length} selected colours? This action cannot be undone.`
+              : "Are you sure you want to delete this colour? Once deleted, it cannot be restored.",
+            actionText: isBulkDelete ? "Delete All" : "Delete",
+          },
+          success: {
+            title: "Deleted Successfully",
+            description: isBulkDelete
+              ? `${selectedIds.length} colours have been deleted.`
+              : "The colour has been deleted.",
+            actionText: "Done",
+          },
+          error: {
+            title: "Delete Failed",
+            description: "Failed to delete. Please try again.",
+            actionText: "Try Again",
+          },
+        }}
+      />
     </div>
   );
 };
