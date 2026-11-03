@@ -49,7 +49,7 @@ interface AccessoryAllotmentDetail {
   accessories: AccessoryItem[];
   pendingAccessories?: AccessoryItem[];
 allottedAccessories?: AccessoryItem[];
-allVerified:"string";
+  allVerified: boolean;
 }
 
 // ---------- Options ----------
@@ -77,23 +77,30 @@ const VehicleVerifyAccessories: React.FC = () => {
     useState<AccessoryAllotmentDetail | null>(null);
 
   // Fetch accessory items for this allotment (using vehicle verify endpoint)
-  const fetchAccessoryItems = async () => {
-    try {
-      setLoading(true);
-      const res = await apiHelper.get(`/orders/vehicle-verify-accessories`);
-    
-      setOrders(res.data || []);
-    } catch (error: any) {
-      console.error(
-        "Failed to fetch accessory items:",
-        error.response?.data || error,
-      );
-      setOrders([]);
-      toast.error("Failed to load vehicle verify accessories");
-    } finally {
-      setLoading(false);
-    }
-  };
+const fetchAccessoryItems = async () => {
+  try {
+    setLoading(true);
+
+    const res = await apiHelper.get(`/orders/vehicle-verify-accessories`);
+
+    const list = Array.isArray(res.data?.data)
+      ? res.data.data
+      : Array.isArray(res.data)
+        ? res.data
+        : [];
+
+    setOrders(list);
+  } catch (error: any) {
+    console.error(
+      "Failed to fetch accessory items:",
+      error.response?.data || error,
+    );
+    setOrders([]);
+    toast.error("Failed to load vehicle verify accessories");
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     fetchAccessoryItems();
@@ -159,7 +166,7 @@ const handleCheckboxChange = async (itemId: number) => {
 
   // Check if already verified
   const target = selectedOrder.allottedAccessories?.find(
-    (item) => item.id === itemId
+    (item) => item.id === itemId,
   );
 
   if (!target || target.verifyStatus === "completed") return;
@@ -168,38 +175,44 @@ const handleCheckboxChange = async (itemId: number) => {
     setVerifyingId(itemId);
 
     await apiHelper.patch(
-      `/orders/vehicle-verify-accessories/${selectedOrder.id}/item/${itemId}`
+      `/orders/vehicle-verify-accessories/${selectedOrder.id}/item/${itemId}`,
     );
 
-    const updateAccessories = (order: AccessoryAllotmentDetail) => {
+    const updateAccessories = (
+      order: AccessoryAllotmentDetail,
+    ): AccessoryAllotmentDetail => {
       if (order.id !== selectedOrder.id) return order;
+
+      const updatedAllotted =
+        order.allottedAccessories?.map((item) =>
+          item.id === itemId ? { ...item, verifyStatus: "completed" } : item,
+        ) ?? [];
 
       return {
         ...order,
-        allottedAccessories:
-          order.allottedAccessories?.map((item) =>
-            item.id === itemId
-              ? {
-                  ...item,
-                  verifyStatus: "completed",
-                }
-              : item
-          ) ?? [],
+        allottedAccessories: updatedAllotted,
+
+        // Drawer table `accessories` se render hota hai, isliye ise bhi update karo
+        accessories: (order.accessories ?? []).map((item) =>
+          item.id === itemId ? { ...item, verifyStatus: "completed" } : item,
+        ),
+
+        // Row ka green check turant update ho
+        allVerified:
+          updatedAllotted.length > 0 &&
+          updatedAllotted.every((item) => item.verifyStatus === "completed"),
       };
     };
 
     setOrders((prev) => prev.map(updateAccessories));
-    setSelectedOrder((prev) =>
-      prev ? updateAccessories(prev) : prev
-    );
+    setSelectedOrder((prev) => (prev ? updateAccessories(prev) : prev));
 
     toast.success("Item verified successfully");
   } catch (error: any) {
     console.error("Failed to verify item:", error);
 
     toast.error(
-      error.response?.data?.message ||
-        "Failed to verify accessory item"
+      error.response?.data?.message || "Failed to verify accessory item",
     );
   } finally {
     setVerifyingId(null);

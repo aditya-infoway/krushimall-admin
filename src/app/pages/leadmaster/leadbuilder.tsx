@@ -438,12 +438,18 @@ export default function LeadBuilder() {
                   {/* Process / Billing Column - Vertical buttons (one per row) */}
                   <Td>
                     <div className="flex w-full flex-col gap-1.5">
-                      <button
-                        onClick={() => handleCreateOrder(lead.id)}
-                        className="w-full cursor-pointer rounded-md border border-emerald-500 py-0.5 text-[12px] text-emerald-600"
-                      >
-                        Create Order
-                      </button>
+                     <button
+  onClick={() => handleCreateOrder(lead.id)}
+  disabled={!!lead.order}
+  title={lead.order ? "Order already created" : "Create Order"}
+  className={`w-full rounded-md border py-0.5 text-[12px] ${
+    lead.order
+      ? "dark:border-dark-500 dark:bg-dark-600 dark:text-dark-300 cursor-not-allowed border-gray-300 bg-gray-300 text-gray-500"
+      : "cursor-pointer border-emerald-500 text-emerald-600"
+  }`}
+>
+  {lead.order ? "Order Created" : "Create Order"}
+</button>
                       <button
                         onClick={() => handleCreateBooking(lead.id)}
                         className="w-full cursor-pointer rounded-md border border-red-500 py-0.5 text-[12px] text-red-600"
