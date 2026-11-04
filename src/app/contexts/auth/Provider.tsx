@@ -42,7 +42,7 @@ const reducerHandlers: Record<
     user: action.payload?.user ?? null,
   }),
 
-  // Naya login attempt shuru hote hi purana error hata do
+  // Clear the previous error as soon as a new login attempt starts
   LOGIN_REQUEST: (state) => ({
     ...state,
     isLoading: true,
@@ -80,7 +80,7 @@ const reducer = (
   return handler ? handler(state, action) : state;
 };
 
-// Purana token / company data hatata hai taaki stale session login ko na bigade
+// Removes the old token / company data so a stale session does not break login
 const clearStaleSession = () => {
   setSession(null);
   localStorage.removeItem("companyId");
@@ -109,7 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             },
           });
         } else {
-          // Token nahi hai ya expire ho chuka hai => storage se bhi hata do
+          // Token is missing or expired => remove it from storage as well
           if (authToken) setSession(null);
 
           dispatch({
@@ -141,13 +141,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     email: string;
     password: string;
   }): Promise<boolean> => {
-    // Double click / double submit se bachne ke liye
+    // Prevent double click / double submit
     if (state.isLoading) return false;
 
     dispatch({ type: "LOGIN_REQUEST" });
 
-    // Login request se pehle purana token header se hata do,
-    // warna backend / interceptor purane token pe 401 de deta hai
+    // Remove the old token from headers before the login request,
+    // otherwise the backend / interceptor may return 401 for the old token
     clearStaleSession();
 
     const payload = {
@@ -167,8 +167,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         response = await request();
       } catch (firstErr: any) {
-        // Server se koi response hi nahi aaya (network drop / slow server):
-        // ek baar automatic retry. Wrong password jaise errors retry nahi hote.
+        // No response received from the server (network drop / slow server):
+        // retry once automatically. Errors like wrong password are not retried.
         if (!firstErr?.response) {
           response = await request();
         } else {
@@ -191,7 +191,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const msg = err?.response
         ? err.response.data?.message || "Login failed. Please try again."
-        : "Server se connect nahi ho pa raha. Please dobara try karo.";
+        : "Unable to connect to the server. Please try again.";
 
       dispatch({
         type: "LOGIN_ERROR",
