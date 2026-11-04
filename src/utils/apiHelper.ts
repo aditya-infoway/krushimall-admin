@@ -3,8 +3,9 @@ import { storage, setSession } from "./jwt";
 
 const API_URL =
   import.meta.env.VITE_API_URL ||
-  // "http://31.97.237.210/krushimall-api/api";
-"http://localhost:5001/api";
+  "http://31.97.237.210/krushimall-api/api";
+  // "http://localhost:5001/api";
+  // "http://192.168.1.5:5001/api";
 const api = axios.create({
   baseURL: API_URL,
   headers: {
@@ -26,20 +27,14 @@ api.interceptors.request.use((config) => {
 // 401 / 403 handling
 api.interceptors.response.use(
   (response) => {
-    if (
-      response.data?.status === 401 ||
-      response.data?.status === 403
-    ) {
+    if (response.data?.status === 401 || response.data?.status === 403) {
       Logout();
     }
 
     return response;
   },
   (error) => {
-    if (
-      error.response?.status === 401 ||
-      error.response?.status === 403
-    ) {
+    if (error.response?.status === 401 || error.response?.status === 403) {
       Logout();
     }
 
@@ -63,16 +58,11 @@ export const getBaseUrl = () => {
 
 const apiHelper = {
   // Image URL helper
-  getImageUrl: (
-    imagePath: string | null | undefined,
-  ): string => {
+  getImageUrl: (imagePath: string | null | undefined): string => {
     if (!imagePath) return "";
 
     // Full URL or base64
-    if (
-      imagePath.startsWith("http") ||
-      imagePath.startsWith("data:")
-    ) {
+    if (imagePath.startsWith("http") || imagePath.startsWith("data:")) {
       return imagePath;
     }
 
@@ -86,19 +76,13 @@ const apiHelper = {
   },
 
   // GET
-  get: async (
-    url: string,
-    params?: Record<string, any>,
-  ) => {
+  get: async (url: string, params?: Record<string, any>) => {
     const response = await api.get(url, { params });
     return response.data;
   },
 
   // GET Blob
-  getBlob: async (
-    url: string,
-    params?: Record<string, any>,
-  ) => {
+  getBlob: async (url: string, params?: Record<string, any>) => {
     const response = await api.get(url, {
       params,
       responseType: "blob",
@@ -108,29 +92,19 @@ const apiHelper = {
   },
 
   // POST
-  post: async (
-    url: string,
-    data?: Record<string, any>,
-  ) => {
+  post: async (url: string, data?: Record<string, any>) => {
     const response = await api.post(url, data);
     return response.data;
   },
 
   // PUT
-  put: async (
-    url: string,
-    data: any,
-    config?: any,
-  ) => {
+  put: async (url: string, data: any, config?: any) => {
     const response = await api.put(url, data, config);
     return response.data;
   },
 
   // PATCH
-  patch: async (
-    url: string,
-    data?: Record<string, any>,
-  ) => {
+  patch: async (url: string, data?: Record<string, any>) => {
     const response = await api.patch(url, data);
     return response.data;
   },
@@ -142,10 +116,7 @@ const apiHelper = {
   },
 
   // Upload
-  upload: async (
-    url: string,
-    formData: FormData,
-  ) => {
+  upload: async (url: string, formData: FormData) => {
     const response = await api.post(url, formData, {
       headers: {
         "Content-Type": "multipart/form-data",
