@@ -5,6 +5,15 @@ const storage = localStorage;
 
 const LOGIN_PATH = "/krushimall-admin/login";
 
+// Requests where a 401 means "wrong credentials", not "session expired"
+const AUTH_ENDPOINTS = ["/auth/login"];
+
+const isAuthEndpoint = (url?: string): boolean =>
+  !!url && AUTH_ENDPOINTS.some((endpoint) => url.includes(endpoint));
+
+const isOnLoginPage = (): boolean =>
+  window.location.pathname.endsWith("/login");
+
 const isTokenValid = (authToken: string): boolean => {
   try {
     const decoded: { exp?: number } = jwtDecode(authToken);
@@ -24,14 +33,10 @@ const isTokenValid = (authToken: string): boolean => {
 };
 
 const setSession = (authToken?: string | null): void => {
-  if (
-    typeof authToken === "string" &&
-    authToken.trim() !== ""
-  ) {
+  if (typeof authToken === "string" && authToken.trim() !== "") {
     storage.setItem("authToken", authToken);
 
-    axiosInstance.defaults.headers.common.Authorization =
-      `Bearer ${authToken}`;
+    axiosInstance.defaults.headers.common.Authorization = `Bearer ${authToken}`;
   } else {
     storage.removeItem("authToken");
 
@@ -41,14 +46,17 @@ const setSession = (authToken?: string | null): void => {
 
 // Check token before request
 axiosInstance.interceptors.request.use((config) => {
+  // Never block the login request itself
+  if (isAuthEndpoint(config.url)) return config;
+
   const authToken = storage.getItem("authToken");
 
   if (authToken && !isTokenValid(authToken)) {
-    storage.removeItem("authToken");
+    setSession(null);
 
-    delete axiosInstance.defaults.headers.common.Authorization;
-
-    window.location.href = LOGIN_PATH;
+    if (!isOnLoginPage()) {
+      window.location.href = LOGIN_PATH;
+    }
 
     return Promise.reject(new Error("Session expired"));
   }
@@ -56,12 +64,18 @@ axiosInstance.interceptors.request.use((config) => {
   return config;
 });
 
-// Handle 401
+// Handle 401 (expired / invalid session only)
 axiosInstance.interceptors.response.use(
   (response) => response,
 
   (error) => {
-    if (error.response?.status === 401) {
+    const status = error.response?.status;
+
+    if (
+      status === 401 &&
+      !isAuthEndpoint(error.config?.url) &&
+      !isOnLoginPage()
+    ) {
       setSession(null);
 
       window.location.href = LOGIN_PATH;
@@ -71,8 +85,4 @@ axiosInstance.interceptors.response.use(
   },
 );
 
-export {
-  isTokenValid,
-  setSession,
-  storage,
-};
+export { isTokenValid, setSession, storage };
