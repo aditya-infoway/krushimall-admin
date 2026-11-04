@@ -97,8 +97,7 @@ const AccessoriesAllotDetail: React.FC = () => {
     null,
   );
   const [loading, setLoading] = useState(true);
-  const isSaved =
-    detailData?.accessoriesAllotStatus?.toLowerCase() === "completed";
+ const isSaved = !!detailData?.invoiceNo && detailData.invoiceNo !== "-";
   // State for history modal
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
   const [showHistoryModal, setShowHistoryModal] = useState(false);

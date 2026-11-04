@@ -42,15 +42,18 @@ const reducerHandlers: Record<
     user: action.payload?.user ?? null,
   }),
 
+  // Naya login attempt shuru hote hi purana error hata do
   LOGIN_REQUEST: (state) => ({
     ...state,
     isLoading: true,
+    errorMessage: null,
   }),
 
   LOGIN_SUCCESS: (state, action) => ({
     ...state,
     isAuthenticated: true,
     isLoading: false,
+    errorMessage: null,
     user: action.payload?.user ?? null,
   }),
 
@@ -63,6 +66,7 @@ const reducerHandlers: Record<
   LOGOUT: (state) => ({
     ...state,
     isAuthenticated: false,
+    errorMessage: null,
     user: null,
   }),
 };
@@ -74,6 +78,13 @@ const reducer = (
 ): AuthContextType => {
   const handler = reducerHandlers[action.type];
   return handler ? handler(state, action) : state;
+};
+
+// Purana token / company data hatata hai taaki stale session login ko na bigade
+const clearStaleSession = () => {
+  setSession(null);
+  localStorage.removeItem("companyId");
+  localStorage.removeItem("financialYearId");
 };
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -98,6 +109,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             },
           });
         } else {
+          // Token nahi hai ya expire ho chuka hai => storage se bhi hata do
+          if (authToken) setSession(null);
+
           dispatch({
             type: "INITIALIZE",
             payload: {
@@ -108,6 +122,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } catch (err) {
         console.error(err);
+        setSession(null);
+
         dispatch({
           type: "INITIALIZE",
           payload: {
@@ -125,13 +141,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     email: string;
     password: string;
   }): Promise<boolean> => {
+    // Double click / double submit se bachne ke liye
+    if (state.isLoading) return false;
+
     dispatch({ type: "LOGIN_REQUEST" });
 
-    try {
-      const response = await axios.post<{
+    // Login request se pehle purana token header se hata do,
+    // warna backend / interceptor purane token pe 401 de deta hai
+    clearStaleSession();
+
+    const payload = {
+      email: credentials.email.trim(),
+      password: credentials.password,
+    };
+
+    const request = () =>
+      axios.post<{
         token: string;
         user: User;
-      }>("/auth/login", credentials);
+      }>("/auth/login", payload);
+
+    try {
+      let response;
+
+      try {
+        response = await request();
+      } catch (firstErr: any) {
+        // Server se koi response hi nahi aaya (network drop / slow server):
+        // ek baar automatic retry. Wrong password jaise errors retry nahi hote.
+        if (!firstErr?.response) {
+          response = await request();
+        } else {
+          throw firstErr;
+        }
+      }
 
       const { token, user } = response.data;
 
@@ -144,27 +187,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       return true;
     } catch (err: any) {
-      const msg =
-        err?.response?.data?.message || err?.message || JSON.stringify(err);
-      alert("Error: " + msg + "\nURL: " + err?.config?.url);
+      console.error("LOGIN ERROR:", err);
+
+      const msg = err?.response
+        ? err.response.data?.message || "Login failed. Please try again."
+        : "Server se connect nahi ho pa raha. Please dobara try karo.";
+
       dispatch({
         type: "LOGIN_ERROR",
         payload: {
           errorMessage: msg,
         },
       });
+
       return false;
     }
   };
- const logout = async () => {
-  setSession(null);
 
-  // Remove selected company/session values if required
-  localStorage.removeItem("companyId");
-  localStorage.removeItem("financialYearId");
+  const logout = async () => {
+    clearStaleSession();
 
-  dispatch({ type: "LOGOUT" });
-};
+    dispatch({ type: "LOGOUT" });
+  };
+
   if (!children) {
     return null;
   }
