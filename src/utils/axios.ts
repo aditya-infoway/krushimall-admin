@@ -1,4 +1,4 @@
-import axios, { AxiosError, AxiosResponse } from "axios";
+import axios from "axios";
 import { JWT_HOST_API } from "@/configs/auth";
 
 const axiosInstance = axios.create({
@@ -6,11 +6,8 @@ const axiosInstance = axios.create({
 });
 
 axiosInstance.interceptors.response.use(
-  (response: AxiosResponse) => response,
-  (error: AxiosError) => {
-    alert("Axios error: " + JSON.stringify(error.response?.data) + " status: " + error.response?.status)
-    return Promise.reject(error.response?.data || "Something went wrong")
-  }
+  (response) => response,
+  (error) => Promise.reject(error),
 );
 
 export default axiosInstance;
