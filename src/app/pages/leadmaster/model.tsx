@@ -2484,7 +2484,7 @@ export function LeadDetailsModal({
                         }}
                         displayField="name"
                         placeholder="Search Customer"
-                        searchFields={["label", "mobile"]}
+                        searchFields={["name", "mobile"]}
                         columns={[
                           {
                             header: "Customer",
