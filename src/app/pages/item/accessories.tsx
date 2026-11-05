@@ -171,6 +171,8 @@ const Accessories = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [selectedStatusFilter, setSelectedStatusFilter] = useState("All");
   const [selectedTypeFilter, setSelectedTypeFilter] = useState("All");
+  const [selectedItemNameFilter, setSelectedItemNameFilter] = useState("All");
+
   const [loading, setLoading] = useState(false);
   const [selectedVariants, setSelectedVariants] = useState<any[]>([]);
   const [variantOptions, setVariantOptions] = useState([]);
@@ -460,13 +462,17 @@ const Accessories = () => {
       item.codeNo.toLowerCase().includes(search.toLowerCase()) ||
       item.shortName.toLowerCase().includes(search.toLowerCase());
 
+    const matchesItemName =
+      selectedItemNameFilter === "All" ||
+      item.itemName === selectedItemNameFilter;
+
     const matchesStatus =
       selectedStatusFilter === "All" || item.status === selectedStatusFilter;
 
     const matchesType =
       selectedTypeFilter === "All" || item.type === selectedTypeFilter;
 
-    return matchesSearch && matchesStatus && matchesType;
+    return matchesSearch && matchesItemName && matchesStatus && matchesType;
   });
 
   const totalItems = filteredData.length;
@@ -496,7 +502,12 @@ const Accessories = () => {
         : [...prev, id],
     );
   };
-
+  const itemNameFilterOptions = [
+    { id: "All", name: "All Items" },
+    ...Array.from(
+      new Set(items.map((item) => item.itemName).filter(Boolean)),
+    ).map((name) => ({ id: name, name })),
+  ];
   const typeFilterOptions = [
     { id: "All", name: "All Types" },
     { id: "Accessories", name: "Accessories" },
@@ -610,6 +621,27 @@ const Accessories = () => {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
             <div className="flex flex-col gap-1">
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
+                Item Name
+              </span>
+              <Combobox
+                data={itemNameFilterOptions}
+                value={
+                  itemNameFilterOptions.find(
+                    (o) => o.id === selectedItemNameFilter,
+                  ) || itemNameFilterOptions[0]
+                }
+                displayField="name"
+                searchFields={["name"]}
+                placeholder="Search or select item"
+                onChange={(opt: any) => {
+                  setSelectedItemNameFilter(opt?.id ?? "All");
+                  setCurrentPage(1);
+                }}
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
                 Type
               </span>
               <Listbox
@@ -626,6 +658,7 @@ const Accessories = () => {
                 displayField="name"
               />
             </div>
+
             <div className="flex flex-col gap-1">
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
                 Status
@@ -912,7 +945,7 @@ const Accessories = () => {
                     leaveTo="transform opacity-0 scale-95"
                   >
                     <MenuItems
-                      anchor="top start"
+                        anchor="bottom start"
                       className="dark:bg-dark-700 dark:border-dark-600 z-[200] w-20 space-y-0.5 rounded-lg border border-gray-200 bg-white p-1 shadow-xl ring-1 ring-black/5 [--anchor-gap:6px] focus:outline-none"
                     >
                       {entriesOptions.map((opt) => (
@@ -1079,7 +1112,7 @@ const Accessories = () => {
                 </div>
 
                 {/* Content */}
-           <div className="grow space-y-4 overflow-y-auto p-4 pb-40 sm:space-y-5 sm:p-5 sm:pb-40">
+                <div className="grow space-y-4 overflow-y-auto p-4 pb-40 sm:space-y-5 sm:p-5 sm:pb-40">
                   {/* Type */}
                   {/* Type - Using Radio buttons */}
                   {/* Type - Using Radio buttons */}

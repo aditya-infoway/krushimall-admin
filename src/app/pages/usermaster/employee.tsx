@@ -30,7 +30,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/Table";
 import { Button, Checkbox, Input } from "@/components/ui";
-import { Combobox } from "@/components/shared/form/StyledCombobox";
+import { Combobox } from "@/components/shared/form/Combobox";
 import { Listbox } from "@/components/shared/form/StyledListbox";
 import { toast } from "sonner";
 import { ConfirmModal } from "@/components/shared/ConfirmModal";
@@ -40,7 +40,7 @@ type Employee = {
   id: number;
   department: string;
   branchId: string;
-  branch:string;
+  branch: string;
   role: string;
   employeeName: string;
   mobileNumber: string;
@@ -60,7 +60,7 @@ type FormValues = {
   department: string;
   branchId: string;
   role: string;
-branch:string;
+  branch: string;
   employeeName: string;
   mobileNumber: string;
   alternateNumber: string;
@@ -88,8 +88,6 @@ const statusOptions = [
 
 // Change from { id, name } to { label, value } format for Combobox
 
-
-
 const Employee = () => {
   const [showDrawer, setShowDrawer] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
@@ -105,7 +103,7 @@ const Employee = () => {
   const [selectedStatusFilter, setSelectedStatusFilter] = useState("All");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-const [branchOptions, setBranchOptions] = useState<any[]>([]);
+  const [branchOptions, setBranchOptions] = useState<any[]>([]);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [confirmState, setConfirmState] = useState<
     "pending" | "success" | "error"
@@ -115,6 +113,9 @@ const [branchOptions, setBranchOptions] = useState<any[]>([]);
   const [isBulkDelete, setIsBulkDelete] = useState(false);
   const [departmentOptions, setDepartmentOptions] = useState<any[]>([]);
   const [roleOptions, setRoleOptions] = useState<any[]>([]);
+  const [filterRoleOptions, setFilterRoleOptions] = useState<
+  { id: string; name: string }[]
+>([]);
   // Add this after your useForm declaration
   const {
     register,
@@ -127,8 +128,8 @@ const [branchOptions, setBranchOptions] = useState<any[]>([]);
     defaultValues: {
       department: "",
       teamLeadId: undefined,
-     branchId: "",
-     branch:"",
+      branchId: "",
+      branch: "",
       role: "",
       employeeName: "",
       mobileNumber: "",
@@ -149,8 +150,8 @@ const [branchOptions, setBranchOptions] = useState<any[]>([]);
     control,
     name: "teamLeadId",
   });
- const [teamLeadOptions, setTeamLeadOptions] = useState<any[]>([]);
- 
+  const [teamLeadOptions, setTeamLeadOptions] = useState<any[]>([]);
+
   const getTeamLeads = async (department: string) => {
     const res = await apiHelper.get(
       `/employees/team-leads?department=${department}`,
@@ -197,23 +198,19 @@ const [branchOptions, setBranchOptions] = useState<any[]>([]);
   };
 
   // Keep these as { id, name } format for Listbox
-  const departmentFilterOptions = [
-    { id: "All", name: "All Departments" },
-    { id: "Sales", name: "Sales" },
-    { id: "Marketing", name: "Marketing" },
-    { id: "HR", name: "HR" },
-    { id: "IT", name: "IT" },
-    { id: "Finance", name: "Finance" },
-  ];
+const departmentFilterOptions = [
+  { id: "All", name: "All Departments" },
+  ...departmentOptions.map((d: any) => ({
+    id: d.value,
+    name: d.label,
+    departmentId: d.departmentId,
+  })),
+];
 
-  const roleFilterOptions = [
-    { id: "All", name: "All Roles" },
-    { id: "Manager", name: "Manager" },
-    { id: "Executive", name: "Executive" },
-    { id: "Associate", name: "Associate" },
-    { id: "Intern", name: "Intern" },
-    { id: "Team Lead", name: "Team Lead" },
-  ];
+const roleFilterOptions = [
+  { id: "All", name: "All Roles" },
+  ...filterRoleOptions,
+];
 
   const statusFilterOptions = [
     { id: "All", name: "All Statuses" },
@@ -251,7 +248,41 @@ const [branchOptions, setBranchOptions] = useState<any[]>([]);
       console.log(err);
     }
   };
+const handleDepartmentFilterChange = async (opt: any) => {
+  const deptName = opt?.id ?? "All";
 
+  setSelectedDepartmentFilter(deptName);
+  setSelectedRoleFilter("All"); // department badalte hi role reset
+  setCurrentPage(1);
+
+  if (deptName === "All") {
+    setFilterRoleOptions([]);
+    return;
+  }
+
+  const department = departmentOptions.find((d: any) => d.value === deptName);
+
+  if (!department) {
+    setFilterRoleOptions([]);
+    return;
+  }
+
+  try {
+    const res = await apiHelper.get(
+      `/employees/roles/department/${department.departmentId}`,
+    );
+
+    setFilterRoleOptions(
+      (res.data || []).map((item: any) => ({
+        id: item.roleName,
+        name: item.roleName,
+      })),
+    );
+  } catch (err) {
+    console.log(err);
+    setFilterRoleOptions([]);
+  }
+};
   const getEmployees = async () => {
     try {
       const response = await apiHelper.get("/employees");
@@ -261,33 +292,31 @@ const [branchOptions, setBranchOptions] = useState<any[]>([]);
       console.log(error);
     }
   };
-const getBranches = async () => {
-  try {
-    const branches = await apiHelper.get("/branch");
+  const getBranches = async () => {
+    try {
+      const branches = await apiHelper.get("/branch");
 
-   
-
-    setBranchOptions(
-      branches.map((item: any) => ({
-        label: item.branchName,
-        value: item.id,
-      }))
-    );
-  } catch (err) {
-    console.log(err);
-  }
-};
+      setBranchOptions(
+        branches.map((item: any) => ({
+          label: item.branchName,
+          value: item.id,
+        })),
+      );
+    } catch (err) {
+      console.log(err);
+    }
+  };
   useEffect(() => {
     getEmployees();
     getDepartments();
-      getBranches();
+    getBranches();
   }, []);
   const handleOpenAddDrawer = () => {
     setEditId(null);
     reset({
       department: "",
-    branchId: "",
-    branch:"",
+      branchId: "",
+      branch: "",
       role: "",
       teamLeadId: undefined,
       employeeName: "",
@@ -325,7 +354,7 @@ const getBranches = async () => {
 
       reset({
         department: employee.department,
-     branchId: employee.branchId,   
+        branchId: employee.branchId,
         role: employee.role,
         teamLeadId: employee.teamLeadId,
         employeeName: employee.employeeName,
@@ -399,7 +428,7 @@ const getBranches = async () => {
     try {
       const payload = {
         department: data.department,
-         branchId: data.branchId,
+        branchId: data.branchId,
         teamLeadId: data.teamLeadId,
         role: data.role,
         employeeName: data.employeeName,
@@ -423,7 +452,7 @@ const getBranches = async () => {
       setEditId(null);
       reset({
         department: "",
-      branchId: "",
+        branchId: "",
         role: "",
         employeeName: "",
         mobileNumber: "",
@@ -445,29 +474,24 @@ const getBranches = async () => {
   const searchText = search.trim().toLowerCase();
   const filteredData = employees.filter((item) => {
     const matchesSearch =
-     String(item.employeeName ?? "")
-      .toLowerCase()
-      .includes(searchText) ||
-
-    String(item.department ?? "")
-      .toLowerCase()
-      .includes(searchText) ||
-
-    String(item.branch ?? "")
-      .toLowerCase()
-      .includes(searchText) ||
-
-    String(item.role ?? "")
-      .toLowerCase()
-      .includes(searchText) ||
-
-    String(item.mobileNumber ?? "")
-      .toLowerCase()
-      .includes(searchText) ||
-
-    String(item.email ?? "")
-      .toLowerCase()
-      .includes(searchText);
+      String(item.employeeName ?? "")
+        .toLowerCase()
+        .includes(searchText) ||
+      String(item.department ?? "")
+        .toLowerCase()
+        .includes(searchText) ||
+      String(item.branch ?? "")
+        .toLowerCase()
+        .includes(searchText) ||
+      String(item.role ?? "")
+        .toLowerCase()
+        .includes(searchText) ||
+      String(item.mobileNumber ?? "")
+        .toLowerCase()
+        .includes(searchText) ||
+      String(item.email ?? "")
+        .toLowerCase()
+        .includes(searchText);
 
     const matchesDepartment =
       selectedDepartmentFilter === "All" ||
@@ -583,43 +607,47 @@ const getBranches = async () => {
       {showFilterBar && (
         <div className="dark:bg-dark-700 dark:border-dark-500 animate-in fade-in slide-in-from-top-2 rounded-xl border border-gray-200 bg-white p-4 transition-all duration-150">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <div className="flex flex-col gap-1">
-              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
-                Department
-              </span>
-              <Listbox
-                data={departmentFilterOptions}
-                value={
-                  departmentFilterOptions.find(
-                    (o) => o.id === selectedDepartmentFilter,
-                  ) || departmentFilterOptions[0]
-                }
-                placeholder="All Departments"
-                onChange={(opt: any) => {
-                  setSelectedDepartmentFilter(opt.id);
-                  setCurrentPage(1);
-                }}
-                displayField="name"
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
-                Role
-              </span>
-              <Listbox
-                data={roleFilterOptions}
-                value={
-                  roleFilterOptions.find((o) => o.id === selectedRoleFilter) ||
-                  roleFilterOptions[0]
-                }
-                placeholder="All Roles"
-                onChange={(opt: any) => {
-                  setSelectedRoleFilter(opt.id);
-                  setCurrentPage(1);
-                }}
-                displayField="name"
-              />
-            </div>
+       <div className="flex flex-col gap-1">
+  <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
+    Department
+  </span>
+  <Combobox
+    data={departmentFilterOptions}
+    value={
+      departmentFilterOptions.find(
+        (o) => o.id === selectedDepartmentFilter,
+      ) || departmentFilterOptions[0]
+    }
+    displayField="name"
+    searchFields={["name"]}
+    placeholder="Search or select department"
+    onChange={handleDepartmentFilterChange}
+  />
+</div>
+
+<div
+  className={`flex flex-col gap-1 ${
+    selectedDepartmentFilter === "All" ? "pointer-events-none opacity-60" : ""
+  }`}
+>
+  <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
+    Role
+  </span>
+  <Combobox
+    data={roleFilterOptions}
+    value={
+      roleFilterOptions.find((o) => o.id === selectedRoleFilter) ||
+      roleFilterOptions[0]
+    }
+    displayField="name"
+    searchFields={["name"]}
+    placeholder="Search or select role"
+    onChange={(opt: any) => {
+      setSelectedRoleFilter(opt?.id ?? "All");
+      setCurrentPage(1);
+    }}
+  />
+</div>
             <div className="flex flex-col gap-1">
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
                 Status
@@ -725,7 +753,7 @@ const getBranches = async () => {
                       {item.department}
                     </Td>
                     <Td className="dark:text-dark-200 py-4 text-gray-600">
-                   {item.branch}
+                      {item.branch}
                     </Td>
                     <Td className="dark:text-dark-200 py-4 text-gray-600">
                       {item.role}
@@ -872,7 +900,7 @@ const getBranches = async () => {
                     leaveTo="transform opacity-0 scale-95"
                   >
                     <MenuItems
-                      anchor="top start"
+                        anchor="bottom start"
                       className="dark:bg-dark-700 dark:border-dark-600 z-[200] w-20 space-y-0.5 rounded-lg border border-gray-200 bg-white p-1 shadow-xl ring-1 ring-black/5 [--anchor-gap:6px] focus:outline-none"
                     >
                       {entriesOptions.map((opt) => (
@@ -1066,6 +1094,8 @@ const getBranches = async () => {
                               }
                               placeholder="Select Department"
                               data={departmentOptions}
+                              displayField="label"
+                              searchFields={["label"]}
                               value={
                                 departmentOptions.find(
                                   (item) => item.value === field.value,
@@ -1090,29 +1120,33 @@ const getBranches = async () => {
                       </div>
                     </div>
                     <div>
-                     <Controller
-  name="branchId"
-  control={control}
-  rules={{ required: "Branch is required" }}
-  render={({ field, fieldState }) => (
-    <Combobox
-      label={
-        <span>
-          Branch <span className="text-red-500">*</span>
-        </span>
-      }
-      placeholder="Select Branch"
-      data={branchOptions}
-      value={
-        branchOptions.find(
-          (item) => item.value === field.value
-        ) || null
-      }
-      error={fieldState.error?.message}
-      onChange={(val: any) => field.onChange(val?.value ?? null)}
-    />
-  )}
-/>
+                      <Controller
+                        name="branchId"
+                        control={control}
+                        rules={{ required: "Branch is required" }}
+                        render={({ field, fieldState }) => (
+                          <Combobox
+                            label={
+                              <span>
+                                Branch <span className="text-red-500">*</span>
+                              </span>
+                            }
+                            placeholder="Select Branch"
+                            data={branchOptions}
+                            displayField="label"
+                            searchFields={["label"]}
+                            value={
+                              branchOptions.find(
+                                (item) => item.value === field.value,
+                              ) || null
+                            }
+                            error={fieldState.error?.message}
+                            onChange={(val: any) =>
+                              field.onChange(val?.value ?? null)
+                            }
+                          />
+                        )}
+                      />
                     </div>
                   </div>
 
@@ -1132,6 +1166,8 @@ const getBranches = async () => {
                           }
                           placeholder="Select Role"
                           data={roleOptions}
+                          displayField="label"
+                          searchFields={["label"]}
                           value={
                             roleOptions.find(
                               (item) => item.value === field.value,
@@ -1161,6 +1197,8 @@ const getBranches = async () => {
                       }
                       placeholder="Select Team Lead"
                       data={teamLeadOptions}
+                      displayField="label"
+                      searchFields={["label"]}
                       value={
                         teamLeadOptions.find(
                           (item) => item.value === formTeamLeadValue,

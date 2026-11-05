@@ -81,12 +81,12 @@ useEffect(() => {
 }, [search]);
   const getLedgerAccounts = async () => {
     try {
-      const res = await apiHelper.get("/accounts");
+   const res = await apiHelper.get("/ledger/report");
 
 
 
       setLedgerData(
-        (res.data || res).map((item: any) => ({
+     (res.report || res.data?.report || []).map((item: any) => ({
           id: item.id,
           accountName: item.accountName,
           group: item.group,
@@ -233,7 +233,7 @@ useEffect(() => {
         <Search className="absolute top-1/2 left-3 size-4.5 -translate-y-1/2 text-gray-400" />
         <input
           type="text"
-          placeholder="Search contra entries..."
+          placeholder="Search accounts..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="dark:border-dark-500 dark:bg-dark-800 w-full rounded-lg border border-gray-300 bg-white py-2.5 pr-4 pl-10 text-sm outline-none"

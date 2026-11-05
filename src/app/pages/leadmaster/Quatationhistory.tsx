@@ -333,7 +333,7 @@ const handleView = (
           leaveTo="transform opacity-0 scale-95"
         >
           <MenuItems
-            anchor="top start"
+              anchor="bottom start"
             className="z-200 w-20 space-y-0.5 rounded-lg border border-gray-200 bg-white p-1 shadow-xl focus:outline-none dark:border-dark-600 dark:bg-dark-700"
           >
             {entriesOptions.map(

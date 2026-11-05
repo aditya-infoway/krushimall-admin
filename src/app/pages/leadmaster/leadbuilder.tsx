@@ -629,7 +629,7 @@ export default function LeadBuilder() {
                     leaveTo="transform opacity-0 scale-95"
                   >
                     <MenuItems
-                      anchor="top start"
+                        anchor="bottom start"
                       className="dark:bg-dark-700 dark:border-dark-600 z-200 w-20 space-y-0.5 rounded-lg border border-gray-200 bg-white p-1 shadow-xl ring-1 ring-black/5 [--anchor-gap:6px] focus:outline-none"
                     >
                       {[10, 20, 30, 40, 50, 100].map((opt) => (

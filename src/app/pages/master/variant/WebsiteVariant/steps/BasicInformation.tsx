@@ -444,9 +444,7 @@ export function BasicInformation({
                     onChange={(e) => field.onChange(e.target.checked)}
                     className="text-primary-600 h-4 w-4 rounded border-gray-300"
                   />
-                  <span className="text-sm font-medium">
-                     Upcoming Tractor
-                  </span>
+                  <span className="text-sm font-medium">Upcoming Tractor</span>
                 </label>
               )}
             />
@@ -466,6 +464,7 @@ export function BasicInformation({
                   placeholder="Select Category"
                   label="Select Category"
                   error={errors.categoryId?.message}
+                  searchFields={["categoryName"]}
                   onChange={(option: any) => {
                     field.onChange(option?.id ?? "");
 
@@ -495,6 +494,7 @@ export function BasicInformation({
                   placeholder="Select Brand"
                   label="Select Brand"
                   error={errors.brandId?.message}
+                  searchFields={["brandName"]}
                   onChange={(option: any) => {
                     field.onChange(option?.id ?? "");
 
@@ -523,6 +523,7 @@ export function BasicInformation({
                   displayField="modelName"
                   placeholder="Select Model"
                   label="Select Model"
+                  searchFields={["modelName"]}
                   error={errors.modelId?.message}
                   onChange={(option: any) => {
                     field.onChange(option?.id ?? "");
@@ -549,6 +550,7 @@ export function BasicInformation({
                   }
                   displayField="modelYear"
                   placeholder="Select Model Year"
+                  searchFields={["modelYear"]}
                   label="Select Model Year"
                   error={errors.modelYearId?.message}
                   onChange={(option: any) => {
@@ -579,6 +581,7 @@ export function BasicInformation({
                   displayField="variantName"
                   placeholder="Select Variant"
                   label="Select Variant"
+                  searchFields={["variantName"]}
                   error={errors.variantId?.message}
                   onChange={(option: any) => {
                     field.onChange(option?.id ?? "");
@@ -643,6 +646,7 @@ export function BasicInformation({
                   }
                   displayField="label"
                   placeholder="Select Status"
+                  searchFields={["label"]}
                   label="Tractor Status"
                   error={errors.tractorStatus?.message}
                   onChange={(option: any) => {
@@ -653,26 +657,26 @@ export function BasicInformation({
             />
           </div>
           <Controller
-  name="driveType"
-  control={control}
-  render={({ field }) => (
-    <Combobox
-      data={driveTypeOptions}
-      value={
-        driveTypeOptions.find(
-          (item) => item.value === field.value
-        ) || null
-      }
-      displayField="label"
-      placeholder="Select Drive Type"
-      label="Drive Type"
-      error={errors.driveType?.message}
-      onChange={(option: any) => {
-        field.onChange(option?.value ?? "");
-      }}
-    />
-  )}
-/>
+            name="driveType"
+            control={control}
+            render={({ field }) => (
+              <Combobox
+                data={driveTypeOptions}
+                value={
+                  driveTypeOptions.find((item) => item.value === field.value) ||
+                  null
+                }
+                displayField="label"
+                placeholder="Select Drive Type"
+                     searchFields={["label"]}
+                label="Drive Type"
+                error={errors.driveType?.message}
+                onChange={(option: any) => {
+                  field.onChange(option?.value ?? "");
+                }}
+              />
+            )}
+          />
         </div>
 
         {/* Short Description */}
@@ -802,91 +806,101 @@ export function BasicInformation({
           </p>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
-           {/* Country */}
-<div>
-  <Controller
-    name="country"
-    control={control}
-    render={({ field }) => (
-      <Combobox
-        data={countryOptions}
-        displayField="label"
-        searchFields={["label"]}
-        placeholder="Search Country"
-        label="Country"
-        value={
-          countryOptions.find((option) => option.value === field.value) ||
-          null
-        }
-        error={errors.country?.message}
-        onChange={(selected: any) => {
-          field.onChange(selected?.value || "");
-          setCountry(selected?.value || "");
-          setState("");
-          setCity("");
-        }}
-      />
-    )}
-  />
-</div>
+            {/* Country */}
+            <div>
+              <Controller
+                name="country"
+                control={control}
+                render={({ field }) => (
+                  <Combobox
+                    data={countryOptions}
+                    displayField="label"
+                    searchFields={["label"]}
+                    placeholder="Search Country"
+                    label="Country"
+                    value={
+                      countryOptions.find(
+                        (option) => option.value === field.value,
+                      ) || null
+                    }
+                    error={errors.country?.message}
+                    onChange={(selected: any) => {
+                      field.onChange(selected?.value || "");
+                      setCountry(selected?.value || "");
+                      setState("");
+                      setCity("");
+                    }}
+                  />
+                )}
+              />
+            </div>
 
-{/* Available States */}
-<div className={!country ? "pointer-events-none opacity-60" : ""}>
-  <Controller
-    name="availableStates"
-    control={control}
-    render={({ field }) => (
-      <Combobox
-        data={stateOptions}
-        displayField="label"
-        searchFields={["label"]}
-        placeholder="Search State"
-        label={
-          <span>
-            Available States <span className="text-red-500">*</span>
-          </span>
-        }
-        multiple
-        value={stateOptions.filter((option) =>
-          field.value?.includes(option.value),
-        )}
-        error={errors.availableStates?.message}
-        onChange={(selected: any[]) => {
-          field.onChange(selected?.map((item: any) => item.value) || []);
-        }}
-      />
-    )}
-  />
-</div>
+            {/* Available States */}
+            <div className={!country ? "pointer-events-none opacity-60" : ""}>
+              <Controller
+                name="availableStates"
+                control={control}
+                render={({ field }) => (
+                  <Combobox
+                    data={stateOptions}
+                    displayField="label"
+                    searchFields={["label"]}
+                    placeholder="Search State"
+                    label={
+                      <span>
+                        Available States <span className="text-red-500">*</span>
+                      </span>
+                    }
+                    multiple
+                    value={stateOptions.filter((option) =>
+                      field.value?.includes(option.value),
+                    )}
+                    error={errors.availableStates?.message}
+                    onChange={(selected: any[]) => {
+                      field.onChange(
+                        selected?.map((item: any) => item.value) || [],
+                      );
+                    }}
+                  />
+                )}
+              />
+            </div>
 
-{/* Available Districts */}
-<div className={!selectedStates.length ? "pointer-events-none opacity-60" : ""}>
-  <Controller
-    name="availableDistricts"
-    control={control}
-    render={({ field }) => (
-      <Combobox
-        data={cityOptions}
-        displayField="label"
-        searchFields={["label"]}
-        placeholder="Search District"
-        label={
-          <span>
-            Available Districts <span className="text-red-500">*</span>
-          </span>
-        }
-        multiple
-        value={cityOptions.filter((option) =>
-          field.value?.includes(option.value),
-        )}
-        error={errors.availableDistricts?.message}
-        onChange={(selected: any[]) => {
-          field.onChange(selected?.map((item: any) => item.value) || []);
-        }}
-      />
-    )}
-  />
-</div>
+            {/* Available Districts */}
+            <div
+              className={
+                !selectedStates.length ? "pointer-events-none opacity-60" : ""
+              }
+            >
+              <Controller
+                name="availableDistricts"
+                control={control}
+                render={({ field }) => (
+                  <Combobox
+                    data={cityOptions}
+                    displayField="label"
+                    searchFields={["label"]}
+                    placeholder="Search District"
+                    label={
+                      <span>
+                        Available Districts{" "}
+                        <span className="text-red-500">*</span>
+                      </span>
+                    }
+                    multiple
+                    value={cityOptions.filter((option) =>
+                      field.value?.includes(option.value),
+                    )}
+                    error={errors.availableDistricts?.message}
+                    onChange={(selected: any[]) => {
+                      field.onChange(
+                        selected?.map((item: any) => item.value) || [],
+                      );
+                    }}
+                  />
+                )}
+              />
+            </div>
 
             <div>
               {/* <label className="mb-1 block text-sm font-medium">
@@ -905,6 +919,7 @@ export function BasicInformation({
                     displayField="label"
                     placeholder="Search Dealers"
                     label="Available Dealers"
+                         searchFields={["label"]}
                     multiple
                     error={errors.availableDealers?.message}
                     onChange={(selected: any[]) => {
@@ -930,6 +945,7 @@ export function BasicInformation({
                       ) || null
                     }
                     displayField="label"
+                         searchFields={["label"]}
                     placeholder="Select Stock Status"
                     label="Stock Status"
                     error={errors.stockStatus?.message}
