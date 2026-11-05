@@ -81,7 +81,8 @@ const Finance = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [selectedStatusFilter, setSelectedStatusFilter] = useState("All");
-
+const [selectedFinanceFilter, setSelectedFinanceFilter] = useState("All");
+const [selectedEmployeeFilter, setSelectedEmployeeFilter] = useState("All");
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [confirmState, setConfirmState] = useState<
     "pending" | "success" | "error"
@@ -168,10 +169,11 @@ const Finance = () => {
 const handleOpenEditDrawer = (item: Finance) => {
   setEditId(item.id);
 
-  reset({
-    employeeName: item.employeeName,
-    status: item.status,
-  });
+reset({
+  finance: String(item.account.id),
+  employeeName: item.employeeName,
+  status: item.status,
+});
 
   setSelectedFinance({
     value: item.account.id,
@@ -270,18 +272,39 @@ const onFormSubmit = async (data: FormValues) => {
     );
   }
 };
+const financeFilterOptions = [
+  { id: "All", name: "All Finances" },
+  ...Array.from(
+    new Set(
+      finances.map((item: any) => item.account?.accountName).filter(Boolean),
+    ),
+  ).map((name) => ({ id: name, name })),
+];
 
+const employeeFilterOptions = [
+  { id: "All", name: "All Employees" },
+  ...Array.from(
+    new Set(finances.map((item: any) => item.employeeName).filter(Boolean)),
+  ).map((name) => ({ id: name, name })),
+];
   // Filter data
- const filteredData = finances.filter((item: any) => {
+const filteredData = finances.filter((item: any) => {
   const matchesSearch = (item.account?.accountName ?? "")
     .toLowerCase()
     .includes(search.toLowerCase());
 
-  const matchesStatus =
-    selectedStatusFilter === "All" ||
-    item.status === selectedStatusFilter;
+  const matchesFinance =
+    selectedFinanceFilter === "All" ||
+    item.account?.accountName === selectedFinanceFilter;
 
-  return matchesSearch && matchesStatus;
+  const matchesEmployee =
+    selectedEmployeeFilter === "All" ||
+    item.employeeName === selectedEmployeeFilter;
+
+  const matchesStatus =
+    selectedStatusFilter === "All" || item.status === selectedStatusFilter;
+
+  return matchesSearch && matchesFinance && matchesEmployee && matchesStatus;
 });
 
   const totalItems = filteredData.length;
@@ -386,27 +409,66 @@ const onFormSubmit = async (data: FormValues) => {
       {/* Filter Bar */}
       {showFilterBar && (
         <div className="dark:bg-dark-700 dark:border-dark-500 animate-in fade-in slide-in-from-top-2 rounded-xl border border-gray-200 bg-white p-4 transition-all duration-150">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
-            <div className="flex flex-col gap-1">
-              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
-                Status
-              </span>
-              <Listbox
-                data={statusFilterOptions}
-                value={
-                  statusFilterOptions.find(
-                    (o) => o.id === selectedStatusFilter,
-                  ) || statusFilterOptions[0]
-                }
-                placeholder="All Statuses"
-                onChange={(opt: any) => {
-                  setSelectedStatusFilter(opt.id);
-                  setCurrentPage(1);
-                }}
-                displayField="name"
-              />
-            </div>
-          </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+  <div className="flex flex-col gap-1">
+    <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
+      Finance
+    </span>
+    <Combobox
+      data={financeFilterOptions}
+      value={
+        financeFilterOptions.find((o) => o.id === selectedFinanceFilter) ||
+        financeFilterOptions[0]
+      }
+      displayField="name"
+      searchFields={["name"]}
+      placeholder="Search or select finance"
+      onChange={(opt: any) => {
+        setSelectedFinanceFilter(opt?.id ?? "All");
+        setCurrentPage(1);
+      }}
+    />
+  </div>
+
+  <div className="flex flex-col gap-1">
+    <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
+      Employee
+    </span>
+    <Combobox
+      data={employeeFilterOptions}
+      value={
+        employeeFilterOptions.find((o) => o.id === selectedEmployeeFilter) ||
+        employeeFilterOptions[0]
+      }
+      displayField="name"
+      searchFields={["name"]}
+      placeholder="Search or select employee"
+      onChange={(opt: any) => {
+        setSelectedEmployeeFilter(opt?.id ?? "All");
+        setCurrentPage(1);
+      }}
+    />
+  </div>
+
+  <div className="flex flex-col gap-1">
+    <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
+      Status
+    </span>
+    <Listbox
+      data={statusFilterOptions}
+      value={
+        statusFilterOptions.find((o) => o.id === selectedStatusFilter) ||
+        statusFilterOptions[0]
+      }
+      placeholder="All Statuses"
+      onChange={(opt: any) => {
+        setSelectedStatusFilter(opt.id);
+        setCurrentPage(1);
+      }}
+      displayField="name"
+    />
+  </div>
+</div>
         </div>
       )}
 
@@ -602,7 +664,7 @@ const onFormSubmit = async (data: FormValues) => {
                     leaveTo="transform opacity-0 scale-95"
                   >
                     <MenuItems
-                      anchor="top start"
+                        anchor="bottom start"
                       className="dark:bg-dark-700 dark:border-dark-600 z-[200] w-20 space-y-0.5 rounded-lg border border-gray-200 bg-white p-1 shadow-xl ring-1 ring-black/5 [--anchor-gap:6px] focus:outline-none"
                     >
                       {entriesOptions.map((opt) => (
@@ -811,9 +873,9 @@ const onFormSubmit = async (data: FormValues) => {
         },
       ]}
       value={
-        financeAccounts.find(
-          (item: any) => item.value === field.value
-        ) || null
+      financeAccounts.find(
+  (item: any) => String(item.value) === String(field.value),
+) || null
       }
       error={fieldState.error?.message}
       onChange={(val: any) => {

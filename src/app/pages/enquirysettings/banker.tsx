@@ -31,7 +31,7 @@ import { toast } from "sonner";
 import { ConfirmModal } from "@/components/shared/ConfirmModal";
 import { RiFileExcel2Fill, RiFilePdfFill } from "react-icons/ri";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
-
+import { Combobox } from "@/components/shared/form/Combobox";
 type Banker = {
   id: number;
   banker: string;
@@ -77,7 +77,7 @@ const [bankers, setBankers] =
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [selectedStatusFilter, setSelectedStatusFilter] = useState("All");
-
+const [selectedBankerFilter, setSelectedBankerFilter] = useState("All");
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 const [confirmState, setConfirmState] = useState<"pending" | "success" | "error">("pending");
 const [confirmLoading, setConfirmLoading] = useState(false);
@@ -213,17 +213,26 @@ const handleToggleStatus = async (id: number) => {
     toast.error(error.response?.data?.message || "Failed to save banker. Please try again.");
   }
 };
-
+const bankerFilterOptions = [
+  { id: "All", name: "All Bankers" },
+  ...Array.from(
+    new Set(bankers.map((item) => item.banker).filter(Boolean)),
+  ).map((name) => ({ id: name, name })),
+];
   // Filter data
-  const filteredData = bankers.filter((item) => {
-    const matchesSearch =
-      item.banker.toLowerCase().includes(search.toLowerCase());
+const filteredData = bankers.filter((item) => {
+  const matchesSearch = item.banker
+    .toLowerCase()
+    .includes(search.toLowerCase());
 
-    const matchesStatus =
-      selectedStatusFilter === "All" || item.status === selectedStatusFilter;
+  const matchesBanker =
+    selectedBankerFilter === "All" || item.banker === selectedBankerFilter;
 
-    return matchesSearch && matchesStatus;
-  });
+  const matchesStatus =
+    selectedStatusFilter === "All" || item.status === selectedStatusFilter;
+
+  return matchesSearch && matchesBanker && matchesStatus;
+});
 
   const totalItems = filteredData.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
@@ -327,27 +336,46 @@ const handleToggleStatus = async (id: number) => {
       {/* Filter Bar */}
       {showFilterBar && (
         <div className="dark:bg-dark-700 dark:border-dark-500 animate-in fade-in slide-in-from-top-2 rounded-xl border border-gray-200 bg-white p-4 transition-all duration-150">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
-            <div className="flex flex-col gap-1">
-              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
-                Status
-              </span>
-              <Listbox
-                data={statusFilterOptions}
-                value={
-                  statusFilterOptions.find(
-                    (o) => o.id === selectedStatusFilter
-                  ) || statusFilterOptions[0]
-                }
-                placeholder="All Statuses"
-                onChange={(opt: any) => {
-                  setSelectedStatusFilter(opt.id);
-                  setCurrentPage(1);
-                }}
-                displayField="name"
-              />
-            </div>
-          </div>
+         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+  <div className="flex flex-col gap-1">
+    <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
+      Banker
+    </span>
+    <Combobox
+      data={bankerFilterOptions}
+      value={
+        bankerFilterOptions.find((o) => o.id === selectedBankerFilter) ||
+        bankerFilterOptions[0]
+      }
+      displayField="name"
+      searchFields={["name"]}
+      placeholder="Search or select banker"
+      onChange={(opt: any) => {
+        setSelectedBankerFilter(opt?.id ?? "All");
+        setCurrentPage(1);
+      }}
+    />
+  </div>
+
+  <div className="flex flex-col gap-1">
+    <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
+      Status
+    </span>
+    <Listbox
+      data={statusFilterOptions}
+      value={
+        statusFilterOptions.find((o) => o.id === selectedStatusFilter) ||
+        statusFilterOptions[0]
+      }
+      placeholder="All Statuses"
+      onChange={(opt: any) => {
+        setSelectedStatusFilter(opt.id);
+        setCurrentPage(1);
+      }}
+      displayField="name"
+    />
+  </div>
+</div>
         </div>
       )}
 
@@ -537,7 +565,7 @@ const handleToggleStatus = async (id: number) => {
                     leaveTo="transform opacity-0 scale-95"
                   >
                     <MenuItems
-                      anchor="top start"
+                        anchor="bottom start"
                       className="dark:bg-dark-700 dark:border-dark-600 z-[200] w-20 space-y-0.5 rounded-lg border border-gray-200 bg-white p-1 shadow-xl ring-1 ring-black/5 [--anchor-gap:6px] focus:outline-none"
                     >
                       {entriesOptions.map((opt) => (

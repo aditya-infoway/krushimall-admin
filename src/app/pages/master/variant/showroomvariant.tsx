@@ -812,52 +812,54 @@ export default function ShowroomVariantPage() {
       </div>
 
       {/* Filters - Model + Variant */}
-      {showFilterBar && (
-        <div className="dark:bg-dark-700 dark:border-dark-500 rounded-xl border border-gray-200 bg-white p-4">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="flex flex-col gap-1">
-              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
-                Filter by Model
-              </span>
-              <Listbox
-                data={modelFilterOptions}
-                value={
-                  modelFilterOptions.find(
-                    (o) => o.id === selectedModelFilter,
-                  ) || modelFilterOptions[0]
-                }
-                onChange={(opt: any) => {
-                  setSelectedModelFilter(opt.id);
-                  setSelectedVariantFilter("All"); // reset variant when model changes
-                  setCurrentPage(1);
-                }}
-                displayField="name"
-              />
-            </div>
+     {/* Filters - Model + Variant */}
+{showFilterBar && (
+  <div className="dark:bg-dark-700 dark:border-dark-500 rounded-xl border border-gray-200 bg-white p-4">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className="flex flex-col gap-1">
+        <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
+          Filter by Model
+        </span>
+        <Combobox
+          data={modelFilterOptions}
+          value={
+            modelFilterOptions.find((o) => o.id === selectedModelFilter) ||
+            modelFilterOptions[0]
+          }
+          displayField="name"
+          searchFields={["name"]}
+          placeholder="Search or select model"
+          onChange={(opt: any) => {
+            setSelectedModelFilter(opt?.id ?? "All");
+            setSelectedVariantFilter("All"); // reset variant when model changes
+            setCurrentPage(1);
+          }}
+        />
+      </div>
 
-            {/* Variant filter, dependent on selected model */}
-            <div className="flex flex-col gap-1">
-              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
-                Filter by Variant
-              </span>
-              <Listbox
-                data={variantFilterOptions}
-                value={
-                  variantFilterOptions.find(
-                    (o) => o.id === selectedVariantFilter,
-                  ) || variantFilterOptions[0]
-                }
-                onChange={(opt: any) => {
-                  setSelectedVariantFilter(opt.id);
-                  setCurrentPage(1);
-                }}
-                displayField="name"
-              />
-            </div>
-          </div>
-        </div>
-      )}
-
+      {/* Variant filter, dependent on selected model */}
+      <div className="flex flex-col gap-1">
+        <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
+          Filter by Variant
+        </span>
+        <Combobox
+          data={variantFilterOptions}
+          value={
+            variantFilterOptions.find((o) => o.id === selectedVariantFilter) ||
+            variantFilterOptions[0]
+          }
+          displayField="name"
+          searchFields={["name"]}
+          placeholder="Search or select variant"
+          onChange={(opt: any) => {
+            setSelectedVariantFilter(opt?.id ?? "All");
+            setCurrentPage(1);
+          }}
+        />
+      </div>
+    </div>
+  </div>
+)}
       {/* Table - Removed Status column */}
       <div className="dark:bg-dark-800 dark:border-dark-700 rounded-xl border border-gray-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
@@ -1129,6 +1131,7 @@ export default function ShowroomVariantPage() {
                             error={fieldState.error?.message}
                             displayField="name"
                             placeholder="Search or select model"
+                            searchFields={["name"]}
                             onChange={(option: any) => {
                               if (!option) return;
 
@@ -1175,6 +1178,7 @@ export default function ShowroomVariantPage() {
                               ? "Search or select variant"
                               : "Select model first"
                           }
+                               searchFields={["name"]}
                           onChange={(option: any) => {
                             if (!option) return;
 

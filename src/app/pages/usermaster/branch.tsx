@@ -195,6 +195,9 @@ const CreateBranch = () => {
   const [selectedBranchTypeFilter, setSelectedBranchTypeFilter] =
     useState("All");
   const [selectedCountryFilter, setSelectedCountryFilter] = useState("All");
+  const [selectedBranchNameFilter, setSelectedBranchNameFilter] =
+    useState("All");
+  const [selectedManagerFilter, setSelectedManagerFilter] = useState("All");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -354,7 +357,19 @@ const CreateBranch = () => {
     { id: "All", name: "All Countries" },
     ...countryOptions.map((c) => ({ id: c.label, name: c.label })),
   ];
+  const branchNameFilterOptions = [
+    { id: "All", name: "All Branches" },
+    ...Array.from(
+      new Set(branches.map((b: any) => b.branchName).filter(Boolean)),
+    ).map((name) => ({ id: name, name })),
+  ];
 
+  const managerFilterOptions = [
+    { id: "All", name: "All Managers" },
+    ...Array.from(
+      new Set(branches.map((b: any) => b.manager?.accountName).filter(Boolean)),
+    ).map((name) => ({ id: name, name })),
+  ];
   const getBranches = async () => {
     try {
       const response = await apiHelper.get("/branch");
@@ -570,7 +585,7 @@ const CreateBranch = () => {
       String(item.branchCode ?? "")
         .toLowerCase()
         .includes(searchText) ||
-      String(item.managerName ?? "")
+      String(item.manager?.accountName ?? "")
         .toLowerCase()
         .includes(searchText) ||
       String(item.gmailId ?? "")
@@ -584,11 +599,25 @@ const CreateBranch = () => {
       selectedBranchTypeFilter === "All" ||
       String(item.branchType ?? "") === String(selectedBranchTypeFilter);
 
+    const matchesBranchName =
+      selectedBranchNameFilter === "All" ||
+      item.branchName === selectedBranchNameFilter;
+
+    const matchesManager =
+      selectedManagerFilter === "All" ||
+      item.manager?.accountName === selectedManagerFilter;
+
     const matchesCountry =
       selectedCountryFilter === "All" ||
       String(item.country ?? "") === String(selectedCountryFilter);
 
-    return matchesSearch && matchesBranchType && matchesCountry;
+    return (
+      matchesSearch &&
+      matchesBranchType &&
+      matchesBranchName &&
+      matchesManager &&
+      matchesCountry
+    );
   });
 
   const totalItems = filteredData.length;
@@ -744,7 +773,49 @@ const CreateBranch = () => {
       {/* Filter Bar */}
       {showFilterBar && (
         <div className="dark:bg-dark-700 dark:border-dark-500 animate-in fade-in slide-in-from-top-2 rounded-xl border border-gray-200 bg-white p-4 transition-all duration-150">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="flex flex-col gap-1">
+              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
+                Branch Name
+              </span>
+              <Combobox
+                data={branchNameFilterOptions}
+                value={
+                  branchNameFilterOptions.find(
+                    (o) => o.id === selectedBranchNameFilter,
+                  ) || branchNameFilterOptions[0]
+                }
+                displayField="name"
+                searchFields={["name"]}
+                placeholder="Search or select branch"
+                onChange={(opt: any) => {
+                  setSelectedBranchNameFilter(opt?.id ?? "All");
+                  setCurrentPage(1);
+                }}
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
+                Manager
+              </span>
+              <Combobox
+                data={managerFilterOptions}
+                value={
+                  managerFilterOptions.find(
+                    (o) => o.id === selectedManagerFilter,
+                  ) || managerFilterOptions[0]
+                }
+                displayField="name"
+                searchFields={["name"]}
+                placeholder="Search or select manager"
+                onChange={(opt: any) => {
+                  setSelectedManagerFilter(opt?.id ?? "All");
+                  setCurrentPage(1);
+                }}
+              />
+            </div>
+
             <div className="flex flex-col gap-1">
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
                 Branch Type
@@ -764,25 +835,6 @@ const CreateBranch = () => {
                 displayField="name"
               />
             </div>
-            {/* <div className="flex flex-col gap-1">
-              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
-                Country
-              </span>
-              <Listbox
-                data={countryFilterOptions}
-                value={
-                  countryFilterOptions.find(
-                    (o) => o.id === selectedCountryFilter,
-                  ) || countryFilterOptions[0]
-                }
-                placeholder="All Countries"
-                onChange={(opt: any) => {
-                  setSelectedCountryFilter(opt.id);
-                  setCurrentPage(1);
-                }}
-                displayField="name"
-              />
-            </div> */}
           </div>
         </div>
       )}
@@ -1034,7 +1086,7 @@ const CreateBranch = () => {
                     leaveTo="transform opacity-0 scale-95"
                   >
                     <MenuItems
-                      anchor="top start"
+                        anchor="bottom start"
                       className="dark:bg-dark-700 dark:border-dark-600 z-200 w-20 space-y-0.5 rounded-lg border border-gray-200 bg-white p-1 shadow-xl ring-1 ring-black/5 [--anchor-gap:6px] focus:outline-none"
                     >
                       {entriesOptions.map((opt) => (

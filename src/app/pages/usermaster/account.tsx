@@ -136,6 +136,7 @@ const statusOptions = [
   { label: "Active", value: "ACTIVE" },
   { label: "Inactive", value: "INACTIVE" },
 ];
+
 const Account = () => {
   const navigate = useNavigate();
   const [data, setData] = useState<any[]>([]);
@@ -149,6 +150,7 @@ const Account = () => {
   const [confirmState, setConfirmState] = useState<
     "pending" | "success" | "error"
   >("pending");
+  const [selectedAccountName, setSelectedAccountName] = useState("All");
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
   const [isBulkDelete, setIsBulkDelete] = useState(false);
@@ -159,7 +161,19 @@ const Account = () => {
     setConfirmState("pending");
     setShowConfirmModal(true);
   };
+const accountNameFilterOptions = [
+  { id: "All", name: "All Accounts" },
+  ...Array.from(
+    new Set(data.map((a: any) => a.accountName).filter(Boolean)),
+  ).map((name) => ({ id: name, name })),
+];
 
+const groupFilterOptions = [
+  { label: "All", value: "All" },
+  ...Array.from(
+    new Set(data.map((a: any) => a.group).filter(Boolean)),
+  ).map((g) => ({ label: g as string, value: g as string })),
+];
   const handleAdd = () => {
     navigate("/usermaster/newaccount");
   };
@@ -211,10 +225,10 @@ const Account = () => {
   // Filter data based on search
   const searchText = search.trim().toLowerCase();
 
-const filteredData = data.filter((item: any) => {
-  const matchesSearch =
-    !searchText ||
-     String(item.accountName ?? "")
+  const filteredData = data.filter((item: any) => {
+    const matchesSearch =
+      !searchText ||
+      String(item.accountName ?? "")
         .toLowerCase()
         .includes(searchText) ||
       String(item.printName ?? "")
@@ -240,20 +254,29 @@ const filteredData = data.filter((item: any) => {
         .includes(searchText) ||
       String(item.country ?? "")
         .toLowerCase()
-        .includes(searchText)
+        .includes(searchText);
 
-  const matchesGroup =
-    selectedGroup === "All" ||
-    String(item.group ?? "").trim().toLowerCase() ===
-      String(selectedGroup ?? "").trim().toLowerCase();
+    const matchesGroup =
+      selectedGroup === "All" ||
+      String(item.group ?? "")
+        .trim()
+        .toLowerCase() ===
+        String(selectedGroup ?? "")
+          .trim()
+          .toLowerCase();
 
-  const matchesStatus =
-    selectedStatus === "All" ||
-    String(item.status ?? "").trim().toLowerCase() ===
-      String(selectedStatus ?? "").trim().toLowerCase();
-
-  return matchesSearch && matchesGroup && matchesStatus;
-});
+    const matchesStatus =
+      selectedStatus === "All" ||
+      String(item.status ?? "")
+        .trim()
+        .toLowerCase() ===
+        String(selectedStatus ?? "")
+          .trim()
+          .toLowerCase();
+    const matchesAccountName =
+      selectedAccountName === "All" || item.accountName === selectedAccountName;
+     return matchesSearch && matchesGroup && matchesStatus && matchesAccountName;
+  });
   const totalItems = filteredData.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -283,7 +306,7 @@ const filteredData = data.filter((item: any) => {
   };
   const getAccounts = async () => {
     try {
-      const response = await apiHelper.get("/accounts");
+   const response = await apiHelper.get("/accounts?withClosing=true");
 
       // Check actual structure
 
@@ -370,29 +393,70 @@ const filteredData = data.filter((item: any) => {
       {/* Filter Bar */}
       {showFilterBar && (
         <div className="dark:bg-dark-700 dark:border-dark-500 animate-in fade-in slide-in-from-top-2 rounded-xl border border-gray-200 bg-white p-4 transition-all duration-150">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div className="flex flex-col gap-1">
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
-                Account Type
+                Account Name
+              </span>
+              <Combobox
+                data={accountNameFilterOptions}
+                value={
+                  accountNameFilterOptions.find(
+                    (o) => o.id === selectedAccountName,
+                  ) || accountNameFilterOptions[0]
+                }
+                displayField="name"
+                searchFields={["name"]}
+                placeholder="Search or select account"
+                onChange={(opt: any) => {
+                  setSelectedAccountName(opt?.id ?? "All");
+                  setCurrentPage(1);
+                }}
+              />
+            </div>
+
+            {/* Group - label changed from "Account Type" */}
+            <div className="flex flex-col gap-1">
+              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
+                Group
               </span>
             <Combobox
-  data={accountGroupOptions}
+  data={groupFilterOptions}
   value={
-    accountGroupOptions.find(
-      (option) => option.value === selectedGroup
-    ) || accountGroupOptions[0]
+    groupFilterOptions.find((option) => option.value === selectedGroup) ||
+    groupFilterOptions[0]
   }
   displayField="label"
   searchFields={["label", "value"]}
-  placeholder="Search account group..."
+  placeholder="Search group..."
   onChange={(option: any) => {
-    const value = option?.value ?? "All";
-
-    setSelectedGroup(value);
+    setSelectedGroup(option?.value ?? "All");
     setCurrentPage(1);
   }}
 />
             </div>
+            {/* <div className="flex flex-col gap-1">
+              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
+                Account Type
+              </span>
+              <Combobox
+                data={accountGroupOptions}
+                value={
+                  accountGroupOptions.find(
+                    (option) => option.value === selectedGroup,
+                  ) || accountGroupOptions[0]
+                }
+                displayField="label"
+                searchFields={["label", "value"]}
+                placeholder="Search account group..."
+                onChange={(option: any) => {
+                  const value = option?.value ?? "All";
+
+                  setSelectedGroup(value);
+                  setCurrentPage(1);
+                }}
+              />
+            </div> */}
             <div className="flex flex-col gap-1">
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
                 Status
@@ -507,7 +571,7 @@ const filteredData = data.filter((item: any) => {
                       {item.openingBalance} {item.drCr}
                     </Td>
                     <Td className="dark:text-dark-200 py-4 text-gray-600">
-                      {item.closingBalance} {item.drCr}
+                 {item.closingBalance} {item.closingDrCr ?? item.drCr}
                     </Td>
                     <Td className="dark:text-dark-200 py-4 text-gray-600">
                       {item.mobile}
@@ -636,7 +700,7 @@ const filteredData = data.filter((item: any) => {
                     leaveTo="transform opacity-0 scale-95"
                   >
                     <MenuItems
-                      anchor="top start"
+                        anchor="bottom start"
                       className="dark:bg-dark-700 dark:border-dark-600 z-200 w-20 space-y-0.5 rounded-lg border border-gray-200 bg-white p-1 shadow-xl ring-1 ring-black/5 [--anchor-gap:6px] focus:outline-none"
                     >
                       {entriesOptions.map((opt) => (
