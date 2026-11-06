@@ -18,5 +18,11 @@ export const dashboards: NavigationTree = {
       title: "Inventory",
       path: "/dashboards/inventory",
     },
+     {
+      id: "branchwiseInventory",
+      type: "item",
+      title: "Branch Wise Inventory",
+      path: "/dashboards/branchwiseInventory",
+    },
   ],
 };
