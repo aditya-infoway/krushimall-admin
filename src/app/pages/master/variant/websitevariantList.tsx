@@ -769,7 +769,7 @@ const matchesYearDropdown =
               {currentItems.length === 0 && (
                 <Tr>
                   <Td
-                    colSpan={9}
+                    colSpan={11}
                     className="py-12 text-center text-gray-400 dark:text-gray-500"
                   >
                     No Website Variant found
