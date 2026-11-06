@@ -51,6 +51,13 @@ const protectedRoutes: RouteObject = {
                   .default,
               }),
             },
+              {
+              path: "branchwiseInventory",
+              lazy: async () => ({
+                Component: (await import("@/app/pages/dashboards/branchwiseInventory"))
+                  .default,
+              }),
+            },
           ],
         },
         {
