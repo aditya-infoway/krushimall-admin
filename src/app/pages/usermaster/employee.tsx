@@ -217,21 +217,27 @@ const roleFilterOptions = [
     { id: "ACTIVE", name: "Active" },
     { id: "INACTIVE", name: "Inactive" },
   ];
-  const getDepartments = async () => {
-    try {
-      const res = await apiHelper.get("/employees/departments");
+const ALLOWED_DEPARTMENTS = ["sales", "service"];
 
-      setDepartmentOptions(
-        res.data.map((item: any) => ({
+const getDepartments = async () => {
+  try {
+    const res = await apiHelper.get("/employees/departments");
+
+    setDepartmentOptions(
+      (res.data || [])
+        .filter((item: any) =>
+          ALLOWED_DEPARTMENTS.includes(String(item.name).trim().toLowerCase()),
+        )
+        .map((item: any) => ({
           label: item.name,
-          value: item.name, // ✅ Store department name
-          departmentId: item.id, // Keep id separately
+          value: item.name, // department name store hoga
+          departmentId: item.id,
         })),
-      );
-    } catch (err) {
-      console.log(err);
-    }
-  };
+    );
+  } catch (err) {
+    console.log(err);
+  }
+};
   const getRoles = async (departmentId: number) => {
     try {
       const res = await apiHelper.get(
