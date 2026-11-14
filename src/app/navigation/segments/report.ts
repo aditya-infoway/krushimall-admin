@@ -5,6 +5,7 @@ export const report: NavigationTree = {
   type: "root",
   title: "Report",
   icon: "report",
+   path: "/report", 
   childs: [
     {
       id: "dynemicreport",

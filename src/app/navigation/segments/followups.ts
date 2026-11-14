@@ -4,6 +4,7 @@ export const followups: NavigationTree = {
   id: "followups",
   type: "root",
   title: "FollowUps",
+   path: "/followups", 
   icon: "follow",
   childs: [
     {

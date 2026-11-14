@@ -5,6 +5,7 @@ export const bookingbalance: NavigationTree = {
   type: "root",
   title: "Booking Balance",
   icon: "bookingbalance",
+    path: "/bookingbalance", 
   childs: [
     {
       id: "bookingbalance",

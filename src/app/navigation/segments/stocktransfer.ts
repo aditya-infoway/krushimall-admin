@@ -5,6 +5,7 @@ export const stocktransfer: NavigationTree = {
   type: "root",
   title: "Stock Transfer",
   icon: "stocktransfer",
+   path: "/stocktransfer", 
   childs: [
     {
       id: "vehiclestock",
