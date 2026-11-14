@@ -5,6 +5,7 @@ export const accounting: NavigationTree = {
   type: "root",
   title: "Accounting MASTER",
   icon: "accounting",
+    path: "/accounting", 
   childs: [
     {
       id: "debit-note",

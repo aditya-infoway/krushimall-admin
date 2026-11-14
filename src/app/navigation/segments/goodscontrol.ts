@@ -4,6 +4,7 @@ export const goodcontrol: NavigationTree = {
   id: "goodscontrol",
   type: "root",
   title: "Goods Control MASTER",
+   path: "/goodscontrol", 
   icon: "control",
   childs: [
     {

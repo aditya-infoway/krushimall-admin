@@ -1,3 +1,4 @@
+import { TbPalette } from "react-icons/tb";
 import {
   HomeIcon,
   UserIcon as HiUserIcon,
@@ -8,51 +9,65 @@ import {
   ClipboardDocumentListIcon,
   ShoppingCartIcon,
   ExclamationTriangleIcon,
+  BriefcaseIcon,
+  BuildingLibraryIcon,
+  WalletIcon,
+  ArchiveBoxIcon,
+  UsersIcon,
+  UserGroupIcon,
+  ArrowsRightLeftIcon,
+  BookOpenIcon,
+  BanknotesIcon,
+  TruckIcon,
+  Squares2X2Icon,
+  PhoneArrowUpRightIcon,
+  // Cog6ToothIcon,
 } from "@heroicons/react/24/outline";
 import { ElementType } from "react";
-import {
-  TbCategory,
-  TbBriefcase,
-  TbBuildingBank,
-  TbPalette,
-  TbTruck,
-  TbTools,
-  TbBuildingBank as TbBank,
-  TbWallet,
-  TbPackages,
-  TbUsers,
-  TbTransfer,
-  TbBook2,
-  TbReportMoney,
-} from "react-icons/tb";
 
 import DashboardsIcon from "@/assets/dualicons/dashboards.svg?react";
 import SettingIcon from "@/assets/dualicons/setting.svg?react";
-import { report } from "./segments/report";
 
 export const navigationIcons: Record<string, ElementType> = {
   dashboards: DashboardsIcon,
-  user: TbBriefcase,
-  settings: SettingIcon,
   "dashboards.home": HomeIcon,
-  "settings.general": HiUserIcon,
-  "settings.appearance": TbPalette,
+
+  user: BriefcaseIcon,
   master: FolderIcon,
   variant: CubeIcon,
-  leadbuilder: ChartBarIcon,
-  enquirysettings: TbCategory,
   item: ClipboardDocumentListIcon,
   accessories: WrenchScrewdriverIcon,
+
+  leadmaster: ChartBarIcon,
+  leadbuilder: ChartBarIcon,
+  usermaster: UsersIcon,
+  enquirysettings: Squares2X2Icon,
+
   purchase: ShoppingCartIcon,
-  "purchase-tractor": TbTruck,
-  "purchase-accessories": TbTools,
+  "purchase-tractor": TruckIcon,
+  "purchase-accessories": WrenchScrewdriverIcon,
+
+  stocktransfer: ArrowsRightLeftIcon,
+
+  accounting: BuildingLibraryIcon,
+  cashbank: WalletIcon,
+
+  bookregister: BookOpenIcon,
+  ledgerreport: BookOpenIcon,
+  bookingbalance: BanknotesIcon,
+
+  control: ArchiveBoxIcon,
+  goodcontrol: ArchiveBoxIcon,
+  goodscontrol: ArchiveBoxIcon,
+
+  allot: TruckIcon,
+
   report: ExclamationTriangleIcon,
-  accounting: TbBuildingBank,
-  cashbank:TbWallet,
-  control:TbPackages,
-  follow:TbUsers,
-  stocktransfer: TbTransfer,
-  ledgerreport: TbBook2,
-  bookingbalance: TbReportMoney,
-  
+
+  follow: UserGroupIcon,
+  followups: PhoneArrowUpRightIcon,
+
+  settings: SettingIcon,
+  "settings.general": HiUserIcon,
+  "settings.appearance": TbPalette,
 };

@@ -5,12 +5,14 @@ export const dashboards: NavigationTree = {
   type: "root",
   title: "Dashboards",
   icon: "dashboards",
+    path: "/dashboards", 
   childs: [
     {
       id: "dashboard",
       type: "item",
       title: "Dashboard",
       path: "/dashboards/dashboard",
+      
     },
     {
       id: "inventory",
