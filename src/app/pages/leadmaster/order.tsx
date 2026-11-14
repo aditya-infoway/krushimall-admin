@@ -432,8 +432,7 @@ const OrderVehicleOption = (props: any) => {
     getBankers();
     fetchPaymentAccounts();
   }, []);
- // Kaun si status wali vehicles order mein allot ho sakti hain.
-// Sirf verify hui vehicles chahiye to "transit" hata do.
+
 const SELECTABLE_STATUSES = ["present"];
 
 const fetchVehicleInventory = async () => {
