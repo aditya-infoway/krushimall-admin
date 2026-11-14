@@ -1,34 +1,123 @@
 // Import Dependencies
+import { useState } from "react";
 import { EnvelopeIcon, LockClosedIcon } from "@heroicons/react/24/outline";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 // Local Imports
 import Logo from "@/assets/appLogo.svg?react";
 import { Button, Card, Input, InputErrorMsg } from "@/components/ui";
+import { Combobox } from "@/components/shared/form/Combobox";
 import { useAuthContext } from "@/app/contexts/auth/context";
-import { AuthFormValues, schema } from "./schema";
+import apiHelper from "@/utils/apiHelper";
+import { AuthFormValues, ROLE_OPTIONS, schema } from "./schema";
 import { Page } from "@/components/shared/Page";
 import { useNavigate } from "react-router";
 // ----------------------------------------------------------------------
 
+const roleOptions = ROLE_OPTIONS.map((r) => ({
+  id: r.value,
+  name: r.label,
+}));
+
+// Env ho to wahi, warna same origin ka path (live ke liye)
+const BRANCH_APP_URL =
+  (import.meta.env.VITE_BRANCH_APP_URL as string | undefined) ||
+  `${window.location.origin}/krushimall-branch`;
+
+const EMPLOYEE_APP_URL =
+  (import.meta.env.VITE_EMPLOYEE_APP_URL as string | undefined) ||
+  `${window.location.origin}/krushimall-employee`;
+
+const VENDOR_APP_URL =
+  (import.meta.env.VITE_VENDOR_APP_URL as string | undefined) ||
+  `${window.location.origin}/krushimall-adminvendor`;
+
+// Alag app wale roles: login endpoint + us app ka URL (+ extra body agar chahiye)
+const EXTERNAL_APPS: Record<
+  string,
+  { endpoint: string; url: string; extra?: Record<string, unknown> }
+> = {
+  branch: { endpoint: "/branch/login", url: BRANCH_APP_URL },
+  employee: { endpoint: "/employees/login", url: EMPLOYEE_APP_URL },
+  "vendor-admin": {
+    endpoint: "/vendor-admin/login",
+    url: VENDOR_APP_URL,
+    extra: { platform: "web" }, // controller isse expiresIn decide karta hai
+  },
+};
+
 export default function SignIn() {
   const navigate = useNavigate();
   const { login, errorMessage } = useAuthContext();
+  const [appError, setAppError] = useState("");
+  const [appLoading, setAppLoading] = useState(false);
+
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
-  } = useForm({
+  } = useForm<AuthFormValues>({
     resolver: yupResolver(schema),
     defaultValues: {
+      role: "superadmin",
       email: "",
       password: "",
     },
   });
 
+  // Branch / Employee / Vendor: unki API se login, phir unki app par token ke saath redirect
+  const handleAppLogin = async (data: AuthFormValues) => {
+    const app = EXTERNAL_APPS[data.role];
+    if (!app || appLoading) return;
+
+    setAppError("");
+    setAppLoading(true);
+
+    try {
+      const res: any = await apiHelper.post(app.endpoint, {
+        email: data.email.trim(),
+        password: data.password,
+        ...(app.extra || {}),
+      });
+
+      // apiHelper kabhi res.data deta hai, kabhi direct body
+      const body = res?.data?.token ? res.data : res;
+      const { token, user } = body || {};
+
+      if (!token) {
+        throw new Error("Token not received from server");
+      }
+
+      toast.success("Login successfully");
+
+      // Hash (#) server ko nahi jata, aur dusri app use turant clear kar degi
+      const params = new URLSearchParams({
+        token,
+        user: JSON.stringify(user ?? null),
+      });
+
+      window.location.href = `${app.url.replace(/\/$/, "")}/auth-callback#${params.toString()}`;
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Login failed. Please try again.";
+      setAppError(msg);
+      setAppLoading(false);
+    }
+  };
+
   const onSubmit = async (data: AuthFormValues) => {
+    setAppError("");
+
+    if (EXTERNAL_APPS[data.role]) {
+      await handleAppLogin(data);
+      return;
+    }
+
     const success = await login({
       email: data.email,
       password: data.password,
@@ -42,6 +131,8 @@ export default function SignIn() {
       });
     }
   };
+
+  const shownError = appError || errorMessage || "";
 
   return (
     <Page title="Login">
@@ -65,6 +156,32 @@ export default function SignIn() {
             <Card className="mt-6 rounded-lg p-5 lg:p-7">
               <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
                 <div className="space-y-4">
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium">
+                      Login As
+                    </label>
+                    <Controller
+                      name="role"
+                      control={control}
+                      render={({ field, fieldState }) => (
+                        <Combobox
+                          data={roleOptions}
+                          value={
+                            roleOptions.find((opt) => opt.id === field.value) ||
+                            null
+                          }
+                          placeholder="Select Role"
+                          error={fieldState.error?.message}
+                          onChange={(selectedOpt: any) => {
+                            if (selectedOpt) field.onChange(selectedOpt.id);
+                          }}
+                          displayField="name"
+                          searchFields={["name"]}
+                        />
+                      )}
+                    />
+                  </div>
+
                   <Input
                     label="Email"
                     placeholder="Enter Email"
@@ -93,15 +210,18 @@ export default function SignIn() {
                 </div>
 
                 <div className="mt-2">
-                  <InputErrorMsg
-                    when={(errorMessage && errorMessage !== "") as boolean}
-                  >
-                    {errorMessage}
+                  <InputErrorMsg when={shownError !== ""}>
+                    {shownError}
                   </InputErrorMsg>
                 </div>
 
-                <Button type="submit" className="mt-5 w-full" color="primary">
-                  Sign In
+                <Button
+                  type="submit"
+                  className="mt-5 w-full"
+                  color="primary"
+                  disabled={appLoading}
+                >
+                  {appLoading ? "Signing In..." : "Sign In"}
                 </Button>
               </form>
             </Card>

@@ -5,6 +5,7 @@ export const allot: NavigationTree = {
   type: "root",
   title: "Allot",
   icon: "cashbank",
+    path: "/allot", 
   childs: [
     {
       id: "allot",

@@ -41,24 +41,34 @@ export function MenuItem({ data }: { data: NavigationTree  }) {
         )
       }
     >
-      {({ isActive }) => (
-        <div
-          data-menu-active={isActive}
-          style={{ height: "34px" }}
-          className="flex items-center justify-between text-xs-plus tracking-wide"
-        >
-          <span className="mr-1 truncate">{title}</span>
-          {info?.val && (
-            <Badge
-              color={info.color}
-              variant="soft"
-              className="h-4.5 min-w-[1rem] shrink-0 p-[5px] text-tiny-plus"
-            >
-              {info.val}
-            </Badge>
-          )}
-        </div>
-      )}
+    {({ isActive }) => (
+  <div
+    data-menu-active={isActive}
+    style={{ height: "34px" }}
+    className="flex items-center justify-between text-xs-plus tracking-wide"
+  >
+    <div className="flex min-w-0 items-center space-x-2 rtl:space-x-reverse">
+      <div
+        className={clsx(
+          isActive
+            ? "bg-primary-600 dark:bg-primary-400 opacity-80"
+            : "opacity-50 transition-all",
+          "size-1.5 rounded-full border border-current",
+        )}
+      ></div>
+      <span className="truncate">{title}</span>
+    </div>
+    {info?.val && (
+      <Badge
+        color={info.color}
+        variant="soft"
+        className="h-4.5 min-w-[1rem] shrink-0 p-[5px] text-tiny-plus"
+      >
+        {info.val}
+      </Badge>
+    )}
+  </div>
+)}
     </NavLink>
   );
 }
