@@ -4,16 +4,17 @@ import { EnvelopeIcon, LockClosedIcon } from "@heroicons/react/24/outline";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { useNavigate } from "react-router";
 
 // Local Imports
 import Logo from "@/assets/appLogo.svg?react";
 import { Button, Card, Input, InputErrorMsg } from "@/components/ui";
-import { Combobox } from "@/components/shared/form/Combobox";
+import { Combobox } from "@/components/shared/form/StyledCombobox";
 import { useAuthContext } from "@/app/contexts/auth/context";
 import apiHelper from "@/utils/apiHelper";
 import { AuthFormValues, ROLE_OPTIONS, schema } from "./schema";
 import { Page } from "@/components/shared/Page";
-import { useNavigate } from "react-router";
+import logo from "@/assets/logo.png";
 // ----------------------------------------------------------------------
 
 const roleOptions = ROLE_OPTIONS.map((r) => ({
@@ -21,7 +22,6 @@ const roleOptions = ROLE_OPTIONS.map((r) => ({
   name: r.label,
 }));
 
-// Env ho to wahi, warna same origin ka path (live ke liye)
 const BRANCH_APP_URL =
   (import.meta.env.VITE_BRANCH_APP_URL as string | undefined) ||
   `${window.location.origin}/krushimall-branch`;
@@ -34,7 +34,6 @@ const VENDOR_APP_URL =
   (import.meta.env.VITE_VENDOR_APP_URL as string | undefined) ||
   `${window.location.origin}/krushimall-adminvendor`;
 
-// Alag app wale roles: login endpoint + us app ka URL (+ extra body agar chahiye)
 const EXTERNAL_APPS: Record<
   string,
   { endpoint: string; url: string; extra?: Record<string, unknown> }
@@ -44,7 +43,7 @@ const EXTERNAL_APPS: Record<
   "vendor-admin": {
     endpoint: "/vendor-admin/login",
     url: VENDOR_APP_URL,
-    extra: { platform: "web" }, // controller isse expiresIn decide karta hai
+    extra: { platform: "web" },
   },
 };
 
@@ -61,14 +60,9 @@ export default function SignIn() {
     formState: { errors },
   } = useForm<AuthFormValues>({
     resolver: yupResolver(schema),
-    defaultValues: {
-      role: "superadmin",
-      email: "",
-      password: "",
-    },
+    defaultValues: { role: "superadmin", email: "", password: "" },
   });
 
-  // Branch / Employee / Vendor: unki API se login, phir unki app par token ke saath redirect
   const handleAppLogin = async (data: AuthFormValues) => {
     const app = EXTERNAL_APPS[data.role];
     if (!app || appLoading) return;
@@ -83,17 +77,13 @@ export default function SignIn() {
         ...(app.extra || {}),
       });
 
-      // apiHelper kabhi res.data deta hai, kabhi direct body
       const body = res?.data?.token ? res.data : res;
       const { token, user } = body || {};
 
-      if (!token) {
-        throw new Error("Token not received from server");
-      }
+      if (!token) throw new Error("Token not received from server");
 
       toast.success("Login successfully");
 
-      // Hash (#) server ko nahi jata, aur dusri app use turant clear kar degi
       const params = new URLSearchParams({
         token,
         user: JSON.stringify(user ?? null),
@@ -118,17 +108,11 @@ export default function SignIn() {
       return;
     }
 
-    const success = await login({
-      email: data.email,
-      password: data.password,
-    });
+    const success = await login({ email: data.email, password: data.password });
 
     if (success) {
       toast.success("Login successfully");
-
-      navigate("/select-company", {
-        replace: true,
-      });
+      navigate("/select-company", { replace: true });
     }
   };
 
@@ -136,106 +120,119 @@ export default function SignIn() {
 
   return (
     <Page title="Login">
-      <div className="flex h-screen">
-        <div className="dark:bg-dark-700 flex w-full items-center justify-center bg-white xl:w-1/2">
-          <div className="w-full max-w-md px-6">
-            <div className="text-center">
-              <Logo className="mx-auto size-16" />
+      <main className="flex min-h-screen items-center justify-center bg-gray-50">
+        <div className="w-full">
+          <div className="grid min-h-screen grid-cols-1 gap-0 overflow-hidden lg:grid-cols-2">
+            {/* Left Side - Form */}
+            <div className="flex items-center justify-center bg-white p-6 sm:p-8 lg:p-10">
+              <Card
+                className="w-full rounded-lg bg-transparent p-5 lg:p-7"
+                style={{ overflow: "visible" }}
+              >
+                {/* Company Logo */}
+                {/* Logo */}
+                <div className="mb-8 flex justify-center">
+                  <img
+                    src={logo}
+                    alt="KrushiMall"
+                    className="h-14 w-auto object-contain sm:h-28"
+                  />
+                </div>
+                <div className="border-primary-600 dark:border-primary-400 w-full rounded-[40px] border-y-[6px]"></div>
 
-              <div className="mt-4">
-                <h2 className="dark:text-dark-100 text-2xl font-semibold text-gray-600">
-                  Welcome Back
-                </h2>
+                <div className="mt-6 text-left">
+                  <h2 className="text-2xl font-bold text-gray-800 sm:text-3xl">
+                    Welcome to{" "}
+                    <span className="text-primary-600">KrushiMall</span>
+                  </h2>
+                  <p className="mt-1 leading-relaxed text-gray-600">
+                    Please sign in to continue
+                  </p>
+                </div>
 
-                <p className="dark:text-dark-300 text-gray-400">
-                  Please sign in to continue
-                </p>
-              </div>
-            </div>
-
-            <Card className="mt-6 rounded-lg p-5 lg:p-7">
-              <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
-                <div className="space-y-4">
-                  <div>
-                    <label className="mb-1.5 block text-sm font-medium">
-                      Login As
-                    </label>
+                <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
+                  <div className="mt-6 space-y-4">
                     <Controller
                       name="role"
                       control={control}
                       render={({ field, fieldState }) => (
                         <Combobox
                           data={roleOptions}
+                          displayField="name"
                           value={
                             roleOptions.find((opt) => opt.id === field.value) ||
                             null
                           }
-                          placeholder="Select Role"
-                          error={fieldState.error?.message}
-                          onChange={(selectedOpt: any) => {
-                            if (selectedOpt) field.onChange(selectedOpt.id);
+                          onChange={(v: any) => {
+                            const opt = Array.isArray(v) ? v[0] : v;
+                            if (opt) field.onChange(opt.id);
                           }}
-                          displayField="name"
+                          placeholder="Select Role"
+                          label="Login As"
                           searchFields={["name"]}
+                          error={fieldState.error?.message}
                         />
                       )}
                     />
+
+                    <Input
+                      label="Email"
+                      placeholder="Enter Email"
+                      prefix={
+                        <EnvelopeIcon
+                          className="size-5 text-gray-500"
+                          strokeWidth="1"
+                        />
+                      }
+                      className="focus:border-primary border-gray-300 bg-white text-gray-800"
+                      {...register("email")}
+                      error={errors?.email?.message}
+                    />
+                    <Input
+                      label="Password"
+                      placeholder="Enter Password"
+                      type="password"
+                      prefix={
+                        <LockClosedIcon
+                          className="size-5 text-gray-500"
+                          strokeWidth="1"
+                        />
+                      }
+                      className="focus:border-primary border-gray-300 bg-white text-gray-800"
+                      {...register("password")}
+                      error={errors?.password?.message}
+                    />
                   </div>
 
-                  <Input
-                    label="Email"
-                    placeholder="Enter Email"
-                    prefix={
-                      <EnvelopeIcon
-                        className="size-5 transition-colors duration-200"
-                        strokeWidth="1"
-                      />
-                    }
-                    {...register("email")}
-                    error={errors?.email?.message}
-                  />
-                  <Input
-                    label="Password"
-                    placeholder="Enter Password"
-                    type="password"
-                    prefix={
-                      <LockClosedIcon
-                        className="size-5 transition-colors duration-200"
-                        strokeWidth="1"
-                      />
-                    }
-                    {...register("password")}
-                    error={errors?.password?.message}
-                  />
-                </div>
+                  <div className="mt-2">
+                    <InputErrorMsg when={shownError !== ""}>
+                      {shownError}
+                    </InputErrorMsg>
+                  </div>
 
-                <div className="mt-2">
-                  <InputErrorMsg when={shownError !== ""}>
-                    {shownError}
-                  </InputErrorMsg>
-                </div>
+                  <Button
+                    type="submit"
+                    className="mt-5 w-full"
+                    color="primary"
+                    disabled={appLoading}
+                  >
+                    {appLoading ? "Signing In..." : "Sign In"}
+                  </Button>
+                </form>
+              </Card>
+            </div>
 
-                <Button
-                  type="submit"
-                  className="mt-5 w-full"
-                  color="primary"
-                  disabled={appLoading}
-                >
-                  {appLoading ? "Signing In..." : "Sign In"}
-                </Button>
-              </form>
-            </Card>
+            {/* Right Side - Image (same as before) */}
+            <div className="relative hidden items-center justify-center lg:flex">
+              <img
+                src="https://images.unsplash.com/photo-1520607162513-77705c0f0d4a"
+                alt="company"
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+            </div>
           </div>
         </div>
-
-        <div className="hidden h-full xl:block xl:w-1/2">
-          <img
-            src="https://images.unsplash.com/photo-1520607162513-77705c0f0d4a"
-            alt="company"
-            className="h-full w-full object-cover"
-          />
-        </div>
-      </div>
+      </main>
     </Page>
   );
 }

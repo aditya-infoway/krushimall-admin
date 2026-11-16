@@ -51,11 +51,12 @@ const protectedRoutes: RouteObject = {
                   .default,
               }),
             },
-              {
+            {
               path: "branchwiseInventory",
               lazy: async () => ({
-                Component: (await import("@/app/pages/dashboards/branchwiseInventory"))
-                  .default,
+                Component: (
+                  await import("@/app/pages/dashboards/branchwiseInventory")
+                ).default,
               }),
             },
           ],
@@ -219,7 +220,7 @@ const protectedRoutes: RouteObject = {
                 ).default,
               }),
             },
-              {
+            {
               path: "testdrivehistory",
               lazy: async () => ({
                 Component: (
@@ -540,6 +541,27 @@ const protectedRoutes: RouteObject = {
                   .default,
               }),
             },
+            {
+              path: "ledgerdetails",
+              children: [
+                {
+                  path: "ledgerreport",
+                  lazy: async () => ({
+                    Component: (
+                      await import("@/app/pages/accounting/ledgerdetails/ledgerreport")
+                    ).default,
+                  }),
+                },
+                {
+                  path: "ledgerdetails",
+                  lazy: async () => ({
+                    Component: (
+                      await import("@/app/pages/accounting/ledgerdetails/ledgerdetails")
+                    ).default,
+                  }),
+                },
+              ],
+            },
           ],
         },
         {
@@ -561,108 +583,71 @@ const protectedRoutes: RouteObject = {
             },
           ],
         },
+
         {
-          path: "ledgerdetails",
+          path: "goodscontrol",
           children: [
             {
-              path: "ledgerreport",
+              path: "tractorinventory",
               lazy: async () => ({
                 Component: (
-                  await import("@/app/pages/ledgerdetails/ledgerreport")
+                  await import("@/app/pages/goodscontrol/tractorinventory")
                 ).default,
               }),
             },
             {
-              path: "ledgerdetails",
+              path: "accessoriesinventory",
               lazy: async () => ({
                 Component: (
-                  await import("@/app/pages/ledgerdetails/ledgerdetails")
+                  await import("@/app/pages/goodscontrol/accessoriesinventory")
+                ).default,
+              }),
+            },
+            {
+              path: "accessoriesinventory/history/:id",
+              lazy: async () => ({
+                Component: (
+                  await import("@/app/pages/goodscontrol/accessorieshistory")
                 ).default,
               }),
             },
           ],
         },
         {
-          path: "bookingbalance",
+          path: "allot",
           children: [
             {
-              path: "bookingbalance",
+              path: "vehicleIncharge",
+              lazy: async () => ({
+                Component: (await import("@/app/pages/allot/vehicleIncharge"))
+                  .default,
+              }),
+            },
+            {
+              path: "accessoriesAllot",
+              lazy: async () => ({
+                Component: (await import("@/app/pages/allot/accessoriesAllot"))
+                  .default,
+              }),
+            },
+            {
+              path: "vehicle_verify_accessories",
               lazy: async () => ({
                 Component: (
-                  await import("@/app/pages/bookingbalance/bookingbalance")
+                  await import("@/app/pages/allot/vehicle_verify_accessories")
+                ).default,
+              }),
+            },
+            {
+              path: "accessories-allot/:id",
+              lazy: async () => ({
+                Component: (
+                  await import("@/app/pages/allot/accessoriesallotdetails")
                 ).default,
               }),
             },
           ],
         },
-       {
-  path: "goodscontrol",
-  children: [
-    {
-      path: "tractorinventory",
-      lazy: async () => ({
-        Component: (
-          await import("@/app/pages/goodscontrol/tractorinventory")
-        ).default,
-      }),
-    },
-    {
-      path: "accessoriesinventory",
-      lazy: async () => ({
-        Component: (
-          await import("@/app/pages/goodscontrol/accessoriesinventory")
-        ).default,
-      }),
-    },
-    {
-      path: "accessoriesinventory/history/:id",
-      lazy: async () => ({
-        Component: (
-          await import("@/app/pages/goodscontrol/accessorieshistory")
-        ).default,
-      }),
-    },
-  ],
-},
-    {
-  path: "allot",
-  children: [
-    {
-      path: "vehicleIncharge",
-      lazy: async () => ({
-        Component: (
-          await import("@/app/pages/allot/vehicleIncharge")
-        ).default,
-      }),
-    },
-    {
-      path: "accessoriesAllot",
-      lazy: async () => ({
-        Component: (
-          await import("@/app/pages/allot/accessoriesAllot")
-        ).default,
-      }),
-    },
-    {
-      path: "vehicle_verify_accessories",
-      lazy: async () => ({
-        Component: (
-          await import("@/app/pages/allot/vehicle_verify_accessories")
-        ).default,
-      }),
-    },
-    {
-  path: "accessories-allot/:id",
-  lazy: async () => ({
-    Component: (
-      await import(
-        "@/app/pages/allot/accessoriesallotdetails"
-      )
-    ).default,
-  }),
-}
-  ],
-},
         {
           path: "report",
           children: [
@@ -677,6 +662,13 @@ const protectedRoutes: RouteObject = {
               path: "enquirysource",
               lazy: async () => ({
                 Component: (await import("@/app/pages/report/enquirysource"))
+                  .default,
+              }),
+            },
+            {
+              path: "bookingbalance",
+              lazy: async () => ({
+                Component: (await import("@/app/pages/report/bookingbalance"))
                   .default,
               }),
             },
