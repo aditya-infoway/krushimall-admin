@@ -82,9 +82,9 @@ export default function General() {
 
       const data = response.data.data[0];
 
-      console.log("Company:", data);
+  
 
-      console.log("Saved quotation terms:", data?.quotationTerms);
+   
 
       setCompany(data);
 

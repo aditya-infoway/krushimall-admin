@@ -10,7 +10,7 @@ import {
   // ChatBubbleLeftIcon,
   Cog6ToothIcon,
 } from "@heroicons/react/24/outline";
-import {  TbUser,  } from "react-icons/tb";
+import { TbUser } from "react-icons/tb";
 import { Link } from "react-router";
 import { useAuthContext } from "@/app/contexts/auth/context";
 // Local Imports
@@ -75,26 +75,27 @@ const links: LinkItem[] = [
 
 export function Profile() {
   const [company, setCompany] = useState<any>(null);
- const { logout } = useAuthContext();
+  const { logout } = useAuthContext();
   useEffect(() => {
     fetchCompany();
   }, []);
 
   const fetchCompany = async () => {
-  try {
-    const response = await apiHelper.get("/company");
-    // Handle different response structures
-    const companyData = response?.data?.data?.[0] || response?.data?.[0] || response;
-    setCompany(companyData);
-  } catch (error) {
-    console.error("Failed to fetch company:", error);
-  }
-};
+    try {
+      const response = await apiHelper.get("/company");
+      // Handle different response structures
+      const companyData =
+        response?.data?.data?.[0] || response?.data?.[0] || response;
+      setCompany(companyData);
+    } catch (error) {
+      console.error("Failed to fetch company:", error);
+    }
+  };
 
-const getCompanyLogo = () => {
-  if (!company?.logo) return "/images/avatar/avatar-12.jpg";
-  return apiHelper.getImageUrl(company.logo);
-};
+  const getCompanyLogo = () => {
+    if (!company?.logo) return "/images/avatar/avatar-12.jpg";
+    return apiHelper.getImageUrl(company.logo);
+  };
 
   return (
     <Popover className="relative">
@@ -102,7 +103,7 @@ const getCompanyLogo = () => {
         as={Avatar}
         size={12}
         role="button"
-      src={getCompanyLogo()}
+        src={getCompanyLogo()}
         alt="Profile"
         indicator={
           <AvatarDot color="success" className="ltr:right-0 rtl:left-0" />
@@ -125,10 +126,7 @@ const getCompanyLogo = () => {
             <>
               {/* User Info */}
               <div className="dark:bg-dark-800 flex items-center gap-4 rounded-t-lg bg-gray-100 px-4 py-5">
-               <Avatar
-  size={14}
-  src={getCompanyLogo()}
-/>
+                <Avatar size={14} src={getCompanyLogo()} />
                 <div>
                   <Link
                     className="hover:text-primary-600 focus:text-primary-600 dark:text-dark-100 dark:hover:text-primary-400 dark:focus:text-primary-400 text-base font-medium text-gray-700"
@@ -170,12 +168,12 @@ const getCompanyLogo = () => {
                 ))}
 
                 {/* Logout Button */}
-                   <div className="px-4 pt-4">
-                                 <Button className="w-full gap-2" onClick={() => logout()}>
-                                   <ArrowLeftStartOnRectangleIcon className="size-4.5" />
-                                   <span>Logout</span>
-                                 </Button>
-                               </div>
+                <div className="px-4 pt-4">
+                  <Button className="w-full gap-2" onClick={() => logout()}>
+                    <ArrowLeftStartOnRectangleIcon className="size-4.5" />
+                    <span>Logout</span>
+                  </Button>
+                </div>
               </div>
             </>
           )}

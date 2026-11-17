@@ -21,6 +21,7 @@ import {
   TruckIcon,
   Squares2X2Icon,
   PhoneArrowUpRightIcon,
+  ArrowLeftStartOnRectangleIcon
   // Cog6ToothIcon,
 } from "@heroicons/react/24/outline";
 import { ElementType } from "react";
@@ -31,7 +32,7 @@ import SettingIcon from "@/assets/dualicons/setting.svg?react";
 export const navigationIcons: Record<string, ElementType> = {
   dashboards: DashboardsIcon,
   "dashboards.home": HomeIcon,
-
+logout: ArrowLeftStartOnRectangleIcon,
   user: BriefcaseIcon,
   master: FolderIcon,
   variant: CubeIcon,

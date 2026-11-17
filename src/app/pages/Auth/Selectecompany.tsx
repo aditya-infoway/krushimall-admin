@@ -5,6 +5,7 @@ import Select from "react-select";
 import { Country, State, City } from "country-state-city";
 import { Input } from "@/components/ui";
 import apiHelper from "@/utils/apiHelper"; 
+import logo from "@/assets/logo.png";
 interface Company {
   id: number;
   companyName: string;
@@ -296,9 +297,9 @@ const handleSelectCompany = (company: Company) => {
       {/* Left Side */}
       <div className="dark:bg-dark-700 flex w-full flex-col bg-white p-8 xl:w-1/2">
         {/* Logo */}
-        <div className="mb-8 flex justify-center">
-          <Logo className="mx-auto size-16" />
-        </div>
+        <div className="mb-6 flex justify-center pt-10">
+  <img src={logo} alt="KrushiMall" className="h-20 w-auto object-contain" />
+</div>
 
         {/* Heading */}
         <div className="mb-5 flex items-center gap-3">

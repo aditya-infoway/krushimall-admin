@@ -14,6 +14,7 @@ import { RiFileExcel2Fill, RiFilePdfFill } from "react-icons/ri";
 import { DatePicker } from "@/components/shared/form/Datepicker";
 import { useEffect } from "react";
 import apiHelper from "@/utils/apiHelper";
+import { createPortal } from "react-dom";
 interface LedgerAccount {
   id: number;
   accountName: string;
@@ -40,7 +41,7 @@ const LedgerReport: React.FC = () => {
   );
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
- 
+
   const [selectedAccount, setSelectedAccount] = useState<any>(null);
   const [search, setSearch] = useState("");
   const formatDate = (date: Date) => {
@@ -58,35 +59,33 @@ const LedgerReport: React.FC = () => {
     toDate: formatDate(today),
     displayType: "",
   });
-const [ledgerData, setLedgerData] = useState<LedgerAccount[]>([]);
+  const [ledgerData, setLedgerData] = useState<LedgerAccount[]>([]);
 
-// NEW: filter ledgerData by the search box before paginating
-const filteredData = ledgerData.filter((item) => {
-  const q = search.toLowerCase();
-  return (
-    item.accountName?.toLowerCase().includes(q) ||
-    item.group?.toLowerCase().includes(q) ||
-    item.address?.toLowerCase().includes(q) ||
-    item.city?.toLowerCase().includes(q) ||
-    item.state?.toLowerCase().includes(q)
-  );
-});
+  // NEW: filter ledgerData by the search box before paginating
+  const filteredData = ledgerData.filter((item) => {
+    const q = search.toLowerCase();
+    return (
+      item.accountName?.toLowerCase().includes(q) ||
+      item.group?.toLowerCase().includes(q) ||
+      item.address?.toLowerCase().includes(q) ||
+      item.city?.toLowerCase().includes(q) ||
+      item.state?.toLowerCase().includes(q)
+    );
+  });
 
-const totalPages = Math.ceil(filteredData.length / rowsPerPage);
-const startIndex = (currentPage - 1) * rowsPerPage;
-const endIndex = startIndex + rowsPerPage;
-const currentData = filteredData.slice(startIndex, endIndex);
-useEffect(() => {
-  setCurrentPage(1);
-}, [search]);
+  const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+  const startIndex = (currentPage - 1) * rowsPerPage;
+  const endIndex = startIndex + rowsPerPage;
+  const currentData = filteredData.slice(startIndex, endIndex);
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search]);
   const getLedgerAccounts = async () => {
     try {
-   const res = await apiHelper.get("/ledger/report");
-
-
+      const res = await apiHelper.get("/ledger/report");
 
       setLedgerData(
-     (res.report || res.data?.report || []).map((item: any) => ({
+        (res.report || res.data?.report || []).map((item: any) => ({
           id: item.id,
           accountName: item.accountName,
           group: item.group,
@@ -115,7 +114,7 @@ useEffect(() => {
 
   const handleDrawerOk = () => {
     setIsDrawerOpen(false);
-    navigate("/ledgerdetails/ledgerdetails", {
+    navigate("/accounting/ledgerdetails/ledgerdetails", {
       state: {
         accountId: selectedAccount.id,
         accountName: selectedAccount.accountName,
@@ -396,108 +395,112 @@ useEffect(() => {
       </div>
 
       {/* Right Side Drawer Modal - Matches Theme */}
-      {isDrawerOpen && (
-        <div className="fixed inset-0 z-50 overflow-hidden">
-          {/* Overlay */}
-          <div
-            className="absolute inset-0 bg-black/50 transition-opacity"
-            onClick={handleDrawerClose}
-          />
+      {isDrawerOpen &&
+        createPortal(
+          <div className="fixed inset-0 z-100 overflow-hidden">
+            {/* Overlay */}
+            <div
+              className="absolute inset-0 bg-black/50 transition-opacity"
+              onClick={handleDrawerClose}
+            />
 
-          {/* Drawer */}
-          <div className="dark:bg-dark-800 animate-slideInRight absolute top-0 right-0 h-full w-full max-w-lg transform bg-white shadow-2xl transition-transform">
-            <div className="flex h-full flex-col">
-              {/* Header - Matches Theme */}
-              <div className="dark:border-dark-600 flex items-center justify-between border-b border-gray-200 px-6 py-4">
-                <h2 className="text-lg font-bold text-black">Ledger Report</h2>
-                <button
-                  className="flex h-8 w-8 items-center justify-center rounded-full text-gray-500 transition-colors cursor-pointer"
-                  onClick={handleDrawerClose}
-                >
-                  <FiX size={18} />
-                </button>
-              </div>
+            {/* Drawer */}
+            <div className="dark:bg-dark-800 animate-slideInRight absolute top-0 right-0 h-full w-full max-w-lg transform bg-white shadow-2xl transition-transform">
+              <div className="flex h-full flex-col">
+                {/* Header - Matches Theme */}
+                <div className="dark:border-dark-600 flex items-center justify-between border-b border-gray-200 px-6 py-4">
+                  <h2 className="text-lg font-bold text-black">
+                    Ledger Report
+                  </h2>
+                  <button
+                    className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-gray-500 transition-colors"
+                    onClick={handleDrawerClose}
+                  >
+                    <FiX size={18} />
+                  </button>
+                </div>
 
-              {/* Body */}
-              <div className="flex-1 overflow-y-auto p-6">
-                <div className="space-y-4">
-                  <div>
-                    <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      From Date
-                    </label>
-                    <DatePicker
-                      placeholder="From Date"
-                      options={{ disableMobile: true }}
-                      value={filterData.fromDate}
-                      onChange={(date: any) =>
-                        setFilterData({ ...filterData, fromDate: date })
-                      }
-                    />
-                  </div>
-
-                  <div>
-                    <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      To Date
-                    </label>
-                    <DatePicker
-                      placeholder="To Date"
-                      options={{ disableMobile: true }}
-                      value={filterData.toDate}
-                      onChange={(date: any) =>
-                        setFilterData({ ...filterData, toDate: date })
-                      }
-                    />
-                  </div>
-
-                  <div>
-                    <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Display Type
-                    </label>
-                    <div className="relative">
-                      <select
-                        className="dark:border-dark-600 dark:bg-dark-700 focus:border-primary-500 focus:ring-primary-500/20 w-full appearance-none rounded-lg border border-gray-300 bg-white px-3 py-2 pr-10 text-sm text-gray-900 focus:ring-2 focus:outline-none dark:text-white"
-                        value={filterData.displayType}
-                        onChange={(e) =>
-                          setFilterData({
-                            ...filterData,
-                            displayType: e.target.value,
-                          })
+                {/* Body */}
+                <div className="flex-1 overflow-y-auto p-6">
+                  <div className="space-y-4">
+                    <div>
+                      <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        From Date
+                      </label>
+                      <DatePicker
+                        placeholder="From Date"
+                        options={{ disableMobile: true }}
+                        value={filterData.fromDate}
+                        onChange={(date: any) =>
+                          setFilterData({ ...filterData, fromDate: date })
                         }
-                      >
-                        <option value="">Select Display Type</option>
-                        <option value="summary">Summary</option>
-                        <option value="detailed">Detailed</option>
-                      </select>
-                      <FiChevronDown
-                        className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-gray-400"
-                        size={16}
                       />
+                    </div>
+
+                    <div>
+                      <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        To Date
+                      </label>
+                      <DatePicker
+                        placeholder="To Date"
+                        options={{ disableMobile: true }}
+                        value={filterData.toDate}
+                        onChange={(date: any) =>
+                          setFilterData({ ...filterData, toDate: date })
+                        }
+                      />
+                    </div>
+
+                    <div>
+                      <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Display Type
+                      </label>
+                      <div className="relative">
+                        <select
+                          className="dark:border-dark-600 dark:bg-dark-700 focus:border-primary-500 focus:ring-primary-500/20 w-full appearance-none rounded-lg border border-gray-300 bg-white px-3 py-2 pr-10 text-sm text-gray-900 focus:ring-2 focus:outline-none dark:text-white"
+                          value={filterData.displayType}
+                          onChange={(e) =>
+                            setFilterData({
+                              ...filterData,
+                              displayType: e.target.value,
+                            })
+                          }
+                        >
+                          <option value="">Select Display Type</option>
+                          <option value="summary">Summary</option>
+                          <option value="detailed">Detailed</option>
+                        </select>
+                        <FiChevronDown
+                          className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-gray-400"
+                          size={16}
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Footer - Matches Theme */}
-              <div className="dark:border-dark-600 border-t border-gray-200 px-6 py-4">
-                <div className="flex justify-end gap-3">
-                  <button
-                    className="dark:border-dark-600 dark:hover:bg-dark-700 cursor-pointer rounded-lg border border-gray-300 px-5 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:text-gray-300"
-                    onClick={handleDrawerClose}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    className="bg-primary-500 hover:bg-priamry-600 cursor-pointer rounded-lg px-5 py-2 text-sm font-medium text-white transition-colors"
-                    onClick={handleDrawerOk}
-                  >
-                    OK
-                  </button>
+                {/* Footer - Matches Theme */}
+                <div className="dark:border-dark-600 border-t border-gray-200 px-6 py-4">
+                  <div className="flex justify-end gap-3">
+                    <button
+                      className="dark:border-dark-600 dark:hover:bg-dark-700 cursor-pointer rounded-lg border border-gray-300 px-5 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:text-gray-300"
+                      onClick={handleDrawerClose}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      className="bg-primary-500 hover:bg-priamry-600 cursor-pointer rounded-lg px-5 py-2 text-sm font-medium text-white transition-colors"
+                      onClick={handleDrawerOk}
+                    >
+                      OK
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body,
+        )}
 
       <style>{`
         @keyframes slideInRight {

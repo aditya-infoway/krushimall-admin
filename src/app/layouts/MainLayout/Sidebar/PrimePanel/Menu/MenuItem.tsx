@@ -12,7 +12,7 @@ import { ColorType } from "@/constants/app";
 
 // ----------------------------------------------------------------------
 
-export function MenuItem({ data }: { data: NavigationTree  }) {
+export function MenuItem({ data }: { data: NavigationTree }) {
   const { path, transKey, id, title: defaultTitle } = data;
 
   const { t } = useTranslation();
@@ -36,39 +36,39 @@ export function MenuItem({ data }: { data: NavigationTree  }) {
         clsx(
           "outline-hidden transition-colors duration-300 ease-in-out",
           isActive
-            ? "font-medium text-primary-600 dark:text-primary-400"
-            : "text-gray-600 hover:text-gray-900 dark:text-dark-200 dark:hover:text-dark-50",
+            ? "text-primary-600 dark:text-primary-400 font-medium"
+            : "dark:text-dark-200 dark:hover:text-dark-50 text-gray-600 hover:text-gray-900",
         )
       }
     >
-    {({ isActive }) => (
-  <div
-    data-menu-active={isActive}
-    style={{ height: "34px" }}
-    className="flex items-center justify-between text-xs-plus tracking-wide"
-  >
-    <div className="flex min-w-0 items-center space-x-2 rtl:space-x-reverse">
-      <div
-        className={clsx(
-          isActive
-            ? "bg-primary-600 dark:bg-primary-400 opacity-80"
-            : "opacity-50 transition-all",
-          "size-1.5 rounded-full border border-current",
-        )}
-      ></div>
-      <span className="truncate">{title}</span>
-    </div>
-    {info?.val && (
-      <Badge
-        color={info.color}
-        variant="soft"
-        className="h-4.5 min-w-[1rem] shrink-0 p-[5px] text-tiny-plus"
-      >
-        {info.val}
-      </Badge>
-    )}
-  </div>
-)}
+      {({ isActive }) => (
+        <div
+          data-menu-active={isActive}
+          style={{ height: "34px" }}
+          className="text-xs-plus flex items-center justify-between tracking-wide"
+        >
+          <div className="flex min-w-0 items-center space-x-2 rtl:space-x-reverse">
+            <div
+              className={clsx(
+                isActive
+                  ? "bg-primary-600 dark:bg-primary-400 opacity-80"
+                  : "opacity-50 transition-all",
+                "size-1.5 rounded-full border border-current",
+              )}
+            ></div>
+            <span className="truncate">{title}</span>
+          </div>
+          {info?.val && (
+            <Badge
+              color={info.color}
+              variant="soft"
+              className="text-tiny-plus h-4.5 min-w-[1rem] shrink-0 p-[5px]"
+            >
+              {info.val}
+            </Badge>
+          )}
+        </div>
+      )}
     </NavLink>
   );
 }

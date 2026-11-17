@@ -223,7 +223,7 @@ const LedgerDetails: React.FC = () => {
   };
 
   const handleBack = () => {
-    navigate("/ledgerdetails/ledgerreport");
+    navigate("/accounting/ledgerdetails/ledgerreport");
   };
   const clearFilter = () => {
     setFromDate(filterData.fromDate);
