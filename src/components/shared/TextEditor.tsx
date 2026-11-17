@@ -1,9 +1,7 @@
 import { useEffect } from "react";
-import {
-  useEditor,
-  EditorContent,
-} from "@tiptap/react";
+import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+// import Underline from "@tiptap/extension-underline";
 
 interface TextEditorProps {
   value: string;
@@ -16,50 +14,39 @@ export default function TextEditor({
   onChange,
   readOnly = false,
 }: TextEditorProps) {
-  const editor = useEditor({
-    extensions: [
-      StarterKit,
-    ],
-
-    content: value || "",
-
-    editable: !readOnly,
-
-    onUpdate: ({ editor }) => {
-      onChange(editor.getHTML());
-    },
-  });
-
-  // Show saved terms after API data is fetched
+ const editor = useEditor({
+  extensions: [StarterKit],
+  content: value || "",
+  editable: !readOnly,
+  immediatelyRender: false,
+  onUpdate: ({ editor }) => {
+    onChange(editor.getHTML());
+  },
+});
+  // API se data aane ke baad saved terms dikhao
   useEffect(() => {
-    if (!editor) return;
+    if (!editor || editor.isDestroyed) return;
 
-    const savedContent =
-      value || "";
+    const savedContent = value || "";
 
-    const currentContent =
-      editor.getHTML();
+    let currentContent = "";
+    try {
+      currentContent = editor.getHTML();
+    } catch {
+      // schema abhi ready nahi, agle render par dobara chalega
+      return;
+    }
 
-    if (
-      currentContent !==
-      savedContent
-    ) {
-      editor.commands.setContent(
-        savedContent,
-        {
-          emitUpdate: false,
-        },
-      );
+    if (currentContent !== savedContent) {
+      editor.commands.setContent(savedContent, { emitUpdate: false });
     }
   }, [editor, value]);
 
-  // Update editor editable/read-only mode
+  // Editable / read-only mode update
   useEffect(() => {
-    if (!editor) return;
+    if (!editor || editor.isDestroyed) return;
 
-    editor.setEditable(
-      !readOnly,
-    );
+    editor.setEditable(!readOnly);
   }, [editor, readOnly]);
 
   return (
@@ -68,17 +55,9 @@ export default function TextEditor({
         <div className="flex flex-wrap gap-2 border-b border-gray-300 p-2 dark:border-gray-700">
           <button
             type="button"
-            onClick={() =>
-              editor
-                ?.chain()
-                .focus()
-                .toggleBold()
-                .run()
-            }
+            onClick={() => editor?.chain().focus().toggleBold().run()}
             className={`rounded px-3 py-1 font-bold ${
-              editor?.isActive(
-                "bold",
-              )
+              editor?.isActive("bold")
                 ? "bg-primary-500 text-white"
                 : "bg-gray-100 dark:bg-gray-700"
             }`}
@@ -88,17 +67,9 @@ export default function TextEditor({
 
           <button
             type="button"
-            onClick={() =>
-              editor
-                ?.chain()
-                .focus()
-                .toggleItalic()
-                .run()
-            }
+            onClick={() => editor?.chain().focus().toggleItalic().run()}
             className={`rounded px-3 py-1 italic ${
-              editor?.isActive(
-                "italic",
-              )
+              editor?.isActive("italic")
                 ? "bg-primary-500 text-white"
                 : "bg-gray-100 dark:bg-gray-700"
             }`}
@@ -108,17 +79,9 @@ export default function TextEditor({
 
           <button
             type="button"
-            onClick={() =>
-              editor
-                ?.chain()
-                .focus()
-                .toggleUnderline()
-                .run()
-            }
+            onClick={() => editor?.chain().focus().toggleUnderline().run()}
             className={`rounded px-3 py-1 underline ${
-              editor?.isActive(
-                "underline",
-              )
+              editor?.isActive("underline")
                 ? "bg-primary-500 text-white"
                 : "bg-gray-100 dark:bg-gray-700"
             }`}
@@ -128,17 +91,9 @@ export default function TextEditor({
 
           <button
             type="button"
-            onClick={() =>
-              editor
-                ?.chain()
-                .focus()
-                .toggleBulletList()
-                .run()
-            }
+            onClick={() => editor?.chain().focus().toggleBulletList().run()}
             className={`rounded px-3 py-1 ${
-              editor?.isActive(
-                "bulletList",
-              )
+              editor?.isActive("bulletList")
                 ? "bg-primary-500 text-white"
                 : "bg-gray-100 dark:bg-gray-700"
             }`}
@@ -148,17 +103,9 @@ export default function TextEditor({
 
           <button
             type="button"
-            onClick={() =>
-              editor
-                ?.chain()
-                .focus()
-                .toggleOrderedList()
-                .run()
-            }
+            onClick={() => editor?.chain().focus().toggleOrderedList().run()}
             className={`rounded px-3 py-1 ${
-              editor?.isActive(
-                "orderedList",
-              )
+              editor?.isActive("orderedList")
                 ? "bg-primary-500 text-white"
                 : "bg-gray-100 dark:bg-gray-700"
             }`}
