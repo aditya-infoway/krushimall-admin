@@ -24,24 +24,6 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// 401 / 403 handling
-api.interceptors.response.use(
-  (response) => {
-    if (response.data?.status === 401 || response.data?.status === 403) {
-      Logout();
-    }
-
-    return response;
-  },
-  (error) => {
-    if (error.response?.status === 401 || error.response?.status === 403) {
-      Logout();
-    }
-
-    return Promise.reject(error);
-  },
-);
-
 // Logout
 const Logout = () => {
   setSession(null);
@@ -50,6 +32,41 @@ const Logout = () => {
 
   window.location.href = "/krushimall-admin/login";
 };
+
+// Login endpoints par 401/403 ka matlab "galat password" hai, session expire nahi
+const AUTH_ENDPOINTS = [
+  "/auth/login",
+  "/branch/login",
+  "/employees/login",
+  "/vendor-admin/login",
+];
+
+const isAuthEndpoint = (url?: string) =>
+  !!url && AUTH_ENDPOINTS.some((e) => url.includes(e));
+
+// 401 / 403 handling
+api.interceptors.response.use(
+  (response) => {
+    if (
+      (response.data?.status === 401 || response.data?.status === 403) &&
+      !isAuthEndpoint(response.config?.url)
+    ) {
+      Logout();
+    }
+
+    return response;
+  },
+  (error) => {
+    if (
+      (error.response?.status === 401 || error.response?.status === 403) &&
+      !isAuthEndpoint(error.config?.url)
+    ) {
+      Logout();
+    }
+
+    return Promise.reject(error);
+  },
+);
 
 // Base URL without /api
 export const getBaseUrl = () => {
