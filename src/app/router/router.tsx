@@ -1,5 +1,5 @@
 // Import Dependencies
-import { createBrowserRouter, RouteObject } from "react-router";
+import { createBrowserRouter, RouteObject,createHashRouter } from "react-router";
 
 // Local Imports
 import Root from "@/app/layouts/Root";
@@ -13,7 +13,9 @@ import { publicRoutes } from "./public";
  * Main application router configuration
  * Combines protected, ghost, and public routes under a common root
  */
-const router = createBrowserRouter(
+const isCapacitor = import.meta.env.MODE === "capacitor";
+const createRouter = isCapacitor ? createHashRouter : createBrowserRouter;
+const router = createRouter(
   [
     {
       id: "root",
@@ -28,7 +30,7 @@ const router = createBrowserRouter(
     },
   ],
   {
-    basename: "/krushimall-admin",
+basename: isCapacitor ? "/" : "/krushimall-admin",
   }
 );
 

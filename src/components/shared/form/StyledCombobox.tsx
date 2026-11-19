@@ -1,4 +1,3 @@
-
 // Import Dependencies
 import {
   Combobox,
@@ -134,8 +133,6 @@ function CustomCombobox<TValue = DataItem>(
     onChange?.(newValue as any);
   };
 
-  
-
   return (
     <div className={clsx("flex flex-col", classNames?.root)} {...rootProps}>
       <Combobox
@@ -255,68 +252,78 @@ function CustomCombobox<TValue = DataItem>(
                   leaveTo="opacity-0 translate-y-2"
                   afterLeave={() => setQuery("")}
                 >
-                  
-                  
                   <ComboboxOptions
                     anchor={{ to: "bottom end", gap: 8 }}
                     style={{
                       width: inputWidth,
                     }}
                     className={clsx(
-                      "dark:border-dark-500 dark:bg-dark-750 z-10 max-h-60 overflow-y-auto rounded-lg border border-gray-300 bg-white py-1 shadow-lg outline-hidden",
+                      "dark:border-dark-500 dark:bg-dark-750 z-10 rounded-lg border border-gray-300 bg-white shadow-lg outline-hidden",
                       multiple && "mt-2",
                     )}
                   >
-                    {filteredData.length === 0 && query !== "" ? (
-                      <div className="dark:text-dark-100 relative cursor-default px-4 py-2 text-gray-800 select-none">
-                        Nothing found for {query}
-                      </div>
-                    ) : (
-                      filteredData.map(({ item, refIndex }) => (
-                        <ComboboxOption
-                          key={refIndex}
-                          className={({
-                            selected,
-                            active,
-                          }: {
-                            selected: boolean;
-                            active: boolean;
-                          }) =>
-                            clsx(
-                              "relative cursor-pointer px-4 py-2 outline-hidden transition-colors select-none",
-                              active &&
-                                !selected &&
-                                "dark:bg-dark-600 bg-gray-100",
-                              selected
-                                ? "bg-primary-600 dark:bg-primary-500 text-white"
-                                : "dark:text-dark-100 text-gray-800",
-                            )
-                          }
-                          value={item}
-                        >
-                          {({ selected }: { selected: boolean }) => (
-                            <span
-                              className={`block truncate ${
-                                selected ? "font-medium" : "font-normal"
-                              }`}
-                            >
-                              {highlight ? (
-                                <Highlight query={query}>
-                                  {String(
+                    <div
+                      style={{
+                        height: "260px",
+                        overflowY: "auto",
+                        overflowX: "hidden",
+                        scrollbarWidth: "thin",
+                        scrollbarColor: "#9ca3af transparent",
+                      }}
+                      className="py-1"
+                    >
+                      {filteredData.length === 0 && query !== "" ? (
+                        <div className="dark:text-dark-100 relative cursor-default px-4 py-2 text-gray-800">
+                          Nothing found for {query}
+                        </div>
+                      ) : (
+                        filteredData.map(({ item, refIndex }) => (
+                          <ComboboxOption
+                            key={refIndex}
+                            className={({
+                              selected,
+                              active,
+                            }: {
+                              selected: boolean;
+                              active: boolean;
+                            }) =>
+                              clsx(
+                                "relative cursor-pointer px-4 py-2 outline-hidden transition-colors select-none",
+                                active &&
+                                  !selected &&
+                                  "dark:bg-dark-600 bg-gray-100",
+                                selected
+                                  ? "bg-primary-600 dark:bg-primary-500 text-white"
+                                  : "dark:text-dark-100 text-gray-800",
+                              )
+                            }
+                            value={item}
+                          >
+                            {({ selected }: { selected: boolean }) => (
+                              <span
+                                className={`block truncate ${
+                                  selected ? "font-medium" : "font-normal"
+                                }`}
+                              >
+                                {highlight ? (
+                                  <Highlight query={query}>
+                                    {String(
+                                      item?.[displayField as keyof DataItem] ??
+                                        "",
+                                    )}
+                                  </Highlight>
+                                ) : (
+                                  String(
                                     item?.[displayField as keyof DataItem] ??
                                       "",
-                                  )}
-                                </Highlight>
-                              ) : (
-                                String(
-                                  item?.[displayField as keyof DataItem] ?? "",
-                                )
-                              )}
-                            </span>
-                          )}
-                        </ComboboxOption>
-                      ))
-                    )}
+                                  )
+                                )}
+                              </span>
+                            )}
+                          </ComboboxOption>
+                        ))
+                      )}
+                    </div>
                   </ComboboxOptions>
                 </Transition>
               </div>

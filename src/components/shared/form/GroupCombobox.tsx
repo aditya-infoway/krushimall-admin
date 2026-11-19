@@ -114,6 +114,7 @@ function GroupCombobox<TValue = DataItem>(
     keys: searchFields,
     threshold: 0.2,
     matchAllOnEmptyQuery: true,
+    limit: data.length,
   });
 
   const boxSizeRef = useRef<HTMLDivElement>(null);
@@ -254,16 +255,24 @@ function GroupCombobox<TValue = DataItem>(
                   leaveTo="opacity-0 translate-y-2"
                   afterLeave={() => setQuery("")}
                 >
-                <ComboboxOptions
-  anchor={{ to: "bottom end", gap: 8 }}
-  style={{
-    width: inputWidth, // Keep this for width synchronization
-  }}
-  className={clsx(
-  "dark:border-dark-500 dark:bg-dark-750 z-50 max-h-96 overflow-y-auto rounded-lg border border-gray-300 bg-white py-1 shadow-lg",
-  multiple && "mt-2"
-)}
->
+                  <ComboboxOptions
+                    anchor={{ to: "bottom end", gap: 8 }}
+                    style={{
+                      width: inputWidth,
+                      height: "260px",
+                      minHeight: "260px",
+                      maxHeight: "260px",
+                      overflowY: "auto",
+                      overflowX: "hidden",
+                      overscrollBehavior: "contain",
+                      scrollbarWidth: "thin",
+                      scrollbarColor: "#64748b transparent",
+                    }}
+                    className={clsx(
+                      "dark:border-dark-500 dark:bg-dark-750 z-50 rounded-lg border border-gray-300 bg-white py-1 shadow-lg",
+                      multiple && "mt-2",
+                    )}
+                  >
                     {filteredData.length === 0 && query !== "" ? (
                       <div className="dark:text-dark-100 relative cursor-default px-4 py-2 text-gray-800 select-none">
                         Nothing found for {query}
@@ -275,8 +284,7 @@ function GroupCombobox<TValue = DataItem>(
                           <span>Group</span>
                           <span className="text-right">Effect</span>
                         </div>
-                      
-                        
+
                         {filteredData.map(({ item, refIndex }) => (
                           <ComboboxOption
                             key={refIndex}

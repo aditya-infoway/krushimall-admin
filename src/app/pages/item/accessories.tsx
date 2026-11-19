@@ -117,17 +117,56 @@ const entriesOptions = [
   { id: 50, name: "50" },
   { id: 100, name: "100" },
 ];
+// const unitOptions = [
+//   // { label: "NOS", value: "NOS" },
+//   { label: "PCS", value: "PCS" },
+//   { label: "SET", value: "SET" },
+//   { label: "BOX", value: "BOX" },
+//   // { label: "KIT", value: "KIT" },
+//   // { label: "LTR", value: "LTR" },
+//   { label: "KG", value: "KG" },
+//   { label: "GM", value: "GM" },
+//   // { label: "MTR", value: "MTR" },
+// ];
+
 const unitOptions = [
-  // { label: "NOS", value: "NOS" },
+  // Quantity / Counting Units
   { label: "PCS", value: "PCS" },
+  { label: "NOS", value: "NOS" },
   { label: "SET", value: "SET" },
+  { label: "PAIR", value: "PAIR" },
+  { label: "DOZEN", value: "DOZ" },
+  { label: "KIT", value: "KIT" },
+
+  // Packaging Units
   { label: "BOX", value: "BOX" },
-  // { label: "KIT", value: "KIT" },
-  // { label: "LTR", value: "LTR" },
-  { label: "KG", value: "KG" },
-  { label: "GM", value: "GM" },
-  // { label: "MTR", value: "MTR" },
+  { label: "PACK", value: "PACK" },
+  { label: "PACKET", value: "PKT" },
+  { label: "CARTON", value: "CTN" },
+  { label: "ROLL", value: "ROLL" },
+
+  // Weight Units
+  { label: "KILOGRAM (KG)", value: "KG" },
+  { label: "GRAM (GM)", value: "GM" },
+  { label: "MILLIGRAM (MG)", value: "MG" },
+  { label: "TON", value: "TON" },
+  { label: "QUINTAL (QTL)", value: "QTL" },
+
+  // Liquid Units
+  { label: "LITRE (LTR)", value: "LTR" },
+  { label: "MILLILITRE (ML)", value: "ML" },
+  { label: "GALLON", value: "GAL" },
+
+  // Length Units
+  { label: "METER (MTR)", value: "MTR" },
+  { label: "CENTIMETER (CM)", value: "CM" },
+  { label: "MILLIMETER (MM)", value: "MM" },
+
+  // Area Units
+  { label: "SQUARE FEET (SQFT)", value: "SQFT" },
+  { label: "SQUARE METER (SQM)", value: "SQM" },
 ];
+
 const statusOptions = [
   { label: "Active", value: "ACTIVE" },
   { label: "Inactive", value: "INACTIVE" },
@@ -152,11 +191,6 @@ const groupOptions = [
   { label: "Filters", value: "Filters" },
   { label: "Hydraulics", value: "Hydraulics" },
   { label: "General Accessories", value: "General Accessories" },
-];
-
-const typeOptions = [
-  { label: "Accessories", value: "Accessories" },
-  { label: "Parts", value: "Parts" },
 ];
 
 // ─── Main Component ──────────────────────────────────────────────────────
@@ -945,7 +979,7 @@ const Accessories = () => {
                     leaveTo="transform opacity-0 scale-95"
                   >
                     <MenuItems
-                        anchor="bottom start"
+                      anchor="bottom start"
                       className="dark:bg-dark-700 dark:border-dark-600 z-[200] w-20 space-y-0.5 rounded-lg border border-gray-200 bg-white p-1 shadow-xl ring-1 ring-black/5 [--anchor-gap:6px] focus:outline-none"
                     >
                       {entriesOptions.map((opt) => (
