@@ -264,9 +264,10 @@ function CustomCombobox<TValue = DataItem>(
                   >
                     <div
                       style={{
-                        height: "260px",
+                        maxHeight: "260px",
                         overflowY: "auto",
                         overflowX: "hidden",
+                        overscrollBehavior: "contain",
                         scrollbarWidth: "thin",
                         scrollbarColor: "#9ca3af transparent",
                       }}
