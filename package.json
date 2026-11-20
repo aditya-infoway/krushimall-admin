@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite --host",
     "build": "tsc -b && vite build",
+    "build:capacitor": "tsc -b && vite build --mode capacitor",
     "lint": "eslint .",
     "preview": "vite preview"
   },
@@ -95,6 +96,7 @@
     "yup": "^1.7.1"
   },
   "devDependencies": {
+    "@capacitor/assets": "^4.0.0",
     "@eslint/js": "^9.39.2",
     "@tailwindcss/postcss": "^4.1.18",
     "@types/file-saver": "^2.0.7",
