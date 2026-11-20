@@ -18,7 +18,7 @@ type FormValues = {
   openingBalance: string;
   drCr: string;
   country: string;
-  countryCode: string;
+  countryCode: string; 
   state: string;
   stateCode: string;
   district: string;
