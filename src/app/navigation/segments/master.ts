@@ -99,10 +99,9 @@ export const master: NavigationTree = {
       path: "/usermaster/branch",
     },
 
+    { id: "divider-usermaster", type: "divider" },
 
-{ id: "divider-usermaster", type: "divider" },
-
-        // Enquiry Master section
+    // Enquiry Master section
     {
       id: "enquirymaster-label",
       type: "title",
@@ -145,10 +144,9 @@ export const master: NavigationTree = {
       path: "/enquirysettings/enquirystatus",
     },
 
+    { id: "divider-usermaster", type: "divider" },
 
-{ id: "divider-usermaster", type: "divider" },
-
-     {
+    {
       id: "itemmaster-label",
       type: "title",
       title: "Item Master",
@@ -166,9 +164,15 @@ export const master: NavigationTree = {
       path: "/item/accessories",
     },
 
+    {
+      id: "spareparts",
+      type: "item",
+      title: "Spare Parts",
+      path: "/item/sparepart",
+    },
 
-{ id: "divider-usermaster", type: "divider" },
-        // Goods Control Master section
+    { id: "divider-usermaster", type: "divider" },
+    // Goods Control Master section
     {
       id: "goodscontrol-label",
       type: "title",
