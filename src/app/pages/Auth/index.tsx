@@ -15,6 +15,7 @@ import apiHelper from "@/utils/apiHelper";
 import { AuthFormValues, ROLE_OPTIONS, schema } from "./schema";
 import { Page } from "@/components/shared/Page";
 import logo from "@/assets/logo.png";
+import image from "@/assets/krushi.png";
 // ----------------------------------------------------------------------
 
 const roleOptions = ROLE_OPTIONS.map((r) => ({
@@ -225,7 +226,7 @@ export default function SignIn() {
             {/* Right Side - Image (same as before) */}
             <div className="relative hidden items-center justify-center lg:flex">
               <img
-                src="https://images.unsplash.com/photo-1520607162513-77705c0f0d4a"
+                src={image}
                 alt="company"
                 className="absolute inset-0 h-full w-full object-cover"
               />

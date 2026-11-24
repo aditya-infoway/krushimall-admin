@@ -29,14 +29,6 @@ interface AccessoriesPurchaseBillProps {
   onSaved?: (row: any) => void;
 }
 
-interface AccessoryOption {
-  id: string;
-  itemName: string;
-  modalName: string;
-  itemCodeNo: string;
-  hsnCode: string;
-}
-
 interface ItemRow {
   id: string;
 
@@ -83,7 +75,6 @@ interface NewAccountData {
 
 // Accessories Item Form Data (matches the main Accessories form)
 interface AccessoryItemFormData {
-  type: "Accessories" | "Parts";
   itemName: string;
   codeNo: string;
   shortName: string;
@@ -146,32 +137,6 @@ const paymentModeOptions: { label: string; value: PaymentMode }[] = [
   { label: "IMPS", value: "IMPS" },
   { label: "CHEQUE", value: "CHEQUE" },
   { label: "CARD", value: "CARD" },
-];
-
-// ---------- Mock data ----------
-
-const ACCESSORY_OPTIONS: AccessoryOption[] = [
-  {
-    id: "a1",
-    itemName: "Hydraulic Filter",
-    modalName: "HF-200",
-    itemCodeNo: "ACC-001",
-    hsnCode: "8421",
-  },
-  {
-    id: "a2",
-    itemName: "Tractor Seat Cover",
-    modalName: "TSC-Std",
-    itemCodeNo: "ACC-002",
-    hsnCode: "8708",
-  },
-  {
-    id: "a3",
-    itemName: "Towing Hook",
-    modalName: "TH-Heavy",
-    itemCodeNo: "ACC-003",
-    hsnCode: "7326",
-  },
 ];
 
 const termsOptions = [
@@ -302,36 +267,36 @@ const CheckboxOption = (props: any) => (
 );
 // ─── react-select custom styles ────────────────────────────────────────
 const selectClassNames = {
-    control: ({ isFocused }: any) =>
-      `min-h-[42px] rounded-lg border bg-white px-1 text-sm dark:bg-transparent ${
-        isFocused
-          ? "border-primary-600 ring-1 ring-primary-600"
-          : "dark:border-dark-500 border-gray-300 hover:border-primary-500"
-      }`,
-    valueContainer: () => "gap-1 px-2 py-1",
-    placeholder: () => "text-gray-400",
-    input: () => "text-gray-900 dark:text-dark-100",
-    multiValue: () => "bg-primary-50 dark:bg-dark-600 rounded-md px-1.5 py-0.5",
-    multiValueLabel: () =>
-      "text-primary-700 dark:text-dark-100 text-xs font-medium",
-    multiValueRemove: () =>
-      "ml-1 rounded text-gray-500 hover:bg-red-100 hover:text-red-600 dark:text-dark-200",
-    menu: () =>
-      "dark:bg-dark-700 dark:border-dark-500 absolute z-50 mt-1 w-full overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg",
-    menuList: () => "p-1",
-    option: ({ isFocused, isSelected }: any) =>
-      `cursor-pointer rounded-md px-3 py-2 text-sm ${
-        isSelected
-          ? "bg-primary-50 text-primary-700 dark:bg-primary-600 dark:text-white"
-          : isFocused
-            ? "dark:bg-dark-600 bg-gray-100 text-gray-900 dark:text-white"
-            : "dark:text-dark-100 text-gray-700"
-      }`,
-    noOptionsMessage: () => "py-3 text-sm text-gray-400",
-    dropdownIndicator: () => "px-2 text-gray-400",
-    clearIndicator: () => "px-2 text-gray-400 hover:text-red-500",
-    indicatorSeparator: () => "hidden",
-  };
+  control: ({ isFocused }: any) =>
+    `min-h-[42px] rounded-lg border bg-white px-1 text-sm dark:bg-transparent ${
+      isFocused
+        ? "border-primary-600 ring-1 ring-primary-600"
+        : "dark:border-dark-500 border-gray-300 hover:border-primary-500"
+    }`,
+  valueContainer: () => "gap-1 px-2 py-1",
+  placeholder: () => "text-gray-400",
+  input: () => "text-gray-900 dark:text-dark-100",
+  multiValue: () => "bg-primary-50 dark:bg-dark-600 rounded-md px-1.5 py-0.5",
+  multiValueLabel: () =>
+    "text-primary-700 dark:text-dark-100 text-xs font-medium",
+  multiValueRemove: () =>
+    "ml-1 rounded text-gray-500 hover:bg-red-100 hover:text-red-600 dark:text-dark-200",
+  menu: () =>
+    "dark:bg-dark-700 dark:border-dark-500 absolute z-50 mt-1 w-full overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg",
+  menuList: () => "p-1",
+  option: ({ isFocused, isSelected }: any) =>
+    `cursor-pointer rounded-md px-3 py-2 text-sm ${
+      isSelected
+        ? "bg-primary-50 text-primary-700 dark:bg-primary-600 dark:text-white"
+        : isFocused
+          ? "dark:bg-dark-600 bg-gray-100 text-gray-900 dark:text-white"
+          : "dark:text-dark-100 text-gray-700"
+    }`,
+  noOptionsMessage: () => "py-3 text-sm text-gray-400",
+  dropdownIndicator: () => "px-2 text-gray-400",
+  clearIndicator: () => "px-2 text-gray-400 hover:text-red-500",
+  indicatorSeparator: () => "hidden",
+};
 
 // ---------- Main component ----------
 
@@ -383,7 +348,6 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
   // ── Add Accessories Item Modal state ────────────────────────────────
   const [addAccessoryModalOpen, setAddAccessoryModalOpen] = useState(false);
   const [accessoryForm, setAccessoryForm] = useState<AccessoryItemFormData>({
-    type: "Accessories",
     itemName: "",
     codeNo: "",
     shortName: "",
@@ -527,7 +491,6 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
     try {
       const res = await apiHelper.get("/accessories");
 
-   
       setAccessories(
         Array.isArray(res.data?.data)
           ? res.data.data
@@ -711,19 +674,6 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
     }
   };
 
-  const handleAccessoryTypeChange = (type: "Accessories" | "Parts") => {
-    setAccessoryForm((prev) => ({
-      ...prev,
-      type,
-      itemName: "",
-      codeNo: "",
-    }));
-    const newErrors = { ...accessoryFormErrors };
-    delete newErrors.itemName;
-    delete newErrors.codeNo;
-    setAccessoryFormErrors(newErrors);
-  };
-
   const validateAccessoryForm = () => {
     const newErrors: Record<string, string> = {};
     if (!accessoryForm.itemName.trim())
@@ -749,7 +699,6 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
 
     try {
       const payload = {
-        type: accessoryForm.type,
         itemName: accessoryForm.itemName,
         codeNo: accessoryForm.codeNo,
         shortName: accessoryForm.shortName,
@@ -785,7 +734,6 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
 
   const resetAccessoryForm = () => {
     setAccessoryForm({
-      type: "Accessories",
       itemName: "",
       codeNo: "",
       shortName: "",
@@ -1742,7 +1690,7 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
                     <td className="border border-gray-500 px-2 py-1.5 text-center dark:border-gray-500">
                       <button
                         onClick={() => setAccessoryDrawerOpen(true)}
-                     className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-blue-600 bg-blue-600 text-white transition hover:bg-blue-700"
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-blue-600 bg-blue-600 text-white transition hover:bg-blue-700"
                       >
                         <PlusIcon className="h-5 w-5" />
                       </button>
@@ -2282,47 +2230,15 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
               {/* Content */}
               <div className="flex-1 overflow-y-auto p-4 sm:p-6">
                 <div className="space-y-4 sm:space-y-5">
-                  {/* Type - Radio buttons */}
-                  <div>
-                    <label className="dark:text-dark-200 mb-2 block text-sm font-medium text-gray-700">
-                      Type <span className="text-red-500">*</span>
-                    </label>
-                    <div className="flex gap-6">
-                      <label className="flex cursor-pointer items-center gap-2 text-sm text-gray-800 dark:text-gray-200">
-                        <Radio
-                          checked={accessoryForm.type === "Accessories"}
-                          onChange={() =>
-                            handleAccessoryTypeChange("Accessories")
-                          }
-                        />
-                        Accessories
-                      </label>
-                      <label className="flex cursor-pointer items-center gap-2 text-sm text-gray-800 dark:text-gray-200">
-                        <Radio
-                          checked={accessoryForm.type === "Parts"}
-                          onChange={() => handleAccessoryTypeChange("Parts")}
-                        />
-                        Parts
-                      </label>
-                    </div>
-                  </div>
-
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
                     {/* Item Name */}
                     <div>
                       <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
-                        {accessoryForm.type === "Accessories"
-                          ? "Accessories Name"
-                          : "Part Name"}{" "}
-                        <span className="text-red-500">*</span>
+                        Accessories Name <span className="text-red-500">*</span>
                       </label>
                       <Input
                         type="text"
-                        placeholder={
-                          accessoryForm.type === "Accessories"
-                            ? "Enter Accessories Name"
-                            : "Enter Part Name"
-                        }
+                        placeholder="Enter Accessories Name"
                         value={accessoryForm.itemName}
                         onChange={(e) =>
                           handleAccessoryFormChange("itemName", e.target.value)
@@ -2343,18 +2259,11 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
                     {/* Code No */}
                     <div>
                       <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
-                        {accessoryForm.type === "Accessories"
-                          ? "Accessories Code"
-                          : "Item Code"}{" "}
-                        <span className="text-red-500">*</span>
+                        Accessories Code <span className="text-red-500">*</span>
                       </label>
                       <Input
                         type="text"
-                        placeholder={
-                          accessoryForm.type === "Accessories"
-                            ? "Enter Accessories Code"
-                            : "Enter Item Code"
-                        }
+                        placeholder="Enter Accessories Code"
                         value={accessoryForm.codeNo}
                         onChange={(e) =>
                           handleAccessoryFormChange("codeNo", e.target.value)
@@ -2588,20 +2497,22 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
                       <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
                         Variant <span className="text-red-500">*</span>
                       </label>
-                     <Select
-  isMulti
-  unstyled
-  closeMenuOnSelect={false}
-  hideSelectedOptions={false}
-  menuPlacement="auto"
-  maxMenuHeight={220}
-  classNames={selectClassNames}
-  options={variantOptionsState}
-  value={selectedVariants}
-  onChange={(selected) => setSelectedVariants(selected as any[])}
-  components={{ Option: CheckboxOption }}
-  placeholder="Select Variant"
-/>
+                      <Select
+                        isMulti
+                        unstyled
+                        closeMenuOnSelect={false}
+                        hideSelectedOptions={false}
+                        menuPlacement="auto"
+                        maxMenuHeight={220}
+                        classNames={selectClassNames}
+                        options={variantOptionsState}
+                        value={selectedVariants}
+                        onChange={(selected) =>
+                          setSelectedVariants(selected as any[])
+                        }
+                        components={{ Option: CheckboxOption }}
+                        placeholder="Select Variant"
+                      />
                       {accessoryFormErrors.variant && (
                         <span className="text-xs text-red-500">
                           {accessoryFormErrors.variant}
@@ -3272,123 +3183,147 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
                   </div>
 
                   {/* Country - Dynamic with react-select */}
-                 {/* Country */}
-<div>
-  <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
-    Country <span className="text-red-500">*</span>
-  </label>
-  <Combobox
-    data={countryOptions}
-    displayField="label"
-    searchFields={["label"]}
-    placeholder="Search Country"
-    value={
-      countryOptions.find((o) => o.value === accountForm.countryCode) ||
-      null
-    }
-    onChange={(selected: { value: string; label: string } | null) => {
-      updateAccountForm("countryCode", selected?.value || "");
-      updateAccountForm("country", selected?.label || "");
-      updateAccountForm("stateCode", "");
-      updateAccountForm("state", "");
-      updateAccountForm("district", "");
-      updateAccountForm("city", "");
-    }}
-  />
-  {getAccountError("countryCode") && (
-    <p className="mt-1 text-xs text-red-500">
-      {getAccountError("countryCode")}
-    </p>
-  )}
-</div>
+                  {/* Country */}
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+                      Country <span className="text-red-500">*</span>
+                    </label>
+                    <Combobox
+                      data={countryOptions}
+                      displayField="label"
+                      searchFields={["label"]}
+                      placeholder="Search Country"
+                      value={
+                        countryOptions.find(
+                          (o) => o.value === accountForm.countryCode,
+                        ) || null
+                      }
+                      onChange={(
+                        selected: { value: string; label: string } | null,
+                      ) => {
+                        updateAccountForm("countryCode", selected?.value || "");
+                        updateAccountForm("country", selected?.label || "");
+                        updateAccountForm("stateCode", "");
+                        updateAccountForm("state", "");
+                        updateAccountForm("district", "");
+                        updateAccountForm("city", "");
+                      }}
+                    />
+                    {getAccountError("countryCode") && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {getAccountError("countryCode")}
+                      </p>
+                    )}
+                  </div>
 
-{/* State */}
-<div>
-  <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
-    State <span className="text-red-500">*</span>
-  </label>
-  <div
-    className={!accountForm.countryCode ? "pointer-events-none opacity-60" : ""}
-  >
-    <Combobox
-      data={stateOptions}
-      displayField="label"
-      searchFields={["label"]}
-      placeholder="Search State"
-      value={
-        stateOptions.find((o) => o.value === accountForm.stateCode) || null
-      }
-      onChange={(selected: { value: string; label: string } | null) => {
-        updateAccountForm("stateCode", selected?.value || "");
-        updateAccountForm("state", selected?.label || "");
-        updateAccountForm("district", "");
-        updateAccountForm("city", "");
-      }}
-    />
-  </div>
-  {getAccountError("stateCode") && (
-    <p className="mt-1 text-xs text-red-500">
-      {getAccountError("stateCode")}
-    </p>
-  )}
-</div>
+                  {/* State */}
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+                      State <span className="text-red-500">*</span>
+                    </label>
+                    <div
+                      className={
+                        !accountForm.countryCode
+                          ? "pointer-events-none opacity-60"
+                          : ""
+                      }
+                    >
+                      <Combobox
+                        data={stateOptions}
+                        displayField="label"
+                        searchFields={["label"]}
+                        placeholder="Search State"
+                        value={
+                          stateOptions.find(
+                            (o) => o.value === accountForm.stateCode,
+                          ) || null
+                        }
+                        onChange={(
+                          selected: { value: string; label: string } | null,
+                        ) => {
+                          updateAccountForm("stateCode", selected?.value || "");
+                          updateAccountForm("state", selected?.label || "");
+                          updateAccountForm("district", "");
+                          updateAccountForm("city", "");
+                        }}
+                      />
+                    </div>
+                    {getAccountError("stateCode") && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {getAccountError("stateCode")}
+                      </p>
+                    )}
+                  </div>
 
-{/* District */}
-<div>
-  <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
-    District <span className="text-red-500">*</span>
-  </label>
-  <div
-    className={!accountForm.stateCode ? "pointer-events-none opacity-60" : ""}
-  >
-    <Combobox
-      data={districtOptions}
-      displayField="label"
-      searchFields={["label"]}
-      placeholder="Search District"
-      value={
-        districtOptions.find((o) => o.value === accountForm.district) ||
-        null
-      }
-      onChange={(selected: { value: string; label: string } | null) =>
-        updateAccountForm("district", selected?.value || "")
-      }
-    />
-  </div>
-  {getAccountError("district") && (
-    <p className="mt-1 text-xs text-red-500">
-      {getAccountError("district")}
-    </p>
-  )}
-</div>
+                  {/* District */}
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+                      District <span className="text-red-500">*</span>
+                    </label>
+                    <div
+                      className={
+                        !accountForm.stateCode
+                          ? "pointer-events-none opacity-60"
+                          : ""
+                      }
+                    >
+                      <Combobox
+                        data={districtOptions}
+                        displayField="label"
+                        searchFields={["label"]}
+                        placeholder="Search District"
+                        value={
+                          districtOptions.find(
+                            (o) => o.value === accountForm.district,
+                          ) || null
+                        }
+                        onChange={(
+                          selected: { value: string; label: string } | null,
+                        ) =>
+                          updateAccountForm("district", selected?.value || "")
+                        }
+                      />
+                    </div>
+                    {getAccountError("district") && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {getAccountError("district")}
+                      </p>
+                    )}
+                  </div>
 
-{/* City */}
-<div>
-  <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
-    City <span className="text-red-500">*</span>
-  </label>
-  <div
-    className={!accountForm.stateCode ? "pointer-events-none opacity-60" : ""}
-  >
-    <Combobox
-      data={cityOptions}
-      displayField="label"
-      searchFields={["label"]}
-      placeholder="Search City"
-      value={
-        cityOptions.find((o) => o.value === accountForm.city) || null
-      }
-      onChange={(selected: { value: string; label: string } | null) =>
-        updateAccountForm("city", selected?.value || "")
-      }
-    />
-  </div>
-  {getAccountError("city") && (
-    <p className="mt-1 text-xs text-red-500">
-      {getAccountError("city")}
-    </p>
-  )}
-</div>
+                  {/* City */}
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+                      City <span className="text-red-500">*</span>
+                    </label>
+                    <div
+                      className={
+                        !accountForm.stateCode
+                          ? "pointer-events-none opacity-60"
+                          : ""
+                      }
+                    >
+                      <Combobox
+                        data={cityOptions}
+                        displayField="label"
+                        searchFields={["label"]}
+                        placeholder="Search City"
+                        value={
+                          cityOptions.find(
+                            (o) => o.value === accountForm.city,
+                          ) || null
+                        }
+                        onChange={(
+                          selected: { value: string; label: string } | null,
+                        ) => updateAccountForm("city", selected?.value || "")}
+                      />
+                    </div>
+                    {getAccountError("city") && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {getAccountError("city")}
+                      </p>
+                    )}
+                  </div>
 
                   {/* Address */}
                   <div className="sm:col-span-2">

@@ -25,7 +25,7 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/Table";
-import { Button, Checkbox, Input, Radio } from "@/components/ui";
+import { Button, Checkbox, Input } from "@/components/ui";
 import { Combobox } from "@/components/shared/form/StyledCombobox";
 import { Listbox } from "@/components/shared/form/StyledListbox";
 import apiHelper from "@/utils/apiHelper";
@@ -53,7 +53,6 @@ const CheckboxOption = (props: any) => {
 // ─── Types ──────────────────────────────────────────────────────────────────
 interface AccessoryItem {
   id: number;
-  type: "Accessories" | "Parts";
   itemName: string;
   codeNo: string;
   shortName: string;
@@ -75,7 +74,6 @@ interface AccessoryItem {
 }
 
 interface FormValues {
-  type: "Accessories" | "Parts";
   itemName: string;
   codeNo: string;
   shortName: string;
@@ -93,20 +91,20 @@ interface FormValues {
 }
 
 // ─── Helper Functions ──────────────────────────────────────────────────────
-const formatDate = (dateString: string) => {
-  if (!dateString) return "-";
-  try {
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return dateString;
-    return date.toLocaleDateString("en-GB", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    });
-  } catch {
-    return dateString;
-  }
-};
+// const formatDate = (dateString: string) => {
+//   if (!dateString) return "-";
+//   try {
+//     const date = new Date(dateString);
+//     if (isNaN(date.getTime())) return dateString;
+//     return date.toLocaleDateString("en-GB", {
+//       day: "numeric",
+//       month: "short",
+//       year: "numeric",
+//     });
+//   } catch {
+//     return dateString;
+//   }
+// };
 
 // ─── Options ──────────────────────────────────────────────────────────────
 const entriesOptions = [
@@ -204,7 +202,6 @@ const Accessories = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [selectedStatusFilter, setSelectedStatusFilter] = useState("All");
-  const [selectedTypeFilter, setSelectedTypeFilter] = useState("All");
   const [selectedItemNameFilter, setSelectedItemNameFilter] = useState("All");
 
   const [loading, setLoading] = useState(false);
@@ -244,7 +241,6 @@ const Accessories = () => {
   }, []);
   // ─── Form State ─────────────────────────────────────────────────────────
   const [formData, setFormData] = useState<FormValues>({
-    type: "Accessories",
     itemName: "",
     codeNo: "",
     shortName: "",
@@ -263,9 +259,6 @@ const Accessories = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // ─── Fetch Data ──────────────────────────────────────────────────────
-  useEffect(() => {
-    getAccessories();
-  }, []);
 
   const getAccessories = async () => {
     try {
@@ -282,6 +275,10 @@ const Accessories = () => {
     }
   };
 
+  useEffect(() => {
+    getAccessories();
+  }, []);
+
   // ─── Handlers ───────────────────────────────────────────────────────────
   const handleInputChange = (field: keyof FormValues, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -292,24 +289,9 @@ const Accessories = () => {
     }
   };
 
-  const handleTypeChange = (type: "Accessories" | "Parts") => {
-    setFormData((prev) => ({
-      ...prev,
-      type,
-      itemName: "",
-      codeNo: "",
-    }));
-    // Clear errors for these fields if they exist
-    const newErrors = { ...errors };
-    delete newErrors.itemName;
-    delete newErrors.codeNo;
-    setErrors(newErrors);
-  };
-
   const handleOpenAddDrawer = () => {
     setEditId(null);
     setFormData({
-      type: "Accessories",
       itemName: "",
       codeNo: "",
       shortName: "",
@@ -333,7 +315,6 @@ const Accessories = () => {
     setEditId(item.id);
 
     setFormData({
-      type: item.type,
       itemName: item.itemName || "",
       codeNo: item.codeNo || "",
       shortName: item.shortName || "",
@@ -449,7 +430,6 @@ const Accessories = () => {
 
     try {
       const payload = {
-        type: formData.type,
         itemName: formData.itemName,
         codeNo: formData.codeNo,
         shortName: formData.shortName,
@@ -503,10 +483,7 @@ const Accessories = () => {
     const matchesStatus =
       selectedStatusFilter === "All" || item.status === selectedStatusFilter;
 
-    const matchesType =
-      selectedTypeFilter === "All" || item.type === selectedTypeFilter;
-
-    return matchesSearch && matchesItemName && matchesStatus && matchesType;
+    return matchesSearch && matchesItemName && matchesStatus;
   });
 
   const totalItems = filteredData.length;
@@ -542,11 +519,7 @@ const Accessories = () => {
       new Set(items.map((item) => item.itemName).filter(Boolean)),
     ).map((name) => ({ id: name, name })),
   ];
-  const typeFilterOptions = [
-    { id: "All", name: "All Types" },
-    { id: "Accessories", name: "Accessories" },
-    { id: "Parts", name: "Parts" },
-  ];
+
   const selectClassNames = {
     control: ({ isFocused }: any) =>
       `min-h-[42px] rounded-lg border bg-white px-1 text-sm dark:bg-transparent ${
@@ -587,7 +560,7 @@ const Accessories = () => {
             Accessories Item
           </h1>
           <p className="dark:text-dark-300 mt-1 text-sm text-gray-500">
-            Manage all accessories and parts from here
+            Manage all accessories from here
           </p>
         </div>
 
@@ -652,7 +625,7 @@ const Accessories = () => {
       {/* Filter Bar */}
       {showFilterBar && (
         <div className="dark:bg-dark-700 dark:border-dark-500 animate-in fade-in slide-in-from-top-2 rounded-xl border border-gray-200 bg-white p-4 transition-all duration-150">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="flex flex-col gap-1">
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
                 Item Name
@@ -671,25 +644,6 @@ const Accessories = () => {
                   setSelectedItemNameFilter(opt?.id ?? "All");
                   setCurrentPage(1);
                 }}
-              />
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
-                Type
-              </span>
-              <Listbox
-                data={typeFilterOptions}
-                value={
-                  typeFilterOptions.find((o) => o.id === selectedTypeFilter) ||
-                  typeFilterOptions[0]
-                }
-                placeholder="All Types"
-                onChange={(opt: any) => {
-                  setSelectedTypeFilter(opt.id);
-                  setCurrentPage(1);
-                }}
-                displayField="name"
               />
             </div>
 
@@ -734,9 +688,6 @@ const Accessories = () => {
                 </Th>
                 <Th className="w-16 py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   S.No
-                </Th>
-                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  Type
                 </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Item Name
@@ -805,17 +756,6 @@ const Accessories = () => {
                     </Td>
                     <Td className="py-4 font-medium text-gray-500">
                       {indexOfFirstItem + index + 1}
-                    </Td>
-                    <Td className="py-4">
-                      <span
-                        className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-                          item.type === "Accessories"
-                            ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"
-                            : "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                        }`}
-                      >
-                        {item.type}
-                      </span>
                     </Td>
                     <Td className="py-4 font-medium text-gray-900 dark:text-gray-400">
                       {item.itemName}
@@ -934,7 +874,7 @@ const Accessories = () => {
               {currentItems.length === 0 && (
                 <Tr>
                   <Td
-                    colSpan={15}
+                    colSpan={17}
                     className="py-12 text-center text-gray-400 dark:text-gray-500"
                   >
                     No items found
@@ -1147,46 +1087,14 @@ const Accessories = () => {
 
                 {/* Content */}
                 <div className="grow space-y-4 overflow-y-auto p-4 pb-40 sm:space-y-5 sm:p-5 sm:pb-40">
-                  {/* Type */}
-                  {/* Type - Using Radio buttons */}
-                  {/* Type - Using Radio buttons */}
-                  <div>
-                    <label className="dark:text-dark-200 mb-2 block text-sm font-medium text-gray-700">
-                      Type <span className="text-red-500">*</span>
-                    </label>
-                    <div className="flex gap-6">
-                      <label className="flex cursor-pointer items-center gap-2 text-sm text-gray-800 dark:text-gray-200">
-                        <Radio
-                          checked={formData.type === "Accessories"}
-                          onChange={() => handleTypeChange("Accessories")}
-                        />
-                        Accessories
-                      </label>
-                      <label className="flex cursor-pointer items-center gap-2 text-sm text-gray-800 dark:text-gray-200">
-                        <Radio
-                          checked={formData.type === "Parts"}
-                          onChange={() => handleTypeChange("Parts")}
-                        />
-                        Parts
-                      </label>
-                    </div>
-                  </div>
-
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
                     <div>
                       <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
-                        {formData.type === "Accessories"
-                          ? "Accessories Name"
-                          : "Part Name"}{" "}
-                        <span className="text-red-500">*</span>
+                        Accessories Name <span className="text-red-500">*</span>
                       </label>
                       <Input
                         type="text"
-                        placeholder={
-                          formData.type === "Accessories"
-                            ? "Enter Accessories Name"
-                            : "Enter Part Name"
-                        }
+                        placeholder="Enter Accessories Name"
                         value={formData.itemName}
                         onChange={(e) =>
                           handleInputChange("itemName", e.target.value)
@@ -1201,18 +1109,11 @@ const Accessories = () => {
 
                     <div>
                       <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
-                        {formData.type === "Accessories"
-                          ? "Accessories Code"
-                          : "Item Code"}{" "}
-                        <span className="text-red-500">*</span>
+                        Accessories Code <span className="text-red-500">*</span>
                       </label>
                       <Input
                         type="text"
-                        placeholder={
-                          formData.type === "Accessories"
-                            ? "Enter Accessories Code"
-                            : "Enter Item Code"
-                        }
+                        placeholder="Enter Accessories Code"
                         value={formData.codeNo}
                         onChange={(e) =>
                           handleInputChange("codeNo", e.target.value)

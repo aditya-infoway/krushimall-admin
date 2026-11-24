@@ -354,6 +354,12 @@ const protectedRoutes: RouteObject = {
                   .default,
               }),
             },
+            {
+              path: "sparepart",
+              lazy: async () => ({
+                Component: (await import("@/app/pages/item/sparepart")).default,
+              }),
+            },
           ],
         },
 
@@ -434,6 +440,46 @@ const protectedRoutes: RouteObject = {
                   }),
                 },
               ],
+            },
+
+            {
+              // Change "spare-parts" to "spare-part" here!
+              path: "spare-part",
+              children: [
+                {
+                  index: true,
+                  lazy: async () => ({
+                    Component: (
+                      await import("@/app/pages/purchase/spare-part/spare-parts")
+                    ).default,
+                  }),
+                },
+                {
+                  path: "add",
+                  lazy: async () => ({
+                    Component: (
+                      await import("@/app/pages/purchase/spare-part/sparepartsbill")
+                    ).default,
+                  }),
+                },
+                {
+                  path: "add/:id",
+                  lazy: async () => ({
+                    Component: (
+                      await import("@/app/pages/purchase/spare-part/sparepartsbill")
+                    ).default,
+                  }),
+                },
+              ],
+            },
+            // 👆 AND ALSO MAKE SURE THE INWARD ROUTE MATCHES YOUR FOLDER
+            {
+              path: "spare-part-inward/:id",
+              lazy: async () => ({
+                Component: (
+                  await import("@/app/pages/purchase/spare-part/sparePartsItemList")
+                ).default,
+              }),
             },
           ],
         },

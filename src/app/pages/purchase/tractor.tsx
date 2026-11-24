@@ -46,8 +46,8 @@ export interface PurchaseRegisterRow {
   status: string;
   verified: boolean;
   allInward: boolean;
-   hasBookedItem: boolean;
-    createdBy?: string;
+  hasBookedItem: boolean;
+  createdBy?: string;
   createdById?: number;
   createdType?: string;
 }
@@ -109,7 +109,7 @@ const columns = [
   "Mobile No",
   "Vehicle No",
   "Status",
-   "Created By",      // Add
+  "Created By", // Add
   "Created Type",
 ];
 
@@ -204,12 +204,12 @@ const TractorPurchaseRegister: React.FC<TractorPurchaseRegisterProps> = ({
           mobileNo: item.mobileNumber || "",
           vehicalNo: item.vehicleNumber || "",
           status: item.status === "VERIFY" ? "Verified" : "Pending",
-hasBookedItem: item.hasBookedItem,
+          hasBookedItem: item.hasBookedItem,
           verified: item.verified,
           allInward: item.allInward,
-           createdBy: item.createdBy,
-    createdById: item.createdById,
-    createdType: item.createdType,
+          createdBy: item.createdBy,
+          createdById: item.createdById,
+          createdType: item.createdType,
         })),
       );
     } catch (error) {
@@ -310,34 +310,34 @@ hasBookedItem: item.hasBookedItem,
           </p>
         </div>
 
-       <div className="flex flex-wrap items-center justify-between gap-2 md:flex-nowrap">
-  {/* Left side - Excel and PDF icons */}
-  <div className="flex items-center gap-2">
-    <button
-      type="button"
-      className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
-    >
-      <RiFileExcel2Fill className="text-lg text-green-500" />
-    </button>
+        <div className="flex flex-wrap items-center justify-between gap-2 md:flex-nowrap">
+          {/* Left side - Excel and PDF icons */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            >
+              <RiFileExcel2Fill className="text-lg text-green-500" />
+            </button>
 
-    <button
-      type="button"
-      className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
-    >
-      <RiFilePdfFill className="text-lg text-red-500" />
-    </button>
-  </div>
+            <button
+              type="button"
+              className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            >
+              <RiFilePdfFill className="text-lg text-red-500" />
+            </button>
+          </div>
 
-  {/* Right side - Add Purchase button */}
-  <Button
-    color="primary"
-    onClick={handleAddPurchase}
-    className="whitespace-nowrap"
-  >
-    <PlusIcon className="mr-1.5 size-4.5" />
-    Add Purchase
-  </Button>
-</div>
+          {/* Right side - Add Purchase button */}
+          <Button
+            color="primary"
+            onClick={handleAddPurchase}
+            className="whitespace-nowrap"
+          >
+            <PlusIcon className="mr-1.5 size-4.5" />
+            Add Purchase
+          </Button>
+        </div>
       </div>
 
       {/* Search and Filter */}
@@ -450,12 +450,12 @@ hasBookedItem: item.hasBookedItem,
                   Status
                 </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-  Created By
-</Th>
+                  Created By
+                </Th>
 
-<Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-  Created Type
-</Th>
+                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                  Created Type
+                </Th>
               </Tr>
             </THead>
 
@@ -481,7 +481,7 @@ hasBookedItem: item.hasBookedItem,
                     </Td>
                     <Td className="py-4 text-center">
                       <div className="flex items-center justify-center gap-1.5">
-                      {!item.allInward && !item.hasBookedItem && (
+                        {!item.allInward && !item.hasBookedItem && (
                           <button
                             onClick={() => handleEditRow(item)}
                             className="cursor-pointer text-blue-500 hover:text-blue-700"
@@ -534,8 +534,8 @@ hasBookedItem: item.hasBookedItem,
                         {item.status}
                       </span>
                     </Td>
-                      <Td className="py-4">{item.createdBy}</Td>
-                    <Td className="py-4">{item.createdType }</Td>
+                    <Td className="py-4">{item.createdBy}</Td>
+                    <Td className="py-4">{item.createdType}</Td>
                   </Tr>
                 );
               })}
