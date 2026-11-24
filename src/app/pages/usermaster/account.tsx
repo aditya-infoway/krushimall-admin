@@ -161,19 +161,19 @@ const Account = () => {
     setConfirmState("pending");
     setShowConfirmModal(true);
   };
-const accountNameFilterOptions = [
-  { id: "All", name: "All Accounts" },
-  ...Array.from(
-    new Set(data.map((a: any) => a.accountName).filter(Boolean)),
-  ).map((name) => ({ id: name, name })),
-];
+  const accountNameFilterOptions = [
+    { id: "All", name: "All Accounts" },
+    ...Array.from(
+      new Set(data.map((a: any) => a.accountName).filter(Boolean)),
+    ).map((name) => ({ id: name, name })),
+  ];
 
-const groupFilterOptions = [
-  { label: "All", value: "All" },
-  ...Array.from(
-    new Set(data.map((a: any) => a.group).filter(Boolean)),
-  ).map((g) => ({ label: g as string, value: g as string })),
-];
+  const groupFilterOptions = [
+    { label: "All", value: "All" },
+    ...Array.from(new Set(data.map((a: any) => a.group).filter(Boolean))).map(
+      (g) => ({ label: g as string, value: g as string }),
+    ),
+  ];
   const handleAdd = () => {
     navigate("/usermaster/newaccount");
   };
@@ -275,7 +275,7 @@ const groupFilterOptions = [
           .toLowerCase();
     const matchesAccountName =
       selectedAccountName === "All" || item.accountName === selectedAccountName;
-     return matchesSearch && matchesGroup && matchesStatus && matchesAccountName;
+    return matchesSearch && matchesGroup && matchesStatus && matchesAccountName;
   });
   const totalItems = filteredData.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
@@ -306,7 +306,7 @@ const groupFilterOptions = [
   };
   const getAccounts = async () => {
     try {
-   const response = await apiHelper.get("/accounts?withClosing=true");
+      const response = await apiHelper.get("/accounts?withClosing=true");
 
       // Check actual structure
 
@@ -420,20 +420,21 @@ const groupFilterOptions = [
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
                 Group
               </span>
-            <Combobox
-  data={groupFilterOptions}
-  value={
-    groupFilterOptions.find((option) => option.value === selectedGroup) ||
-    groupFilterOptions[0]
-  }
-  displayField="label"
-  searchFields={["label", "value"]}
-  placeholder="Search group..."
-  onChange={(option: any) => {
-    setSelectedGroup(option?.value ?? "All");
-    setCurrentPage(1);
-  }}
-/>
+              <Combobox
+                data={groupFilterOptions}
+                value={
+                  groupFilterOptions.find(
+                    (option) => option.value === selectedGroup,
+                  ) || groupFilterOptions[0]
+                }
+                displayField="label"
+                searchFields={["label", "value"]}
+                placeholder="Search group..."
+                onChange={(option: any) => {
+                  setSelectedGroup(option?.value ?? "All");
+                  setCurrentPage(1);
+                }}
+              />
             </div>
             {/* <div className="flex flex-col gap-1">
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
@@ -571,7 +572,7 @@ const groupFilterOptions = [
                       {item.openingBalance} {item.drCr}
                     </Td>
                     <Td className="dark:text-dark-200 py-4 text-gray-600">
-                 {item.closingBalance} {item.closingDrCr ?? item.drCr}
+                      {item.closingBalance} {item.closingDrCr ?? item.drCr}
                     </Td>
                     <Td className="dark:text-dark-200 py-4 text-gray-600">
                       {item.mobile}
@@ -700,7 +701,7 @@ const groupFilterOptions = [
                     leaveTo="transform opacity-0 scale-95"
                   >
                     <MenuItems
-                        anchor="bottom start"
+                      anchor="bottom start"
                       className="dark:bg-dark-700 dark:border-dark-600 z-200 w-20 space-y-0.5 rounded-lg border border-gray-200 bg-white p-1 shadow-xl ring-1 ring-black/5 [--anchor-gap:6px] focus:outline-none"
                     >
                       {entriesOptions.map((opt) => (

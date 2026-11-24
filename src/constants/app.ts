@@ -7,7 +7,7 @@ export const HOME_PATH = "/";
 export const GHOST_ENTRY_PATH = "/login";
 
 // Navigation Types
-export type NavigationType = "root" | "group" | "collapse" | "item" | "divider";
+export type NavigationType = "root" | "group" | "collapse" | "item" | "divider" | "title";;
 
 export const COLORS = [
   "neutral",

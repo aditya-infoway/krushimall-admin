@@ -1,12 +1,12 @@
 import { dashboards } from "./segments/dashboards";
 import { master } from "./segments/master";
 import { leadmaster } from "./segments/leadmaster";
-import { usermaster } from "./segments/usermaster";
-import { enquirysettings } from "./segments/enquirysettings";
-import { item } from "./segments/item";
+// import { usermaster } from "./segments/usermaster";
+// import { enquirysettings } from "./segments/enquirysettings";
+// import { item } from "./segments/item";
 import { purchase } from "./segments/purchase";
 import { accounting } from "./segments/accounting";
-import { goodcontrol } from "./segments/goodscontrol";
+// import { goodcontrol } from "./segments/goodscontrol";
 import { report } from "./segments/report";
 import { followups } from "./segments/followups";
 import { bookregister } from "./segments/bookregister";
@@ -19,15 +19,15 @@ export const navigation = [
   dashboards,
   master,
   leadmaster,
-  usermaster,
-  enquirysettings,
-  item,
+  // usermaster,
+  // enquirysettings,
+  // item,
   purchase,
   stocktransfer,
   accounting,
   bookregister,
   // ledgerreport,
-  goodcontrol,
+  // goodcontrol,
   allot,
   report,
   followups,

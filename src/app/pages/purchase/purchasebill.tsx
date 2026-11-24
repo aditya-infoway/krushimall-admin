@@ -783,7 +783,6 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
 
   const handleCreateAccount = async () => {
     try {
-    
       const required: (keyof NewAccountData)[] = [
         "accountName",
         "mobile",
@@ -838,7 +837,7 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
               ? accountForm.drCr
               : null,
       });
-  
+
       const account = res.data;
 
       if (!account?.id) {
@@ -2250,123 +2249,147 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
                   </div>
 
                   {/* Country - Dynamic with react-select */}
-                 {/* Country */}
-<div>
-  <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
-    Country <span className="text-red-500">*</span>
-  </label>
-  <Combobox
-    data={countryOptions}
-    displayField="label"
-    searchFields={["label"]}
-    placeholder="Search Country"
-    value={
-      countryOptions.find((o) => o.value === accountForm.countryCode) ||
-      null
-    }
-    onChange={(selected: { value: string; label: string } | null) => {
-      updateAccountForm("countryCode", selected?.value || "");
-      updateAccountForm("country", selected?.label || "");
-      updateAccountForm("stateCode", "");
-      updateAccountForm("state", "");
-      updateAccountForm("district", "");
-      updateAccountForm("city", "");
-    }}
-  />
-  {getAccountError("countryCode") && (
-    <p className="mt-1 text-xs text-red-500">
-      {getAccountError("countryCode")}
-    </p>
-  )}
-</div>
+                  {/* Country */}
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+                      Country <span className="text-red-500">*</span>
+                    </label>
+                    <Combobox
+                      data={countryOptions}
+                      displayField="label"
+                      searchFields={["label"]}
+                      placeholder="Search Country"
+                      value={
+                        countryOptions.find(
+                          (o) => o.value === accountForm.countryCode,
+                        ) || null
+                      }
+                      onChange={(
+                        selected: { value: string; label: string } | null,
+                      ) => {
+                        updateAccountForm("countryCode", selected?.value || "");
+                        updateAccountForm("country", selected?.label || "");
+                        updateAccountForm("stateCode", "");
+                        updateAccountForm("state", "");
+                        updateAccountForm("district", "");
+                        updateAccountForm("city", "");
+                      }}
+                    />
+                    {getAccountError("countryCode") && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {getAccountError("countryCode")}
+                      </p>
+                    )}
+                  </div>
 
-{/* State */}
-<div>
-  <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
-    State <span className="text-red-500">*</span>
-  </label>
-  <div
-    className={!accountForm.countryCode ? "pointer-events-none opacity-60" : ""}
-  >
-    <Combobox
-      data={stateOptions}
-      displayField="label"
-      searchFields={["label"]}
-      placeholder="Search State"
-      value={
-        stateOptions.find((o) => o.value === accountForm.stateCode) || null
-      }
-      onChange={(selected: { value: string; label: string } | null) => {
-        updateAccountForm("stateCode", selected?.value || "");
-        updateAccountForm("state", selected?.label || "");
-        updateAccountForm("district", "");
-        updateAccountForm("city", "");
-      }}
-    />
-  </div>
-  {getAccountError("stateCode") && (
-    <p className="mt-1 text-xs text-red-500">
-      {getAccountError("stateCode")}
-    </p>
-  )}
-</div>
+                  {/* State */}
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+                      State <span className="text-red-500">*</span>
+                    </label>
+                    <div
+                      className={
+                        !accountForm.countryCode
+                          ? "pointer-events-none opacity-60"
+                          : ""
+                      }
+                    >
+                      <Combobox
+                        data={stateOptions}
+                        displayField="label"
+                        searchFields={["label"]}
+                        placeholder="Search State"
+                        value={
+                          stateOptions.find(
+                            (o) => o.value === accountForm.stateCode,
+                          ) || null
+                        }
+                        onChange={(
+                          selected: { value: string; label: string } | null,
+                        ) => {
+                          updateAccountForm("stateCode", selected?.value || "");
+                          updateAccountForm("state", selected?.label || "");
+                          updateAccountForm("district", "");
+                          updateAccountForm("city", "");
+                        }}
+                      />
+                    </div>
+                    {getAccountError("stateCode") && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {getAccountError("stateCode")}
+                      </p>
+                    )}
+                  </div>
 
-{/* District */}
-<div>
-  <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
-    District <span className="text-red-500">*</span>
-  </label>
-  <div
-    className={!accountForm.stateCode ? "pointer-events-none opacity-60" : ""}
-  >
-    <Combobox
-      data={districtOptions}
-      displayField="label"
-      searchFields={["label"]}
-      placeholder="Search District"
-      value={
-        districtOptions.find((o) => o.value === accountForm.district) ||
-        null
-      }
-      onChange={(selected: { value: string; label: string } | null) =>
-        updateAccountForm("district", selected?.value || "")
-      }
-    />
-  </div>
-  {getAccountError("district") && (
-    <p className="mt-1 text-xs text-red-500">
-      {getAccountError("district")}
-    </p>
-  )}
-</div>
+                  {/* District */}
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+                      District <span className="text-red-500">*</span>
+                    </label>
+                    <div
+                      className={
+                        !accountForm.stateCode
+                          ? "pointer-events-none opacity-60"
+                          : ""
+                      }
+                    >
+                      <Combobox
+                        data={districtOptions}
+                        displayField="label"
+                        searchFields={["label"]}
+                        placeholder="Search District"
+                        value={
+                          districtOptions.find(
+                            (o) => o.value === accountForm.district,
+                          ) || null
+                        }
+                        onChange={(
+                          selected: { value: string; label: string } | null,
+                        ) =>
+                          updateAccountForm("district", selected?.value || "")
+                        }
+                      />
+                    </div>
+                    {getAccountError("district") && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {getAccountError("district")}
+                      </p>
+                    )}
+                  </div>
 
-{/* City */}
-<div>
-  <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
-    City <span className="text-red-500">*</span>
-  </label>
-  <div
-    className={!accountForm.stateCode ? "pointer-events-none opacity-60" : ""}
-  >
-    <Combobox
-      data={cityOptions}
-      displayField="label"
-      searchFields={["label"]}
-      placeholder="Search City"
-      value={
-        cityOptions.find((o) => o.value === accountForm.city) || null
-      }
-      onChange={(selected: { value: string; label: string } | null) =>
-        updateAccountForm("city", selected?.value || "")
-      }
-    />
-  </div>
-  {getAccountError("city") && (
-    <p className="mt-1 text-xs text-red-500">
-      {getAccountError("city")}
-    </p>
-  )}
-</div>
+                  {/* City */}
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+                      City <span className="text-red-500">*</span>
+                    </label>
+                    <div
+                      className={
+                        !accountForm.stateCode
+                          ? "pointer-events-none opacity-60"
+                          : ""
+                      }
+                    >
+                      <Combobox
+                        data={cityOptions}
+                        displayField="label"
+                        searchFields={["label"]}
+                        placeholder="Search City"
+                        value={
+                          cityOptions.find(
+                            (o) => o.value === accountForm.city,
+                          ) || null
+                        }
+                        onChange={(
+                          selected: { value: string; label: string } | null,
+                        ) => updateAccountForm("city", selected?.value || "")}
+                      />
+                    </div>
+                    {getAccountError("city") && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {getAccountError("city")}
+                      </p>
+                    )}
+                  </div>
                   {/* Address */}
                   <div className="sm:col-span-2">
                     <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">

@@ -12,10 +12,10 @@ import apiHelper from "@/utils/apiHelper";
 import Select from "react-select";
 import { Country, State, City } from "country-state-city";
 import TextEditor from "@/components/shared/TextEditor";
-import Quill from "quill";
+// import Quill from "quill";
 import { toast } from "sonner";
 import { Combobox } from "@/components/shared/form/StyledCombobox";
-const Delta = Quill.import("delta");
+// const Delta = Quill.import("delta");
 export default function General() {
   const [avatar, setAvatar] = useState<File | null>(null);
   const [company, setCompany] = useState<any>(null);
@@ -28,7 +28,7 @@ export default function General() {
   const [prefixes, setPrefixes] = useState<any[]>([]);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [savingTerms, setSavingTerms] = useState(false);
-  const [termsValue, setTermsValue] = useState(new Delta());
+  // const [termsValue, setTermsValue] = useState(new Delta());
   const [newPrefix, setNewPrefix] = useState({
     prefixFor: "",
     prefix: "",
@@ -81,10 +81,6 @@ export default function General() {
       const response = await axios.get("/company");
 
       const data = response.data.data[0];
-
-  
-
-   
 
       setCompany(data);
 
@@ -689,7 +685,7 @@ export default function General() {
           </div>
         </div>
       </div>
-      <div className="mt-6 max-h-125 overflow-auto  border border-gray-100">
+      <div className="mt-6 max-h-125 overflow-auto border border-gray-100">
         <table className="w-full border-collapse">
           <thead className="sticky top-0 z-0 bg-white dark:bg-gray-900">
             <tr>
@@ -734,17 +730,20 @@ export default function General() {
           Quotation Terms & Conditions
         </h3>
 
-        <TextEditor
-          value={company?.quotationTerms || ""}
-          onChange={(html) => {
-            console.log("Updated terms:", html);
-
-            setCompany((prev: any) => ({
-              ...prev,
-              quotationTerms: html,
-            }));
-          }}
-        />
+      {company ? (
+  <TextEditor
+    key={company.id}
+    value={company.quotationTerms || ""}
+    onChange={(html) => {
+      setCompany((prev: any) => ({
+        ...prev,
+        quotationTerms: html,
+      }));
+    }}
+  />
+) : (
+  <div className="text-sm text-gray-400">Loading...</div>
+)}
 
         <div className="mt-4 flex justify-end">
           <Button

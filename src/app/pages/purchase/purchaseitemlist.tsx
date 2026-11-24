@@ -194,6 +194,7 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
   }, [id]);
 
   const fetchPurchaseItems = async () => {
+    
     try {
       setLoading(true);
 
@@ -201,6 +202,7 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
 
       const purchase = res.data;
       setTransportSaved(purchase.transportSaved);
+      console.log("Transport Saved:", purchase.transportSaved);
       setRows(
         purchase.items.map((item: any) => ({
           id: String(item.id),
@@ -309,31 +311,55 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
     if (onAddItem) onAddItem();
   };
 
-  const handleInwardClick = async (item: PurchaseItemRow) => {
-    const vehicleSrNo = item.vehicleSrNo || (await getVehicleSerialNo());
+const handleInwardClick = async (item: PurchaseItemRow) => {
 
-    setSelectedItem(item);
+  setSelectedItem(item);
+  setErrors({});
+  setIsView(false);
 
-    setInwardData({
-      vehicleSrNo,
-      chassisNo: item.chassisNo || "",
-      engineNo: item.engineNo || "",
-      mfgDate: "",
-      keyNo: "",
-      batteryMake: "",
-      batteryNo: "",
-      first1TyerNo: "",
-      first2TyerNo: "",
-      second1TyerNo: "",
-      second2TyerNo: "",
-      location: "",
-      grnNumber: "",
-      grnDate: "",
-      grnRecordDate: "",
-    });
+  // Open drawer immediately
+  setInwardData({
+    vehicleSrNo: item.vehicleSrNo || "",
+    chassisNo: item.chassisNo || "",
+    engineNo: item.engineNo || "",
+    mfgDate: "",
+    keyNo: "",
+    batteryMake: "",
+    batteryNo: "",
+    first1TyerNo: "",
+    first2TyerNo: "",
+    second1TyerNo: "",
+    second2TyerNo: "",
+    location: "",
+    grnNumber: "",
+    grnDate: "",
+    grnRecordDate: "",
+  });
 
-    setShowDrawer(true);
-  };
+  setShowDrawer(true);
+
+  // Generate serial number only if missing
+  if (!item.vehicleSrNo) {
+    try {
+      const vehicleSrNo = await getVehicleSerialNo();
+
+      setInwardData((prev) => ({
+        ...prev,
+        vehicleSrNo,
+      }));
+    } catch (error: any) {
+      console.error("Vehicle Serial API Error:", error);
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to generate vehicle serial number",
+      );
+    }
+  }
+};
+
+
+
+
   const validateInward = () => {
     const newErrors: any = {};
 
@@ -439,13 +465,13 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
       }));
     }
   };
-  const getVehicleSerialNo = async () => {
-    const res = await apiHelper.get("/purchases/vehicle-serial-no");
+const getVehicleSerialNo = async () => {
+  const res = await apiHelper.get("/purchases/vehicle-serial-no");
 
-    console.log(res);
+  console.log("Vehicle Serial Response:", res);
 
-    return res.vehicleSrNo;
-  };
+  return res.vehicleSrNo;
+};
   const handleViewClick = (item: PurchaseItemRow) => {
     setSelectedItem(item);
 

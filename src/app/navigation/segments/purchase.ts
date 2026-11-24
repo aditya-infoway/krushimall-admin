@@ -5,21 +5,25 @@ export const purchase: NavigationTree = {
   type: "root",
   title: "Purchase MASTER",
   icon: "purchase",
-   path: "/purchase", 
+  path: "/purchase",
   childs: [
     {
       id: "purchase-tractor",
       type: "item",
       title: "Tractor Purchase",
       path: "/purchase/tractor",
-   
     },
     {
       id: "purchase-accessories",
       type: "item",
       title: "Accessories Purchase",
       path: "/purchase/accessories",
-     
+    },
+    {
+      id: "purchase-sparepart",
+      type: "item",
+      title: "Sparepart Purchase",
+      path: "/purchase/spare-part",
     },
   ],
 };

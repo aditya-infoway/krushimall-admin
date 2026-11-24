@@ -18,7 +18,7 @@ type FormValues = {
   openingBalance: string;
   drCr: string;
   country: string;
-  countryCode: string;
+  countryCode: string; 
   state: string;
   stateCode: string;
   district: string;
@@ -288,10 +288,10 @@ const NewAccount = () => {
 
       <form onSubmit={handleSubmit(onFormSubmit)}>
         {/* Full Page Form - 3 Columns */}
-        <div className="grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-x-6 lg:grid-cols-[minmax(0,1fr)_1px_minmax(0,1fr)]">
           {/* Column 1 */}
-          <div className="space-y-4">
-            <div>
+          <div className="grid grid-cols-1 gap-x-4 gap-y-4 md:grid-cols-2">
+            <div className="md:col-span-2">
               <Input
                 label={
                   <span>
@@ -534,10 +534,7 @@ const NewAccount = () => {
                 />
               </div>
             </div>
-          </div>
 
-          {/* Column 2 */}
-          <div className="space-y-4">
             {/* City */}
             <div>
               <label className={labelClass}>
@@ -645,8 +642,11 @@ const NewAccount = () => {
             </div>
           </div>
 
+          <div className="hidden w-px bg-gray-200 lg:block dark:bg-gray-700" />
+
           {/* Column 3 */}
-          <div className="space-y-4">
+          {/* Right Section */}
+          <div className="grid grid-cols-1 gap-x-4 gap-y-4 md:grid-cols-2">
             <div>
               <DatePicker
                 label="Birthday On"
@@ -726,7 +726,7 @@ const NewAccount = () => {
               />
             </div>
 
-            <div>
+            <div className="md:col-span-2">
               <Input
                 label="Aadhar Card No"
                 placeholder="Aadhar Number"

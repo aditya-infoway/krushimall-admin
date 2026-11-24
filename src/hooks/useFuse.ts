@@ -10,35 +10,20 @@ import {
 interface UseFuseOptions<T> extends IFuseOptions<T> {
   /**
    * Maximum number of results to return.
-   * Note: This is a search option, not a Fuse configuration option.
+   * If not provided, all results are returned.
    */
   limit?: number;
 
   /**
-   * If true and the query is empty, returns all items (up to `limit`).
+   * If true and query is empty, returns all items.
    */
   matchAllOnEmptyQuery?: boolean;
 }
 
 interface UseFuseResult<T> {
-  /**
-   * The search results based on the query and Fuse options.
-   */
   result: FuseResult<T>[];
-
-  /**
-   * The current query string (deferred value).
-   */
   query: string;
-
-  /**
-   * Whether the search is in a "loading" state due to deferred query changes.
-   */
   loading: boolean;
-
-  /**
-   * Function to update the query string.
-   */
   setQuery: Dispatch<SetStateAction<string>>;
 }
 
@@ -49,26 +34,30 @@ export function useFuse<T>(
   const [query, setQuery] = useState<string>("");
   const deferredQuery = useDeferredValue(query);
 
-  // Extract custom options from Fuse options
-  const { limit = 10, matchAllOnEmptyQuery = false, ...fuseOptions } = options;
+  // No default limit: return all results unless explicitly specified
+  const { limit, matchAllOnEmptyQuery = false, ...fuseOptions } = options;
 
-  // Memoize the Fuse instance for performance
+  // Memoize Fuse instance
   const fuse = useMemo(
     () => new Fuse<T>(list, fuseOptions),
     [list, fuseOptions],
   );
 
-  // Memoize the search results whenever the query or options change
+  // Search results
   const result = useMemo<FuseResult<T>[]>(() => {
     if (!deferredQuery.trim() && matchAllOnEmptyQuery) {
-      // Return all items up to the specified limit if the query is empty and matchAllOnEmptyQuery is true
-      return list
-        .slice(0, limit)
-        .map((item, index) => ({ item, refIndex: index }));
+      const items = limit !== undefined ? list.slice(0, limit) : list;
+
+      return items.map((item, index) => ({
+        item,
+        refIndex: index,
+      }));
     }
 
-    // Perform a fuzzy search using the deferred query
-    return fuse.search(deferredQuery.trim(), { limit });
+    // Return all matching results unless limit is explicitly provided
+    return limit !== undefined
+      ? fuse.search(deferredQuery.trim(), { limit })
+      : fuse.search(deferredQuery.trim());
   }, [fuse, limit, matchAllOnEmptyQuery, deferredQuery, list]);
 
   const loading = deferredQuery !== query;
