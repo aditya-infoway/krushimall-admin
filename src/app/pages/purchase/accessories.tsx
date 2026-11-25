@@ -439,15 +439,7 @@ createdBy: item.createdBy || "-",
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Grand Total
                 </Th>
-                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  Transport
-                </Th>
-                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  Mobile No
-                </Th>
-                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  Vehicle No
-                </Th>
+              
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Created By
                 </Th>
@@ -525,9 +517,7 @@ createdBy: item.createdBy || "-",
                     <Td className="py-4 text-right font-bold text-blue-600 dark:text-blue-400">
                       ₹{fmt(item.grandTotal)}
                     </Td>
-                    <Td className="py-4">{item.transportName}</Td>
-                    <Td className="py-4">{item.mobileNo}</Td>
-                    <Td className="py-4">{item.vehicalNo}</Td>
+                  
                       <Td className="py-4">{item.createdBy}</Td>
 
 <Td className="py-4">

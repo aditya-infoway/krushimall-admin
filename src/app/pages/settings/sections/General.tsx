@@ -61,6 +61,7 @@ export default function General() {
     { value: "LEAD", label: "LEAD" },
     { value: "JOBCARD", label: "JOB CARD" },
     { value: "ACCESSORIES_INVOICE", label: "ACCESSORIES_INVOICE" },
+    { value: "SPARE_PARTS_PURCHASE", label: "SPAREPARTS PURCHASE" },
   ];
 
   useEffect(() => {
