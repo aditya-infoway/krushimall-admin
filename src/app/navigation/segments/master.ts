@@ -190,5 +190,12 @@ export const master: NavigationTree = {
       title: "Accessories Inventory",
       path: "/goodscontrol/accessoriesinventory",
     },
+
+    {
+      id: "sparepartinventory",
+      type: "item",
+      title: "Spareparts Inventory",
+      path: "/goodscontrol/sparepartsinventory",
+    },
   ],
 };

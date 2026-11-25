@@ -549,9 +549,9 @@ const SparePartItemList: React.FC<SparePartItemListProps> = ({ onAddItem }) => {
                     </Td>
                     <Td className="py-4 text-center">
                       <button
-                        onClick={() => handleViewClick(item)}
-                        title="View Inward Details"
-                        className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                        disabled
+                        title="View Disabled"
+                        className="cursor-not-allowed text-gray-400 opacity-50"
                       >
                         <EyeIcon className="size-5" />
                       </button>
