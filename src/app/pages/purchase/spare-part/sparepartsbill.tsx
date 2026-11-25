@@ -532,7 +532,7 @@ const SparePartsPurchaseBill: React.FC = () => {
       maximumFractionDigits: 2,
     });
 
-  const handleBack = () => navigate("/purchase/spare-parts");
+  const handleBack = () => navigate("/purchase/spare-part");
 
   // ── Save Bill ───────────────────────────────────────────────────────
   const handleSave = async () => {
@@ -605,7 +605,7 @@ const SparePartsPurchaseBill: React.FC = () => {
         toast.success("Purchase created successfully!");
       }
 
-      navigate("/purchase/spare-parts");
+      navigate("/purchase/spare-part");
     } catch (error: any) {
       console.error(error);
       toast.error(error.response?.data?.message || "Failed to save purchase");

@@ -291,15 +291,22 @@ const SpareParts = () => {
       status: item.status || "ACTIVE",
     });
 
+    // ✅ FIX: Properly map the nested model object
+    const variantsToMap = item.showroomVariantDetails || item.showroomVariants || [];
+    
     setSelectedVariants(
-      (item.showroomVariantDetails || item.showroomVariants || []).map(
-        (v: any) => ({
+      variantsToMap.map((v: any) => {
+        // Backend returns model as an object (because of `include: { model: true }`)
+        // So we need to extract the actual name
+        const modelName = v.model?.modelName || v.model?.model || v.model || "Unknown Model";
+        
+        return {
           value: v.id,
-          label: `${v.variantName} - ${v.model?.model ?? v.model}`,
+          label: `${v.variantName} - ${modelName}`,
           variantName: v.variantName,
-          model: v.model?.model ?? v.model,
-        }),
-      ),
+          model: modelName, // Store just the string for the payload
+        };
+      })
     );
 
     setShowDrawer(true);

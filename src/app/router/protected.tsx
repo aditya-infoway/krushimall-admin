@@ -238,6 +238,36 @@ const protectedRoutes: RouteObject = {
             },
           ],
         },
+
+        {
+          path: "implement",
+          children: [
+            {
+              path: "implementcategory",
+              lazy: async () => ({
+                Component: (
+                  await import("@/app/pages/implement/implementcategory")
+                ).default,
+              }),
+            },
+            {
+              path: "implementbrand",
+              lazy: async () => ({
+                Component: (
+                  await import("@/app/pages/implement/implementbrand")
+                ).default,
+              }),
+            },
+            {
+              path: "createimplement",
+              lazy: async () => ({
+                Component: (
+                  await import("@/app/pages/implement/createimplement")
+                ).default,
+              }),
+            },
+          ],
+        },
         {
           path: "usermaster",
           children: [
@@ -654,6 +684,22 @@ const protectedRoutes: RouteObject = {
               lazy: async () => ({
                 Component: (
                   await import("@/app/pages/goodscontrol/accessorieshistory")
+                ).default,
+              }),
+            },
+            {
+              path: "sparepartsinventory",
+              lazy: async () => ({
+                Component: (
+                  await import("@/app/pages/goodscontrol/sparepartsinventory")
+                ).default,
+              }),
+            },
+            {
+              path: "sparepartsinventory/history/:id",
+              lazy: async () => ({
+                Component: (
+                  await import("@/app/pages/goodscontrol/sparepartshistory")
                 ).default,
               }),
             },
