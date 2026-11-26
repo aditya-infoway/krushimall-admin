@@ -206,6 +206,7 @@ useEffect(() => {
   useEffect(() => {
     fetchVariants();
   }, []);
+  
  const categoryOptions = [
   { id: "All", name: "All Categories" },
   ...categories.map((c: any) => ({

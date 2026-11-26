@@ -48,6 +48,24 @@ export const leadmaster: NavigationTree = {
       path: "/implement/implementbrand",
     },
     {
+      id: "implementmodel",
+      type: "item",
+      title: "Model",
+      path: "/implement/implementmodel",
+    },
+    {
+      id: "implementvariant",
+      type: "item",
+      title: "Variant",
+      path: "/implement/implementvariant",
+    },
+    {
+      id: "implementcolour",
+      type: "item",
+      title: "Colour",
+      path: "/implement/implementcolour",
+    },
+     {
       id: "createimplement",
       type: "item",
       title: "Create Implement",

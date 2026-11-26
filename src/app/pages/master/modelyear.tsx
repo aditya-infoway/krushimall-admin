@@ -188,7 +188,7 @@ export default function ModelYear() {
 
   const getCategories = async () => {
     try {
-      const response = await apiHelper.get("/category");
+      const response = await apiHelper.get("/category/active");
       const data = response?.data || response;
       setCategories(
         (Array.isArray(data) ? data : []).map((item: any) => ({
@@ -203,7 +203,7 @@ export default function ModelYear() {
 
   const getBrands = async () => {
     try {
-      const response = await apiHelper.get("/brand");
+      const response = await apiHelper.get("/brand/active");
       const data = response?.data || response;
       const list: BrandOption[] = (Array.isArray(data) ? data : []).map(
         (item: any) => ({
@@ -224,7 +224,7 @@ export default function ModelYear() {
 
   const getModels = async () => {
     try {
-      const response = await apiHelper.get("/model");
+      const response = await apiHelper.get("/model/active");
       const data = response?.data || response;
       const list: ModelOption[] = (Array.isArray(data) ? data : []).map(
         (item: any) => ({
