@@ -268,7 +268,7 @@ export default function ShowroomVariantPage() {
 
   const getModels = async () => {
     try {
-      const response = await apiHelper.get("/model");
+      const response = await apiHelper.get("/model/active");
       const data = response?.data || response;
       setModels(
         (Array.isArray(data) ? data : []).map((item: any) => ({

@@ -246,7 +246,7 @@ const Colour = () => {
   const getModels = async () => {
     try {
       setLoading(true);
-      const response = await apiHelper.get("/model");
+      const response = await apiHelper.get("/model/active");
       let modelsData = response?.data || response;
       if (!Array.isArray(modelsData)) modelsData = [];
 
