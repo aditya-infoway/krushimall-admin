@@ -182,7 +182,7 @@ const modelYearOptions = filteredModelYears.map((yr) => ({
   }, []);
   const getCategories = async () => {
     try {
-      const response = await apiHelper.get("/category");
+      const response = await apiHelper.get("/category/active");
       const data = response?.data || response;
       setCategories(
         (Array.isArray(data) ? data : []).map((item: any) => ({
@@ -197,7 +197,7 @@ const modelYearOptions = filteredModelYears.map((yr) => ({
 
   const getBrands = async () => {
   try {
-    const response = await apiHelper.get("/brand");
+    const response = await apiHelper.get("/brand/active");
     const data = response?.data || response;
     setBrands(
       (Array.isArray(data) ? data : []).map((item: any) => ({
@@ -215,7 +215,7 @@ const modelYearOptions = filteredModelYears.map((yr) => ({
 
 const getModels = async () => {
   try {
-    const response = await apiHelper.get("/model");
+    const response = await apiHelper.get("/model/active");
     const data = response?.data || response;
     setModels(
       (Array.isArray(data) ? data : []).map((item: any) => ({
@@ -233,7 +233,7 @@ const getModels = async () => {
 
 const getModelYears = async () => {
   try {
-    const response = await apiHelper.get("/model-year");
+    const response = await apiHelper.get("/model-year/active");
     const data = response?.data || response;
     setModelYears(
       (Array.isArray(data) ? data : []).map((item: any) => ({

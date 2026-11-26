@@ -171,7 +171,7 @@ export default function Model() {
 
   const getCategories = async () => {
     try {
-      const response = await apiHelper.get("/category");
+      const response = await apiHelper.get("/category/active");
       const data = response?.data || response;
       const list = (Array.isArray(data) ? data : []).map((item: any) => ({
         id: item.id || item._id,
@@ -184,7 +184,7 @@ export default function Model() {
   };
   const getBrands = async () => {
     try {
-      const response = await apiHelper.get("/brand");
+      const response = await apiHelper.get("/brand/active");
 
       const data = response?.data || response;
 

@@ -122,28 +122,28 @@ export default function Brand() {
     getCategories();
   }, []);
 
-  const getCategories = async () => {
-    try {
-      const response = await apiHelper.get("/category");
+const getCategories = async () => {
+  try {
+    // ✅ CHANGED: Fetch only active categories
+    const response = await apiHelper.get("/category/active");
 
-      let categoriesData = [];
-      if (response && response.data && Array.isArray(response.data)) {
-        categoriesData = response.data;
-      } else if (Array.isArray(response)) {
-        categoriesData = response;
-      }
-
-      // Store both id and name
-      const categoryList = categoriesData.map((item: any) => ({
-        id: item.id || item._id,
-        name: item.categoryName || item.name,
-      }));
-      setCategories(categoryList);
-    } catch (error) {
-      console.error("Failed to fetch categories:", error);
-      setCategories([]);
+    let categoriesData = [];
+    if (response && response.data && Array.isArray(response.data)) {
+      categoriesData = response.data;
+    } else if (Array.isArray(response)) {
+      categoriesData = response;
     }
-  };
+
+    const categoryList = categoriesData.map((item: any) => ({
+      id: item.id || item._id,
+      name: item.categoryName || item.name,
+    }));
+    setCategories(categoryList);
+  } catch (error) {
+    console.error("Failed to fetch categories:", error);
+    setCategories([]);
+  }
+};
 
   const getBrands = async () => {
     try {

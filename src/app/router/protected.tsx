@@ -258,6 +258,30 @@ const protectedRoutes: RouteObject = {
                 ).default,
               }),
             },
+             {
+              path: "implementmodel",
+              lazy: async () => ({
+                Component: (
+                  await import("@/app/pages/implement/implementmodel")
+                ).default,
+              }),
+            },
+            {
+              path: "implementvariant",
+              lazy: async () => ({
+                Component: (
+                  await import("@/app/pages/implement/implementvariant")
+                ).default,
+              }),
+            },
+             {
+              path: "implementcolour",
+              lazy: async () => ({
+                Component: (
+                  await import("@/app/pages/implement/implementcolour")
+                ).default,
+              }),
+            },
             {
               path: "createimplement",
               lazy: async () => ({
