@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import { PlusIcon } from "@heroicons/react/24/outline";
 // import { Combobox } from "@/components/shared/form/StyledCombobox";
 import { Combobox } from "@/components/shared/form/Combobox";
+import { createPortal } from "react-dom";
 interface TractorPurchaseBillProps {
   onBack?: () => void;
   onSaved?: (row: PurchaseRegisterRow) => void;
@@ -361,8 +362,9 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
     try {
       const res = await apiHelper.get("/tractors");
 
-      const tractors = res.data || [];
-
+      const tractors = (res.data || []).filter(
+        (item: any) => String(item.status).toUpperCase() === "ACTIVE",
+      );
       setVehicleOptions(
         tractors.map((item: any) => ({
           id: item.id,
@@ -1854,8 +1856,8 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
       {/* ========== RIGHT SIDE DRAWER MODALS ========== */}
 
       {/* Vehicle Details - Right Drawer */}
-      {vehicleModalOpen && (
-        <div className="fixed inset-0 z-50 overflow-hidden">
+      {vehicleModalOpen && createPortal (
+        <div className="fixed inset-0 z-100 overflow-hidden">
           <div
             className="absolute inset-0 bg-black/50"
             onClick={() => {
@@ -1955,12 +1957,12 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
               </div>
             </div>
           </div>
-        </div>
-      )}
-
+        </div>,
+       document.body,
+  )}
       {/* Bank Details - Right Drawer */}
-      {bankDetailsModalOpen && (
-        <div className="fixed inset-0 z-50 overflow-hidden">
+      {bankDetailsModalOpen && createPortal(
+        <div className="fixed inset-0 z-100 overflow-hidden">
           <div
             className="absolute inset-0 bg-black/50"
             onClick={handleCancelBankDetails}
@@ -2106,12 +2108,13 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
               </div>
             </div>
           </div>
-        </div>
-      )}
+        </div>,
+       document.body,
+  )}
 
       {/* Create Account - Right Drawer WITH DYNAMIC LOCATION */}
-      {accountModalOpen && (
-        <div className="fixed inset-0 z-50 overflow-hidden">
+      {accountModalOpen && createPortal(
+        <div className="fixed inset-0 z-100 overflow-hidden">
           <div
             className="absolute inset-0 bg-black/50"
             onClick={() => {
@@ -2479,8 +2482,9 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
               </div>
             </div>
           </div>
-        </div>
-      )}
+        </div>,
+      document.body,
+  )}
     </div>
   );
 };

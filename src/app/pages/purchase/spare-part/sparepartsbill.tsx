@@ -18,7 +18,7 @@ import apiHelper from "@/utils/apiHelper";
 import { toast } from "sonner";
 import { Combobox } from "@/components/shared/form/Combobox";
 import emptyStateImage from "@/assets/notfound.png"
-
+import { createPortal } from "react-dom";
 interface ItemRow {
   id: string;
   sparePartId?: number;
@@ -265,21 +265,21 @@ const SparePartsPurchaseBill: React.FC = () => {
     }
   }, [id]);
 
-  const fetchSpareParts = async () => {
-    try {
-      const res = await apiHelper.get("/spare-part");
-      setSpareParts(
-        Array.isArray(res.data?.data)
-          ? res.data.data
-          : Array.isArray(res.data)
-            ? res.data
-            : [],
-      );
-    } catch (err) {
-      console.log(err);
-      setSpareParts([]);
-    }
-  };
+const fetchSpareParts = async () => {
+  try {
+    const res = await apiHelper.get("/spare-part/active");
+    setSpareParts(
+      Array.isArray(res.data?.data)
+        ? res.data.data
+        : Array.isArray(res.data)
+          ? res.data
+          : [],
+    );
+  } catch (err) {
+    console.log(err);
+    setSpareParts([]);
+  }
+};
 
   const getBillNo = useCallback(async () => {
     try {
@@ -1314,8 +1314,8 @@ const SparePartsPurchaseBill: React.FC = () => {
       {/* ========== RIGHT SIDE DRAWER MODALS ========== */}
 
       {/* Spare Part Selection Drawer */}
-      {spareDrawerOpen && (
-        <div className="fixed inset-0 z-50 overflow-hidden">
+      {spareDrawerOpen && createPortal(
+        <div className="fixed inset-0 z-100 overflow-hidden">
           <div
             className="absolute inset-0 bg-black/50"
             onClick={() => {
@@ -1400,12 +1400,13 @@ const SparePartsPurchaseBill: React.FC = () => {
               </div>
             </div>
           </div>
-        </div>
-      )}
+        </div>,
+      document.body,
+  )}
 
       {/* Bank Details - Right Drawer */}
-      {bankDetailsModalOpen && (
-        <div className="fixed inset-0 z-50 overflow-hidden">
+      {bankDetailsModalOpen && createPortal(
+        <div className="fixed inset-0 z-100 overflow-hidden">
           <div
             className="absolute inset-0 bg-black/50"
             onClick={() => setBankDetailsModalOpen(false)}
@@ -1532,12 +1533,13 @@ const SparePartsPurchaseBill: React.FC = () => {
               </div>
             </div>
           </div>
-        </div>
-      )}
+        </div>,
+      document.body,
+  )}
 
       {/* Create Account - Right Drawer */}
-      {accountModalOpen && (
-        <div className="fixed inset-0 z-50 overflow-hidden">
+      {accountModalOpen && createPortal(
+        <div className="fixed inset-0 z-100 overflow-hidden">
           <div
             className="absolute inset-0 bg-black/50"
             onClick={() => {
@@ -1775,8 +1777,9 @@ const SparePartsPurchaseBill: React.FC = () => {
               </div>
             </div>
           </div>
-        </div>
-      )}
+        </div>,
+       document.body,
+  )}
     </div>
   );
 };

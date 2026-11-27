@@ -47,6 +47,7 @@ export interface PurchaseItemRow {
   keyNo?: string;
   batteryMake?: string;
   batteryNo?: string;
+  tyreMake?: string;
   first1TyerNo?: string;
   first2TyerNo?: string;
   second1TyerNo?: string;
@@ -67,6 +68,7 @@ export interface InwardDrawerData {
   keyNo: string;
   batteryMake: string;
   batteryNo: string;
+  tyreMake: string;
   first1TyerNo: string;
   first2TyerNo: string;
   second1TyerNo: string;
@@ -165,6 +167,7 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
     keyNo: "",
     batteryMake: "",
     batteryNo: "",
+    tyreMake: "",
     first1TyerNo: "",
     first2TyerNo: "",
     second1TyerNo: "",
@@ -182,6 +185,7 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
     transporterName: "",
     mobileNumber: "",
     vehicleNumber: "",
+    driverName: "",
   });
 
   const [transportErrors, setTransportErrors] = useState<any>({});
@@ -194,7 +198,6 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
   }, [id]);
 
   const fetchPurchaseItems = async () => {
-    
     try {
       setLoading(true);
 
@@ -228,6 +231,7 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
           keyNo: item.keyNo || "",
           batteryMake: item.batteryMake || "",
           batteryNo: item.batteryNo || "",
+          tyreMake: item.tyreMake || "",
           first1TyerNo: item.first1TyerNo || "",
           first2TyerNo: item.first2TyerNo || "",
           second1TyerNo: item.second1TyerNo || "",
@@ -311,54 +315,51 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
     if (onAddItem) onAddItem();
   };
 
-const handleInwardClick = async (item: PurchaseItemRow) => {
+  const handleInwardClick = async (item: PurchaseItemRow) => {
+    setSelectedItem(item);
+    setErrors({});
+    setIsView(false);
 
-  setSelectedItem(item);
-  setErrors({});
-  setIsView(false);
+    // Open drawer immediately
+    setInwardData({
+      vehicleSrNo: item.vehicleSrNo || "",
+      chassisNo: item.chassisNo || "",
+      engineNo: item.engineNo || "",
+      mfgDate: "",
+      keyNo: "",
+      batteryMake: "",
+      batteryNo: "",
+      tyreMake: "",
+      first1TyerNo: "",
+      first2TyerNo: "",
+      second1TyerNo: "",
+      second2TyerNo: "",
+      location: "",
+      grnNumber: "",
+      grnDate: "",
+      grnRecordDate: "",
+    });
 
-  // Open drawer immediately
-  setInwardData({
-    vehicleSrNo: item.vehicleSrNo || "",
-    chassisNo: item.chassisNo || "",
-    engineNo: item.engineNo || "",
-    mfgDate: "",
-    keyNo: "",
-    batteryMake: "",
-    batteryNo: "",
-    first1TyerNo: "",
-    first2TyerNo: "",
-    second1TyerNo: "",
-    second2TyerNo: "",
-    location: "",
-    grnNumber: "",
-    grnDate: "",
-    grnRecordDate: "",
-  });
+    setShowDrawer(true);
 
-  setShowDrawer(true);
+    // Generate serial number only if missing
+    if (!item.vehicleSrNo) {
+      try {
+        const vehicleSrNo = await getVehicleSerialNo();
 
-  // Generate serial number only if missing
-  if (!item.vehicleSrNo) {
-    try {
-      const vehicleSrNo = await getVehicleSerialNo();
-
-      setInwardData((prev) => ({
-        ...prev,
-        vehicleSrNo,
-      }));
-    } catch (error: any) {
-      console.error("Vehicle Serial API Error:", error);
-      toast.error(
-        error.response?.data?.message ||
-          "Failed to generate vehicle serial number",
-      );
+        setInwardData((prev) => ({
+          ...prev,
+          vehicleSrNo,
+        }));
+      } catch (error: any) {
+        console.error("Vehicle Serial API Error:", error);
+        toast.error(
+          error.response?.data?.message ||
+            "Failed to generate vehicle serial number",
+        );
+      }
     }
-  }
-};
-
-
-
+  };
 
   const validateInward = () => {
     const newErrors: any = {};
@@ -372,7 +373,8 @@ const handleInwardClick = async (item: PurchaseItemRow) => {
 
     if (!inwardData.batteryNo.trim())
       newErrors.batteryNo = "Battery No is required";
-
+    if (!inwardData.tyreMake.trim())
+      newErrors.tyreMake = "Tyre Make is required";
     if (!inwardData.first1TyerNo.trim())
       newErrors.first1TyerNo = "First 1 Tyre No is required";
 
@@ -405,7 +407,8 @@ const handleInwardClick = async (item: PurchaseItemRow) => {
 
     if (!transportData.transporterName.trim())
       errors.transporterName = "Transporter Name is required";
-
+    if (!transportData.driverName.trim())
+      errors.driverName = "Driver Name is required";
     if (!transportData.mobileNumber.trim())
       errors.mobileNumber = "Mobile Number is required";
 
@@ -465,13 +468,13 @@ const handleInwardClick = async (item: PurchaseItemRow) => {
       }));
     }
   };
-const getVehicleSerialNo = async () => {
-  const res = await apiHelper.get("/purchases/vehicle-serial-no");
+  const getVehicleSerialNo = async () => {
+    const res = await apiHelper.get("/purchases/vehicle-serial-no");
 
-  console.log("Vehicle Serial Response:", res);
+    console.log("Vehicle Serial Response:", res);
 
-  return res.vehicleSrNo;
-};
+    return res.vehicleSrNo;
+  };
   const handleViewClick = (item: PurchaseItemRow) => {
     setSelectedItem(item);
 
@@ -483,6 +486,7 @@ const getVehicleSerialNo = async () => {
       keyNo: item.keyNo || "",
       batteryMake: item.batteryMake || "",
       batteryNo: item.batteryNo || "",
+      tyreMake: item.tyreMake || "",
       first1TyerNo: item.first1TyerNo || "",
       first2TyerNo: item.first2TyerNo || "",
       second1TyerNo: item.second1TyerNo || "",
@@ -498,12 +502,12 @@ const getVehicleSerialNo = async () => {
   };
 
   // FIXED: output format now matches the DatePicker's configured dateFormat "d-m-Y"
-const toLocalDateString = (date: Date): string => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${day}-${month}-${year}`;   // e.g. "20-06-2026"
-};
+  const toLocalDateString = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${day}-${month}-${year}`; // e.g. "20-06-2026"
+  };
   return (
     <div className="relative min-h-screen space-y-6 p-4 pb-28 text-gray-900 md:p-6 dark:text-gray-100">
       {/* Header */}
@@ -917,6 +921,26 @@ const toLocalDateString = (date: Date): string => {
               <div className="grow space-y-4 overflow-y-auto p-5">
                 <div>
                   <label className="mb-1 block text-sm font-medium">
+                    Driver Name
+                  </label>
+                  <Input
+                    value={transportData.driverName}
+                    placeholder="Driver Name"
+                    onChange={(e) =>
+                      setTransportData({
+                        ...transportData,
+                        driverName: e.target.value,
+                      })
+                    }
+                  />
+                  {transportErrors.driverName && (
+                    <p className="text-sm text-red-500">
+                      {transportErrors.driverName}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium">
                     Transporter Name
                   </label>
                   <Input
@@ -1175,7 +1199,24 @@ const toLocalDateString = (date: Date): string => {
                       </p>
                     )}
                   </div>
-
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Tyre Make
+                    </label>
+                    <Input
+                      type="text"
+                      readOnly={isView}
+                      name="tyreMake"
+                      value={inwardData.tyreMake}
+                      onChange={handleInwardChange}
+                      placeholder="Enter tyre make"
+                    />
+                    {errors.tyreMake && (
+                      <p className="mt-1 text-sm text-red-500">
+                        {errors.tyreMake}
+                      </p>
+                    )}
+                  </div>
                   <div>
                     <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                       First 1 Tyer No.

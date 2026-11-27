@@ -20,7 +20,7 @@ import { components } from "react-select";
 import apiHelper from "@/utils/apiHelper";
 // import { Combobox } from "@/components/shared/form/StyledCombobox";
 import { toast } from "sonner";
-
+import { createPortal } from "react-dom";
 // ---------- Types ----------
 import { useParams } from "react-router-dom";
 import { Combobox } from "@/components/shared/form/Combobox";
@@ -487,22 +487,22 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
     }
   };
   // ── API Functions ────────────────────────────────────────────────────
-  const fetchAccessories = async () => {
-    try {
-      const res = await apiHelper.get("/accessories");
+const fetchAccessories = async () => {
+  try {
+    const res = await apiHelper.get("/accessories/active");
 
-      setAccessories(
-        Array.isArray(res.data?.data)
-          ? res.data.data
-          : Array.isArray(res.data)
-            ? res.data
-            : [],
-      );
-    } catch (err) {
-      console.log(err);
-      setAccessories([]);
-    }
-  };
+    setAccessories(
+      Array.isArray(res.data?.data)
+        ? res.data.data
+        : Array.isArray(res.data)
+          ? res.data
+          : [],
+    );
+  } catch (err) {
+    console.log(err);
+    setAccessories([]);
+  }
+};
 
   // Get Bill Number
   const getBillNo = async () => {
@@ -1049,9 +1049,15 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
       itemCode: a.codeNo,
       hsn: a.hsnCode,
       barCode: a.barCode,
-      modelName: a.showroomVariantDetails?.[0]?.model?.modelName || "",
+    modelName:
+  a.showroomVariantDetails?.[0]?.model?.modelName ||
+  a.showroomVariants?.[0]?.model ||
+  "",
       groupName: a.group,
-      variantName: a.showroomVariantDetails?.[0]?.variantName || "",
+    variantName:
+  a.showroomVariantDetails?.[0]?.variantName ||
+  a.showroomVariants?.[0]?.variantName ||
+  "",
       unit: a.unit,
       qty,
       pPrice: String(price),
@@ -2067,8 +2073,8 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
       {/* ========== MODALS (Keep all the same as before) ========== */}
 
       {/* Accessories Details - Right Drawer */}
-      {accessoryDrawerOpen && (
-        <div className="fixed inset-0 z-50 overflow-hidden">
+      {accessoryDrawerOpen && createPortal(
+        <div className="fixed inset-0 z-100 overflow-hidden">
           <div
             className="absolute inset-0 bg-black/50"
             onClick={() => {
@@ -2151,22 +2157,27 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
 
                           <td className="p-2">{a.hsnCode}</td>
 
-                          <td className="p-2">
-                            {a.showroomVariantDetails?.length
-                              ? a.showroomVariantDetails
-                                  .map((v: any) => v.model?.modelName)
-                                  .join(", ")
-                              : "-"}
-                          </td>
+                         <td className="p-2">
+  {(
+    a.showroomVariantDetails?.length
+      ? a.showroomVariantDetails
+      : a.showroomVariants || []
+  )
+    .map((v: any) => v?.model?.modelName || v?.model)
+    .filter(Boolean)
+    .join(", ") || "-"}
+</td>
 
-                          <td className="p-2">
-                            {" "}
-                            {a.showroomVariantDetails?.length
-                              ? a.showroomVariantDetails
-                                  .map((v: any) => v.variantName)
-                                  .join(", ")
-                              : "-"}
-                          </td>
+<td className="p-2">
+  {(
+    a.showroomVariantDetails?.length
+      ? a.showroomVariantDetails
+      : a.showroomVariants || []
+  )
+    .map((v: any) => v?.variantName)
+    .filter(Boolean)
+    .join(", ") || "-"}
+</td>
 
                           <td className="p-2">
                             ₹{Number(a.purchasePrice || 0).toFixed(2)}
@@ -2196,12 +2207,13 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
               </div>
             </div>
           </div>
-        </div>
-      )}
+        </div>,
+      document.body,
+  )}
 
       {/* Add Accessories Item Modal */}
-      {addAccessoryModalOpen && (
-        <div className="fixed inset-0 z-50 overflow-hidden">
+      {addAccessoryModalOpen && createPortal(
+        <div className="fixed inset-0 z-100 overflow-hidden">
           <div
             className="absolute inset-0 bg-black/50"
             onClick={() => {
@@ -2565,12 +2577,13 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
               </div>
             </div>
           </div>
-        </div>
-      )}
+        </div>,
+       document.body,
+  )}
 
       {/* Add Tractor Modal */}
-      {addTractorModalOpen && (
-        <div className="fixed inset-0 z-50 overflow-hidden">
+      {addTractorModalOpen && createPortal(
+        <div className="fixed inset-0 z-100 overflow-hidden">
           <div
             className="absolute inset-0 bg-black/50"
             onClick={() => {
@@ -2888,12 +2901,13 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
               </div>
             </div>
           </div>
-        </div>
-      )}
+        </div>,
+       document.body,
+  )}
 
       {/* Bank Details Modal */}
-      {bankDetailsModalOpen && (
-        <div className="fixed inset-0 z-50 overflow-hidden">
+      {bankDetailsModalOpen && createPortal(
+        <div className="fixed inset-0 z-100 overflow-hidden">
           <div
             className="absolute inset-0 bg-black/50"
             onClick={handleCancelBankDetails}
@@ -3040,12 +3054,13 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
               </div>
             </div>
           </div>
-        </div>
-      )}
+        </div>,
+        document.body,
+  )}
 
       {/* Create Account Modal */}
-      {accountModalOpen && (
-        <div className="fixed inset-0 z-50 overflow-hidden">
+      {accountModalOpen && createPortal(
+        <div className="fixed inset-0 z-100 overflow-hidden">
           <div
             className="absolute inset-0 bg-black/50"
             onClick={() => {
@@ -3414,8 +3429,9 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
               </div>
             </div>
           </div>
-        </div>
-      )}
+        </div>,
+      document.body,
+  )}
     </div>
   );
 };

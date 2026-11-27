@@ -62,6 +62,7 @@ export default function General() {
     { value: "JOBCARD", label: "JOB CARD" },
     { value: "ACCESSORIES_INVOICE", label: "ACCESSORIES_INVOICE" },
     { value: "SPARE_PARTS_PURCHASE", label: "SPAREPARTS PURCHASE" },
+    { value: "IMPLEMENT_PURCHASE", label: "IMPLEMENT PURCHASE" },
   ];
 
   useEffect(() => {

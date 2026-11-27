@@ -410,11 +410,11 @@ export function BasicInformation({
     try {
       const [categoryRes, brandRes, modelRes, modelYearRes, variantRes] =
         await Promise.all([
-          apiHelper.get("/category"),
+          apiHelper.get("/category/active"),
 
-          apiHelper.get("/brand"),
-          apiHelper.get("/model"),
-          apiHelper.get("/model-year"),
+          apiHelper.get("/brand/active"),
+          apiHelper.get("/model/active"),
+          apiHelper.get("/model-year/active"),
           apiHelper.get("/variant"),
         ]);
 

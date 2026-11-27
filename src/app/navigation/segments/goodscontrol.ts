@@ -19,6 +19,7 @@ export const goodcontrol: NavigationTree = {
       title: "Accessories Inventory",
       path: "/goodscontrol/accessoriesinventory",
     },
+    
 
   ],
 };

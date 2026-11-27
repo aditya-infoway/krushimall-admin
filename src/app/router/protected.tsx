@@ -258,7 +258,7 @@ const protectedRoutes: RouteObject = {
                 ).default,
               }),
             },
-             {
+            {
               path: "implementmodel",
               lazy: async () => ({
                 Component: (
@@ -274,7 +274,7 @@ const protectedRoutes: RouteObject = {
                 ).default,
               }),
             },
-             {
+            {
               path: "implementcolour",
               lazy: async () => ({
                 Component: (
@@ -524,16 +524,52 @@ const protectedRoutes: RouteObject = {
                     ).default,
                   }),
                 },
+                 {
+                  path: "inward/:id",
+                  lazy: async () => ({
+                    Component: (
+                      await import("@/app/pages/purchase/Implement-purchase/ImplementItemList")
+                    ).default,
+                  }),
+                },
               ],
             },
-            // 👆 AND ALSO MAKE SURE THE INWARD ROUTE MATCHES YOUR FOLDER
             {
-              path: "spare-part-inward/:id",
-              lazy: async () => ({
-                Component: (
-                  await import("@/app/pages/purchase/spare-part/sparePartsItemList")
-                ).default,
-              }),
+              path: "implement-purchase",
+              children: [
+                {
+                  index: true,
+                  lazy: async () => ({
+                    Component: (
+                      await import("@/app/pages/purchase/Implement-purchase/implement")
+                    ).default,
+                  }),
+                },
+                {
+                  path: "add",
+                  lazy: async () => ({
+                    Component: (
+                      await import("@/app/pages/purchase/Implement-purchase/Implementbill")
+                    ).default,
+                  }),
+                },
+                {
+                  path: "add/:id",
+                  lazy: async () => ({
+                    Component: (
+                      await import("@/app/pages/purchase/Implement-purchase/Implementbill")
+                    ).default,
+                  }),
+                },
+                {
+                  path: "inward/:id",
+                  lazy: async () => ({
+                    Component: (
+                      await import("@/app/pages/purchase/Implement-purchase/ImplementItemList")
+                    ).default,
+                  }),
+                },
+              ],
             },
           ],
         },
@@ -724,6 +760,14 @@ const protectedRoutes: RouteObject = {
               lazy: async () => ({
                 Component: (
                   await import("@/app/pages/goodscontrol/sparepartshistory")
+                ).default,
+              }),
+            },
+            {
+              path: "implementinventory",
+              lazy: async () => ({
+                Component: (
+                  await import("@/app/pages/goodscontrol/ImplementInventory")
                 ).default,
               }),
             },
