@@ -25,5 +25,11 @@ export const purchase: NavigationTree = {
       title: "Sparepart Purchase",
       path: "/purchase/spare-part",
     },
+     {
+      id: "purchase-implement",
+      type: "item",
+      title: "Implement Purchase",
+      path: "/purchase/implement-purchase",
+    },
   ],
 };

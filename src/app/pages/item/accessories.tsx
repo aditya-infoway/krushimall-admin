@@ -399,12 +399,14 @@ const Accessories = () => {
       prev.map((i) => (i.id === id ? { ...i, status: newStatus } : i)),
     );
 
-    try {
-      await apiHelper.put(`/accessories/${id}`, { status: newStatus });
-    } catch (error) {
-      console.error("Failed to toggle status:", error);
-      await getAccessories();
-    }
+  try {
+  await apiHelper.put(`/accessories/${id}`, { status: newStatus });
+  toast.success(`Status updated to ${newStatus}`);
+} catch (error) {
+  console.error("Failed to toggle status:", error);
+  toast.error("Failed to update status");
+  await getAccessories();
+}
   };
 
   const validate = () => {
