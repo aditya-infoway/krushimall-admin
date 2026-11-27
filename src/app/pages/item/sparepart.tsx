@@ -359,23 +359,25 @@ const SpareParts = () => {
     }
   };
 
-  const handleToggleStatus = async (id: number) => {
-    const item = items.find((i) => i.id === id);
-    if (!item) return;
+ const handleToggleStatus = async (id: number) => {
+  const item = items.find((i) => i.id === id);
+  if (!item) return;
 
-    const newStatus = item.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
+  const newStatus = item.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
 
-    setItems((prev) =>
-      prev.map((i) => (i.id === id ? { ...i, status: newStatus } : i)),
-    );
+  setItems((prev) =>
+    prev.map((i) => (i.id === id ? { ...i, status: newStatus } : i)),
+  );
 
-    try {
-      await apiHelper.put(`/spare-part/${id}`, { status: newStatus });
-    } catch (error) {
-      console.error("Failed to toggle status:", error);
-      await getSpareParts();
-    }
-  };
+  try {
+    await apiHelper.put(`/spare-part/${id}`, { status: newStatus });
+    toast.success(`Status updated to ${newStatus}`);
+  } catch (error) {
+    console.error("Failed to toggle status:", error);
+    toast.error("Failed to update status");
+    await getSpareParts();
+  }
+};
 
   const validate = () => {
     const newErrors: Record<string, string> = {};

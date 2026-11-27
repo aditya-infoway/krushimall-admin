@@ -208,7 +208,7 @@ const SparePartsPurchaseRegister: React.FC = () => {
   const handleEditRow = (row: SparePartsPurchaseRegisterRow) =>
     navigate(`/purchase/spare-part/add/${row.id}`);
   const handleInward = (row: SparePartsPurchaseRegisterRow) =>
-    navigate(`/purchase/spare-part-inward/${row.id}`);
+    navigate(`/purchase/spare-part/inward/${row.id}`);
 
   const handleDeleteRow = (row: SparePartsPurchaseRegisterRow) => {
     setDeleteTargetId(row.id);
