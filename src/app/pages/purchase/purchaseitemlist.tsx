@@ -905,13 +905,17 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
           >
             <DialogPanel className="dark:bg-dark-700 fixed top-0 right-0 flex h-full w-full max-w-lg flex-col bg-white shadow-2xl">
               {/* Header */}
-              <div className="flex items-center justify-between border-b px-5 py-4">
-                <h2 className="text-lg font-semibold">Add Transport</h2>
+              <div className="bg-primary-600 dark:bg-primary-700 flex items-center justify-between px-4 py-3 sm:px-5 sm:py-4">
+                <h2 className="text-base font-semibold text-white sm:text-lg">
+                  Add Transport
+                </h2>
 
                 <Button
                   variant="flat"
                   isIcon
                   onClick={() => setShowTransportModal(false)}
+                  className="size-8 rounded-full text-white hover:bg-white/10 hover:text-white focus:bg-white/10 active:bg-white/20"
+                  type="button"
                 >
                   <XMarkIcon className="size-5" />
                 </Button>
@@ -1054,15 +1058,15 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({ onAddItem }) => {
           >
             <DialogPanel className="dark:bg-dark-700 fixed top-0 right-0 flex h-full w-full max-w-4xl transform-gpu flex-col bg-white shadow-2xl transition-transform duration-200">
               {/* Header */}
-              <div className="dark:border-dark-500 flex items-center justify-between border-b border-gray-200 px-5 py-4">
-                <h2 className="dark:text-dark-50 text-lg font-semibold text-gray-800">
+              <div className="bg-primary-600 dark:bg-primary-700 flex items-center justify-between px-4 py-3 sm:px-5 sm:py-4">
+                <h2 className="text-base font-semibold text-white sm:text-lg">
                   Inward Details
                 </h2>
                 <Button
                   onClick={() => setShowDrawer(false)}
                   variant="flat"
                   isIcon
-                  className="size-8 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                  className="size-8 rounded-full text-white hover:bg-white/10 hover:text-white focus:bg-white/10 active:bg-white/20"
                   type="button"
                 >
                   <XMarkIcon className="size-5" />

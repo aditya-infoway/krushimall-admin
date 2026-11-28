@@ -338,7 +338,7 @@ const ImplementBrand = () => {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-xl font-semibold text-gray-900 md:text-2xl dark:text-white">
-             Brand
+            Brand
           </h1>
           <p className="dark:text-dark-300 mt-1 text-sm text-gray-500">
             Manage all brands from here
@@ -792,17 +792,15 @@ const ImplementBrand = () => {
             <DialogPanel className="dark:bg-dark-700 fixed top-0 right-0 flex h-full w-full max-w-md transform-gpu flex-col bg-white shadow-2xl transition-transform duration-200">
               <div className="flex h-full flex-col">
                 {/* Header */}
-                <div className="dark:border-dark-500 flex items-center justify-between border-b border-gray-200 px-4 py-3 sm:px-5 sm:py-4">
-                  <h2 className="dark:text-dark-50 text-base font-semibold text-gray-800 sm:text-lg">
-                    {editId !== null
-                      ? "Edit  Brand"
-                      : "Add  Brand"}
+                <div className="bg-primary-600 dark:bg-primary-700 flex items-center justify-between px-4 py-3 sm:px-5 sm:py-4">
+                  <h2 className="text-base font-semibold text-white sm:text-lg">
+                    {editId !== null ? "Edit Brand" : "Add Brand"}
                   </h2>
                   <Button
                     onClick={() => setShowDrawer(false)}
                     variant="flat"
                     isIcon
-                    className="size-8 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                    className="size-8 rounded-full text-white hover:bg-white/10 hover:text-white focus:bg-white/10 active:bg-white/20"
                     type="button"
                   >
                     <XMarkIcon className="size-5" />

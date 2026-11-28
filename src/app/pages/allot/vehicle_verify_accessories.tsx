@@ -16,7 +16,14 @@ import { Listbox } from "@/components/shared/form/StyledListbox";
 import apiHelper from "@/utils/apiHelper";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-
+import { Fragment } from "react";
+import {
+  Dialog,
+  DialogPanel,
+  Transition,
+  TransitionChild,
+} from "@headlessui/react";
+import { Button } from "@/components/ui";
 // ---------- Types ----------
 interface AccessoryItem {
   id: number;
@@ -28,7 +35,7 @@ interface AccessoryItem {
   tax: number;
   salesPrice: number;
   status: string;
-    verifyStatus: string;
+  verifyStatus: string;
 }
 
 interface AccessoryAllotmentDetail {
@@ -48,7 +55,7 @@ interface AccessoryAllotmentDetail {
   invoiceDate?: string;
   accessories: AccessoryItem[];
   pendingAccessories?: AccessoryItem[];
-allottedAccessories?: AccessoryItem[];
+  allottedAccessories?: AccessoryItem[];
   allVerified: boolean;
 }
 
@@ -77,30 +84,30 @@ const VehicleVerifyAccessories: React.FC = () => {
     useState<AccessoryAllotmentDetail | null>(null);
 
   // Fetch accessory items for this allotment (using vehicle verify endpoint)
-const fetchAccessoryItems = async () => {
-  try {
-    setLoading(true);
+  const fetchAccessoryItems = async () => {
+    try {
+      setLoading(true);
 
-    const res = await apiHelper.get(`/orders/vehicle-verify-accessories`);
+      const res = await apiHelper.get(`/orders/vehicle-verify-accessories`);
 
-    const list = Array.isArray(res.data?.data)
-      ? res.data.data
-      : Array.isArray(res.data)
-        ? res.data
-        : [];
+      const list = Array.isArray(res.data?.data)
+        ? res.data.data
+        : Array.isArray(res.data)
+          ? res.data
+          : [];
 
-    setOrders(list);
-  } catch (error: any) {
-    console.error(
-      "Failed to fetch accessory items:",
-      error.response?.data || error,
-    );
-    setOrders([]);
-    toast.error("Failed to load vehicle verify accessories");
-  } finally {
-    setLoading(false);
-  }
-};
+      setOrders(list);
+    } catch (error: any) {
+      console.error(
+        "Failed to fetch accessory items:",
+        error.response?.data || error,
+      );
+      setOrders([]);
+      toast.error("Failed to load vehicle verify accessories");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchAccessoryItems();
@@ -139,85 +146,85 @@ const fetchAccessoryItems = async () => {
   const currentItems = filteredRows.slice(indexOfFirstItem, indexOfLastItem);
 
   // Handle open drawer with accessories
-const handleOpenDrawer = (order: AccessoryAllotmentDetail) => {
-  setSelectedOrder({
-    ...order,
-    accessories: [...(order.allottedAccessories ?? [])],
-  });
+  const handleOpenDrawer = (order: AccessoryAllotmentDetail) => {
+    setSelectedOrder({
+      ...order,
+      accessories: [...(order.allottedAccessories ?? [])],
+    });
 
-  setShowDrawer(true);
-};;
-const handleOpenViewModal = (order: any) => {
-  setSelectedOrder({
-    ...order,
-    accessories: order.pendingAccessories,
-  });
+    setShowDrawer(true);
+  };
+  const handleOpenViewModal = (order: any) => {
+    setSelectedOrder({
+      ...order,
+      accessories: order.pendingAccessories,
+    });
 
-  setShowViewModal(true);
-};
+    setShowViewModal(true);
+  };
   // Handle back navigation
   const handleBack = () => {
     navigate("/allot/accessoriesAllot");
   };
 
   // Checkbox click -> verify this accessory item (vehicle-verify stage)
-const handleCheckboxChange = async (itemId: number) => {
-  if (!selectedOrder) return;
+  const handleCheckboxChange = async (itemId: number) => {
+    if (!selectedOrder) return;
 
-  // Check if already verified
-  const target = selectedOrder.allottedAccessories?.find(
-    (item) => item.id === itemId,
-  );
-
-  if (!target || target.verifyStatus === "completed") return;
-
-  try {
-    setVerifyingId(itemId);
-
-    await apiHelper.patch(
-      `/orders/vehicle-verify-accessories/${selectedOrder.id}/item/${itemId}`,
+    // Check if already verified
+    const target = selectedOrder.allottedAccessories?.find(
+      (item) => item.id === itemId,
     );
 
-    const updateAccessories = (
-      order: AccessoryAllotmentDetail,
-    ): AccessoryAllotmentDetail => {
-      if (order.id !== selectedOrder.id) return order;
+    if (!target || target.verifyStatus === "completed") return;
 
-      const updatedAllotted =
-        order.allottedAccessories?.map((item) =>
-          item.id === itemId ? { ...item, verifyStatus: "completed" } : item,
-        ) ?? [];
+    try {
+      setVerifyingId(itemId);
 
-      return {
-        ...order,
-        allottedAccessories: updatedAllotted,
+      await apiHelper.patch(
+        `/orders/vehicle-verify-accessories/${selectedOrder.id}/item/${itemId}`,
+      );
 
-        // Drawer table `accessories` se render hota hai, isliye ise bhi update karo
-        accessories: (order.accessories ?? []).map((item) =>
-          item.id === itemId ? { ...item, verifyStatus: "completed" } : item,
-        ),
+      const updateAccessories = (
+        order: AccessoryAllotmentDetail,
+      ): AccessoryAllotmentDetail => {
+        if (order.id !== selectedOrder.id) return order;
 
-        // Row ka green check turant update ho
-        allVerified:
-          updatedAllotted.length > 0 &&
-          updatedAllotted.every((item) => item.verifyStatus === "completed"),
+        const updatedAllotted =
+          order.allottedAccessories?.map((item) =>
+            item.id === itemId ? { ...item, verifyStatus: "completed" } : item,
+          ) ?? [];
+
+        return {
+          ...order,
+          allottedAccessories: updatedAllotted,
+
+          // Drawer table `accessories` se render hota hai, isliye ise bhi update karo
+          accessories: (order.accessories ?? []).map((item) =>
+            item.id === itemId ? { ...item, verifyStatus: "completed" } : item,
+          ),
+
+          // Row ka green check turant update ho
+          allVerified:
+            updatedAllotted.length > 0 &&
+            updatedAllotted.every((item) => item.verifyStatus === "completed"),
+        };
       };
-    };
 
-    setOrders((prev) => prev.map(updateAccessories));
-    setSelectedOrder((prev) => (prev ? updateAccessories(prev) : prev));
+      setOrders((prev) => prev.map(updateAccessories));
+      setSelectedOrder((prev) => (prev ? updateAccessories(prev) : prev));
 
-    toast.success("Item verified successfully");
-  } catch (error: any) {
-    console.error("Failed to verify item:", error);
+      toast.success("Item verified successfully");
+    } catch (error: any) {
+      console.error("Failed to verify item:", error);
 
-    toast.error(
-      error.response?.data?.message || "Failed to verify accessory item",
-    );
-  } finally {
-    setVerifyingId(null);
-  }
-};
+      toast.error(
+        error.response?.data?.message || "Failed to verify accessory item",
+      );
+    } finally {
+      setVerifyingId(null);
+    }
+  };
 
   if (loading) {
     return (
@@ -330,11 +337,11 @@ const handleCheckboxChange = async (itemId: number) => {
 
             <TBody className="dark:divide-dark-700 divide-y divide-gray-200">
               {currentItems.map((order, index) => {
-  //          const allVerified =
-  // order.allottedAccessories?.length > 0 &&
-  // order.allottedAccessories.every(
-  //   (item) => item.verifyStatus === "completed"
-  // );
+                //          const allVerified =
+                // order.allottedAccessories?.length > 0 &&
+                // order.allottedAccessories.every(
+                //   (item) => item.verifyStatus === "completed"
+                // );
 
                 return (
                   <Tr
@@ -359,25 +366,23 @@ const handleCheckboxChange = async (itemId: number) => {
                       <div className="flex items-center justify-center gap-2">
                         <div className="flex flex-col items-center gap-1">
                           {/* {!allVerified && ( */}
-                            <button
-                              onClick={() => handleOpenDrawer(order)}
-                              className="bg-primary-500 hover:bg-primary-600 inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-full text-white transition-colors"
-                              title="Verify accessories"
-                            >
-                              <PlusIcon className="h-4 w-4" />
-                            </button>
+                          <button
+                            onClick={() => handleOpenDrawer(order)}
+                            className="bg-primary-500 hover:bg-primary-600 inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-full text-white transition-colors"
+                            title="Verify accessories"
+                          >
+                            <PlusIcon className="h-4 w-4" />
+                          </button>
                           {/* )} */}
 
                           {/* {allVerified && ( */}
-                        <div
-  className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-white ${
-    order.allVerified
-      ? "bg-green-500"
-      : "bg-gray-400"
-  }`}
->
-  <CheckIcon className="h-3 w-3" />
-</div>
+                          <div
+                            className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-white ${
+                              order.allVerified ? "bg-green-500" : "bg-gray-400"
+                            }`}
+                          >
+                            <CheckIcon className="h-3 w-3" />
+                          </div>
                           {/* )} */}
                         </div>
                       </div>
@@ -385,7 +390,7 @@ const handleCheckboxChange = async (itemId: number) => {
                     <Td className="text-center font-medium text-yellow-600">
                       <button
                         onClick={() => handleOpenViewModal(order)}
-                        className="text-primary-500 hover:text-primary-600 transition-colors cursor-pointer"
+                        className="text-primary-500 hover:text-primary-600 cursor-pointer transition-colors"
                         title="View details"
                       >
                         <EyeIcon className="size-5" />
@@ -494,168 +499,82 @@ const handleCheckboxChange = async (itemId: number) => {
       </div>
 
       {/* Right Side Drawer - View Only (opens from Pending column eye icon) */}
-      {showViewModal && selectedOrder && (
-        <div className="fixed inset-0 z-50 overflow-hidden">
-          {/* Backdrop */}
-          <div
-            className="absolute inset-0 bg-black/50"
-            onClick={() => setShowViewModal(false)}
-          />
+      <Transition appear show={showViewModal && !!selectedOrder} as={Fragment}>
+        <Dialog
+          as="div"
+          className="relative z-[100]"
+          onClose={() => setShowViewModal(false)}
+        >
+          <TransitionChild
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-gray-900/50 backdrop-blur transition-opacity dark:bg-black/40" />
+          </TransitionChild>
 
-          {/* Drawer */}
-          <div className="absolute top-0 right-0 h-full w-full max-w-2xl bg-white shadow-2xl dark:bg-gray-800">
-            <div className="flex h-full flex-col">
-              {/* Header */}
-              <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4 dark:border-gray-700">
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Accessories Details
-                  </h2>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {selectedOrder.accountName} - {selectedOrder.chassisNo}
-                  </p>
+          <TransitionChild
+            as={Fragment}
+            enter="ease-out transform-gpu transition-transform duration-200"
+            enterFrom="translate-x-full"
+            enterTo="translate-x-0"
+            leave="ease-in transform-gpu transition-transform duration-200"
+            leaveFrom="translate-x-0"
+            leaveTo="translate-x-full"
+          >
+            <DialogPanel className="dark:bg-dark-700 fixed top-0 right-0 flex h-full w-full max-w-2xl transform-gpu flex-col bg-white shadow-2xl transition-transform duration-200">
+              <div className="flex h-full flex-col">
+                {/* Header */}
+                <div className="bg-primary-600 dark:bg-primary-700 flex items-center justify-between px-5 py-4">
+                  <div>
+                    <h2 className="text-lg font-semibold text-white">
+                      Accessories Details
+                    </h2>
+                    <p className="text-sm text-white/80">
+                      {selectedOrder?.accountName} - {selectedOrder?.chassisNo}
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() => setShowViewModal(false)}
+                    variant="flat"
+                    isIcon
+                    className="size-8 rounded-full text-white hover:bg-white/10 hover:text-white focus:bg-white/10 active:bg-white/20"
+                    type="button"
+                  >
+                    <XMarkIcon className="size-5" />
+                  </Button>
                 </div>
-                <button
-                  onClick={() => setShowViewModal(false)}
-                  className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-200"
-                >
-                  <XMarkIcon className="size-6" />
-                </button>
-              </div>
 
-              {/* Body */}
-              <div className="flex-1 overflow-y-auto p-6">
-                {selectedOrder.accessories.length > 0 ? (
-                  <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-                    <Table hoverable className="w-full text-left">
-                      <THead className="bg-gray-100 dark:bg-gray-700">
-                        <Tr>
-                          <Th className="py-3 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
-                            S.No
-                          </Th>
-                          <Th className="py-3 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
-                            Item Name
-                          </Th>
-                          <Th className="py-3 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
-                            Item Code
-                          </Th>
-                          <Th className="py-3 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
-                            HSN Code
-                          </Th>
-                          <Th className="py-3 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
-                            Status
-                          </Th>
-                        </Tr>
-                      </THead>
-                      <TBody className="divide-y divide-gray-200 dark:divide-gray-700">
-                        {selectedOrder.accessories.map((item, index) => (
-                          <Tr key={item.id}>
-                            <Td className="py-3">{index + 1}</Td>
-                            <Td className="font-medium">{item.itemName}</Td>
-                            <Td>{item.itemCode}</Td>
-                            <Td>{item.hsnCode}</Td>
-                            <Td>
-                              <span
-                                className={`rounded-full px-2 py-1 text-xs font-medium ${
-                                  item.status === "completed"
-                                    ? "bg-green-100 text-green-700"
-                                    : "bg-yellow-100 text-yellow-700"
-                                }`}
-                              >
-                                {item.status === "completed"
-                                  ? "Verified"
-                                  : "Pending"}
-                              </span>
-                            </Td>
+                {/* Body */}
+                <div className="grow overflow-y-auto p-5">
+                  {(selectedOrder?.accessories ?? []).length > 0 ? (
+                    <div className="dark:border-dark-500 overflow-x-auto rounded-lg border border-gray-200">
+                      <Table hoverable className="w-full text-left">
+                        <THead className="dark:bg-dark-700/60 bg-gray-100">
+                          <Tr>
+                            <Th className="py-3 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
+                              S.No
+                            </Th>
+                            <Th className="py-3 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
+                              Item Name
+                            </Th>
+                            <Th className="py-3 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
+                              Item Code
+                            </Th>
+                            <Th className="py-3 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
+                              HSN Code
+                            </Th>
+                            <Th className="py-3 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
+                              Status
+                            </Th>
                           </Tr>
-                        ))}
-                      </TBody>
-                    </Table>
-                  </div>
-                ) : (
-                  <div className="flex h-40 items-center justify-center text-gray-500">
-                    No accessories found
-                  </div>
-                )}
-              </div>
-
-              {/* Footer */}
-              <div className="border-t border-gray-200 px-6 py-4 dark:border-gray-700">
-                <button
-                  onClick={() => setShowViewModal(false)}
-                  className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Right Side Drawer - Checkbox to verify each accessory */}
-      {showDrawer && selectedOrder && (
-        <div className="fixed inset-0 z-50 overflow-hidden">
-          {/* Backdrop */}
-          <div
-            className="absolute inset-0 bg-black/50"
-            onClick={() => setShowDrawer(false)}
-          />
-
-          {/* Drawer */}
-          <div className="absolute top-0 right-0 h-full w-full max-w-2xl bg-white shadow-2xl dark:bg-gray-800">
-            <div className="flex h-full flex-col">
-              {/* Header */}
-              <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4 dark:border-gray-700">
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Accessories List
-                  </h2>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {selectedOrder.accountName} - {selectedOrder.chassisNo}
-                  </p>
-                </div>
-                <button
-                  onClick={() => setShowDrawer(false)}
-                  className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-200"
-                >
-                  <XMarkIcon className="size-6" />
-                </button>
-              </div>
-
-              {/* Content */}
-              <div className="flex-1 overflow-y-auto p-6">
-                {selectedOrder.accessories.length > 0 ? (
-                  <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-                    <Table hoverable className="w-full text-left">
-                      <THead className="bg-gray-100 dark:bg-gray-700">
-                        <Tr>
-                          <Th className="py-3 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
-                            S.No
-                          </Th>
-                          <Th className="py-3 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
-                            Item Name
-                          </Th>
-                          <Th className="py-3 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
-                            Item Code
-                          </Th>
-                          <Th className="py-3 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
-                            HSN Code
-                          </Th>
-                          <Th className="py-3 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
-                            Status
-                          </Th>
-                          <Th className="py-3 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
-                            Action
-                          </Th>
-                        </Tr>
-                      </THead>
-                      <TBody className="divide-y divide-gray-200 dark:divide-gray-700">
-                        {selectedOrder.accessories.map((item, index) => {
-                         const isCompleted = item.verifyStatus === "completed";
-                          const isBusy = verifyingId === item.id;
-
-                          return (
+                        </THead>
+                        <TBody className="dark:divide-dark-700 divide-y divide-gray-200">
+                          {selectedOrder?.accessories.map((item, index) => (
                             <Tr key={item.id}>
                               <Td className="py-3">{index + 1}</Td>
                               <Td className="font-medium">{item.itemName}</Td>
@@ -664,61 +583,197 @@ const handleCheckboxChange = async (itemId: number) => {
                               <Td>
                                 <span
                                   className={`rounded-full px-2 py-1 text-xs font-medium ${
-                                    isCompleted
+                                    item.status === "completed"
                                       ? "bg-green-100 text-green-700"
                                       : "bg-yellow-100 text-yellow-700"
                                   }`}
                                 >
-                                  {isCompleted ? "Verified" : "Pending"}
+                                  {item.status === "completed"
+                                    ? "Verified"
+                                    : "Pending"}
                                 </span>
                               </Td>
-                              <Td className="text-center">
-                                {isCompleted ? (
-                                  // Verified ho gaya - checkbox hide, check icon dikhega
-                                  <div
-                                    className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-white"
-                                    title="Verified"
-                                  >
-                                    <CheckIcon className="h-3 w-3" />
-                                  </div>
-                                ) : (
-                                  <input
-                                    type="checkbox"
-                                    checked={false}
-                                    disabled={isBusy}
-                                    onChange={() =>
-                                      handleCheckboxChange(item.id)
-                                    }
-                                    className="h-5 w-5 cursor-pointer rounded border-gray-300 text-green-600 focus:ring-green-500 disabled:cursor-not-allowed disabled:opacity-50"
-                                  />
-                                )}
-                              </Td>
                             </Tr>
-                          );
-                        })}
-                      </TBody>
-                    </Table>
-                  </div>
-                ) : (
-                  <div className="flex h-40 items-center justify-center text-gray-500">
-                    No accessories found
-                  </div>
-                )}
-              </div>
+                          ))}
+                        </TBody>
+                      </Table>
+                    </div>
+                  ) : (
+                    <div className="flex h-40 items-center justify-center text-gray-500">
+                      No accessories found
+                    </div>
+                  )}
+                </div>
 
-              {/* Footer - Close button only */}
-              <div className="border-t border-gray-200 px-6 py-4 dark:border-gray-700">
-                <button
-                  onClick={() => setShowDrawer(false)}
-                  className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
-                >
-                  Close
-                </button>
+                {/* Footer */}
+                <div className="dark:border-dark-500 flex items-center justify-end gap-3 border-t border-gray-200 p-5">
+                  <Button
+                    variant="outlined"
+                    color="neutral"
+                    type="button"
+                    onClick={() => setShowViewModal(false)}
+                    className="h-10 w-full"
+                  >
+                    Close
+                  </Button>
+                </div>
               </div>
-            </div>
-          </div>
-        </div>
-      )}
+            </DialogPanel>
+          </TransitionChild>
+        </Dialog>
+      </Transition>
+
+      {/* Right Side Drawer - Checkbox to verify each accessory */}
+      <Transition appear show={showDrawer && !!selectedOrder} as={Fragment}>
+        <Dialog
+          as="div"
+          className="relative z-[100]"
+          onClose={() => setShowDrawer(false)}
+        >
+          <TransitionChild
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-gray-900/50 backdrop-blur transition-opacity dark:bg-black/40" />
+          </TransitionChild>
+
+          <TransitionChild
+            as={Fragment}
+            enter="ease-out transform-gpu transition-transform duration-200"
+            enterFrom="translate-x-full"
+            enterTo="translate-x-0"
+            leave="ease-in transform-gpu transition-transform duration-200"
+            leaveFrom="translate-x-0"
+            leaveTo="translate-x-full"
+          >
+            <DialogPanel className="dark:bg-dark-700 fixed top-0 right-0 flex h-full w-full max-w-2xl transform-gpu flex-col bg-white shadow-2xl transition-transform duration-200">
+              <div className="flex h-full flex-col">
+                {/* Header */}
+                <div className="bg-primary-600 dark:bg-primary-700 flex items-center justify-between px-5 py-4">
+                  <div>
+                    <h2 className="text-lg font-semibold text-white">
+                      Accessories List
+                    </h2>
+                    <p className="text-sm text-white/80">
+                      {selectedOrder?.accountName} - {selectedOrder?.chassisNo}
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() => setShowDrawer(false)}
+                    variant="flat"
+                    isIcon
+                    className="size-8 rounded-full text-white hover:bg-white/10 hover:text-white focus:bg-white/10 active:bg-white/20"
+                    type="button"
+                  >
+                    <XMarkIcon className="size-5" />
+                  </Button>
+                </div>
+
+                {/* Content */}
+                <div className="grow overflow-y-auto p-5">
+                  {(selectedOrder?.accessories ?? []).length > 0 ? (
+                    <div className="dark:border-dark-500 overflow-x-auto rounded-lg border border-gray-200">
+                      <Table hoverable className="w-full text-left">
+                        <THead className="dark:bg-dark-700/60 bg-gray-100">
+                          <Tr>
+                            <Th className="py-3 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
+                              S.No
+                            </Th>
+                            <Th className="py-3 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
+                              Item Name
+                            </Th>
+                            <Th className="py-3 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
+                              Item Code
+                            </Th>
+                            <Th className="py-3 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
+                              HSN Code
+                            </Th>
+                            <Th className="py-3 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
+                              Status
+                            </Th>
+                            <Th className="py-3 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
+                              Action
+                            </Th>
+                          </Tr>
+                        </THead>
+                        <TBody className="dark:divide-dark-700 divide-y divide-gray-200">
+                          {selectedOrder?.accessories.map((item, index) => {
+                            const isCompleted =
+                              item.verifyStatus === "completed";
+                            const isBusy = verifyingId === item.id;
+
+                            return (
+                              <Tr key={item.id}>
+                                <Td className="py-3">{index + 1}</Td>
+                                <Td className="font-medium">{item.itemName}</Td>
+                                <Td>{item.itemCode}</Td>
+                                <Td>{item.hsnCode}</Td>
+                                <Td>
+                                  <span
+                                    className={`rounded-full px-2 py-1 text-xs font-medium ${
+                                      isCompleted
+                                        ? "bg-green-100 text-green-700"
+                                        : "bg-yellow-100 text-yellow-700"
+                                    }`}
+                                  >
+                                    {isCompleted ? "Verified" : "Pending"}
+                                  </span>
+                                </Td>
+                                <Td className="text-center">
+                                  {isCompleted ? (
+                                    <div
+                                      className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-white"
+                                      title="Verified"
+                                    >
+                                      <CheckIcon className="h-3 w-3" />
+                                    </div>
+                                  ) : (
+                                    <input
+                                      type="checkbox"
+                                      checked={false}
+                                      disabled={isBusy}
+                                      onChange={() =>
+                                        handleCheckboxChange(item.id)
+                                      }
+                                      className="h-5 w-5 cursor-pointer rounded border-gray-300 text-green-600 focus:ring-green-500 disabled:cursor-not-allowed disabled:opacity-50"
+                                    />
+                                  )}
+                                </Td>
+                              </Tr>
+                            );
+                          })}
+                        </TBody>
+                      </Table>
+                    </div>
+                  ) : (
+                    <div className="flex h-40 items-center justify-center text-gray-500">
+                      No accessories found
+                    </div>
+                  )}
+                </div>
+
+                {/* Footer */}
+                <div className="dark:border-dark-500 flex items-center justify-end gap-3 border-t border-gray-200 p-5">
+                  <Button
+                    variant="outlined"
+                    color="neutral"
+                    type="button"
+                    onClick={() => setShowDrawer(false)}
+                    className="h-10 w-full"
+                  >
+                    Close
+                  </Button>
+                </div>
+              </div>
+            </DialogPanel>
+          </TransitionChild>
+        </Dialog>
+      </Transition>
     </div>
   );
 };

@@ -61,37 +61,55 @@ const SparePartsHistory = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  useEffect(() => {
-    if (!id) return;
-    let cancelled = false;
+ useEffect(() => {
+  if (!id) return;
+  let cancelled = false;
 
-    (async () => {
-      try {
-        setLoading(true);
-        const res = await apiHelper.get(`/spare-part/${id}/history`);
-        if (cancelled) return;
+  (async () => {
+    try {
+      setLoading(true);
+      const res = await apiHelper.get(`/spare-part/${id}/history`);
+      if (cancelled) return;
 
-        setRows(res.history || []);
+      // Opening Stock hamesha pehle, baaki entries date ke hisaab se
+      const sorted = [...(res.history || [])].sort(
+        (a: HistoryRow, b: HistoryRow) => {
+          const aOpen = /opening/i.test(a.type ?? "") ? 0 : 1;
+          const bOpen = /opening/i.test(b.type ?? "") ? 0 : 1;
+          if (aOpen !== bOpen) return aOpen - bOpen;
 
-        if (res.itemName) {
-          setSparePart({
-            itemName: res.itemName || "-",
-            codeNo: res.codeNo || "-",
-            group: res.group || "-",
-          });
-        }
-      } catch (err) {
-        console.log(err);
-        if (!cancelled) setRows([]);
-      } finally {
-        if (!cancelled) setLoading(false);
+          return new Date(a.date).getTime() - new Date(b.date).getTime();
+        },
+      );
+
+      // Running stock dobara nikalo (sorted order ke hisaab se)
+      let running = 0;
+      const withBalance = sorted.map((row: HistoryRow) => {
+        running += (row.qtyIn || 0) - (row.qtyOut || 0);
+        return { ...row, balance: running };
+      });
+
+      setRows(withBalance);
+
+      if (res.itemName) {
+        setSparePart({
+          itemName: res.itemName || "-",
+          codeNo: res.codeNo || "-",
+          group: res.group || "-",
+        });
       }
-    })();
+    } catch (err) {
+      console.log(err);
+      if (!cancelled) setRows([]);
+    } finally {
+      if (!cancelled) setLoading(false);
+    }
+  })();
 
-    return () => {
-      cancelled = true;
-    };
-  }, [id]);
+  return () => {
+    cancelled = true;
+  };
+}, [id]);
 
   const searchLower = search.trim().toLowerCase();
 

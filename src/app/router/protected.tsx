@@ -528,7 +528,7 @@ const protectedRoutes: RouteObject = {
                   path: "inward/:id",
                   lazy: async () => ({
                     Component: (
-                      await import("@/app/pages/purchase/Implement-purchase/ImplementItemList")
+                      await import("@/app/pages/purchase/spare-part/sparePartsItemList")
                     ).default,
                   }),
                 },

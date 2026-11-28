@@ -114,8 +114,8 @@ const Employee = () => {
   const [departmentOptions, setDepartmentOptions] = useState<any[]>([]);
   const [roleOptions, setRoleOptions] = useState<any[]>([]);
   const [filterRoleOptions, setFilterRoleOptions] = useState<
-  { id: string; name: string }[]
->([]);
+    { id: string; name: string }[]
+  >([]);
   // Add this after your useForm declaration
   const {
     register,
@@ -198,46 +198,48 @@ const Employee = () => {
   };
 
   // Keep these as { id, name } format for Listbox
-const departmentFilterOptions = [
-  { id: "All", name: "All Departments" },
-  ...departmentOptions.map((d: any) => ({
-    id: d.value,
-    name: d.label,
-    departmentId: d.departmentId,
-  })),
-];
+  const departmentFilterOptions = [
+    { id: "All", name: "All Departments" },
+    ...departmentOptions.map((d: any) => ({
+      id: d.value,
+      name: d.label,
+      departmentId: d.departmentId,
+    })),
+  ];
 
-const roleFilterOptions = [
-  { id: "All", name: "All Roles" },
-  ...filterRoleOptions,
-];
+  const roleFilterOptions = [
+    { id: "All", name: "All Roles" },
+    ...filterRoleOptions,
+  ];
 
   const statusFilterOptions = [
     { id: "All", name: "All Statuses" },
     { id: "ACTIVE", name: "Active" },
     { id: "INACTIVE", name: "Inactive" },
   ];
-const ALLOWED_DEPARTMENTS = ["sales", "service"];
+  const ALLOWED_DEPARTMENTS = ["sales", "service"];
 
-const getDepartments = async () => {
-  try {
-    const res = await apiHelper.get("/employees/departments");
+  const getDepartments = async () => {
+    try {
+      const res = await apiHelper.get("/employees/departments");
 
-    setDepartmentOptions(
-      (res.data || [])
-        .filter((item: any) =>
-          ALLOWED_DEPARTMENTS.includes(String(item.name).trim().toLowerCase()),
-        )
-        .map((item: any) => ({
-          label: item.name,
-          value: item.name, // department name store hoga
-          departmentId: item.id,
-        })),
-    );
-  } catch (err) {
-    console.log(err);
-  }
-};
+      setDepartmentOptions(
+        (res.data || [])
+          .filter((item: any) =>
+            ALLOWED_DEPARTMENTS.includes(
+              String(item.name).trim().toLowerCase(),
+            ),
+          )
+          .map((item: any) => ({
+            label: item.name,
+            value: item.name, // department name store hoga
+            departmentId: item.id,
+          })),
+      );
+    } catch (err) {
+      console.log(err);
+    }
+  };
   const getRoles = async (departmentId: number) => {
     try {
       const res = await apiHelper.get(
@@ -254,41 +256,41 @@ const getDepartments = async () => {
       console.log(err);
     }
   };
-const handleDepartmentFilterChange = async (opt: any) => {
-  const deptName = opt?.id ?? "All";
+  const handleDepartmentFilterChange = async (opt: any) => {
+    const deptName = opt?.id ?? "All";
 
-  setSelectedDepartmentFilter(deptName);
-  setSelectedRoleFilter("All"); // department badalte hi role reset
-  setCurrentPage(1);
+    setSelectedDepartmentFilter(deptName);
+    setSelectedRoleFilter("All"); // department badalte hi role reset
+    setCurrentPage(1);
 
-  if (deptName === "All") {
-    setFilterRoleOptions([]);
-    return;
-  }
+    if (deptName === "All") {
+      setFilterRoleOptions([]);
+      return;
+    }
 
-  const department = departmentOptions.find((d: any) => d.value === deptName);
+    const department = departmentOptions.find((d: any) => d.value === deptName);
 
-  if (!department) {
-    setFilterRoleOptions([]);
-    return;
-  }
+    if (!department) {
+      setFilterRoleOptions([]);
+      return;
+    }
 
-  try {
-    const res = await apiHelper.get(
-      `/employees/roles/department/${department.departmentId}`,
-    );
+    try {
+      const res = await apiHelper.get(
+        `/employees/roles/department/${department.departmentId}`,
+      );
 
-    setFilterRoleOptions(
-      (res.data || []).map((item: any) => ({
-        id: item.roleName,
-        name: item.roleName,
-      })),
-    );
-  } catch (err) {
-    console.log(err);
-    setFilterRoleOptions([]);
-  }
-};
+      setFilterRoleOptions(
+        (res.data || []).map((item: any) => ({
+          id: item.roleName,
+          name: item.roleName,
+        })),
+      );
+    } catch (err) {
+      console.log(err);
+      setFilterRoleOptions([]);
+    }
+  };
   const getEmployees = async () => {
     try {
       const response = await apiHelper.get("/employees");
@@ -613,47 +615,49 @@ const handleDepartmentFilterChange = async (opt: any) => {
       {showFilterBar && (
         <div className="dark:bg-dark-700 dark:border-dark-500 animate-in fade-in slide-in-from-top-2 rounded-xl border border-gray-200 bg-white p-4 transition-all duration-150">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-       <div className="flex flex-col gap-1">
-  <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
-    Department
-  </span>
-  <Combobox
-    data={departmentFilterOptions}
-    value={
-      departmentFilterOptions.find(
-        (o) => o.id === selectedDepartmentFilter,
-      ) || departmentFilterOptions[0]
-    }
-    displayField="name"
-    searchFields={["name"]}
-    placeholder="Search or select department"
-    onChange={handleDepartmentFilterChange}
-  />
-</div>
+            <div className="flex flex-col gap-1">
+              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
+                Department
+              </span>
+              <Combobox
+                data={departmentFilterOptions}
+                value={
+                  departmentFilterOptions.find(
+                    (o) => o.id === selectedDepartmentFilter,
+                  ) || departmentFilterOptions[0]
+                }
+                displayField="name"
+                searchFields={["name"]}
+                placeholder="Search or select department"
+                onChange={handleDepartmentFilterChange}
+              />
+            </div>
 
-<div
-  className={`flex flex-col gap-1 ${
-    selectedDepartmentFilter === "All" ? "pointer-events-none opacity-60" : ""
-  }`}
->
-  <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
-    Role
-  </span>
-  <Combobox
-    data={roleFilterOptions}
-    value={
-      roleFilterOptions.find((o) => o.id === selectedRoleFilter) ||
-      roleFilterOptions[0]
-    }
-    displayField="name"
-    searchFields={["name"]}
-    placeholder="Search or select role"
-    onChange={(opt: any) => {
-      setSelectedRoleFilter(opt?.id ?? "All");
-      setCurrentPage(1);
-    }}
-  />
-</div>
+            <div
+              className={`flex flex-col gap-1 ${
+                selectedDepartmentFilter === "All"
+                  ? "pointer-events-none opacity-60"
+                  : ""
+              }`}
+            >
+              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
+                Role
+              </span>
+              <Combobox
+                data={roleFilterOptions}
+                value={
+                  roleFilterOptions.find((o) => o.id === selectedRoleFilter) ||
+                  roleFilterOptions[0]
+                }
+                displayField="name"
+                searchFields={["name"]}
+                placeholder="Search or select role"
+                onChange={(opt: any) => {
+                  setSelectedRoleFilter(opt?.id ?? "All");
+                  setCurrentPage(1);
+                }}
+              />
+            </div>
             <div className="flex flex-col gap-1">
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
                 Status
@@ -906,7 +910,7 @@ const handleDepartmentFilterChange = async (opt: any) => {
                     leaveTo="transform opacity-0 scale-95"
                   >
                     <MenuItems
-                        anchor="bottom start"
+                      anchor="bottom start"
                       className="dark:bg-dark-700 dark:border-dark-600 z-[200] w-20 space-y-0.5 rounded-lg border border-gray-200 bg-white p-1 shadow-xl ring-1 ring-black/5 [--anchor-gap:6px] focus:outline-none"
                     >
                       {entriesOptions.map((opt) => (
@@ -1064,15 +1068,15 @@ const handleDepartmentFilterChange = async (opt: any) => {
                 className="flex h-full flex-col"
               >
                 {/* Header */}
-                <div className="dark:border-dark-500 flex items-center justify-between border-b border-gray-200 px-5 py-4">
-                  <h2 className="dark:text-dark-50 text-lg font-semibold text-gray-800">
+                <div className="bg-primary-600 dark:bg-primary-700 flex items-center justify-between px-5 py-4">
+                  <h2 className="text-lg font-semibold text-white">
                     {editId !== null ? "Edit Employee" : "Add Employee"}
                   </h2>
                   <Button
                     onClick={() => setShowDrawer(false)}
                     variant="flat"
                     isIcon
-                    className="size-8 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                    className="size-8 rounded-full text-white hover:bg-white/10 hover:text-white focus:bg-white/10 active:bg-white/20"
                     type="button"
                   >
                     <XMarkIcon className="size-5" />

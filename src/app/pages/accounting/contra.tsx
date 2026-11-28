@@ -50,7 +50,6 @@ interface ContraEntry {
 
 // ── Static options ─────────────────────────────────────────────────────────────
 
-
 const CONTRA_TYPES: ContraType[] = [
   "Cash Deposit",
   "Cash Withdrawal",
@@ -74,17 +73,17 @@ export default function Contra() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
-// Type filter options — dynamically built from actual entries data
-const typeFilterOptions = [
-  { id: "All", name: "All Types" },
-  ...Array.from(new Set(entries.map((e) => e.type).filter(Boolean))).map(
-    (t) => ({ id: t, name: t }),
-  ),
-];
+  // Type filter options — dynamically built from actual entries data
+  const typeFilterOptions = [
+    { id: "All", name: "All Types" },
+    ...Array.from(new Set(entries.map((e) => e.type).filter(Boolean))).map(
+      (t) => ({ id: t, name: t }),
+    ),
+  ];
   // form state
   const [type, setType] = useState<ContraType>("Bank Transfer");
   const [cashBankAccount, setCashBankAccount] = useState<any>(null);
- const [voucherNo, setVoucherNo] = useState("");
+  const [voucherNo, setVoucherNo] = useState("");
   const [date, setDate] = useState<any>(null);
   const [oppAccount, setOppAccount] = useState<any>(null);
   const [amount, setAmount] = useState("");
@@ -92,34 +91,30 @@ const typeFilterOptions = [
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const [showFilterBar, setShowFilterBar] = useState(false);
-const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   // Filter states
   const [filterType, setFilterType] = useState("All");
   const [filterDateFrom, setFilterDateFrom] = useState<any>(null);
   const [filterDateTo, setFilterDateTo] = useState<any>(null);
   const [accounts, setAccounts] = useState<any[]>([]);
-const companyId = Number(
-  localStorage.getItem("companyId"),
-);
+  const companyId = Number(localStorage.getItem("companyId"));
 
-const financialYearId = Number(
-  localStorage.getItem("financialYearId"),
-);
+  const financialYearId = Number(localStorage.getItem("financialYearId"));
   useEffect(() => {
-     fetchContras();
+    fetchContras();
     const fetchAccounts = async () => {
       try {
         const res = await apiHelper.get("/accounts");
-       
+
         const accountData = (res.data || res.data).map((acc: any) => ({
           id: acc.id,
           label: acc.accountName,
           value: acc.id,
-           mobile: acc.mobile,
-  openingBalance: acc.openingBalance,
+          mobile: acc.mobile,
+          openingBalance: acc.openingBalance,
           group: acc.group, // "Cash-in-Hand" or "Bank Accounts"
         }));
-       
+
         setAccounts(accountData);
       } catch (error) {
         console.error("Failed to fetch accounts:", error);
@@ -130,192 +125,170 @@ const financialYearId = Number(
   }, []);
 
   const cashBankAccountOptions = accounts.filter((acc) => {
-  if (type === "Cash Deposit") {
-    return acc.group === "Cash-in-Hand";
-  }
-
-  if (type === "Cash Withdrawal") {
-    return acc.group === "Bank Accounts";
-  }
-
-  // Bank Transfer
-  return (
-    acc.group === "Bank Accounts" &&
-    acc.id !== oppAccount?.id
-  );
-});
-
-const oppAccountOptions = accounts.filter((acc) => {
-  if (type === "Cash Deposit") {
-    return acc.group === "Bank Accounts";
-  }
-
-  if (type === "Cash Withdrawal") {
-    return acc.group === "Cash-in-Hand";
-  }
-
-  // Bank Transfer
-  return (
-    acc.group === "Bank Accounts" &&
-    acc.id !== cashBankAccount?.id
-  );
-});
-const fetchContras = async () => {
-  try {
-    setLoading(true);
-
-    const res = await apiHelper.get("/contra");
-
-
-    const data = res.map((item: any) => ({
-      id: item.id,
-      date: item.date,
-      voucherNo: item.voucherNo,
-      type: item.type,
-      cashBankAccount: item.cashBankAccount?.accountName,
-      oppAccount: item.oppAccount?.accountName,
-      amount: item.amount,
-      narration: item.narration,
-      createdType: item.createdType,
-      createdBy: item.createdBy,
-    }));
-
-    setEntries(data);
-  } catch (err) {
-    console.log(err);
-  } finally {
-    setLoading(false);
-  }
-};
-const getVoucher = async () => {
-  try {
-    if (!companyId || !financialYearId) {
-      toast.error("Company or financial year is not selected");
-      return;
+    if (type === "Cash Deposit") {
+      return acc.group === "Cash-in-Hand";
     }
 
-    const res = await apiHelper.get(
-      `/contra/voucher?companyId=${companyId}&financialYearId=${financialYearId}`
-    );
+    if (type === "Cash Withdrawal") {
+      return acc.group === "Bank Accounts";
+    }
 
-    setVoucherNo(res.voucherNo || "");
-  } catch (err) {
-    console.error(err);
-    toast.error("Unable to generate voucher number");
-  }
-};
+    // Bank Transfer
+    return acc.group === "Bank Accounts" && acc.id !== oppAccount?.id;
+  });
+
+  const oppAccountOptions = accounts.filter((acc) => {
+    if (type === "Cash Deposit") {
+      return acc.group === "Bank Accounts";
+    }
+
+    if (type === "Cash Withdrawal") {
+      return acc.group === "Cash-in-Hand";
+    }
+
+    // Bank Transfer
+    return acc.group === "Bank Accounts" && acc.id !== cashBankAccount?.id;
+  });
+  const fetchContras = async () => {
+    try {
+      setLoading(true);
+
+      const res = await apiHelper.get("/contra");
+
+      const data = res.map((item: any) => ({
+        id: item.id,
+        date: item.date,
+        voucherNo: item.voucherNo,
+        type: item.type,
+        cashBankAccount: item.cashBankAccount?.accountName,
+        oppAccount: item.oppAccount?.accountName,
+        amount: item.amount,
+        narration: item.narration,
+        createdType: item.createdType,
+        createdBy: item.createdBy,
+      }));
+
+      setEntries(data);
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+  const getVoucher = async () => {
+    try {
+      if (!companyId || !financialYearId) {
+        toast.error("Company or financial year is not selected");
+        return;
+      }
+
+      const res = await apiHelper.get(
+        `/contra/voucher?companyId=${companyId}&financialYearId=${financialYearId}`,
+      );
+
+      setVoucherNo(res.voucherNo || "");
+    } catch (err) {
+      console.error(err);
+      toast.error("Unable to generate voucher number");
+    }
+  };
   const openModal = () => {
     setType("Cash Deposit");
     setCashBankAccount(null);
-     setVoucherNo("");
-   setDate(new Date());
+    setVoucherNo("");
+    setDate(new Date());
     setOppAccount(null);
     setAmount("");
     setNarration("");
     setErrors({});
-     getVoucher();
+    getVoucher();
     setShowModal(true);
   };
 
-const validateForm = () => {
-  const newErrors: Record<string, string> = {};
-if (!companyId) {
-  newErrors.companyId =
-    "Company is not selected";
-}
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+    if (!companyId) {
+      newErrors.companyId = "Company is not selected";
+    }
 
-if (!financialYearId) {
-  newErrors.financialYearId =
-    "Financial year is not selected";
-}
-  // Cash/Bank Account
-  if (!cashBankAccount?.value) {
-    newErrors.cashBankAccount =
-      "Cash/Bank Account is required";
-  }
+    if (!financialYearId) {
+      newErrors.financialYearId = "Financial year is not selected";
+    }
+    // Cash/Bank Account
+    if (!cashBankAccount?.value) {
+      newErrors.cashBankAccount = "Cash/Bank Account is required";
+    }
 
-  // Opp. Account
-  if (!oppAccount?.value) {
-    newErrors.oppAccount =
-      "Opp. Account is required";
-  }
+    // Opp. Account
+    if (!oppAccount?.value) {
+      newErrors.oppAccount = "Opp. Account is required";
+    }
 
-  // Same account validation
-  if (
-    cashBankAccount?.value &&
-    oppAccount?.value &&
-    Number(cashBankAccount.value) ===
-      Number(oppAccount.value)
-  ) {
-    newErrors.oppAccount =
-      "Both accounts cannot be the same";
-  }
+    // Same account validation
+    if (
+      cashBankAccount?.value &&
+      oppAccount?.value &&
+      Number(cashBankAccount.value) === Number(oppAccount.value)
+    ) {
+      newErrors.oppAccount = "Both accounts cannot be the same";
+    }
 
-  // Date
-  if (
-    !date ||
-    (Array.isArray(date) &&
-      date.length === 0)
-  ) {
-    newErrors.date = "Date is required";
-  }
+    // Date
+    if (!date || (Array.isArray(date) && date.length === 0)) {
+      newErrors.date = "Date is required";
+    }
 
-  // Amount
-  const numericAmount = Number(amount);
+    // Amount
+    const numericAmount = Number(amount);
 
-  if (
-    amount === "" ||
-    amount === null ||
-    amount === undefined
-  ) {
-    newErrors.amount = "Amount is required";
-  } else if (Number.isNaN(numericAmount)) {
-    newErrors.amount =
-      "Enter a valid amount";
-  } else if (numericAmount <= 0) {
-    newErrors.amount =
-      "Amount must be greater than 0";
-  }
+    if (amount === "" || amount === null || amount === undefined) {
+      newErrors.amount = "Amount is required";
+    } else if (Number.isNaN(numericAmount)) {
+      newErrors.amount = "Enter a valid amount";
+    } else if (numericAmount <= 0) {
+      newErrors.amount = "Amount must be greater than 0";
+    }
 
-  setErrors(newErrors);
+    setErrors(newErrors);
 
-  return Object.keys(newErrors).length === 0;
-};
+    return Object.keys(newErrors).length === 0;
+  };
 
- const handleSubmit = async () => {
-  if (!validateForm()) return;
- if (!companyId || !financialYearId) {
-    toast.error(
-      "Company or financial year is not selected",
-    );
-    return;
-  }
-  try {
-    await apiHelper.post("/contra", {
-      companyId,
-      financialYearId,
-      date,
-      type,
-      cashBankAccountId: cashBankAccount.id,
-      oppAccountId: oppAccount.id,
-      amount: Number(amount),
-      narration,
-    });
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
+    if (!companyId || !financialYearId) {
+      toast.error("Company or financial year is not selected");
+      return;
+    }
+    try {
+      await apiHelper.post("/contra", {
+        companyId,
+        financialYearId,
+        date,
+        type,
+        cashBankAccountId: cashBankAccount.id,
+        oppAccountId: oppAccount.id,
+        amount: Number(amount),
+        narration,
+      });
 
-    toast.success("Contra entry added successfully!");
-    await fetchContras();
+      toast.success("Contra entry added successfully!");
+      await fetchContras();
 
-    setShowModal(false);
-    setCashBankAccount(null);
-    setOppAccount(null);
-    setAmount("");
-    setNarration("");
-    setDate(null);
-  } catch (error: any) {
-    console.log(error);
-    toast.error(error.response?.data?.message || "Failed to add contra entry. Please try again.");
-  }
-};
+      setShowModal(false);
+      setCashBankAccount(null);
+      setOppAccount(null);
+      setAmount("");
+      setNarration("");
+      setDate(null);
+    } catch (error: any) {
+      console.log(error);
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to add contra entry. Please try again.",
+      );
+    }
+  };
 
   const handleDelete = (id: number) => {
     setEntries(entries.filter((row) => row.id !== id));
@@ -326,32 +299,32 @@ if (!financialYearId) {
     setSelectedIds([]);
   };
 
- const filtered = entries.filter((e) => {
-  const matchesSearch = Object.values(e).some((v) =>
-    String(v).toLowerCase().includes(search.toLowerCase()),
-  );
+  const filtered = entries.filter((e) => {
+    const matchesSearch = Object.values(e).some((v) =>
+      String(v).toLowerCase().includes(search.toLowerCase()),
+    );
 
-  const matchesType = filterType === "All" || e.type === filterType;
+    const matchesType = filterType === "All" || e.type === filterType;
 
-  // NEW: date range filter — handles DatePicker returning either a Date or an array
-  const rowDate = new Date(e.date);
-  rowDate.setHours(0, 0, 0, 0);
+    // NEW: date range filter — handles DatePicker returning either a Date or an array
+    const rowDate = new Date(e.date);
+    rowDate.setHours(0, 0, 0, 0);
 
-  const rawFrom = Array.isArray(filterDateFrom)
-    ? filterDateFrom[0]
-    : filterDateFrom;
-  const fromDate = rawFrom ? new Date(rawFrom) : null;
-  if (fromDate) fromDate.setHours(0, 0, 0, 0);
+    const rawFrom = Array.isArray(filterDateFrom)
+      ? filterDateFrom[0]
+      : filterDateFrom;
+    const fromDate = rawFrom ? new Date(rawFrom) : null;
+    if (fromDate) fromDate.setHours(0, 0, 0, 0);
 
-  const rawTo = Array.isArray(filterDateTo) ? filterDateTo[0] : filterDateTo;
-  const toDate = rawTo ? new Date(rawTo) : null;
-  if (toDate) toDate.setHours(23, 59, 59, 999);
+    const rawTo = Array.isArray(filterDateTo) ? filterDateTo[0] : filterDateTo;
+    const toDate = rawTo ? new Date(rawTo) : null;
+    if (toDate) toDate.setHours(23, 59, 59, 999);
 
-  const matchesDateFrom = !fromDate || rowDate >= fromDate;
-  const matchesDateTo = !toDate || rowDate <= toDate;
+    const matchesDateFrom = !fromDate || rowDate >= fromDate;
+    const matchesDateTo = !toDate || rowDate <= toDate;
 
-  return matchesSearch && matchesType && matchesDateFrom && matchesDateTo;
-});
+    return matchesSearch && matchesType && matchesDateFrom && matchesDateTo;
+  });
 
   const totalItems = filtered.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
@@ -384,27 +357,25 @@ if (!financialYearId) {
   useEffect(() => {
     setCurrentPage(1);
   }, [search, filterType, filterDateFrom, filterDateTo]);
-const downloadExcel = async () => {
-  try {
-    const blob = await apiHelper.getBlob(
-      "/contra/export/excel"
-    );
+  const downloadExcel = async () => {
+    try {
+      const blob = await apiHelper.getBlob("/contra/export/excel");
 
-    const url = window.URL.createObjectURL(blob);
+      const url = window.URL.createObjectURL(blob);
 
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "ContraRegister.xlsx";
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "ContraRegister.xlsx";
 
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
 
-    window.URL.revokeObjectURL(url);
-  } catch (err) {
-    console.log(err);
-  }
-};
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.log(err);
+    }
+  };
   return (
     <div className="relative min-h-screen space-y-6 p-4 pb-28 text-gray-900 md:p-6 dark:text-gray-100">
       {/* Upper Actions Control Toolbar Layout */}
@@ -432,23 +403,24 @@ const downloadExcel = async () => {
             Filter
           </button>
           <button
-            type="button"   onClick={downloadExcel}
-            className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 cursor-pointer"
+            type="button"
+            onClick={downloadExcel}
+            className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
           >
-         <RiFileExcel2Fill className="text-lg text-green-500" />
+            <RiFileExcel2Fill className="text-lg text-green-500" />
           </button>
 
           <button
             type="button"
-            className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 cursor-pointer"
+            className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
           >
-           <RiFilePdfFill className="text-lg text-red-500" />
+            <RiFilePdfFill className="text-lg text-red-500" />
           </button>
 
           <button
             type="button"
             onClick={openModal}
-            className="bg-primary-600 hover:bg-primary-700 cursor-pointer inline-flex items-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-medium text-white transition-colors"
+            className="bg-primary-600 hover:bg-primary-700 inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-medium text-white transition-colors"
           >
             <Plus className="size-4.5" />
             Add Contra
@@ -471,42 +443,42 @@ const downloadExcel = async () => {
       {/* Filter Bar */}
       {showFilterBar && (
         <div className="dark:bg-dark-700 dark:border-dark-500 animate-in fade-in slide-in-from-top-2 rounded-xl border border-gray-200 bg-white p-4 transition-all duration-150">
-       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-  <div>
-    <label className="dark:text-dark-200 mb-1.5 block text-sm font-medium text-gray-700">
-      Type
-    </label>
-    <Listbox
-      data={typeFilterOptions}
-      value={
-        typeFilterOptions.find((o) => o.id === filterType) ||
-        typeFilterOptions[0]
-      }
-      onChange={(opt: any) => setFilterType(opt.id)}
-      displayField="name"
-    />
-  </div>
-  <div>
-    <label className="dark:text-dark-200 mb-1.5 block text-sm font-medium text-gray-700">
-      Date From
-    </label>
-    <DatePicker
-      placeholder="From Date"
-      value={filterDateFrom}
-      onChange={setFilterDateFrom}
-    />
-  </div>
-  <div>
-    <label className="dark:text-dark-200 mb-1.5 block text-sm font-medium text-gray-700">
-      Date To
-    </label>
-    <DatePicker
-      placeholder="To Date"
-      value={filterDateTo}
-      onChange={setFilterDateTo}
-    />
-  </div>
-</div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div>
+              <label className="dark:text-dark-200 mb-1.5 block text-sm font-medium text-gray-700">
+                Type
+              </label>
+              <Listbox
+                data={typeFilterOptions}
+                value={
+                  typeFilterOptions.find((o) => o.id === filterType) ||
+                  typeFilterOptions[0]
+                }
+                onChange={(opt: any) => setFilterType(opt.id)}
+                displayField="name"
+              />
+            </div>
+            <div>
+              <label className="dark:text-dark-200 mb-1.5 block text-sm font-medium text-gray-700">
+                Date From
+              </label>
+              <DatePicker
+                placeholder="From Date"
+                value={filterDateFrom}
+                onChange={setFilterDateFrom}
+              />
+            </div>
+            <div>
+              <label className="dark:text-dark-200 mb-1.5 block text-sm font-medium text-gray-700">
+                Date To
+              </label>
+              <DatePicker
+                placeholder="To Date"
+                value={filterDateTo}
+                onChange={setFilterDateTo}
+              />
+            </div>
+          </div>
         </div>
       )}
 
@@ -517,12 +489,12 @@ const downloadExcel = async () => {
             <thead className="dark:bg-dark-700/60 dark:border-dark-600 border-b border-gray-200 bg-gray-100">
               <tr>
                 <th className="w-10 px-2 py-3.5 text-center">
-  <Checkbox
-    checked={isAllPageSelected}
-    onChange={(e: any) => handleSelectAll(e.target.checked)}
-    className="size-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
-  />
-</th>
+                  <Checkbox
+                    checked={isAllPageSelected}
+                    onChange={(e: any) => handleSelectAll(e.target.checked)}
+                    className="size-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                  />
+                </th>
                 <th className="w-12 px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
                   S.No
                 </th>
@@ -567,18 +539,18 @@ const downloadExcel = async () => {
                     key={item.id}
                     className={`${isRowSelected ? "dark:bg-dark-600/30 bg-gray-50/50" : ""} dark:hover:bg-dark-700/40 transition-colors hover:bg-gray-50/30`}
                   >
-                   <td className="px-2 py-3 text-center">
-  <Checkbox
-    checked={isRowSelected}
-    onChange={() => handleSelectRow(item.id)}
-    className="size-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
-  />
-</td>
+                    <td className="px-2 py-3 text-center">
+                      <Checkbox
+                        checked={isRowSelected}
+                        onChange={() => handleSelectRow(item.id)}
+                        className="size-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                      />
+                    </td>
                     <td className="px-3 py-3 text-sm font-medium whitespace-nowrap text-gray-500">
                       {indexOfFirstItem + index + 1}
                     </td>
                     <td className="px-3 py-3 text-sm whitespace-nowrap text-gray-900 dark:text-gray-400">
-                    {new Date(item.date).toLocaleDateString("en-GB")}
+                      {new Date(item.date).toLocaleDateString("en-GB")}
                     </td>
                     <td className="px-3 py-3 text-sm font-medium whitespace-nowrap text-gray-900 dark:text-gray-400">
                       {item.voucherNo}
@@ -715,7 +687,7 @@ const downloadExcel = async () => {
                     leaveTo="transform opacity-0 scale-95"
                   >
                     <MenuItems
-                        anchor="bottom start"
+                      anchor="bottom start"
                       className="dark:bg-dark-700 dark:border-dark-600 z-[200] w-20 space-y-0.5 rounded-lg border border-gray-200 bg-white p-1 shadow-xl ring-1 ring-black/5 [--anchor-gap:6px] focus:outline-none"
                     >
                       {entriesOptions.map((opt) => (
@@ -854,13 +826,13 @@ const downloadExcel = async () => {
             leaveTo="translate-x-full"
           >
             <DialogPanel className="dark:bg-dark-700 fixed top-0 right-0 flex h-full w-full max-w-3xl transform-gpu flex-col bg-white shadow-2xl transition-transform duration-200">
-              <div className="dark:border-dark-500 flex items-center justify-between border-b border-gray-200 px-5 py-4">
-                <h2 className="dark:text-dark-50 text-lg font-semibold text-gray-800">
+             <div className="bg-primary-600 dark:bg-primary-700 flex items-center justify-between px-4 py-3 sm:px-5 sm:py-4">
+  <h2 className="text-base font-semibold text-white sm:text-lg">
                   Add Contra Entry
                 </h2>
                 <button
                   onClick={() => setShowModal(false)}
-                  className="size-8 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                 className="flex size-8 cursor-pointer items-center justify-center rounded-full text-white hover:bg-white/10 hover:text-white focus:bg-white/10 active:bg-white/20"
                 >
                   <X className="size-5" />
                 </button>
@@ -904,43 +876,39 @@ const downloadExcel = async () => {
                     <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Cash/Bank Account <span className="text-red-500">*</span>
                     </label>
-                  <Combobox
-  data={cashBankAccountOptions}
-  value={cashBankAccount}
-  onChange={(val: any) => setCashBankAccount(val)}
-  displayField="label"
-  placeholder="Search Account"
-  searchFields={["label", "mobile"]}
-   error={errors.cashBankAccount}
-  columns={[
-    {
-      header: "Account",
-      field: "label",
-      width: "2fr",
-    },
-    {
-      header: "Mobile",
-      field: "mobile",
-      width: "1.5fr",
-    },
-    {
-      header: "Opening",
-      field: "openingBalance",
-      width: "1fr",
-    },
-  ]}
-/>
+                    <Combobox
+                      data={cashBankAccountOptions}
+                      value={cashBankAccount}
+                      onChange={(val: any) => setCashBankAccount(val)}
+                      displayField="label"
+                      placeholder="Search Account"
+                      searchFields={["label", "mobile"]}
+                      error={errors.cashBankAccount}
+                      columns={[
+                        {
+                          header: "Account",
+                          field: "label",
+                          width: "2fr",
+                        },
+                        {
+                          header: "Mobile",
+                          field: "mobile",
+                          width: "1.5fr",
+                        },
+                        {
+                          header: "Opening",
+                          field: "openingBalance",
+                          width: "1fr",
+                        },
+                      ]}
+                    />
                   </div>
 
                   <div>
                     <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Voucher No.
                     </label>
-                    <Input
-                      type="text"
-                      value={voucherNo}
-                       readOnly
-                    />
+                    <Input type="text" value={voucherNo} readOnly />
                   </div>
 
                   <div>
@@ -968,32 +936,32 @@ const downloadExcel = async () => {
                     <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Opp. Account <span className="text-red-500">*</span>
                     </label>
-                  <Combobox
-  data={oppAccountOptions}
-  value={oppAccount}
-  onChange={(val: any) => setOppAccount(val)}
-  displayField="label"
-  placeholder="Search Account"
-  searchFields={["label", "mobile"]}
-   error={errors.oppAccount}
-  columns={[
-    {
-      header: "Account",
-      field: "label",
-      width: "2fr",
-    },
-    {
-      header: "Mobile",
-      field: "mobile",
-      width: "1.5fr",
-    },
-    {
-      header: "Opening",
-      field: "openingBalance",
-      width: "1fr",
-    },
-  ]}
-/>
+                    <Combobox
+                      data={oppAccountOptions}
+                      value={oppAccount}
+                      onChange={(val: any) => setOppAccount(val)}
+                      displayField="label"
+                      placeholder="Search Account"
+                      searchFields={["label", "mobile"]}
+                      error={errors.oppAccount}
+                      columns={[
+                        {
+                          header: "Account",
+                          field: "label",
+                          width: "2fr",
+                        },
+                        {
+                          header: "Mobile",
+                          field: "mobile",
+                          width: "1.5fr",
+                        },
+                        {
+                          header: "Opening",
+                          field: "openingBalance",
+                          width: "1fr",
+                        },
+                      ]}
+                    />
                   </div>
 
                   <div>

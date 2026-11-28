@@ -16,7 +16,14 @@ import { useNavigate, useParams } from "react-router-dom";
 import AccessoryPurchaseHistory from "./AccessoryPurchaseHistory";
 import { toast } from "sonner";
 import { DatePicker } from "@/components/shared/form/Datepicker";
-
+import { Fragment } from "react";
+import {
+  Dialog,
+  DialogPanel,
+  Transition,
+  TransitionChild,
+} from "@headlessui/react";
+import { Button } from "@/components/ui";
 import { useForm, Controller } from "react-hook-form";
 // ---------- Types ----------
 interface AccessoryItem {
@@ -77,7 +84,7 @@ const columns = [
 ];
 
 const AccessoriesAllotDetail: React.FC = () => {
-  const { control, register, handleSubmit,  setValue, } = useForm({
+  const { control, register, handleSubmit, setValue } = useForm({
     defaultValues: {
       invoiceNo: "",
       invoiceDate: "",
@@ -97,7 +104,7 @@ const AccessoriesAllotDetail: React.FC = () => {
     null,
   );
   const [loading, setLoading] = useState(true);
- const isSaved = !!detailData?.invoiceNo && detailData.invoiceNo !== "-";
+  const isSaved = !!detailData?.invoiceNo && detailData.invoiceNo !== "-";
   // State for history modal
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
@@ -107,16 +114,16 @@ const AccessoriesAllotDetail: React.FC = () => {
     try {
       setLoading(true);
       const res = await apiHelper.get(`/orders/accessories-allot/${id}`);
-     
+
       setDetailData(res.data || null);
       // Pre-fill invoice data if exists
-    if (res.data?.invoiceNo) {
-  setValue("invoiceNo", res.data.invoiceNo);
-}
+      if (res.data?.invoiceNo) {
+        setValue("invoiceNo", res.data.invoiceNo);
+      }
 
-if (res.data?.invoiceDate) {
-  setValue("invoiceDate", res.data.invoiceDate);
-}
+      if (res.data?.invoiceDate) {
+        setValue("invoiceDate", res.data.invoiceDate);
+      }
     } catch (error: any) {
       console.error(
         "Failed to fetch accessory items:",
@@ -169,21 +176,21 @@ if (res.data?.invoiceDate) {
   const indexOfLastItem = currentPage * rowsPerPage;
   const indexOfFirstItem = indexOfLastItem - rowsPerPage;
   const currentItems = filteredRows.slice(indexOfFirstItem, indexOfLastItem);
-const submitInvoice = async (data: any) => {
-  try {
-    await apiHelper.post(`/orders/accessories-allot/${id}/save`, {
-      invoiceNo: data.invoiceNo,
-      invoiceDate: data.invoiceDate,
-    });
+  const submitInvoice = async (data: any) => {
+    try {
+      await apiHelper.post(`/orders/accessories-allot/${id}/save`, {
+        invoiceNo: data.invoiceNo,
+        invoiceDate: data.invoiceDate,
+      });
 
-    toast.success("Saved Successfully");
-    setShowInvoiceDrawer(false);
-    fetchAccessoryItems();
-    navigate("/allot/accessoriesAllot");
-  } catch (err: any) {
-    toast.error(err.response?.data?.message || "Failed to save");
-  }
-};
+      toast.success("Saved Successfully");
+      setShowInvoiceDrawer(false);
+      fetchAccessoryItems();
+      navigate("/allot/accessoriesAllot");
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to save");
+    }
+  };
 
   // Handle status completion for individual accessory
   const handleComplete = async (itemId: number) => {
@@ -401,7 +408,7 @@ const submitInvoice = async (data: any) => {
                     <button
                       onClick={() => handleView(item)}
                       disabled={item.status === "completed"}
-                      className={`transition-colors  ${
+                      className={`transition-colors ${
                         item.status === "completed"
                           ? "cursor-not-allowed text-gray-400 opacity-50"
                           : "text-primary-500 hover:text-primary-600"
@@ -455,7 +462,6 @@ const submitInvoice = async (data: any) => {
                 </Tr>
               )}
             </TBody>
-
           </Table>
         </div>
 
@@ -544,173 +550,177 @@ const submitInvoice = async (data: any) => {
       </div>
 
       {/* {allCompleted && ( */}
-        <div className="mt-6 flex items-center gap-3">
+      <div className="mt-6 flex items-center gap-3">
         <button
-  type="button"
-  onClick={() => {
-    if (!isSaved) {
-      setShowInvoiceDrawer(true);
-    }
-  }}
-  disabled={isSaved}
-  className={`cursor-pointer rounded-lg px-5 py-2.5 font-medium text-white transition-colors ${
-    isSaved
-      ? "cursor-not-allowed bg-gray-400 opacity-60"
-      : "bg-primary-500 hover:bg-primary-600"
-  }`}
->
-  {isSaved ? "Saved" : "Save"}
-</button>
-          <button
-            type="button"
-            onClick={handleBack}
-            className="cursor-pointer rounded-lg border border-gray-300 px-5 py-2.5 font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
-          >
-            Cancel
-          </button>
-        </div>
+          type="button"
+          onClick={() => {
+            if (!isSaved) {
+              setShowInvoiceDrawer(true);
+            }
+          }}
+          disabled={isSaved}
+          className={`cursor-pointer rounded-lg px-5 py-2.5 font-medium text-white transition-colors ${
+            isSaved
+              ? "cursor-not-allowed bg-gray-400 opacity-60"
+              : "bg-primary-500 hover:bg-primary-600"
+          }`}
+        >
+          {isSaved ? "Saved" : "Save"}
+        </button>
+        <button
+          type="button"
+          onClick={handleBack}
+          className="cursor-pointer rounded-lg border border-gray-300 px-5 py-2.5 font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+        >
+          Cancel
+        </button>
+      </div>
       {/* )} */}
 
       {/* Invoice Drawer - Right Side Slide Over */}
-     {showInvoiceDrawer && (
-  <div className="fixed inset-0 z-50 overflow-hidden">
-    {/* Backdrop */}
-    <div
-      className="absolute inset-0 bg-black/50"
-      onClick={() => setShowInvoiceDrawer(false)}
-    />
-
-    {/* Drawer */}
-    <div className="absolute top-0 right-0 h-full w-full max-w-md bg-white shadow-2xl dark:bg-gray-800">
-      <form
-        onSubmit={handleSubmit(submitInvoice)}
-        className="flex h-full flex-col"
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4 dark:border-gray-700">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Accessories Invoice
-          </h2>
-
-          <button
-            type="button"
-            onClick={() => setShowInvoiceDrawer(false)}
-            className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+      <Transition appear show={showInvoiceDrawer} as={Fragment}>
+        <Dialog
+          as="div"
+          className="relative z-[100]"
+          onClose={() => setShowInvoiceDrawer(false)}
+        >
+          <TransitionChild
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
           >
-            <XMarkIcon className="size-6" />
-          </button>
-        </div>
+            <div className="fixed inset-0 bg-gray-900/50 backdrop-blur transition-opacity dark:bg-black/40" />
+          </TransitionChild>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
-          <div className="space-y-6">
-
-            {/* Invoice Number */}
-            <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Invoice Number <span className="text-red-500">*</span>
-              </label>
-
-              <input
-                {...register("invoiceNo", {
-                  required: "Invoice Number is required",
-                })}
-                placeholder="Enter invoice number"
-                className="focus:border-primary-500 focus:ring-primary-500/20 w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none focus:ring-2 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-              />
-            </div>
-
-            {/* Invoice Date */}
-            <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Invoice Date <span className="text-red-500">*</span>
-              </label>
-
-              <Controller
-                name="invoiceDate"
-                control={control}
-                rules={{
-                  required: "Invoice Date is required",
-                }}
-                render={({ field, fieldState }) => (
-                  <DatePicker
-                    value={field.value}
-                    onChange={(val) => field.onChange(val)}
-                    placeholder="DD-MM-YYYY"
-                    options={{
-                      dateFormat: "d-m-Y",
-                      disableMobile: true,
-                      maxDate: "today",
-                    }}
-                    className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm"
-                    error={fieldState.error?.message}
-                  />
-                )}
-              />
-            </div>
-
-            {/* Summary */}
-            <div className="rounded-lg bg-gray-50 p-4 dark:bg-gray-700/50">
-              <h3 className="mb-3 text-sm font-medium text-gray-700 dark:text-gray-300">
-                Summary
-              </h3>
-
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-500 dark:text-gray-400">
-                    Total Accessories:
-                  </span>
-
-                  <span className="font-medium text-gray-900 dark:text-white">
-                    {detailData.accessories.length}
-                  </span>
+          <TransitionChild
+            as={Fragment}
+            enter="ease-out transform-gpu transition-transform duration-200"
+            enterFrom="translate-x-full"
+            enterTo="translate-x-0"
+            leave="ease-in transform-gpu transition-transform duration-200"
+            leaveFrom="translate-x-0"
+            leaveTo="translate-x-full"
+          >
+            <DialogPanel className="dark:bg-dark-700 fixed top-0 right-0 flex h-full w-full max-w-md transform-gpu flex-col bg-white shadow-2xl transition-transform duration-200">
+              <form
+                onSubmit={handleSubmit(submitInvoice)}
+                className="flex h-full flex-col"
+              >
+                {/* Header */}
+                <div className="bg-primary-600 dark:bg-primary-700 flex items-center justify-between px-5 py-4">
+                  <h2 className="text-lg font-semibold text-white">
+                    Accessories Invoice
+                  </h2>
+                  <Button
+                    onClick={() => setShowInvoiceDrawer(false)}
+                    variant="flat"
+                    isIcon
+                    className="size-8 rounded-full text-white hover:bg-white/10 hover:text-white focus:bg-white/10 active:bg-white/20"
+                    type="button"
+                  >
+                    <XMarkIcon className="size-5" />
+                  </Button>
                 </div>
 
-                <div className="flex justify-between">
-                  <span className="text-gray-500 dark:text-gray-400">
-                    Total Value:
-                  </span>
+                {/* Content */}
+                <div className="grow space-y-6 overflow-y-auto p-5">
+                  {/* Invoice Number */}
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Invoice Number <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      {...register("invoiceNo", {
+                        required: "Invoice Number is required",
+                      })}
+                      placeholder="Enter invoice number"
+                      className="focus:border-primary-500 focus:ring-primary-500/20 dark:border-dark-500 dark:bg-dark-800 w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none focus:ring-2 dark:text-white"
+                    />
+                  </div>
 
-                  <span className="font-medium text-gray-900 dark:text-white">
-                    ₹
-                    {detailData.accessories
-                      .reduce(
-                        (sum, item) =>
-                          sum + item.salesPrice * item.selectedStock,
-                        0
-                      )
-                      .toLocaleString()}
-                  </span>
+                  {/* Invoice Date */}
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Invoice Date <span className="text-red-500">*</span>
+                    </label>
+                    <Controller
+                      name="invoiceDate"
+                      control={control}
+                      rules={{ required: "Invoice Date is required" }}
+                      render={({ field, fieldState }) => (
+                        <DatePicker
+                          value={field.value}
+                          onChange={(val) => field.onChange(val)}
+                          placeholder="DD-MM-YYYY"
+                          options={{
+                            dateFormat: "d-m-Y",
+                            disableMobile: true,
+                            maxDate: "today",
+                          }}
+                          className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm"
+                          error={fieldState.error?.message}
+                        />
+                      )}
+                    />
+                  </div>
+
+                  {/* Summary */}
+                  <div className="dark:bg-dark-600 rounded-lg bg-gray-50 p-4">
+                    <h3 className="mb-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Summary
+                    </h3>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-500 dark:text-gray-400">
+                          Total Accessories:
+                        </span>
+                        <span className="font-medium text-gray-900 dark:text-white">
+                          {detailData?.accessories.length ?? 0}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-500 dark:text-gray-400">
+                          Total Value:
+                        </span>
+                        <span className="font-medium text-gray-900 dark:text-white">
+                          ₹
+                          {(detailData?.accessories ?? [])
+                            .reduce(
+                              (sum, item) =>
+                                sum + item.salesPrice * item.selectedStock,
+                              0,
+                            )
+                            .toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
 
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="border-t border-gray-200 px-6 py-4 dark:border-gray-700">
-          <div className="flex gap-3">
-            <button
-              type="submit"
-              className="bg-primary-500 hover:bg-primary-600 flex-1 rounded-lg px-4 py-2.5 text-sm font-medium text-white transition-colors"
-            >
-              Save Invoice
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setShowInvoiceDrawer(false)}
-              className="flex-1 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      </form>
-    </div>
-  </div>
-)}
+                {/* Footer */}
+                <div className="dark:border-dark-500 flex items-center justify-end gap-3 border-t border-gray-200 p-5">
+                  <Button
+                    variant="outlined"
+                    color="neutral"
+                    type="button"
+                    onClick={() => setShowInvoiceDrawer(false)}
+                    className="h-10 w-1/2"
+                  >
+                    Cancel
+                  </Button>
+                  <Button color="primary" type="submit" className="h-10 w-1/2">
+                    Save Invoice
+                  </Button>
+                </div>
+              </form>
+            </DialogPanel>
+          </TransitionChild>
+        </Dialog>
+      </Transition>
 
       {/* Render the history modal with props */}
       {showHistoryModal && selectedItemId && id && (

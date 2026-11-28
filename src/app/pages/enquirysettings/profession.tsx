@@ -77,8 +77,8 @@ const Profession = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [selectedStatusFilter, setSelectedStatusFilter] = useState("All");
-const [selectedProfessionFilter, setSelectedProfessionFilter] =
-  useState("All");
+  const [selectedProfessionFilter, setSelectedProfessionFilter] =
+    useState("All");
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [confirmState, setConfirmState] = useState<
     "pending" | "success" | "error"
@@ -225,25 +225,25 @@ const [selectedProfessionFilter, setSelectedProfessionFilter] =
   };
 
   const professionFilterOptions = [
-  { id: "All", name: "All Professions" },
-  ...Array.from(
-    new Set(professions.map((item) => item.profession).filter(Boolean)),
-  ).map((name) => ({ id: name, name })),
-];
+    { id: "All", name: "All Professions" },
+    ...Array.from(
+      new Set(professions.map((item) => item.profession).filter(Boolean)),
+    ).map((name) => ({ id: name, name })),
+  ];
   const filteredData = professions.filter((item) => {
-  const matchesSearch = item.profession
-    .toLowerCase()
-    .includes(search.toLowerCase());
+    const matchesSearch = item.profession
+      .toLowerCase()
+      .includes(search.toLowerCase());
 
-  const matchesProfession =
-    selectedProfessionFilter === "All" ||
-    item.profession === selectedProfessionFilter;
+    const matchesProfession =
+      selectedProfessionFilter === "All" ||
+      item.profession === selectedProfessionFilter;
 
-  const matchesStatus =
-    selectedStatusFilter === "All" || item.status === selectedStatusFilter;
+    const matchesStatus =
+      selectedStatusFilter === "All" || item.status === selectedStatusFilter;
 
-  return matchesSearch && matchesProfession && matchesStatus;
-});
+    return matchesSearch && matchesProfession && matchesStatus;
+  });
 
   const totalItems = filteredData.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
@@ -286,47 +286,47 @@ const [selectedProfessionFilter, setSelectedProfessionFilter] =
           </p>
         </div>
 
-       <div className="flex flex-wrap items-center justify-between gap-2 md:flex-nowrap">
-  {/* Left side - Filter and icons */}
-  <div className="flex items-center gap-2">
-    <button
-      type="button"
-      onClick={() => setShowFilterBar(!showFilterBar)}
-      className={`inline-flex items-center gap-1.5 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
-        showFilterBar
-          ? "bg-primary-50 border-primary-200 text-primary-600 dark:bg-dark-600 dark:border-dark-500 dark:text-white"
-          : "dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
-      }`}
-    >
-      <FunnelIcon className="size-4.5" />
-      <span className="hidden sm:inline">Filter</span>
-    </button>
+        <div className="flex flex-wrap items-center justify-between gap-2 md:flex-nowrap">
+          {/* Left side - Filter and icons */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowFilterBar(!showFilterBar)}
+              className={`inline-flex items-center gap-1.5 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
+                showFilterBar
+                  ? "bg-primary-50 border-primary-200 text-primary-600 dark:bg-dark-600 dark:border-dark-500 dark:text-white"
+                  : "dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              <FunnelIcon className="size-4.5" />
+              <span className="hidden sm:inline">Filter</span>
+            </button>
 
-    <button
-      type="button"
-      className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
-    >
-      <RiFileExcel2Fill className="text-lg text-green-500" />
-    </button>
+            <button
+              type="button"
+              className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            >
+              <RiFileExcel2Fill className="text-lg text-green-500" />
+            </button>
 
-    <button
-      type="button"
-      className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
-    >
-      <RiFilePdfFill className="text-lg text-red-500" />
-    </button>
-  </div>
+            <button
+              type="button"
+              className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            >
+              <RiFilePdfFill className="text-lg text-red-500" />
+            </button>
+          </div>
 
-  {/* Right side - Add Profession button */}
-  <Button
-    color="primary"
-    onClick={handleOpenAddDrawer}
-    className="whitespace-nowrap"
-  >
-    <PlusIcon className="mr-1.5 size-4.5" />
-    Add Profession
-  </Button>
-</div>
+          {/* Right side - Add Profession button */}
+          <Button
+            color="primary"
+            onClick={handleOpenAddDrawer}
+            className="whitespace-nowrap"
+          >
+            <PlusIcon className="mr-1.5 size-4.5" />
+            Add Profession
+          </Button>
+        </div>
       </div>
 
       {/* Search */}
@@ -347,47 +347,48 @@ const [selectedProfessionFilter, setSelectedProfessionFilter] =
       {/* Filter Bar */}
       {showFilterBar && (
         <div className="dark:bg-dark-700 dark:border-dark-500 animate-in fade-in slide-in-from-top-2 rounded-xl border border-gray-200 bg-white p-4 transition-all duration-150">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
-  <div className="flex flex-col gap-1">
-    <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
-      Profession
-    </span>
-    <Combobox
-      data={professionFilterOptions}
-      value={
-        professionFilterOptions.find(
-          (o) => o.id === selectedProfessionFilter,
-        ) || professionFilterOptions[0]
-      }
-      displayField="name"
-      searchFields={["name"]}
-      placeholder="Search or select profession"
-      onChange={(opt: any) => {
-        setSelectedProfessionFilter(opt?.id ?? "All");
-        setCurrentPage(1);
-      }}
-    />
-  </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+            <div className="flex flex-col gap-1">
+              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
+                Profession
+              </span>
+              <Combobox
+                data={professionFilterOptions}
+                value={
+                  professionFilterOptions.find(
+                    (o) => o.id === selectedProfessionFilter,
+                  ) || professionFilterOptions[0]
+                }
+                displayField="name"
+                searchFields={["name"]}
+                placeholder="Search or select profession"
+                onChange={(opt: any) => {
+                  setSelectedProfessionFilter(opt?.id ?? "All");
+                  setCurrentPage(1);
+                }}
+              />
+            </div>
 
-  <div className="flex flex-col gap-1">
-    <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
-      Status
-    </span>
-    <Listbox
-      data={statusFilterOptions}
-      value={
-        statusFilterOptions.find((o) => o.id === selectedStatusFilter) ||
-        statusFilterOptions[0]
-      }
-      placeholder="All Statuses"
-      onChange={(opt: any) => {
-        setSelectedStatusFilter(opt.id);
-        setCurrentPage(1);
-      }}
-      displayField="name"
-    />
-  </div>
-</div>
+            <div className="flex flex-col gap-1">
+              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
+                Status
+              </span>
+              <Listbox
+                data={statusFilterOptions}
+                value={
+                  statusFilterOptions.find(
+                    (o) => o.id === selectedStatusFilter,
+                  ) || statusFilterOptions[0]
+                }
+                placeholder="All Statuses"
+                onChange={(opt: any) => {
+                  setSelectedStatusFilter(opt.id);
+                  setCurrentPage(1);
+                }}
+                displayField="name"
+              />
+            </div>
+          </div>
         </div>
       )}
 
@@ -577,7 +578,7 @@ const [selectedProfessionFilter, setSelectedProfessionFilter] =
                     leaveTo="transform opacity-0 scale-95"
                   >
                     <MenuItems
-                        anchor="bottom start"
+                      anchor="bottom start"
                       className="dark:bg-dark-700 dark:border-dark-600 z-[200] w-20 space-y-0.5 rounded-lg border border-gray-200 bg-white p-1 shadow-xl ring-1 ring-black/5 [--anchor-gap:6px] focus:outline-none"
                     >
                       {entriesOptions.map((opt) => (
@@ -735,15 +736,15 @@ const [selectedProfessionFilter, setSelectedProfessionFilter] =
                 className="flex h-full flex-col"
               >
                 {/* Header */}
-                <div className="dark:border-dark-500 flex items-center justify-between border-b border-gray-200 px-5 py-4">
-                  <h2 className="dark:text-dark-50 text-lg font-semibold text-gray-800">
+                <div className="bg-primary-600 dark:bg-primary-700 flex items-center justify-between px-5 py-4">
+                  <h2 className="text-lg font-semibold text-white">
                     {editId !== null ? "Edit Profession" : "Add Profession"}
                   </h2>
                   <Button
                     onClick={() => setShowDrawer(false)}
                     variant="flat"
                     isIcon
-                    className="size-8 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                    className="size-8 rounded-full text-white hover:bg-white/10 hover:text-white focus:bg-white/10 active:bg-white/20"
                     type="button"
                   >
                     <XMarkIcon className="size-5" />
@@ -754,12 +755,11 @@ const [selectedProfessionFilter, setSelectedProfessionFilter] =
                 <div className="grow space-y-5 overflow-y-auto p-5">
                   <div>
                     <Input
-                     label={
-      <span>
-       Profession <span className="text-red-500">*</span>
-      </span>
-    }
-                      
+                      label={
+                        <span>
+                          Profession <span className="text-red-500">*</span>
+                        </span>
+                      }
                       placeholder="Enter profession"
                       {...register(
                         "profession",

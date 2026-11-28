@@ -1,12 +1,22 @@
 // src/app/pages/implement/implementvariant.tsx
 import React, { useState, useEffect, Fragment } from "react";
 import {
-  Dialog, DialogPanel, Transition, TransitionChild,
-  Menu, MenuButton, MenuItems, MenuItem,
+  Dialog,
+  DialogPanel,
+  Transition,
+  TransitionChild,
+  Menu,
+  MenuButton,
+  MenuItems,
+  MenuItem,
 } from "@headlessui/react";
 import {
-  PencilIcon, TrashIcon, EllipsisHorizontalIcon, XMarkIcon,
-  ChevronLeftIcon, ChevronRightIcon,
+  PencilIcon,
+  TrashIcon,
+  EllipsisHorizontalIcon,
+  XMarkIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
 } from "@heroicons/react/24/outline";
 import { Search, Filter, Plus } from "lucide-react";
 import { RiFileExcel2Fill, RiFilePdfFill } from "react-icons/ri";
@@ -84,7 +94,9 @@ const ImplementVariant = () => {
   const [loading, setLoading] = useState(false);
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [confirmState, setConfirmState] = useState<"pending" | "success" | "error">("pending");
+  const [confirmState, setConfirmState] = useState<
+    "pending" | "success" | "error"
+  >("pending");
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
   const [isBulkDelete, setIsBulkDelete] = useState(false);
@@ -149,7 +161,12 @@ const ImplementVariant = () => {
 
   useEffect(() => {
     const load = async () => {
-      await Promise.all([getVariants(), getCategories(), getBrands(), getModels()]);
+      await Promise.all([
+        getVariants(),
+        getCategories(),
+        getBrands(),
+        getModels(),
+      ]);
     };
     load();
   }, []);
@@ -158,7 +175,7 @@ const ImplementVariant = () => {
   useEffect(() => {
     if (formData.categoryId) {
       setFilteredBrands(
-        brands.filter((b) => b.categoryId === Number(formData.categoryId))
+        brands.filter((b) => b.categoryId === Number(formData.categoryId)),
       );
     } else {
       setFilteredBrands([]);
@@ -169,7 +186,7 @@ const ImplementVariant = () => {
   useEffect(() => {
     if (formData.brandId) {
       setFilteredModels(
-        models.filter((m) => m.brandId === Number(formData.brandId))
+        models.filter((m) => m.brandId === Number(formData.brandId)),
       );
     } else {
       setFilteredModels([]);
@@ -188,7 +205,13 @@ const ImplementVariant = () => {
 
   const handleOpenAddDrawer = () => {
     setEditId(null);
-    setFormData({ variantName: "", categoryId: "", brandId: "", modelId: "", status: "ACTIVE" });
+    setFormData({
+      variantName: "",
+      categoryId: "",
+      brandId: "",
+      modelId: "",
+      status: "ACTIVE",
+    });
     setErrors({});
     setShowDrawer(true);
   };
@@ -223,7 +246,7 @@ const ImplementVariant = () => {
     try {
       if (isBulkDelete) {
         await Promise.all(
-          selectedIds.map((id) => apiHelper.delete(`/implement-variant/${id}`))
+          selectedIds.map((id) => apiHelper.delete(`/implement-variant/${id}`)),
         );
         toast.success(`${selectedIds.length} variants deleted!`);
         setSelectedIds([]);
@@ -253,7 +276,7 @@ const ImplementVariant = () => {
 
     const newStatus = item.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
     setItems((prev) =>
-      prev.map((i) => (i.id === id ? { ...i, status: newStatus } : i))
+      prev.map((i) => (i.id === id ? { ...i, status: newStatus } : i)),
     );
 
     try {
@@ -275,7 +298,8 @@ const ImplementVariant = () => {
     if (!formData.categoryId) newErrors.categoryId = "Category is required";
     if (!formData.brandId) newErrors.brandId = "Brand is required";
     if (!formData.modelId) newErrors.modelId = "Model is required";
-    if (!formData.variantName.trim()) newErrors.variantName = "Variant Name is required";
+    if (!formData.variantName.trim())
+      newErrors.variantName = "Variant Name is required";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -311,9 +335,15 @@ const ImplementVariant = () => {
   const filteredData = items.filter((item) => {
     const matchesSearch =
       item.variantName.toLowerCase().includes(search.toLowerCase()) ||
-      (item.category?.categoryName || "").toLowerCase().includes(search.toLowerCase()) ||
-      (item.brand?.brandName || "").toLowerCase().includes(search.toLowerCase()) ||
-      (item.model?.modelName || "").toLowerCase().includes(search.toLowerCase());
+      (item.category?.categoryName || "")
+        .toLowerCase()
+        .includes(search.toLowerCase()) ||
+      (item.brand?.brandName || "")
+        .toLowerCase()
+        .includes(search.toLowerCase()) ||
+      (item.model?.modelName || "")
+        .toLowerCase()
+        .includes(search.toLowerCase());
 
     const matchesStatus =
       selectedStatusFilter === "All" || item.status === selectedStatusFilter;
@@ -346,14 +376,14 @@ const ImplementVariant = () => {
 
   const handleSelectRow = (id: number) => {
     setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((sid) => sid !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((sid) => sid !== id) : [...prev, id],
     );
   };
 
   const categoryFilterOptions = [
     { id: "All", name: "All Categories" },
     ...Array.from(
-      new Set(items.map((i) => i.category?.categoryName).filter(Boolean))
+      new Set(items.map((i) => i.category?.categoryName).filter(Boolean)),
     ).map((name) => ({ id: name as string, name: name as string })),
   ];
 
@@ -430,8 +460,9 @@ const ImplementVariant = () => {
               <Combobox
                 data={categoryFilterOptions}
                 value={
-                  categoryFilterOptions.find((o) => o.id === selectedCategoryFilter) ||
-                  categoryFilterOptions[0]
+                  categoryFilterOptions.find(
+                    (o) => o.id === selectedCategoryFilter,
+                  ) || categoryFilterOptions[0]
                 }
                 displayField="name"
                 searchFields={["name"]}
@@ -448,8 +479,9 @@ const ImplementVariant = () => {
               <Listbox
                 data={statusFilterOptions}
                 value={
-                  statusFilterOptions.find((o) => o.id === selectedStatusFilter) ||
-                  statusFilterOptions[0]
+                  statusFilterOptions.find(
+                    (o) => o.id === selectedStatusFilter,
+                  ) || statusFilterOptions[0]
                 }
                 onChange={(opt: any) => {
                   setSelectedStatusFilter(opt.id);
@@ -465,7 +497,10 @@ const ImplementVariant = () => {
       {/* Table */}
       <div className="dark:bg-dark-800 dark:border-dark-700 rounded-xl border border-gray-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
-          <Table hoverable className="w-full min-w-[1000px] text-left [&_.table-th]:font-semibold">
+          <Table
+            hoverable
+            className="w-full min-w-[1000px] text-left [&_.table-th]:font-semibold"
+          >
             <THead className="dark:bg-dark-700/60 dark:border-dark-600 border-b border-gray-200 bg-gray-100">
               <Tr>
                 <Th className="w-12 py-3.5 text-center">
@@ -475,14 +510,30 @@ const ImplementVariant = () => {
                     onChange={(e: any) => handleSelectAll(e.target.checked)}
                   />
                 </Th>
-                <Th className="py-3.5 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">S.No</Th>
-                <Th className="py-3.5 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">Variant</Th>
-                <Th className="py-3.5 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">Category</Th>
-                <Th className="py-3.5 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">Brand</Th>
-                <Th className="py-3.5 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">Model</Th>
-                <Th className="py-3.5 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">Status</Th>
-                <Th className="py-3.5 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">Created</Th>
-                <Th className="w-20 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">Actions</Th>
+                <Th className="py-3.5 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
+                  S.No
+                </Th>
+                <Th className="py-3.5 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
+                  Variant
+                </Th>
+                <Th className="py-3.5 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
+                  Category
+                </Th>
+                <Th className="py-3.5 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
+                  Brand
+                </Th>
+                <Th className="py-3.5 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
+                  Model
+                </Th>
+                <Th className="py-3.5 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
+                  Status
+                </Th>
+                <Th className="py-3.5 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
+                  Created
+                </Th>
+                <Th className="w-20 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
+                  Actions
+                </Th>
               </Tr>
             </THead>
             <TBody className="dark:divide-dark-700 divide-y divide-gray-200">
@@ -491,7 +542,9 @@ const ImplementVariant = () => {
                 return (
                   <Tr
                     key={item.id}
-                    className={isRowSelected ? "dark:bg-dark-600/30 bg-gray-50/50" : ""}
+                    className={
+                      isRowSelected ? "dark:bg-dark-600/30 bg-gray-50/50" : ""
+                    }
                   >
                     <Td className="py-4 text-center">
                       <Checkbox
@@ -504,7 +557,9 @@ const ImplementVariant = () => {
                       {indexOfFirstItem + index + 1}
                     </Td>
                     <Td className="py-4 font-medium">{item.variantName}</Td>
-                    <Td className="py-4">{item.category?.categoryName || "-"}</Td>
+                    <Td className="py-4">
+                      {item.category?.categoryName || "-"}
+                    </Td>
                     <Td className="py-4">{item.brand?.brandName || "-"}</Td>
                     <Td className="py-4">{item.model?.modelName || "-"}</Td>
                     <Td className="py-4">
@@ -534,8 +589,11 @@ const ImplementVariant = () => {
                         : "-"}
                     </Td>
                     <Td className="py-4 text-center">
-                      <Menu as="div" className="relative inline-block text-left">
-                        <MenuButton className="inline-flex size-8 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-dark-600">
+                      <Menu
+                        as="div"
+                        className="relative inline-block text-left"
+                      >
+                        <MenuButton className="dark:hover:bg-dark-600 inline-flex size-8 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100">
                           <EllipsisHorizontalIcon className="size-5" />
                         </MenuButton>
                         <Transition
@@ -603,15 +661,37 @@ const ImplementVariant = () => {
             <div className="order-1 flex items-center justify-center gap-2 text-sm text-gray-600 md:w-1/3 md:justify-start dark:text-gray-400">
               <span>Show</span>
               <div className="w-20">
-                <Menu as="div" className="relative inline-block w-full text-left">
+                <Menu
+                  as="div"
+                  className="relative inline-block w-full text-left"
+                >
                   <MenuButton className="dark:border-dark-600 dark:bg-dark-700 flex w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm">
                     <span>{itemsPerPage}</span>
-                    <svg className="ml-2 h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+                    <svg
+                      className="ml-2 h-4 w-4"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                        clipRule="evenodd"
+                      />
                     </svg>
                   </MenuButton>
-                  <Transition as={Fragment} enter="transition ease-out duration-100" enterFrom="transform opacity-0 scale-95" enterTo="transform opacity-100 scale-100" leave="transition ease-in duration-75" leaveFrom="transform opacity-100 scale-100" leaveTo="transform opacity-0 scale-95">
-                    <MenuItems anchor="bottom start" className="dark:bg-dark-700 dark:border-dark-600 z-[200] w-20 space-y-0.5 rounded-lg border border-gray-200 bg-white p-1 shadow-xl">
+                  <Transition
+                    as={Fragment}
+                    enter="transition ease-out duration-100"
+                    enterFrom="transform opacity-0 scale-95"
+                    enterTo="transform opacity-100 scale-100"
+                    leave="transition ease-in duration-75"
+                    leaveFrom="transform opacity-100 scale-100"
+                    leaveTo="transform opacity-0 scale-95"
+                  >
+                    <MenuItems
+                      anchor="bottom start"
+                      className="dark:bg-dark-700 dark:border-dark-600 z-[200] w-20 space-y-0.5 rounded-lg border border-gray-200 bg-white p-1 shadow-xl"
+                    >
                       {entriesOptions.map((opt) => (
                         <MenuItem key={opt.id}>
                           {({ active }) => (
@@ -642,27 +722,33 @@ const ImplementVariant = () => {
             <div className="order-2 flex justify-center md:w-1/3">
               <div className="dark:border-dark-700 dark:bg-dark-800 inline-flex items-center space-x-1 rounded-lg border border-gray-200 bg-white p-1 shadow-sm">
                 <button
-                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
                   disabled={currentPage === 1}
                   className="dark:hover:bg-dark-700 inline-flex size-8 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100 disabled:opacity-40 dark:text-gray-400"
                 >
                   <ChevronLeftIcon className="size-4" />
                 </button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                  <button
-                    key={page}
-                    onClick={() => setCurrentPage(page)}
-                    className={`inline-flex size-8 items-center justify-center rounded-md text-sm font-medium transition-colors ${
-                      page === currentPage
-                        ? "bg-primary-500 text-white"
-                        : "dark:hover:bg-dark-700 text-gray-600 hover:bg-gray-100 dark:text-gray-300"
-                    }`}
-                  >
-                    {page}
-                  </button>
-                ))}
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (page) => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`inline-flex size-8 items-center justify-center rounded-md text-sm font-medium transition-colors ${
+                        page === currentPage
+                          ? "bg-primary-500 text-white"
+                          : "dark:hover:bg-dark-700 text-gray-600 hover:bg-gray-100 dark:text-gray-300"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ),
+                )}
                 <button
-                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                  }
                   disabled={currentPage === totalPages}
                   className="dark:hover:bg-dark-700 inline-flex size-8 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100 disabled:opacity-40 dark:text-gray-400"
                 >
@@ -693,7 +779,7 @@ const ImplementVariant = () => {
             </div>
             <button
               onClick={handleBulkDelete}
-              className="bg-red-500 hover:bg-red-600 flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold text-white shadow-sm"
+              className="flex items-center gap-1.5 rounded-lg bg-red-500 px-3 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-red-600"
             >
               <TrashIcon className="size-4" />
               <span className="text-xs font-semibold">Delete</span>
@@ -704,18 +790,42 @@ const ImplementVariant = () => {
 
       {/* Drawer */}
       <Transition appear show={showDrawer} as={Fragment}>
-        <Dialog as="div" className="relative z-100" onClose={() => setShowDrawer(false)}>
-          <TransitionChild as={Fragment} enter="ease-out duration-300" enterFrom="opacity-0" enterTo="opacity-100" leave="ease-in duration-200" leaveFrom="opacity-100" leaveTo="opacity-0">
+        <Dialog
+          as="div"
+          className="relative z-100"
+          onClose={() => setShowDrawer(false)}
+        >
+          <TransitionChild
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
             <div className="fixed inset-0 bg-gray-900/50 backdrop-blur transition-opacity dark:bg-black/40" />
           </TransitionChild>
-          <TransitionChild as={Fragment} enter="ease-out transform-gpu transition-transform duration-200" enterFrom="translate-x-full" enterTo="translate-x-0" leave="ease-in transform-gpu transition-transform duration-200" leaveFrom="translate-x-0" leaveTo="translate-x-full">
-            <DialogPanel className="fixed top-0 right-0 flex h-full w-full max-w-2xl transform-gpu flex-col bg-white shadow-2xl transition-transform duration-200 dark:bg-dark-700">
+          <TransitionChild
+            as={Fragment}
+            enter="ease-out transform-gpu transition-transform duration-200"
+            enterFrom="translate-x-full"
+            enterTo="translate-x-0"
+            leave="ease-in transform-gpu transition-transform duration-200"
+            leaveFrom="translate-x-0"
+            leaveTo="translate-x-full"
+          >
+            <DialogPanel className="dark:bg-dark-700 fixed top-0 right-0 flex h-full w-full max-w-2xl transform-gpu flex-col bg-white shadow-2xl transition-transform duration-200">
               <div className="flex h-full flex-col">
-                <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4 dark:border-dark-500">
-                  <h2 className="text-lg font-semibold text-gray-800 dark:text-dark-50">
+                <div className="bg-primary-600 dark:bg-primary-700 flex items-center justify-between px-4 py-3 sm:px-5 sm:py-4">
+                  <h2 className="text-base font-semibold text-white sm:text-lg">
                     {editId !== null ? "Edit Variant" : "Add Variant"}
                   </h2>
-                  <button onClick={() => setShowDrawer(false)} className="size-8 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                  <button
+                    type="button"
+                    onClick={() => setShowDrawer(false)}
+                    className="flex size-8 cursor-pointer items-center justify-center rounded-full text-white hover:bg-white/10 hover:text-white focus:bg-white/10 active:bg-white/20"
+                  >
                     <XMarkIcon className="size-5" />
                   </button>
                 </div>
@@ -735,7 +845,10 @@ const ImplementVariant = () => {
                       searchFields={["label"]}
                       value={
                         categories
-                          .map((c) => ({ value: String(c.id), label: c.categoryName }))
+                          .map((c) => ({
+                            value: String(c.id),
+                            label: c.categoryName,
+                          }))
                           .find((o) => o.value === formData.categoryId) || null
                       }
                       onChange={(val: any) => {
@@ -746,7 +859,9 @@ const ImplementVariant = () => {
                       placeholder="Select Category"
                     />
                     {errors.categoryId && (
-                      <span className="text-xs text-orange-500">{errors.categoryId}</span>
+                      <span className="text-xs text-orange-500">
+                        {errors.categoryId}
+                      </span>
                     )}
                   </div>
 
@@ -764,7 +879,10 @@ const ImplementVariant = () => {
                       searchFields={["label"]}
                       value={
                         filteredBrands
-                          .map((b) => ({ value: String(b.id), label: b.brandName }))
+                          .map((b) => ({
+                            value: String(b.id),
+                            label: b.brandName,
+                          }))
                           .find((o) => o.value === formData.brandId) || null
                       }
                       onChange={(val: any) => {
@@ -772,12 +890,16 @@ const ImplementVariant = () => {
                         handleInputChange("modelId", "");
                       }}
                       placeholder={
-                        formData.categoryId ? "Select Brand" : "Select Category first"
+                        formData.categoryId
+                          ? "Select Brand"
+                          : "Select Category first"
                       }
                       disabled={!formData.categoryId}
                     />
                     {errors.brandId && (
-                      <span className="text-xs text-orange-500">{errors.brandId}</span>
+                      <span className="text-xs text-orange-500">
+                        {errors.brandId}
+                      </span>
                     )}
                   </div>
 
@@ -795,7 +917,10 @@ const ImplementVariant = () => {
                       searchFields={["label"]}
                       value={
                         filteredModels
-                          .map((m) => ({ value: String(m.id), label: m.modelName }))
+                          .map((m) => ({
+                            value: String(m.id),
+                            label: m.modelName,
+                          }))
                           .find((o) => o.value === formData.modelId) || null
                       }
                       onChange={(val: any) =>
@@ -807,7 +932,9 @@ const ImplementVariant = () => {
                       disabled={!formData.brandId}
                     />
                     {errors.modelId && (
-                      <span className="text-xs text-orange-500">{errors.modelId}</span>
+                      <span className="text-xs text-orange-500">
+                        {errors.modelId}
+                      </span>
                     )}
                   </div>
 
@@ -820,10 +947,14 @@ const ImplementVariant = () => {
                       type="text"
                       placeholder="Enter Variant Name"
                       value={formData.variantName}
-                      onChange={(e) => handleInputChange("variantName", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("variantName", e.target.value)
+                      }
                     />
                     {errors.variantName && (
-                      <span className="text-xs text-orange-500">{errors.variantName}</span>
+                      <span className="text-xs text-orange-500">
+                        {errors.variantName}
+                      </span>
                     )}
                   </div>
 
@@ -836,7 +967,9 @@ const ImplementVariant = () => {
                       data={statusOptions}
                       displayField="label"
                       value={
-                        statusOptions.find((s) => s.value === formData.status) || null
+                        statusOptions.find(
+                          (s) => s.value === formData.status,
+                        ) || null
                       }
                       onChange={(val: any) =>
                         handleInputChange("status", val?.value || "ACTIVE")
@@ -846,7 +979,7 @@ const ImplementVariant = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-end gap-3 border-t border-gray-200 p-5 dark:border-dark-500">
+                <div className="dark:border-dark-500 flex items-center justify-end gap-3 border-t border-gray-200 p-5">
                   <button
                     type="button"
                     onClick={() => setShowDrawer(false)}

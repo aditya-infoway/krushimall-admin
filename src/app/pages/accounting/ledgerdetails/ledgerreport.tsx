@@ -408,18 +408,16 @@ const LedgerReport: React.FC = () => {
             <div className="dark:bg-dark-800 animate-slideInRight absolute top-0 right-0 h-full w-full max-w-lg transform bg-white shadow-2xl transition-transform">
               <div className="flex h-full flex-col">
                 {/* Header - Matches Theme */}
-                <div className="dark:border-dark-600 flex items-center justify-between border-b border-gray-200 px-6 py-4">
-                  <h2 className="text-lg font-bold text-black">
-                    Ledger Report
-                  </h2>
-                  <button
-                    className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-gray-500 transition-colors"
-                    onClick={handleDrawerClose}
-                  >
-                    <FiX size={18} />
-                  </button>
-                </div>
-
+               <div className="bg-primary-600 dark:bg-primary-700 flex items-center justify-between px-5 py-4">
+  <h2 className="text-lg font-bold text-white">Ledger Report</h2>
+  <button
+    type="button"
+    onClick={handleDrawerClose}
+    className="flex size-8 cursor-pointer items-center justify-center rounded-full text-white transition-colors hover:bg-white/10 hover:text-white focus:bg-white/10 active:bg-white/20"
+  >
+    <FiX size={18} />
+  </button>
+</div>
                 {/* Body */}
                 <div className="flex-1 overflow-y-auto p-6">
                   <div className="space-y-4">

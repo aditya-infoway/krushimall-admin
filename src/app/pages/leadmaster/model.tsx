@@ -1,5 +1,10 @@
-import { useState, useRef, useEffect } from "react";
-import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
+import { Fragment, useState, useRef, useEffect } from "react";
+import {
+  Dialog,
+  DialogPanel,
+  DialogTitle,
+  Transition,
+} from "@headlessui/react";
 // import { Combobox } from "@/components/shared/form/StyledCombobox";
 import { Checkbox } from "@/components/ui/Form/Checkbox";
 import { XMarkIcon, PlusIcon } from "@heroicons/react/24/outline";
@@ -14,6 +19,7 @@ import { Controller, useForm } from "react-hook-form";
 import apiHelper from "@/utils/apiHelper";
 import { Combobox } from "@/components/shared/form/Combobox";
 import { toast } from "sonner";
+import { createPortal } from "react-dom";
 // ─── Types ──────────────────────────────────────────────────────────────────
 interface AccountForm {
   accountName: string;
@@ -294,360 +300,418 @@ function CreateAccountModal({
       hasError ? "border-orange-500 dark:border-orange-500" : "border-gray-300"
     }`;
 
-  return (
-    <Dialog open={isOpen} onClose={onClose} className="relative z-[60]">
-      <div
-        className="fixed inset-0 bg-black/40 dark:bg-black/60"
-        aria-hidden="true"
-      />
-      <div className="fixed inset-y-0 right-0 flex max-w-full">
-        <DialogPanel className="dark:bg-dark-700 flex h-full w-screen max-w-3xl flex-col bg-white shadow-xl">
-          {/* Header */}
-          <div className="dark:bg-dark-600 flex items-center justify-between bg-blue-700 px-4 py-3">
-            <DialogTitle className="dark:text-dark-50 font-semibold text-white">
-              Create Account
-            </DialogTitle>
-            <button
-              onClick={onClose}
-              className="dark:text-dark-200 text-white/80 hover:text-white dark:hover:text-white"
-            >
-              <XMarkIcon className="size-5" />
-            </button>
-          </div>
+ return (
+    <Transition show={isOpen} as={Fragment}>
+      <Dialog as="div" className="relative z-[1000]" onClose={onClose}>
+        {/* Backdrop */}
+        <Transition.Child
+          as={Fragment}
+          enter="ease-out duration-300"
+          enterFrom="opacity-0"
+          enterTo="opacity-100"
+          leave="ease-in duration-200"
+          leaveFrom="opacity-100"
+          leaveTo="opacity-0"
+        >
+          <div className="fixed inset-0 bg-black/30 dark:bg-black/60" />
+        </Transition.Child>
 
-          {/* Form */}
-          <form
-            onSubmit={handleSubmit(handleFormSubmit)}
-            className="flex-1 overflow-y-auto p-6"
-          >
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              {/* Account Name */}
-              <div className="flex flex-col gap-1">
-                <label className="dark:text-dark-200 text-sm font-medium text-gray-700">
-                  Account Name <span className="text-red-500">*</span>
-                </label>
-                <Controller
-                  name="accountName"
-                  control={control}
-                  render={({ field }) => (
-                    <input
-                      type="text"
-                      placeholder="Enter Account Name"
-                      value={field.value}
-                      onChange={field.onChange}
-                      className={inputClass(
-                        "accountName",
-                        !!errors.accountName,
-                      )}
-                    />
-                  )}
-                />
-                {errors.accountName && (
-                  <span className="text-xs text-orange-500">
-                    {errors.accountName.message}
-                  </span>
-                )}
-              </div>
+        {/* Right side sliding panel */}
+        <div className="fixed inset-0 overflow-hidden">
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="pointer-events-none fixed inset-y-0 right-0 flex max-w-full sm:pl-10">
+              <Transition.Child
+                as={Fragment}
+                enter="transform transition ease-in-out duration-300"
+                enterFrom="translate-x-full"
+                enterTo="translate-x-0"
+                leave="transform transition ease-in-out duration-200"
+                leaveFrom="translate-x-0"
+                leaveTo="translate-x-full"
+              >
+                <DialogPanel className="pointer-events-auto w-screen max-w-3xl">
+                  <div className="dark:bg-dark-700 flex h-full flex-col bg-white shadow-xl">
+                    {/* Header */}
+                    <div className="bg-primary-600 dark:bg-primary-700 flex items-center justify-between px-5 py-4">
+                      <DialogTitle className="text-lg font-semibold text-white">
+                        Create Account
+                      </DialogTitle>
+                      <button
+                        onClick={onClose}
+                        className="cursor-pointer rounded-full p-1.5 text-white/80 hover:bg-white/10 hover:text-white"
+                      >
+                        <XMarkIcon className="size-5" />
+                      </button>
+                    </div>
 
-              {/* Mobile */}
-              <div className="flex flex-col gap-1">
-                <label className="dark:text-dark-200 text-sm font-medium text-gray-700">
-                  Mobile <span className="text-red-500">*</span>
-                </label>
-                <Controller
-                  name="mobile"
-                  control={control}
-                  render={({ field }) => (
-                    <input
-                      type="text"
-                      placeholder="Mobile"
-                      value={field.value}
-                      onChange={field.onChange}
-                      className={inputClass("mobile", !!errors.mobile)}
-                    />
-                  )}
-                />
-                {errors.mobile && (
-                  <span className="text-xs text-orange-500">
-                    {errors.mobile.message}
-                  </span>
-                )}
-              </div>
+                    {/* Form */}
+                    <form
+                      onSubmit={handleSubmit(handleFormSubmit)}
+                      className="flex-1 overflow-y-auto p-4 sm:p-6"
+                    >
+                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        {/* Account Name */}
+                        <div className="flex flex-col gap-1">
+                          <label className="dark:text-dark-200 text-sm font-medium text-gray-700">
+                            Account Name <span className="text-red-500">*</span>
+                          </label>
+                          <Controller
+                            name="accountName"
+                            control={control}
+                            render={({ field }) => (
+                              <input
+                                type="text"
+                                placeholder="Enter Account Name"
+                                value={field.value}
+                                onChange={field.onChange}
+                                className={inputClass(
+                                  "accountName",
+                                  !!errors.accountName,
+                                )}
+                              />
+                            )}
+                          />
+                          {errors.accountName && (
+                            <span className="text-xs text-orange-500">
+                              {errors.accountName.message}
+                            </span>
+                          )}
+                        </div>
 
-              {/* Country */}
-              {/* Country */}
-              <div className="flex flex-col gap-1">
-                <label className="dark:text-dark-200 text-sm font-medium text-gray-700">
-                  Country <span className="text-red-500">*</span>
-                </label>
-                <Controller
-                  name="countryCode"
-                  control={control}
-                  render={({ field }) => (
-                    <Combobox
-                      data={countryOptions}
-                      displayField="label"
-                      searchFields={["label"]}
-                      placeholder="Search Country"
-                      value={
-                        countryOptions.find((o) => o.value === field.value) ||
-                        null
-                      }
-                      onChange={(
-                        selected: { value: string; label: string } | null,
-                      ) => {
-                        field.onChange(selected?.value || "");
-                        setValue("countryName", selected?.label || "");
-                        setCountry(selected?.value || "");
-                        setValue("stateCode", "");
-                        setValue("stateName", "");
-                        setValue("district", "");
-                        setValue("city", "");
-                      }}
-                    />
-                  )}
-                />
-                {errors.countryCode && (
-                  <span className="text-xs text-orange-500">
-                    {errors.countryCode.message}
-                  </span>
-                )}
-              </div>
+                        {/* Mobile */}
+                        <div className="flex flex-col gap-1">
+                          <label className="dark:text-dark-200 text-sm font-medium text-gray-700">
+                            Mobile <span className="text-red-500">*</span>
+                          </label>
+                          <Controller
+                            name="mobile"
+                            control={control}
+                            render={({ field }) => (
+                              <input
+                                type="text"
+                                placeholder="Mobile"
+                                value={field.value}
+                                onChange={field.onChange}
+                                className={inputClass("mobile", !!errors.mobile)}
+                              />
+                            )}
+                          />
+                          {errors.mobile && (
+                            <span className="text-xs text-orange-500">
+                              {errors.mobile.message}
+                            </span>
+                          )}
+                        </div>
 
-              {/* State */}
-              <div className="flex flex-col gap-1">
-                <label className="dark:text-dark-200 text-sm font-medium text-gray-700">
-                  State <span className="text-red-500">*</span>
-                </label>
-                <div
-                  className={
-                    !countryCode ? "pointer-events-none opacity-60" : ""
-                  }
-                >
-                  <Controller
-                    name="stateCode"
-                    control={control}
-                    render={({ field }) => (
-                      <Combobox
-                        data={stateOptions}
-                        displayField="label"
-                        searchFields={["label"]}
-                        placeholder="Search State"
-                        value={
-                          stateOptions.find((o) => o.value === field.value) ||
-                          null
-                        }
-                        onChange={(
-                          selected: { value: string; label: string } | null,
-                        ) => {
-                          field.onChange(selected?.value || "");
-                          setValue("stateName", selected?.label || "");
-                          setState(selected?.value || "");
-                          setValue("district", "");
-                          setValue("city", "");
-                        }}
-                      />
-                    )}
-                  />
-                </div>
-                {errors.stateCode && (
-                  <span className="text-xs text-orange-500">
-                    {errors.stateCode.message}
-                  </span>
-                )}
-              </div>
+                        {/* Country */}
+                        <div className="flex flex-col gap-1">
+                          <label className="dark:text-dark-200 text-sm font-medium text-gray-700">
+                            Country <span className="text-red-500">*</span>
+                          </label>
+                          <Controller
+                            name="countryCode"
+                            control={control}
+                            render={({ field }) => (
+                              <Combobox
+                                data={countryOptions}
+                                displayField="label"
+                                searchFields={["label"]}
+                                placeholder="Search Country"
+                                value={
+                                  countryOptions.find(
+                                    (o) => o.value === field.value,
+                                  ) || null
+                                }
+                                onChange={(
+                                  selected: {
+                                    value: string;
+                                    label: string;
+                                  } | null,
+                                ) => {
+                                  field.onChange(selected?.value || "");
+                                  setValue("countryName", selected?.label || "");
+                                  setCountry(selected?.value || "");
+                                  setValue("stateCode", "");
+                                  setValue("stateName", "");
+                                  setValue("district", "");
+                                  setValue("city", "");
+                                }}
+                              />
+                            )}
+                          />
+                          {errors.countryCode && (
+                            <span className="text-xs text-orange-500">
+                              {errors.countryCode.message}
+                            </span>
+                          )}
+                        </div>
 
-              {/* State Code (auto-filled, read-only) */}
-              <div className="flex flex-col gap-1">
-                <label className="dark:text-dark-200 text-sm font-medium text-gray-700">
-                  State Code
-                </label>
-                <Controller
-                  name="stateCode"
-                  control={control}
-                  render={({ field }) => (
-                    <input
-                      type="text"
-                      placeholder="Auto-filled"
-                      value={field.value}
-                      readOnly
-                      className={
-                        inputClass("stateCode") +
-                        " cursor-not-allowed bg-gray-50"
-                      }
-                    />
-                  )}
-                />
-              </div>
+                        {/* State */}
+                        <div className="flex flex-col gap-1">
+                          <label className="dark:text-dark-200 text-sm font-medium text-gray-700">
+                            State <span className="text-red-500">*</span>
+                          </label>
+                          <div
+                            className={
+                              !countryCode
+                                ? "pointer-events-none opacity-60"
+                                : ""
+                            }
+                          >
+                            <Controller
+                              name="stateCode"
+                              control={control}
+                              render={({ field }) => (
+                                <Combobox
+                                  data={stateOptions}
+                                  displayField="label"
+                                  searchFields={["label"]}
+                                  placeholder="Search State"
+                                  value={
+                                    stateOptions.find(
+                                      (o) => o.value === field.value,
+                                    ) || null
+                                  }
+                                  onChange={(
+                                    selected: {
+                                      value: string;
+                                      label: string;
+                                    } | null,
+                                  ) => {
+                                    field.onChange(selected?.value || "");
+                                    setValue("stateName", selected?.label || "");
+                                    setState(selected?.value || "");
+                                    setValue("district", "");
+                                    setValue("city", "");
+                                  }}
+                                />
+                              )}
+                            />
+                          </div>
+                          {errors.stateCode && (
+                            <span className="text-xs text-orange-500">
+                              {errors.stateCode.message}
+                            </span>
+                          )}
+                        </div>
 
-              {/* District */}
-              {/* District */}
-              <div className="flex flex-col gap-1">
-                <label className="dark:text-dark-200 text-sm font-medium text-gray-700">
-                  District <span className="text-red-500">*</span>
-                </label>
-                <div
-                  className={!stateCode ? "pointer-events-none opacity-60" : ""}
-                >
-                  <Controller
-                    name="district"
-                    control={control}
-                    render={({ field }) => (
-                      <Combobox
-                        data={cityOptions}
-                        displayField="label"
-                        searchFields={["label"]}
-                        placeholder="Search District"
-                        value={
-                          cityOptions.find((o) => o.value === field.value) ||
-                          null
-                        }
-                        onChange={(
-                          selected: { value: string; label: string } | null,
-                        ) => field.onChange(selected?.value || "")}
-                      />
-                    )}
-                  />
-                </div>
-                {errors.district && (
-                  <span className="text-xs text-orange-500">
-                    {errors.district.message}
-                  </span>
-                )}
-              </div>
+                        {/* State Code (auto-filled, read-only) */}
+                        <div className="flex flex-col gap-1">
+                          <label className="dark:text-dark-200 text-sm font-medium text-gray-700">
+                            State Code
+                          </label>
+                          <Controller
+                            name="stateCode"
+                            control={control}
+                            render={({ field }) => (
+                              <input
+                                type="text"
+                                placeholder="Auto-filled"
+                                value={field.value}
+                                readOnly
+                                className={
+                                  inputClass("stateCode") +
+                                  " cursor-not-allowed bg-gray-50"
+                                }
+                              />
+                            )}
+                          />
+                        </div>
 
-              {/* City */}
-              <div className="flex flex-col gap-1">
-                <label className="dark:text-dark-200 text-sm font-medium text-gray-700">
-                  City <span className="text-red-500">*</span>
-                </label>
-                <div
-                  className={!stateCode ? "pointer-events-none opacity-60" : ""}
-                >
-                  <Controller
-                    name="city"
-                    control={control}
-                    render={({ field }) => (
-                      <Combobox
-                        data={cityOptions}
-                        displayField="label"
-                        searchFields={["label"]}
-                        placeholder="Search City"
-                        value={
-                          cityOptions.find((o) => o.value === field.value) ||
-                          null
-                        }
-                        onChange={(
-                          selected: { value: string; label: string } | null,
-                        ) => field.onChange(selected?.value || "")}
-                      />
-                    )}
-                  />
-                </div>
-                {errors.city && (
-                  <span className="text-xs text-orange-500">
-                    {errors.city.message}
-                  </span>
-                )}
-              </div>
+                        {/* District */}
+                        <div className="flex flex-col gap-1">
+                          <label className="dark:text-dark-200 text-sm font-medium text-gray-700">
+                            District <span className="text-red-500">*</span>
+                          </label>
+                          <div
+                            className={
+                              !stateCode ? "pointer-events-none opacity-60" : ""
+                            }
+                          >
+                            <Controller
+                              name="district"
+                              control={control}
+                              render={({ field }) => (
+                                <Combobox
+                                  data={cityOptions}
+                                  displayField="label"
+                                  searchFields={["label"]}
+                                  placeholder="Search District"
+                                  value={
+                                    cityOptions.find(
+                                      (o) => o.value === field.value,
+                                    ) || null
+                                  }
+                                  onChange={(
+                                    selected: {
+                                      value: string;
+                                      label: string;
+                                    } | null,
+                                  ) => field.onChange(selected?.value || "")}
+                                />
+                              )}
+                            />
+                          </div>
+                          {errors.district && (
+                            <span className="text-xs text-orange-500">
+                              {errors.district.message}
+                            </span>
+                          )}
+                        </div>
 
-              {/* Address */}
-              <div className="col-span-1 flex flex-col gap-1 md:col-span-2">
-                <label className="dark:text-dark-200 text-sm font-medium text-gray-700">
-                  Address <span className="text-red-500">*</span>
-                </label>
-                <Controller
-                  name="address"
-                  control={control}
-                  render={({ field }) => (
-                    <input
-                      type="text"
-                      placeholder="Enter Address"
-                      value={field.value}
-                      onChange={field.onChange}
-                      className={inputClass("address", !!errors.address)}
-                    />
-                  )}
-                />
-                {errors.address && (
-                  <span className="text-xs text-orange-500">
-                    {errors.address.message}
-                  </span>
-                )}
-              </div>
+                        {/* City */}
+                        <div className="flex flex-col gap-1">
+                          <label className="dark:text-dark-200 text-sm font-medium text-gray-700">
+                            City <span className="text-red-500">*</span>
+                          </label>
+                          <div
+                            className={
+                              !stateCode ? "pointer-events-none opacity-60" : ""
+                            }
+                          >
+                            <Controller
+                              name="city"
+                              control={control}
+                              render={({ field }) => (
+                                <Combobox
+                                  data={cityOptions}
+                                  displayField="label"
+                                  searchFields={["label"]}
+                                  placeholder="Search City"
+                                  value={
+                                    cityOptions.find(
+                                      (o) => o.value === field.value,
+                                    ) || null
+                                  }
+                                  onChange={(
+                                    selected: {
+                                      value: string;
+                                      label: string;
+                                    } | null,
+                                  ) => field.onChange(selected?.value || "")}
+                                />
+                              )}
+                            />
+                          </div>
+                          {errors.city && (
+                            <span className="text-xs text-orange-500">
+                              {errors.city.message}
+                            </span>
+                          )}
+                        </div>
 
-              {/* PAN Card */}
-              <div className="flex flex-col gap-1">
-                <label className="dark:text-dark-200 text-sm font-medium text-gray-700">
-                  PAN Card <span className="text-red-500">*</span>
-                </label>
-                <Controller
-                  name="panCard"
-                  control={control}
-                  render={({ field }) => (
-                    <input
-                      type="text"
-                      placeholder="PAN Card Number"
-                      value={field.value}
-                      onChange={field.onChange}
-                      className={inputClass("panCard", !!errors.panCard)}
-                    />
-                  )}
-                />
-                {errors.panCard && (
-                  <span className="text-xs text-orange-500">
-                    {errors.panCard.message}
-                  </span>
-                )}
-              </div>
+                        {/* Address */}
+                        <div className="col-span-1 flex flex-col gap-1 md:col-span-2">
+                          <label className="dark:text-dark-200 text-sm font-medium text-gray-700">
+                            Address <span className="text-red-500">*</span>
+                          </label>
+                          <Controller
+                            name="address"
+                            control={control}
+                            render={({ field }) => (
+                              <input
+                                type="text"
+                                placeholder="Enter Address"
+                                value={field.value}
+                                onChange={field.onChange}
+                                className={inputClass(
+                                  "address",
+                                  !!errors.address,
+                                )}
+                              />
+                            )}
+                          />
+                          {errors.address && (
+                            <span className="text-xs text-orange-500">
+                              {errors.address.message}
+                            </span>
+                          )}
+                        </div>
 
-              {/* Aadhar Card */}
-              <div className="flex flex-col gap-1">
-                <label className="dark:text-dark-200 text-sm font-medium text-gray-700">
-                  Aadhar Card No <span className="text-red-500">*</span>
-                </label>
-                <Controller
-                  name="aadharCard"
-                  control={control}
-                  render={({ field }) => (
-                    <input
-                      type="text"
-                      placeholder="Aadhar Number"
-                      value={field.value}
-                      onChange={field.onChange}
-                      className={inputClass("aadharCard", !!errors.aadharCard)}
-                    />
-                  )}
-                />
-                {errors.aadharCard && (
-                  <span className="text-xs text-orange-500">
-                    {errors.aadharCard.message}
-                  </span>
-                )}
-              </div>
+                        {/* PAN Card */}
+                        <div className="flex flex-col gap-1">
+                          <label className="dark:text-dark-200 text-sm font-medium text-gray-700">
+                            PAN Card <span className="text-red-500">*</span>
+                          </label>
+                          <Controller
+                            name="panCard"
+                            control={control}
+                            render={({ field }) => (
+                              <input
+                                type="text"
+                                placeholder="PAN Card Number"
+                                value={field.value}
+                                onChange={field.onChange}
+                                className={inputClass(
+                                  "panCard",
+                                  !!errors.panCard,
+                                )}
+                              />
+                            )}
+                          />
+                          {errors.panCard && (
+                            <span className="text-xs text-orange-500">
+                              {errors.panCard.message}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Aadhar Card */}
+                        <div className="flex flex-col gap-1">
+                          <label className="dark:text-dark-200 text-sm font-medium text-gray-700">
+                            Aadhar Card No{" "}
+                            <span className="text-red-500">*</span>
+                          </label>
+                          <Controller
+                            name="aadharCard"
+                            control={control}
+                            render={({ field }) => (
+                              <input
+                                type="text"
+                                placeholder="Aadhar Number"
+                                value={field.value}
+                                onChange={field.onChange}
+                                className={inputClass(
+                                  "aadharCard",
+                                  !!errors.aadharCard,
+                                )}
+                              />
+                            )}
+                          />
+                          {errors.aadharCard && (
+                            <span className="text-xs text-orange-500">
+                              {errors.aadharCard.message}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </form>
+
+                    {/* Footer */}
+                    <div className="dark:border-dark-500 flex justify-end gap-3 border-t border-gray-200 px-4 py-4 sm:px-6">
+                      <button
+                        type="button"
+                        onClick={onClose}
+                        className="dark:border-dark-500 dark:text-dark-200 dark:hover:bg-dark-600 cursor-pointer rounded-lg border border-gray-300 px-6 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleSubmit(handleFormSubmit)}
+                        className="bg-primary-600 hover:bg-primary-700 cursor-pointer rounded-lg px-6 py-2 text-sm font-semibold text-white"
+                      >
+                        Create Account
+                      </button>
+                    </div>
+                  </div>
+                </DialogPanel>
+              </Transition.Child>
             </div>
-
-            {/* Footer */}
-          </form>
-          <div className="dark:border-dark-500 mt-6 flex justify-end gap-3 border-t border-gray-200 px-6 py-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="dark:border-dark-500 dark:text-dark-200 dark:hover:bg-dark-600 rounded-lg border border-gray-300 px-6 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={handleSubmit(handleFormSubmit)}
-              className="bg-primary-500 hover:bg-primary-500 rounded-lg px-6 py-2 text-sm font-semibold text-white"
-            >
-              Create Account
-            </button>
           </div>
-        </DialogPanel>
-      </div>
-    </Dialog>
+        </div>
+      </Dialog>
+    </Transition>
   );
 }
 
@@ -2356,290 +2420,320 @@ export function LeadDetailsModal({
 
   return (
     <>
-      <Dialog open={isOpen} onClose={onClose} className="relative z-50">
-        <div
-          className="fixed inset-0 bg-black/30 dark:bg-black/60"
-          aria-hidden="true"
-        />
-        <div className="fixed inset-y-0 right-0 flex max-w-full">
-          <DialogPanel
-            className={`dark:bg-dark-700 flex h-full w-screen max-w-3xl flex-col bg-white shadow-xl transition-all duration-300`}
+      <Transition show={isOpen} as={Fragment}>
+   <Dialog as="div" className="relative z-[999]" onClose={onClose}>
+          {/* Backdrop */}
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
           >
-            {/* Header */}
-            <div className="dark:bg-dark-600 flex items-center justify-between bg-blue-700 px-4 py-3">
-              <DialogTitle className="dark:text-dark-50 font-semibold text-white">
-                {getStepTitle()} ({step}/{totalSteps})
-              </DialogTitle>
-              <button
-                onClick={onClose}
-                className="dark:text-dark-200 text-white/80 hover:text-white dark:hover:text-white"
-              >
-                <XMarkIcon className="size-5" />
-              </button>
-            </div>
+            <div className="fixed inset-0 bg-black/30 dark:bg-black/60" />
+          </Transition.Child>
 
-            {/* Body */}
-            <div className="flex-1 overflow-y-auto p-6">
-              {step === 1 && (
-                <div className="space-y-4">
-                  <h3 className="dark:text-dark-50 text-lg font-bold text-gray-800">
-                    Vehicle Selection
-                  </h3>
-
-                  <div className="flex flex-col gap-1">
-                    <label className="dark:text-dark-200 text-sm font-medium text-gray-700">
-                      Select Model
-                    </label>
-                    <Combobox
-                      data={models}
-                      displayField="name"
-                      value={selectedModel}
-                      onChange={handleModelChange}
-                      placeholder="Select Model"
-                      searchFields={["name"]}
-                    />
-                    {errors.model && (
-                      <span className="text-xs text-orange-500">
-                        {errors.model}
-                      </span>
-                    )}
-                  </div>
-
-                  {selectedModel && (
-                    <div className="flex flex-col gap-1">
-                      <label className="dark:text-dark-200 text-sm font-medium text-gray-700">
-                        Select Showroom Variant
-                      </label>
-                      <Combobox
-                        displayField="name"
-                        data={filteredShowroomVariants}
-                        value={selectedShowroomVariant}
-                        onChange={handleShowroomVariantChange}
-                        placeholder="Select Variant"
-                        searchFields={["name"]}
-                      />
-                      {errors.variant && (
-                        <span className="text-xs text-orange-500">
-                          {errors.variant}
-                        </span>
-                      )}
-                    </div>
-                  )}
-
-                  {selectedShowroomVariant && (
-                    <div className="flex flex-col gap-1">
-                      <label className="dark:text-dark-200 text-sm font-medium text-gray-700">
-                        Select Color
-                      </label>
-                      <Combobox
-                        data={filteredColors}
-                        displayField="name"
-                        value={selectedColor}
-                        onChange={handleColorChange}
-                        placeholder="Select Color"
-                        searchFields={["name"]}
-                      />
-                      {errors.color && (
-                        <span className="text-xs text-orange-500">
-                          {errors.color}
-                        </span>
-                      )}
-                    </div>
-                  )}
-
-                  {selectedModel &&
-                    selectedShowroomVariant &&
-                    selectedColor && (
-                      <div className="mt-4 rounded-md border border-blue-200 bg-blue-50 p-3 dark:border-blue-800 dark:bg-blue-900/20">
-                        <p className="text-sm font-medium text-blue-900 dark:text-blue-200">
-                          Selected: {selectedModel.name} -{" "}
-                          {selectedShowroomVariant.name} - {selectedColor.name}
-                        </p>
+          {/* Right side sliding panel */}
+          <div className="fixed inset-0 overflow-hidden">
+            <div className="absolute inset-0 overflow-hidden">
+              <div className="pointer-events-none fixed inset-y-0 right-0 flex max-w-full sm:pl-10">
+                <Transition.Child
+                  as={Fragment}
+                  enter="transform transition ease-in-out duration-300"
+                  enterFrom="translate-x-full"
+                  enterTo="translate-x-0"
+                  leave="transform transition ease-in-out duration-200"
+                  leaveFrom="translate-x-0"
+                  leaveTo="translate-x-full"
+                >
+                  <DialogPanel className="pointer-events-auto w-screen max-w-3xl">
+                    <div className="dark:bg-dark-700 flex h-full flex-col bg-white shadow-xl">
+                      {/* Header */}
+                      <div className="bg-primary-600 dark:bg-primary-700 flex items-center justify-between px-5 py-4">
+                        <DialogTitle className="text-lg font-semibold text-white">
+                          {getStepTitle()} ({step}/{totalSteps})
+                        </DialogTitle>
+                        <button
+                          onClick={onClose}
+                          className="cursor-pointer rounded-full p-1.5 text-white/80 hover:bg-white/10 hover:text-white"
+                        >
+                          <XMarkIcon className="size-5" />
+                        </button>
                       </div>
-                    )}
-                </div>
-              )}
 
-              {step === 2 && (
-                <div className="space-y-4">
-                  <h3 className="dark:text-dark-50 text-lg font-bold text-gray-800">
-                    Customer Detail
-                  </h3>
-                  <div className="flex items-start gap-2">
-                    <div className="flex-1">
-                      <label className="dark:text-dark-200 mb-1 inline-block text-sm font-medium text-gray-700">
-                        Customer Name
-                      </label>
-                      <Combobox
-                        data={customers}
-                        value={selectedCustomer}
-                        onChange={(val: any) => {
-                          setSelectedCustomer(val);
+                      {/* Body */}
+                      <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+                        {step === 1 && (
+                          <div className="space-y-4">
+                            <h3 className="dark:text-dark-50 text-lg font-bold text-gray-800">
+                              Vehicle Selection
+                            </h3>
 
-                          if (errors.customer) {
-                            const newErrors = { ...errors };
-                            delete newErrors.customer;
-                            setErrors(newErrors);
-                          }
-                        }}
-                        displayField="name"
-                        placeholder="Search Customer"
-                        searchFields={["name", "mobile"]}
-                        columns={[
-                          {
-                            header: "Customer",
-                            field: "name",
-                            width: "2fr",
-                          },
-                          {
-                            header: "Mobile",
-                            field: "mobile",
-                            width: "1.5fr",
-                          },
-                        ]}
-                      />
-                      {errors.customer && (
-                        <span className="text-xs text-orange-500">
-                          {errors.customer}
-                        </span>
-                      )}
+                            <div className="flex flex-col gap-1">
+                              <label className="dark:text-dark-200 text-sm font-medium text-gray-700">
+                                Select Model
+                              </label>
+                              <Combobox
+                                data={models}
+                                displayField="name"
+                                value={selectedModel}
+                                onChange={handleModelChange}
+                                placeholder="Select Model"
+                                searchFields={["name"]}
+                              />
+                              {errors.model && (
+                                <span className="text-xs text-orange-500">
+                                  {errors.model}
+                                </span>
+                              )}
+                            </div>
+
+                            {selectedModel && (
+                              <div className="flex flex-col gap-1">
+                                <label className="dark:text-dark-200 text-sm font-medium text-gray-700">
+                                  Select Showroom Variant
+                                </label>
+                                <Combobox
+                                  displayField="name"
+                                  data={filteredShowroomVariants}
+                                  value={selectedShowroomVariant}
+                                  onChange={handleShowroomVariantChange}
+                                  placeholder="Select Variant"
+                                  searchFields={["name"]}
+                                />
+                                {errors.variant && (
+                                  <span className="text-xs text-orange-500">
+                                    {errors.variant}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+
+                            {selectedShowroomVariant && (
+                              <div className="flex flex-col gap-1">
+                                <label className="dark:text-dark-200 text-sm font-medium text-gray-700">
+                                  Select Color
+                                </label>
+                                <Combobox
+                                  data={filteredColors}
+                                  displayField="name"
+                                  value={selectedColor}
+                                  onChange={handleColorChange}
+                                  placeholder="Select Color"
+                                  searchFields={["name"]}
+                                />
+                                {errors.color && (
+                                  <span className="text-xs text-orange-500">
+                                    {errors.color}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+
+                            {selectedModel &&
+                              selectedShowroomVariant &&
+                              selectedColor && (
+                                <div className="mt-4 rounded-md border border-blue-200 bg-blue-50 p-3 dark:border-blue-800 dark:bg-blue-900/20">
+                                  <p className="text-sm font-medium text-blue-900 dark:text-blue-200">
+                                    Selected: {selectedModel.name} -{" "}
+                                    {selectedShowroomVariant.name} -{" "}
+                                    {selectedColor.name}
+                                  </p>
+                                </div>
+                              )}
+                          </div>
+                        )}
+
+                        {step === 2 && (
+                          <div className="space-y-4">
+                            <h3 className="dark:text-dark-50 text-lg font-bold text-gray-800">
+                              Customer Detail
+                            </h3>
+                            <div className="flex items-start gap-2">
+                              <div className="flex-1">
+                                <label className="dark:text-dark-200 mb-1 inline-block text-sm font-medium text-gray-700">
+                                  Customer Name
+                                </label>
+                                <Combobox
+                                  data={customers}
+                                  value={selectedCustomer}
+                                  onChange={(val: any) => {
+                                    setSelectedCustomer(val);
+
+                                    if (errors.customer) {
+                                      const newErrors = { ...errors };
+                                      delete newErrors.customer;
+                                      setErrors(newErrors);
+                                    }
+                                  }}
+                                  displayField="name"
+                                  placeholder="Search Customer"
+                                  searchFields={["name", "mobile"]}
+                                  columns={[
+                                    {
+                                      header: "Customer",
+                                      field: "name",
+                                      width: "2fr",
+                                    },
+                                    {
+                                      header: "Mobile",
+                                      field: "mobile",
+                                      width: "1.5fr",
+                                    },
+                                  ]}
+                                />
+                                {errors.customer && (
+                                  <span className="text-xs text-orange-500">
+                                    {errors.customer}
+                                  </span>
+                                )}
+                              </div>
+                              <button
+                                onClick={() => setIsCreateAccountOpen(true)}
+                                className="dark:border-dark-500 dark:hover:bg-dark-600 mt-6 shrink-0 rounded-md border border-blue-900 p-2 hover:bg-gray-100"
+                              >
+                                <PlusIcon className="dark:text-dark-200 size-6 text-blue-900" />
+                              </button>
+                            </div>
+                            <div className="flex flex-col gap-1">
+                              <label className="dark:text-dark-200 text-sm font-medium text-gray-700">
+                                Sales Executive
+                              </label>
+                              <Combobox
+                                data={executives.map((item: any) => ({
+                                  id: item.id,
+                                  name: item.name,
+                                  role: item.role,
+                                }))}
+                                displayField="name"
+                                value={selectedExecutive}
+                                onChange={(val: any) => {
+                                  setSelectedExecutive(val);
+
+                                  if (errors.executive) {
+                                    const newErrors = { ...errors };
+                                    delete newErrors.executive;
+                                    setErrors(newErrors);
+                                  }
+                                }}
+                                placeholder="Select Sales Executive"
+                                searchFields={["name", "role"]}
+                                columns={[
+                                  {
+                                    header: "Name",
+                                    field: "name",
+                                    width: "2fr",
+                                  },
+                                  {
+                                    header: "Role",
+                                    field: "role",
+                                    width: "1fr",
+                                  },
+                                ]}
+                              />
+                              {errors.executive && (
+                                <span className="text-xs text-orange-500">
+                                  {errors.executive}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {step === 3 && (
+                          <LeadInfoStep
+                            financeData={financeData}
+                            setFinanceData={setFinanceData}
+                            onValidationChange={(validateFn) => {
+                              leadInfoValidateRef.current = validateFn;
+                            }}
+                          />
+                        )}
+
+                        {step === 4 && (
+                          <ReviewLeadSummaryStep
+                            reviewData={reviewData}
+                            setReviewData={setReviewData}
+                            onValidationChange={(validateFn) => {
+                              reviewSummaryValidateRef.current = validateFn;
+                            }}
+                          />
+                        )}
+                        {step === 5 && (
+                          <FinanceDetailsStep
+                            financeDetails={financeDetails}
+                            setFinanceDetails={setFinanceDetails}
+                            financeOptions={financeOptions}
+                          />
+                        )}
+                      </div>
+
+                      {/* Footer */}
+                      <div className="dark:border-dark-500 flex justify-between border-t border-gray-200 p-4">
+                        <button
+                          onClick={handlePrevious}
+                          disabled={step === 1}
+                          className="rounded-lg border border-gray-300 bg-white px-6 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-0 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+                        >
+                          Previous
+                        </button>
+
+                        {/* Step 1, 2 and 3 */}
+                        {step < 4 && (
+                          <button
+                            type="button"
+                            onClick={handleNext}
+                            className="bg-primary-600 hover:bg-primary-700 cursor-pointer rounded-lg px-6 py-2 text-sm font-semibold text-white"
+                          >
+                            Next
+                          </button>
+                        )}
+
+                        {/* Step 4 + Finance = Next */}
+                        {step === 4 &&
+                          reviewData.purchaseType === "Finance" && (
+                            <button
+                              type="button"
+                              onClick={handleNext}
+                              className="bg-primary-600 hover:bg-primary-700 cursor-pointer rounded-lg px-6 py-2 text-sm font-semibold text-white"
+                            >
+                              Next
+                            </button>
+                          )}
+
+                        {/* Step 4 + Cash/Bank = Submit */}
+                        {step === 4 &&
+                          reviewData.purchaseType !== "Finance" && (
+                            <button
+                              type="button"
+                              onClick={handleSubmit}
+                              className="bg-primary-600 hover:bg-primary-700 cursor-pointer rounded-lg px-6 py-2 text-sm font-semibold text-white"
+                            >
+                              Submit
+                            </button>
+                          )}
+
+                        {/* Step 5 Finance Details = Submit */}
+                        {step === 5 && (
+                          <button
+                            type="button"
+                            onClick={handleSubmit}
+                            className="bg-primary-600 hover:bg-primary-700 cursor-pointer rounded-lg px-6 py-2 text-sm font-semibold text-white"
+                          >
+                            Submit
+                          </button>
+                        )}
+                      </div>
                     </div>
-                    <button
-                      onClick={() => setIsCreateAccountOpen(true)}
-                      className="dark:border-dark-500 dark:hover:bg-dark-600 mt-6 shrink-0 rounded-md border border-blue-900 p-2 hover:bg-gray-100"
-                    >
-                      <PlusIcon className="dark:text-dark-200 size-6 text-blue-900" />
-                    </button>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <label className="dark:text-dark-200 text-sm font-medium text-gray-700">
-                      Sales Executive
-                    </label>
-                    <Combobox
-                      data={executives.map((item: any) => ({
-                        id: item.id,
-                        name: item.name,
-                        role: item.role,
-                      }))}
-                      displayField="name"
-                      value={selectedExecutive}
-                      onChange={(val: any) => {
-                        setSelectedExecutive(val);
-
-                        if (errors.executive) {
-                          const newErrors = { ...errors };
-                          delete newErrors.executive;
-                          setErrors(newErrors);
-                        }
-                      }}
-                      placeholder="Select Sales Executive"
-                      searchFields={["name", "role"]}
-                      columns={[
-                        {
-                          header: "Name",
-                          field: "name",
-                          width: "2fr",
-                        },
-                        {
-                          header: "Role",
-                          field: "role",
-                          width: "1fr",
-                        },
-                      ]}
-                    />
-                    {errors.executive && (
-                      <span className="text-xs text-orange-500">
-                        {errors.executive}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {step === 3 && (
-                <LeadInfoStep
-                  financeData={financeData}
-                  setFinanceData={setFinanceData}
-                  onValidationChange={(validateFn) => {
-                    leadInfoValidateRef.current = validateFn;
-                  }}
-                />
-              )}
-
-              {step === 4 && (
-                <ReviewLeadSummaryStep
-                  reviewData={reviewData}
-                  setReviewData={setReviewData}
-                  onValidationChange={(validateFn) => {
-                    reviewSummaryValidateRef.current = validateFn;
-                  }}
-                />
-              )}
-              {step === 5 && (
-                <FinanceDetailsStep
-                  financeDetails={financeDetails}
-                  setFinanceDetails={setFinanceDetails}
-                  financeOptions={financeOptions}
-                />
-              )}
+                  </DialogPanel>
+                </Transition.Child>
+              </div>
             </div>
-
-            {/* Footer */}
-            <div className="dark:border-dark-500 flex justify-between border-t border-gray-200 p-4">
-              <button
-                onClick={handlePrevious}
-                disabled={step === 1}
-                className="rounded-lg border border-gray-300 bg-white px-6 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-0 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
-              >
-                Previous
-              </button>
-              {/* Step 1, 2 and 3 */}
-              {step < 4 && (
-                <button
-                  type="button"
-                  onClick={handleNext}
-                  className="rounded-lg bg-blue-600 px-6 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-                >
-                  Next
-                </button>
-              )}
-
-              {/* Step 4 + Finance = Next */}
-              {step === 4 && reviewData.purchaseType === "Finance" && (
-                <button
-                  type="button"
-                  onClick={handleNext}
-                  className="rounded-lg bg-blue-600 px-6 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-                >
-                  Next
-                </button>
-              )}
-
-              {/* Step 4 + Cash/Bank = Submit */}
-              {step === 4 && reviewData.purchaseType !== "Finance" && (
-                <button
-                  type="button"
-                  onClick={handleSubmit}
-                  className="rounded-lg bg-blue-600 px-6 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-                >
-                  Submit
-                </button>
-              )}
-
-              {/* Step 5 Finance Details = Submit */}
-              {step === 5 && (
-                <button
-                  type="button"
-                  onClick={handleSubmit}
-                  className="rounded-lg bg-blue-600 px-6 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-                >
-                  Submit
-                </button>
-              )}
-            </div>
-          </DialogPanel>
-        </div>
-      </Dialog>
+          </div>
+        </Dialog>
+      </Transition>
 
       <CreateAccountModal
         isOpen={isCreateAccountOpen}

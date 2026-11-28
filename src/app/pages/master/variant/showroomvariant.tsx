@@ -256,7 +256,6 @@ export default function ShowroomVariantPage() {
       let data = response?.data || response;
       if (!Array.isArray(data)) data = [];
       setVariants(data);
-      
     } catch (error) {
       console.error(error);
       setVariants([]);
@@ -284,8 +283,6 @@ export default function ShowroomVariantPage() {
       const res = await apiHelper.get("/accessories");
 
       const data = res.data || [];
-
-     
 
       setAccessoryOptions(data);
     } catch (error) {
@@ -811,54 +808,56 @@ export default function ShowroomVariantPage() {
       </div>
 
       {/* Filters - Model + Variant */}
-     {/* Filters - Model + Variant */}
-{showFilterBar && (
-  <div className="dark:bg-dark-700 dark:border-dark-500 rounded-xl border border-gray-200 bg-white p-4">
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-      <div className="flex flex-col gap-1">
-        <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
-          Filter by Model
-        </span>
-        <Combobox
-          data={modelFilterOptions}
-          value={
-            modelFilterOptions.find((o) => o.id === selectedModelFilter) ||
-            modelFilterOptions[0]
-          }
-          displayField="name"
-          searchFields={["name"]}
-          placeholder="Search or select model"
-          onChange={(opt: any) => {
-            setSelectedModelFilter(opt?.id ?? "All");
-            setSelectedVariantFilter("All"); // reset variant when model changes
-            setCurrentPage(1);
-          }}
-        />
-      </div>
+      {/* Filters - Model + Variant */}
+      {showFilterBar && (
+        <div className="dark:bg-dark-700 dark:border-dark-500 rounded-xl border border-gray-200 bg-white p-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="flex flex-col gap-1">
+              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
+                Filter by Model
+              </span>
+              <Combobox
+                data={modelFilterOptions}
+                value={
+                  modelFilterOptions.find(
+                    (o) => o.id === selectedModelFilter,
+                  ) || modelFilterOptions[0]
+                }
+                displayField="name"
+                searchFields={["name"]}
+                placeholder="Search or select model"
+                onChange={(opt: any) => {
+                  setSelectedModelFilter(opt?.id ?? "All");
+                  setSelectedVariantFilter("All"); // reset variant when model changes
+                  setCurrentPage(1);
+                }}
+              />
+            </div>
 
-      {/* Variant filter, dependent on selected model */}
-      <div className="flex flex-col gap-1">
-        <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
-          Filter by Variant
-        </span>
-        <Combobox
-          data={variantFilterOptions}
-          value={
-            variantFilterOptions.find((o) => o.id === selectedVariantFilter) ||
-            variantFilterOptions[0]
-          }
-          displayField="name"
-          searchFields={["name"]}
-          placeholder="Search or select variant"
-          onChange={(opt: any) => {
-            setSelectedVariantFilter(opt?.id ?? "All");
-            setCurrentPage(1);
-          }}
-        />
-      </div>
-    </div>
-  </div>
-)}
+            {/* Variant filter, dependent on selected model */}
+            <div className="flex flex-col gap-1">
+              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
+                Filter by Variant
+              </span>
+              <Combobox
+                data={variantFilterOptions}
+                value={
+                  variantFilterOptions.find(
+                    (o) => o.id === selectedVariantFilter,
+                  ) || variantFilterOptions[0]
+                }
+                displayField="name"
+                searchFields={["name"]}
+                placeholder="Search or select variant"
+                onChange={(opt: any) => {
+                  setSelectedVariantFilter(opt?.id ?? "All");
+                  setCurrentPage(1);
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
       {/* Table - Removed Status column */}
       <div className="dark:bg-dark-800 dark:border-dark-700 rounded-xl border border-gray-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
@@ -1090,15 +1089,15 @@ export default function ShowroomVariantPage() {
                 onSubmit={handleSubmit(onFormSubmit)}
                 className="flex h-full flex-col"
               >
-                <div className="dark:border-dark-600 flex items-center justify-between border-b px-5 py-4">
-                  <h2 className="text-lg font-semibold">
-                    {editId ? "Edit Variant" : "Add Variant"}
+                <div className="bg-primary-600 dark:bg-primary-700 flex items-center justify-between px-5 py-4">
+                  <h2 className="text-lg font-semibold text-white">
+                    {editId ? "Edit Showroom  Variant" : "Add Showroom Variant"}
                   </h2>
                   <Button
                     onClick={() => setShowDrawer(false)}
                     variant="flat"
                     isIcon
-                    className="size-8 rounded-full"
+                    className="size-8 rounded-full text-white hover:bg-white/10 hover:text-white focus:bg-white/10 active:bg-white/20"
                     type="button"
                   >
                     <XMarkIcon className="size-5" />
@@ -1177,7 +1176,7 @@ export default function ShowroomVariantPage() {
                               ? "Search or select variant"
                               : "Select model first"
                           }
-                               searchFields={["name"]}
+                          searchFields={["name"]}
                           onChange={(option: any) => {
                             if (!option) return;
 

@@ -12,13 +12,14 @@ import {
 import { Input } from "@/components/ui";
 import { Listbox } from "@/components/shared/form/StyledListbox";
 import { DatePicker } from "@/components/shared/form/Datepicker";
-import { Radio } from "@/components/ui";
+import { Radio, Button } from "@/components/ui";
 import { Country, State, City } from "country-state-city";
 import apiHelper from "@/utils/apiHelper";
 import { toast } from "sonner";
 import { Combobox } from "@/components/shared/form/Combobox";
-import emptyStateImage from "@/assets/notfound.png"
+import emptyStateImage from "@/assets/notfound.png";
 import { createPortal } from "react-dom";
+import SideDrawer from "@/components/shared/SideDrawer";
 interface ItemRow {
   id: string;
   sparePartId?: number;
@@ -178,20 +179,29 @@ const SparePartsPurchaseBill: React.FC = () => {
   const [accountModalOpen, setAccountModalOpen] = useState(false);
   const [accountForm, setAccountForm] = useState<NewAccountData>(emptyAccount);
   const countryOptions = useMemo(
-    () => Country.getAllCountries().map(({ isoCode, name }) => ({ label: name, value: isoCode })),
+    () =>
+      Country.getAllCountries().map(({ isoCode, name }) => ({
+        label: name,
+        value: isoCode,
+      })),
     [],
   );
   const stateOptions = useMemo(
     () =>
       accountForm.countryCode
-        ? State.getStatesOfCountry(accountForm.countryCode).map(({ isoCode, name }) => ({ label: name, value: isoCode }))
+        ? State.getStatesOfCountry(accountForm.countryCode).map(
+            ({ isoCode, name }) => ({ label: name, value: isoCode }),
+          )
         : [],
     [accountForm.countryCode],
   );
   const cityOptions = useMemo(
     () =>
       accountForm.countryCode && accountForm.stateCode
-        ? City.getCitiesOfState(accountForm.countryCode, accountForm.stateCode).map(({ name }) => ({ label: name, value: name }))
+        ? City.getCitiesOfState(
+            accountForm.countryCode,
+            accountForm.stateCode,
+          ).map(({ name }) => ({ label: name, value: name }))
         : [],
     [accountForm.countryCode, accountForm.stateCode],
   );
@@ -265,21 +275,21 @@ const SparePartsPurchaseBill: React.FC = () => {
     }
   }, [id]);
 
-const fetchSpareParts = async () => {
-  try {
-    const res = await apiHelper.get("/spare-part/active");
-    setSpareParts(
-      Array.isArray(res.data?.data)
-        ? res.data.data
-        : Array.isArray(res.data)
-          ? res.data
-          : [],
-    );
-  } catch (err) {
-    console.log(err);
-    setSpareParts([]);
-  }
-};
+  const fetchSpareParts = async () => {
+    try {
+      const res = await apiHelper.get("/spare-part/active");
+      setSpareParts(
+        Array.isArray(res.data?.data)
+          ? res.data.data
+          : Array.isArray(res.data)
+            ? res.data
+            : [],
+      );
+    } catch (err) {
+      console.log(err);
+      setSpareParts([]);
+    }
+  };
 
   const getBillNo = useCallback(async () => {
     try {
@@ -687,22 +697,20 @@ const fetchSpareParts = async () => {
                   mobile: acc.mobile,
                   openingBalance: acc.openingBalance,
                 }))}
-                value={
-                  cashAccounts.find((acc) => acc.id === cashAccount)
+                value={(() => {
+                  const selected = cashAccounts.find(
+                    (acc) => Number(acc.id) === Number(cashAccount),
+                  );
+
+                  return selected
                     ? {
-                        label:
-                          cashAccounts.find((acc) => acc.id === cashAccount)
-                            ?.accountName || "",
-                        value: cashAccount,
-                        mobile:
-                          cashAccounts.find((acc) => acc.id === cashAccount)
-                            ?.mobile || "",
-                        openingBalance:
-                          cashAccounts.find((acc) => acc.id === cashAccount)
-                            ?.openingBalance || 0,
+                        label: selected.accountName,
+                        value: selected.id,
+                        mobile: selected.mobile,
+                        openingBalance: selected.openingBalance,
                       }
-                    : null
-                }
+                    : null;
+                })()}
                 onChange={(val: any) => setCashAccount(val.value)}
                 displayField="label"
                 placeholder="Search Cash Account"
@@ -899,57 +907,191 @@ const fetchSpareParts = async () => {
 
         {/* ========== ITEM TABLE ========== */}
         <div className="px-3 pb-3 sm:px-4 sm:pb-4 md:px-6">
+          {/* ───────── CHOTI SCREEN (md se niche): item entry form ─────────
+              Full width : Select button, Item Name, Item Code, Add button
+              2 column   : HSN | Unit, Qty | Rate Per, GST % | Amount      */}
+          <div className="mb-3 rounded-lg border border-gray-300 bg-white p-3 md:hidden dark:border-gray-600 dark:bg-gray-800">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="col-span-2">
+                <button
+                  type="button"
+                  onClick={() => setSpareDrawerOpen(true)}
+                  className="border-primary-600 bg-primary-600 hover:bg-primary-700 inline-flex h-10 w-full cursor-pointer items-center justify-center gap-1.5 rounded-lg border text-sm font-semibold text-white transition"
+                  title="Add Item"
+                >
+                  <PlusIcon className="h-5 w-5" />
+                  Select
+                </button>
+              </div>
+
+              <div className="col-span-2">
+                <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">
+                  Item Name
+                </label>
+                <Input
+                  placeholder="Enter Item Name"
+                  value={draft.item}
+                  onChange={(e) => updateDraft("item", e.target.value)}
+                  className="w-full rounded border border-gray-300 px-2 py-2 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
+                />
+              </div>
+              <div className="col-span-2">
+                <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">
+                  Item Code
+                </label>
+                <Input
+                  placeholder="Enter Code"
+                  value={draft.itemCode}
+                  readOnly
+                  onChange={(e) => updateDraft("itemCode", e.target.value)}
+                  className="w-full rounded border border-gray-300 px-2 py-2 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
+                />
+              </div>
+
+              {/* 2 column fields */}
+              <div>
+                <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">
+                  HSN
+                </label>
+                <Input
+                  placeholder="HSN"
+                  value={draft.hsn}
+                  onChange={(e) => updateDraft("hsn", e.target.value)}
+                  className="w-full rounded border border-gray-300 px-2 py-2 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">
+                  Unit
+                </label>
+                <Input
+                  placeholder="Unit"
+                  value={draft.unit}
+                  onChange={(e) => updateDraft("unit", e.target.value)}
+                  className="w-full rounded border border-gray-300 px-2 py-2 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">
+                  Qty
+                </label>
+                <Input
+                  type="number"
+                  min={1}
+                  value={draft.qty || ""}
+                  onChange={(e) => updateDraft("qty", Number(e.target.value))}
+                  className="w-full rounded border border-gray-300 px-2 py-2 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">
+                  Rate Per
+                </label>
+                <Input
+                  placeholder="Rate"
+                  value={draft.pPrice}
+                  onChange={(e) => updateDraft("pPrice", e.target.value)}
+                  className="w-full rounded border border-gray-300 px-2 py-2 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">
+                  GST %
+                </label>
+                <Input
+                  placeholder="GST"
+                  value={draft.gstPercent}
+                  onChange={(e) => updateDraft("gstPercent", e.target.value)}
+                  className="w-full rounded border border-gray-300 px-2 py-2 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">
+                  Amount
+                </label>
+                <Input
+                  placeholder="Amount"
+                  value={draft.netAmount}
+                  readOnly
+                  className="w-full rounded border border-gray-300 bg-gray-50 px-2 py-2 text-sm outline-none dark:border-gray-600 dark:bg-gray-700"
+                />
+              </div>
+
+              {/* Add button */}
+              <div className="col-span-2">
+                <button
+                  type="button"
+                  onClick={saveDraftRow}
+                  disabled={!draft.item.trim()}
+                  className={`inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-lg text-sm font-semibold text-white ${
+                    draft.item.trim()
+                      ? "bg-green-600 hover:bg-green-700"
+                      : "cursor-not-allowed bg-gray-300"
+                  }`}
+                  title="Add"
+                >
+                  <CheckIcon className="h-5 w-5" />
+                  Add
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* ───────── TABLE ─────────
+              Choti screen : sirf saved rows, columns ki min-width + horizontal scroll
+              Badi screen  : draft row bhi table ke andar (pehle jaisa)            */}
           <div className="overflow-x-auto rounded border border-gray-200 dark:border-gray-700">
-            <div className="h-96 overflow-y-auto">
+            <div className="max-h-96 overflow-y-auto md:h-96 md:max-h-none">
               <table className="w-full border-collapse text-sm">
                 <thead className="sticky top-0 z-10 bg-gray-100 dark:bg-gray-700">
                   <tr>
-                    <th className="border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:border-gray-500 dark:text-gray-300">
+                    <th className="min-w-15 border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:border-gray-500 dark:text-gray-300">
                       ITEM
                     </th>
-                    <th className="border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:border-gray-500 dark:text-gray-300">
+                    <th className="min-w-47.5 border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:border-gray-500 dark:text-gray-300">
                       ITEM NAME
                     </th>
-                    <th className="border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:border-gray-500 dark:text-gray-300">
+                    <th className="min-w-35 border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:border-gray-500 dark:text-gray-300">
                       ITEM CODE
                     </th>
-                    <th className="border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:border-gray-500 dark:text-gray-300">
+                    <th className="min-w-27.5 border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:border-gray-500 dark:text-gray-300">
                       HSN
                     </th>
-                    <th className="border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:border-gray-500 dark:text-gray-300">
+                    <th className="min-w-22.5 border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:border-gray-500 dark:text-gray-300">
                       UNIT
                     </th>
-                    <th className="border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:border-gray-500 dark:text-gray-300">
+                    <th className="min-w-20 border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:border-gray-500 dark:text-gray-300">
                       QTY
                     </th>
-                    <th className="border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:border-gray-500 dark:text-gray-300">
+                    <th className="min-w-27.5 border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:border-gray-500 dark:text-gray-300">
                       RATE PER
                     </th>
-                    <th className="border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:border-gray-500 dark:text-gray-300">
+                    <th className="min-w-22.5 border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:border-gray-500 dark:text-gray-300">
                       GST %
                     </th>
-                    <th className="border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:border-gray-500 dark:text-gray-300">
+                    <th className="min-w-32.5 border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:border-gray-500 dark:text-gray-300">
                       AMOUNT
                     </th>
-                    <th className="border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:border-gray-500 dark:text-gray-300">
+                    <th className="min-w-20 border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:border-gray-500 dark:text-gray-300">
                       ACTION
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {/* Draft row */}
-                  <tr className="sticky top-9 z-10 bg-white dark:bg-gray-800">
+                  {/* Draft row - sirf badi screen pe (choti screen pe upar wala form use hota hai) */}
+                  <tr className="sticky top-9 z-10 hidden bg-white md:table-row dark:bg-gray-800">
                     <td className="border border-gray-500 px-2 py-1.5 text-center dark:border-gray-500">
                       <button
+                        type="button"
                         onClick={() => setSpareDrawerOpen(true)}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-blue-600 bg-blue-600 text-white transition hover:bg-blue-700"
+                        className="border-primary-600 bg-primary-600 hover:bg-primary-700 inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border text-white transition"
                         title="Add Item"
                       >
                         <PlusIcon className="h-5 w-5" />
                       </button>
                     </td>
                     <td className="border border-gray-500 px-2 py-1.5 dark:border-gray-500">
-                      <input
+                      <Input
                         placeholder="Enter Item Name"
                         value={draft.item}
                         onChange={(e) => updateDraft("item", e.target.value)}
@@ -957,9 +1099,10 @@ const fetchSpareParts = async () => {
                       />
                     </td>
                     <td className="border border-gray-500 px-2 py-1.5 dark:border-gray-500">
-                      <input
+                      <Input
                         placeholder="Enter Code"
                         value={draft.itemCode}
+                        readOnly
                         onChange={(e) =>
                           updateDraft("itemCode", e.target.value)
                         }
@@ -967,7 +1110,7 @@ const fetchSpareParts = async () => {
                       />
                     </td>
                     <td className="border border-gray-500 px-2 py-1.5 dark:border-gray-500">
-                      <input
+                      <Input
                         placeholder="HSN"
                         value={draft.hsn}
                         onChange={(e) => updateDraft("hsn", e.target.value)}
@@ -975,7 +1118,7 @@ const fetchSpareParts = async () => {
                       />
                     </td>
                     <td className="border border-gray-500 px-2 py-1.5 dark:border-gray-500">
-                      <input
+                      <Input
                         placeholder="Unit"
                         value={draft.unit}
                         onChange={(e) => updateDraft("unit", e.target.value)}
@@ -983,7 +1126,7 @@ const fetchSpareParts = async () => {
                       />
                     </td>
                     <td className="border border-gray-500 px-2 py-1.5 dark:border-gray-500">
-                      <input
+                      <Input
                         type="number"
                         min={1}
                         value={draft.qty}
@@ -994,7 +1137,7 @@ const fetchSpareParts = async () => {
                       />
                     </td>
                     <td className="border border-gray-500 px-2 py-1.5 dark:border-gray-500">
-                      <input
+                      <Input
                         placeholder="Rate"
                         value={draft.pPrice}
                         onChange={(e) => updateDraft("pPrice", e.target.value)}
@@ -1002,7 +1145,7 @@ const fetchSpareParts = async () => {
                       />
                     </td>
                     <td className="border border-gray-500 px-2 py-1.5 dark:border-gray-500">
-                      <input
+                      <Input
                         placeholder="GST"
                         value={draft.gstPercent}
                         onChange={(e) =>
@@ -1012,7 +1155,7 @@ const fetchSpareParts = async () => {
                       />
                     </td>
                     <td className="border border-gray-500 px-2 py-1.5 dark:border-gray-500">
-                      <input
+                      <Input
                         placeholder="Amount"
                         value={draft.netAmount}
                         readOnly
@@ -1023,7 +1166,7 @@ const fetchSpareParts = async () => {
                       <button
                         onClick={saveDraftRow}
                         disabled={!draft.item.trim()}
-                        className={`inline-flex h-8 w-8 items-center justify-center rounded-lg bg-green-600 text-white ${
+                        className={`inline-flex h-8 w-8 items-center justify-center rounded-lg text-white ${
                           draft.item.trim()
                             ? "bg-green-600 hover:bg-green-700"
                             : "cursor-not-allowed bg-gray-300"
@@ -1047,28 +1190,28 @@ const fetchSpareParts = async () => {
                       <td className="border border-gray-500 px-3 py-2.5 text-center font-medium text-gray-500 dark:border-gray-500 dark:text-gray-400">
                         {index + 1}
                       </td>
-                      <td className="border border-gray-500 px-3 py-2.5 font-medium text-gray-900 dark:border-gray-500 dark:text-gray-200">
+                      <td className="border border-gray-500 px-3 py-2.5 font-medium whitespace-nowrap text-gray-900 dark:border-gray-500 dark:text-gray-200">
                         {r.item}
                       </td>
-                      <td className="border border-gray-500 px-3 py-2.5 text-gray-700 dark:border-gray-500 dark:text-gray-300">
+                      <td className="border border-gray-500 px-3 py-2.5 whitespace-nowrap text-gray-700 dark:border-gray-500 dark:text-gray-300">
                         {r.itemCode}
                       </td>
-                      <td className="border border-gray-500 px-3 py-2.5 text-gray-700 dark:border-gray-500 dark:text-gray-300">
+                      <td className="border border-gray-500 px-3 py-2.5 whitespace-nowrap text-gray-700 dark:border-gray-500 dark:text-gray-300">
                         {r.hsn}
                       </td>
-                      <td className="border border-gray-500 px-3 py-2.5 text-gray-700 dark:border-gray-500 dark:text-gray-300">
+                      <td className="border border-gray-500 px-3 py-2.5 whitespace-nowrap text-gray-700 dark:border-gray-500 dark:text-gray-300">
                         {r.unit}
                       </td>
                       <td className="border border-gray-500 px-3 py-2.5 text-center font-semibold text-gray-900 dark:border-gray-500 dark:text-gray-200">
                         {r.qty}
                       </td>
-                      <td className="border border-gray-500 px-3 py-2.5 text-right text-gray-700 dark:border-gray-500 dark:text-gray-300">
+                      <td className="border border-gray-500 px-3 py-2.5 text-right whitespace-nowrap text-gray-700 dark:border-gray-500 dark:text-gray-300">
                         ₹{r.pPrice}
                       </td>
                       <td className="border border-gray-500 px-3 py-2.5 text-center text-gray-700 dark:border-gray-500 dark:text-gray-300">
                         {r.gstPercent}%
                       </td>
-                      <td className="border border-gray-500 px-3 py-2.5 text-right font-semibold text-gray-900 dark:border-gray-500 dark:text-gray-200">
+                      <td className="border border-gray-500 px-3 py-2.5 text-right font-semibold whitespace-nowrap text-gray-900 dark:border-gray-500 dark:text-gray-200">
                         ₹{r.netAmount}
                       </td>
                       <td className="border border-gray-500 px-3 py-2.5 text-center dark:border-gray-500">
@@ -1314,472 +1457,409 @@ const fetchSpareParts = async () => {
       {/* ========== RIGHT SIDE DRAWER MODALS ========== */}
 
       {/* Spare Part Selection Drawer */}
-      {spareDrawerOpen && createPortal(
-        <div className="fixed inset-0 z-100 overflow-hidden">
-          <div
-            className="absolute inset-0 bg-black/50"
-            onClick={() => {
-              setSpareDrawerOpen(false);
-              setSpareSearch("");
-            }}
+      <SideDrawer
+        show={spareDrawerOpen}
+        onClose={() => {
+          setSpareDrawerOpen(false);
+          setSpareSearch("");
+        }}
+        title="Select Spare Part"
+        widthClass="max-w-3xl"
+      >
+        <div className="relative mb-4">
+          <MagnifyingGlassIcon className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <Input
+            placeholder="Search spare parts..."
+            value={spareSearch}
+            onChange={(e) => setSpareSearch(e.target.value)}
+            className="w-full pl-10"
           />
-          <div className="absolute top-0 right-0 h-full w-full max-w-5xl transform bg-white shadow-2xl transition-transform sm:w-3/4 lg:w-1/2 dark:bg-gray-800">
-            <div className="flex h-full flex-col">
-              <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 sm:px-6 sm:py-4 dark:border-gray-700">
-                <h2 className="text-lg font-bold text-blue-600 dark:text-blue-400">
-                  Select Spare Part
-                </h2>
-                <button
-                  onClick={() => {
-                    setSpareDrawerOpen(false);
-                    setSpareSearch("");
-                  }}
-                  className="rounded-lg p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+        </div>
+
+        <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+          <table className="w-full border-collapse text-sm">
+            <thead>
+              <tr className="bg-gray-100 text-left whitespace-nowrap dark:bg-gray-700">
+                <th className="w-12 p-2">#</th>
+                <th className="p-2">Item Name</th>
+                <th className="p-2">Item Code</th>
+                <th className="p-2">HSN</th>
+                <th className="p-2">Unit</th>
+                <th className="p-2">GST</th>
+                <th className="p-2">Purchase Price</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredSpareParts.map((v) => (
+                <tr
+                  key={v.id}
+                  className="border-t border-gray-200 whitespace-nowrap dark:border-gray-700"
                 >
-                  <XMarkIcon className="h-6 w-6" />
-                </button>
-              </div>
-              <div className="flex-1 overflow-y-auto p-4 sm:p-6">
-                <div className="relative mb-4">
-                  <MagnifyingGlassIcon className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                  <td className="p-2 text-center">
+                    <button
+                      type="button"
+                      onClick={() => handleSpareSelect(v)}
+                      className="inline-flex h-6 w-6 cursor-pointer items-center justify-center rounded bg-green-600 text-white hover:bg-green-700"
+                    >
+                      ✓
+                    </button>
+                  </td>
+                  <td className="p-2">{v.itemName}</td>
+                  <td className="p-2">{v.codeNo}</td>
+                  <td className="p-2">{v.hsnCode}</td>
+                  <td className="p-2">{v.unit}</td>
+                  <td className="p-2">{v.taxSlab}%</td>
+                  <td className="p-2">₹{v.purchasePrice}</td>
+                </tr>
+              ))}
+              {filteredSpareParts.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="p-4 text-center text-gray-500">
+                    No spare parts match your search.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </SideDrawer>
+      {/* Bank Details - Right Drawer */}
+      <SideDrawer
+        show={bankDetailsModalOpen}
+        onClose={() => setBankDetailsModalOpen(false)}
+        title="Bank Details"
+        widthClass="max-w-lg"
+        footer={
+          <>
+            <Button
+              variant="outlined"
+              color="neutral"
+              type="button"
+              onClick={() => setBankDetailsModalOpen(false)}
+              className="h-10 w-1/2"
+            >
+              Cancel
+            </Button>
+            <Button
+              color="primary"
+              type="button"
+              onClick={() => setBankDetailsModalOpen(false)}
+              className="h-10 w-1/2"
+            >
+              Save Bank Details
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          {/* Payment Mode */}
+          <div>
+            <label className="mb-2 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+              Payment Mode <span className="text-red-500">*</span>
+            </label>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
+              {paymentModeOptions.map((opt) => (
+                <label
+                  key={opt.value}
+                  className="flex cursor-pointer items-center gap-2 text-sm text-gray-800 dark:text-gray-200"
+                >
                   <input
-                    placeholder="Search spare parts..."
-                    value={spareSearch}
-                    onChange={(e) => setSpareSearch(e.target.value)}
-                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 pl-10 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
+                    type="radio"
+                    name="paymentMode"
+                    checked={bankDetails.paymentMode === opt.value}
+                    onChange={() =>
+                      setBankDetails((b) => ({ ...b, paymentMode: opt.value }))
+                    }
                   />
-                </div>
-                <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-                  <table className="w-full border-collapse text-sm">
-                    <thead>
-                      <tr className="bg-gray-100 text-left whitespace-nowrap dark:bg-gray-700">
-                        <th className="w-12 p-2">#</th>
-                        <th className="p-2">Item Name</th>
-                        <th className="p-2">Item Code</th>
-                        <th className="p-2">HSN</th>
-                        <th className="p-2">Unit</th>
-                        <th className="p-2">GST</th>
-                        <th className="p-2">Purchase Price</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredSpareParts.map((v) => (
-                        <tr
-                          key={v.id}
-                          className="border-t border-gray-200 whitespace-nowrap dark:border-gray-700"
-                        >
-                          <td className="p-2 text-center">
-                            <button
-                              onClick={() => handleSpareSelect(v)}
-                              className="inline-flex h-6 w-6 items-center justify-center rounded bg-green-600 text-white hover:bg-green-700"
-                            >
-                              ✓
-                            </button>
-                          </td>
-                          <td className="p-2">{v.itemName}</td>
-                          <td className="p-2">{v.codeNo}</td>
-                          <td className="p-2">{v.hsnCode}</td>
-                          <td className="p-2">{v.unit}</td>
-                          <td className="p-2">{v.taxSlab}%</td>
-                          <td className="p-2">₹{v.purchasePrice}</td>
-                        </tr>
-                      ))}
-                      {filteredSpareParts.length === 0 && (
-                        <tr>
-                          <td
-                            colSpan={7}
-                            className="p-4 text-center text-gray-500"
-                          >
-                            No spare parts match your search.
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+                  {opt.label}
+                </label>
+              ))}
             </div>
           </div>
-        </div>,
-      document.body,
-  )}
 
-      {/* Bank Details - Right Drawer */}
-      {bankDetailsModalOpen && createPortal(
-        <div className="fixed inset-0 z-100 overflow-hidden">
-          <div
-            className="absolute inset-0 bg-black/50"
-            onClick={() => setBankDetailsModalOpen(false)}
-          />
-          <div className="absolute top-0 right-0 h-full w-full max-w-lg transform bg-white shadow-2xl transition-transform sm:w-3/4 lg:w-2/5 dark:bg-gray-800">
-            <div className="flex h-full flex-col">
-              <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 sm:px-6 sm:py-4 dark:border-gray-700">
-                <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-                  Bank Details
-                </h2>
-                <button
-                  onClick={() => setBankDetailsModalOpen(false)}
-                  className="rounded-lg p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
-                >
-                  <XMarkIcon className="h-6 w-6" />
-                </button>
+          {/* Cheque fields */}
+          {bankDetails.paymentMode === "CHEQUE" && (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
+              <div>
+                <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+                  Cheque No <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  placeholder="Enter Cheque No"
+                  value={bankDetails.chequeNo}
+                  onChange={(e) =>
+                    setBankDetails((b) => ({ ...b, chequeNo: e.target.value }))
+                  }
+                  className="w-full"
+                />
               </div>
-              <div className="flex-1 overflow-y-auto p-4 sm:p-6">
-                <div className="mb-4">
-                  <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Payment Mode <span className="text-red-500">*</span>
-                  </label>
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
-                    {paymentModeOptions.map((opt) => (
-                      <label
-                        key={opt.value}
-                        className="flex cursor-pointer items-center gap-2 text-sm text-gray-800 dark:text-gray-200"
-                      >
-                        <input
-                          type="radio"
-                          name="paymentMode"
-                          checked={bankDetails.paymentMode === opt.value}
-                          onChange={() =>
-                            setBankDetails((b) => ({
-                              ...b,
-                              paymentMode: opt.value,
-                            }))
-                          }
-                        />
-                        {opt.label}
-                      </label>
-                    ))}
-                  </div>
-                </div>
-
-                {bankDetails.paymentMode === "CHEQUE" && (
-                  <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    <div>
-                      <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Cheque No <span className="text-red-500">*</span>
-                      </label>
-                      <Input
-                        placeholder="Enter Cheque No"
-                        value={bankDetails.chequeNo}
-                        onChange={(e) =>
-                          setBankDetails((b) => ({
-                            ...b,
-                            chequeNo: e.target.value,
-                          }))
-                        }
-                        className="w-full"
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Cheque Date <span className="text-red-500">*</span>
-                      </label>
-                      <DatePicker
-                        value={
-                          bankDetails.chequeDate
-                            ? new Date(bankDetails.chequeDate)
-                            : undefined
-                        }
-                        options={{ disableMobile: true }}
-                        onChange={(selectedDates: Date[]) => {
-                          const val = selectedDates[0];
-                          if (val instanceof Date) {
-                            setBankDetails((b) => ({
-                              ...b,
-                              chequeDate: val.toISOString().split("T")[0],
-                            }));
-                          }
-                        }}
-                        placeholder="Select date..."
-                        className="w-full"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                <div className="mb-4">
-                  <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Narration
-                  </label>
-                  <textarea
-                    placeholder="Enter Narration"
-                    value={bankDetails.narration}
-                    onChange={(e) =>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+                  Cheque Date <span className="text-red-500">*</span>
+                </label>
+                <DatePicker
+                  value={
+                    bankDetails.chequeDate
+                      ? new Date(bankDetails.chequeDate)
+                      : undefined
+                  }
+                  options={{ disableMobile: true }}
+                  onChange={(selectedDates: Date[]) => {
+                    const val = selectedDates[0];
+                    if (val instanceof Date) {
                       setBankDetails((b) => ({
                         ...b,
-                        narration: e.target.value,
-                      }))
+                        chequeDate: val.toISOString().split("T")[0],
+                      }));
                     }
-                    rows={3}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-                  />
-                </div>
-              </div>
-              <div className="border-t border-gray-200 p-4 sm:p-6 dark:border-gray-700">
-                <div className="flex flex-col gap-2 sm:flex-row sm:justify-end sm:gap-3">
-                  <button
-                    onClick={() => setBankDetailsModalOpen(false)}
-                    className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 sm:w-auto sm:px-6 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={() => setBankDetailsModalOpen(false)}
-                    className="bg-primary-500 hover:bg-primary-500 w-full rounded-lg px-4 py-2 text-sm font-semibold text-white sm:w-auto sm:px-6"
-                  >
-                    Save Bank Details
-                  </button>
-                </div>
+                  }}
+                  placeholder="Select date..."
+                  className="w-full"
+                />
               </div>
             </div>
+          )}
+
+          {/* Narration */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+              Narration
+            </label>
+            <textarea
+              placeholder="Enter Narration"
+              value={bankDetails.narration}
+              onChange={(e) =>
+                setBankDetails((b) => ({ ...b, narration: e.target.value }))
+              }
+              rows={3}
+              className="focus:border-primary-500 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+            />
           </div>
-        </div>,
-      document.body,
-  )}
+        </div>
+      </SideDrawer>
 
       {/* Create Account - Right Drawer */}
-      {accountModalOpen && createPortal(
-        <div className="fixed inset-0 z-100 overflow-hidden">
-          <div
-            className="absolute inset-0 bg-black/50"
-            onClick={() => {
-              setAccountModalOpen(false);
-              setAccountForm(emptyAccount);
-            }}
-          />
-          <div className="absolute top-0 right-0 h-full w-full max-w-3xl transform bg-white shadow-2xl transition-transform sm:w-3/4 lg:w-1/2 dark:bg-gray-800">
-            <div className="flex h-full flex-col">
-              <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 sm:px-6 sm:py-4 dark:border-gray-700">
-                <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-                  Create Account
-                </h2>
-                <button
-                  onClick={() => {
-                    setAccountModalOpen(false);
-                    setAccountForm(emptyAccount);
-                  }}
-                  className="rounded-lg p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
-                >
-                  <XMarkIcon className="h-6 w-6" />
-                </button>
-              </div>
-              <div className="flex-1 overflow-y-auto p-4 sm:p-6">
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
-                  <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
-                      Account Name <span className="text-red-500">*</span>
-                    </label>
-                    <Input
-                      placeholder="Enter Account Name"
-                      value={accountForm.accountName}
-                      onChange={(e) =>
-                        setAccountForm((f) => ({
-                          ...f,
-                          accountName: e.target.value,
-                        }))
-                      }
-                      className="w-full"
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-xs font-medium">
-                      Group
-                    </label>
-                    <Listbox
-                      data={groupOptions}
-                      value={
-                        groupOptions.find(
-                          (x) => x.value === accountForm.group,
-                        ) || null
-                      }
-                      onChange={(val: any) =>
-                        setAccountForm((f) => ({
-                          ...f,
-                          group: val?.value || "",
-                        }))
-                      }
-                      placeholder="Select Group"
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
-                      Mobile <span className="text-red-500">*</span>
-                    </label>
-                    <Input
-                      placeholder="Mobile"
-                      value={accountForm.mobile}
-                      onChange={(e) =>
-                        setAccountForm((f) => ({
-                          ...f,
-                          mobile: e.target.value,
-                        }))
-                      }
-                      className="w-full"
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
-                      Country <span className="text-red-500">*</span>
-                    </label>
-                    <Combobox
-                      data={countryOptions}
-                      displayField="label"
-                      searchFields={["label"]}
-                      placeholder="Search Country"
-                      value={
-                        countryOptions.find(
-                          (o) => o.value === accountForm.countryCode,
-                        ) || null
-                      }
-                      onChange={(selected: any) =>
-                        setAccountForm((f) => ({
-                          ...f,
-                          countryCode: selected?.value || "",
-                          country: selected?.label || "",
-                        }))
-                      }
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
-                      State <span className="text-red-500">*</span>
-                    </label>
-                    <Combobox
-                      data={stateOptions}
-                      displayField="label"
-                      searchFields={["label"]}
-                      placeholder="Search State"
-                      value={
-                        stateOptions.find(
-                          (o) => o.value === accountForm.stateCode,
-                        ) || null
-                      }
-                      onChange={(selected: any) =>
-                        setAccountForm((f) => ({
-                          ...f,
-                          stateCode: selected?.value || "",
-                          state: selected?.label || "",
-                        }))
-                      }
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
-                      District <span className="text-red-500">*</span>
-                    </label>
-                    <Combobox
-                      data={districtOptions}
-                      displayField="label"
-                      searchFields={["label"]}
-                      placeholder="Search District"
-                      value={
-                        districtOptions.find(
-                          (o) => o.value === accountForm.district,
-                        ) || null
-                      }
-                      onChange={(selected: any) =>
-                        setAccountForm((f) => ({
-                          ...f,
-                          district: selected?.value || "",
-                        }))
-                      }
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
-                      City <span className="text-red-500">*</span>
-                    </label>
-                    <Combobox
-                      data={cityOptions}
-                      displayField="label"
-                      searchFields={["label"]}
-                      placeholder="Search City"
-                      value={
-                        cityOptions.find((o) => o.value === accountForm.city) ||
-                        null
-                      }
-                      onChange={(selected: any) =>
-                        setAccountForm((f) => ({
-                          ...f,
-                          city: selected?.value || "",
-                        }))
-                      }
-                    />
-                  </div>
-                  <div className="sm:col-span-2">
-                    <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
-                      Address <span className="text-red-500">*</span>
-                    </label>
-                    <Input
-                      placeholder="Enter Address"
-                      value={accountForm.address}
-                      onChange={(e) =>
-                        setAccountForm((f) => ({
-                          ...f,
-                          address: e.target.value,
-                        }))
-                      }
-                      className="w-full"
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
-                      PAN Card <span className="text-red-500">*</span>
-                    </label>
-                    <Input
-                      placeholder="PAN Card Number"
-                      value={accountForm.panCard}
-                      onChange={(e) =>
-                        setAccountForm((f) => ({
-                          ...f,
-                          panCard: e.target.value.toUpperCase(),
-                        }))
-                      }
-                      className="w-full"
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
-                      Aadhar Card No <span className="text-red-500">*</span>
-                    </label>
-                    <Input
-                      placeholder="Aadhar Number"
-                      value={accountForm.aadharCard}
-                      onChange={(e) =>
-                        setAccountForm((f) => ({
-                          ...f,
-                          aadharCard: e.target.value,
-                        }))
-                      }
-                      className="w-full"
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="border-t border-gray-200 p-4 sm:p-6 dark:border-gray-700">
-                <div className="flex flex-col gap-2 sm:flex-row sm:justify-end sm:gap-3">
-                  <button
-                    onClick={() => {
-                      setAccountModalOpen(false);
-                      setAccountForm(emptyAccount);
-                    }}
-                    className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 sm:w-auto sm:px-6 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={() => setAccountModalOpen(false)}
-                    className="bg-primary-500 hover:bg-primary-500 w-full cursor-pointer rounded-lg px-4 py-2 text-sm font-semibold text-white sm:w-auto sm:px-6"
-                  >
-                    Create Account
-                  </button>
-                </div>
-              </div>
-            </div>
+      <SideDrawer
+        show={accountModalOpen}
+        onClose={() => {
+          setAccountModalOpen(false);
+          setAccountForm(emptyAccount);
+        }}
+        title="Create Account"
+        widthClass="max-w-3xl"
+        footer={
+          <>
+            <Button
+              variant="outlined"
+              color="neutral"
+              type="button"
+              onClick={() => {
+                setAccountModalOpen(false);
+                setAccountForm(emptyAccount);
+              }}
+              className="h-10 w-1/2"
+            >
+              Cancel
+            </Button>
+            <Button
+              color="primary"
+              type="button"
+              onClick={() => setAccountModalOpen(false)}
+              className="h-10 w-1/2"
+            >
+              Create Account
+            </Button>
+          </>
+        }
+      >
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
+          {/* Account Name */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+              Account Name <span className="text-red-500">*</span>
+            </label>
+            <Input
+              placeholder="Enter Account Name"
+              value={accountForm.accountName}
+              onChange={(e) =>
+                setAccountForm((f) => ({ ...f, accountName: e.target.value }))
+              }
+              className="w-full"
+            />
           </div>
-        </div>,
-       document.body,
-  )}
+
+          {/* Group */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+              Group
+            </label>
+            <Listbox
+              data={groupOptions}
+              value={
+                groupOptions.find((x) => x.value === accountForm.group) || null
+              }
+              onChange={(val: any) =>
+                setAccountForm((f) => ({ ...f, group: val?.value || "" }))
+              }
+              placeholder="Select Group"
+            />
+          </div>
+
+          {/* Mobile */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+              Mobile <span className="text-red-500">*</span>
+            </label>
+            <Input
+              placeholder="Mobile"
+              value={accountForm.mobile}
+              onChange={(e) =>
+                setAccountForm((f) => ({ ...f, mobile: e.target.value }))
+              }
+              className="w-full"
+            />
+          </div>
+
+          {/* Country */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+              Country <span className="text-red-500">*</span>
+            </label>
+            <Combobox
+              data={countryOptions}
+              displayField="label"
+              searchFields={["label"]}
+              placeholder="Search Country"
+              value={
+                countryOptions.find(
+                  (o) => o.value === accountForm.countryCode,
+                ) || null
+              }
+              onChange={(selected: any) =>
+                setAccountForm((f) => ({
+                  ...f,
+                  countryCode: selected?.value || "",
+                  country: selected?.label || "",
+                }))
+              }
+            />
+          </div>
+
+          {/* State */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+              State <span className="text-red-500">*</span>
+            </label>
+            <Combobox
+              data={stateOptions}
+              displayField="label"
+              searchFields={["label"]}
+              placeholder="Search State"
+              value={
+                stateOptions.find((o) => o.value === accountForm.stateCode) ||
+                null
+              }
+              onChange={(selected: any) =>
+                setAccountForm((f) => ({
+                  ...f,
+                  stateCode: selected?.value || "",
+                  state: selected?.label || "",
+                }))
+              }
+            />
+          </div>
+
+          {/* District */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+              District <span className="text-red-500">*</span>
+            </label>
+            <Combobox
+              data={districtOptions}
+              displayField="label"
+              searchFields={["label"]}
+              placeholder="Search District"
+              value={
+                districtOptions.find((o) => o.value === accountForm.district) ||
+                null
+              }
+              onChange={(selected: any) =>
+                setAccountForm((f) => ({
+                  ...f,
+                  district: selected?.value || "",
+                }))
+              }
+            />
+          </div>
+
+          {/* City */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+              City <span className="text-red-500">*</span>
+            </label>
+            <Combobox
+              data={cityOptions}
+              displayField="label"
+              searchFields={["label"]}
+              placeholder="Search City"
+              value={
+                cityOptions.find((o) => o.value === accountForm.city) || null
+              }
+              onChange={(selected: any) =>
+                setAccountForm((f) => ({ ...f, city: selected?.value || "" }))
+              }
+            />
+          </div>
+
+          {/* Address */}
+          <div className="sm:col-span-2">
+            <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+              Address <span className="text-red-500">*</span>
+            </label>
+            <Input
+              placeholder="Enter Address"
+              value={accountForm.address}
+              onChange={(e) =>
+                setAccountForm((f) => ({ ...f, address: e.target.value }))
+              }
+              className="w-full"
+            />
+          </div>
+
+          {/* PAN Card */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+              PAN Card <span className="text-red-500">*</span>
+            </label>
+            <Input
+              placeholder="PAN Card Number"
+              value={accountForm.panCard}
+              onChange={(e) =>
+                setAccountForm((f) => ({
+                  ...f,
+                  panCard: e.target.value.toUpperCase(),
+                }))
+              }
+              className="w-full"
+            />
+          </div>
+
+          {/* Aadhar Card */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+              Aadhar Card No <span className="text-red-500">*</span>
+            </label>
+            <Input
+              placeholder="Aadhar Number"
+              value={accountForm.aadharCard}
+              onChange={(e) =>
+                setAccountForm((f) => ({ ...f, aadharCard: e.target.value }))
+              }
+              className="w-full"
+            />
+          </div>
+        </div>
+      </SideDrawer>
     </div>
   );
 };

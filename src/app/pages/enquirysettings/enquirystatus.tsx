@@ -1,4 +1,4 @@
-import { useState,useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import {
   Dialog,
@@ -46,7 +46,6 @@ type FormValues = {
 
 // Sample data
 
-
 const entriesOptions = [
   { id: 10, name: "10" },
   { id: 20, name: "20" },
@@ -70,21 +69,22 @@ const statusFilterOptions = [
 const EnquiryStatus = () => {
   const [showDrawer, setShowDrawer] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
-const [enquiryStatuses, setEnquiryStatuses] =
-  useState<EnquiryStatus[]>([]);
+  const [enquiryStatuses, setEnquiryStatuses] = useState<EnquiryStatus[]>([]);
   const [search, setSearch] = useState("");
   const [showFilterBar, setShowFilterBar] = useState(false);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [selectedStatusFilter, setSelectedStatusFilter] = useState("All");
-const [selectedEnquiryStatusFilter, setSelectedEnquiryStatusFilter] =
-  useState("All");
+  const [selectedEnquiryStatusFilter, setSelectedEnquiryStatusFilter] =
+    useState("All");
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-const [confirmState, setConfirmState] = useState<"pending" | "success" | "error">("pending");
-const [confirmLoading, setConfirmLoading] = useState(false);
-const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
-const [isBulkDelete, setIsBulkDelete] = useState(false);
+  const [confirmState, setConfirmState] = useState<
+    "pending" | "success" | "error"
+  >("pending");
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+  const [isBulkDelete, setIsBulkDelete] = useState(false);
 
   const {
     register,
@@ -109,21 +109,19 @@ const [isBulkDelete, setIsBulkDelete] = useState(false);
   const formValidationRules = {
     enquiryStatus: { required: "Enquiry status is required" },
   };
-const getEnquiryStatuses = async () => {
-  try {
-    const response = await apiHelper.get(
-      "/enquiry-statuses"
-    );
+  const getEnquiryStatuses = async () => {
+    try {
+      const response = await apiHelper.get("/enquiry-statuses");
 
-    setEnquiryStatuses(response.data || []);
-  } catch (error) {
-    console.log(error);
-  }
-};
+      setEnquiryStatuses(response.data || []);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
-useEffect(() => {
-  getEnquiryStatuses();
-}, []);
+  useEffect(() => {
+    getEnquiryStatuses();
+  }, []);
   const handleOpenAddDrawer = () => {
     setEditId(null);
     reset({
@@ -142,105 +140,111 @@ useEffect(() => {
     setShowDrawer(true);
   };
 
-const handleDelete = (id: number) => {
-  setDeleteTargetId(id);
-  setIsBulkDelete(false);
-  setConfirmState("pending");
-  setShowConfirmModal(true);
-};
+  const handleDelete = (id: number) => {
+    setDeleteTargetId(id);
+    setIsBulkDelete(false);
+    setConfirmState("pending");
+    setShowConfirmModal(true);
+  };
 
-const handleBulkDelete = () => {
-  setIsBulkDelete(true);
-  setConfirmState("pending");
-  setShowConfirmModal(true);
-};
+  const handleBulkDelete = () => {
+    setIsBulkDelete(true);
+    setConfirmState("pending");
+    setShowConfirmModal(true);
+  };
 
-const performDelete = async () => {
-  setConfirmLoading(true);
-  try {
-    if (isBulkDelete) {
-      await Promise.all(selectedIds.map((id) => apiHelper.delete(`/enquiry-statuses/${id}`)));
-      toast.success(`${selectedIds.length} enquiry statuses deleted successfully!`);
-      setSelectedIds([]);
-      await getEnquiryStatuses();
-      setCurrentPage(1);
-      setConfirmState("success");
-    } else {
-      if (deleteTargetId === null) return;
-      await apiHelper.delete(`/enquiry-statuses/${deleteTargetId}`);
-      toast.success("Enquiry status deleted successfully!");
-      await getEnquiryStatuses();
-      setDeleteTargetId(null);
-      setConfirmState("success");
+  const performDelete = async () => {
+    setConfirmLoading(true);
+    try {
+      if (isBulkDelete) {
+        await Promise.all(
+          selectedIds.map((id) => apiHelper.delete(`/enquiry-statuses/${id}`)),
+        );
+        toast.success(
+          `${selectedIds.length} enquiry statuses deleted successfully!`,
+        );
+        setSelectedIds([]);
+        await getEnquiryStatuses();
+        setCurrentPage(1);
+        setConfirmState("success");
+      } else {
+        if (deleteTargetId === null) return;
+        await apiHelper.delete(`/enquiry-statuses/${deleteTargetId}`);
+        toast.success("Enquiry status deleted successfully!");
+        await getEnquiryStatuses();
+        setDeleteTargetId(null);
+        setConfirmState("success");
+      }
+      setTimeout(() => setShowConfirmModal(false), 1500);
+    } catch (error: any) {
+      console.error("Delete failed:", error);
+      setConfirmState("error");
+      toast.error(
+        error.response?.data?.message || "Failed to delete. Please try again.",
+      );
+    } finally {
+      setConfirmLoading(false);
     }
-    setTimeout(() => setShowConfirmModal(false), 1500);
-  } catch (error: any) {
-    console.error("Delete failed:", error);
-    setConfirmState("error");
-    toast.error(error.response?.data?.message || "Failed to delete. Please try again.");
-  } finally {
-    setConfirmLoading(false);
-  }
-};
+  };
 
- const handleToggleStatus = async (
-  id: number
-) => {
-  try {
-    await apiHelper.patch(
-      `/enquiry-statuses/toggle-status/${id}`,
-      {}
-    );
+  const handleToggleStatus = async (id: number) => {
+    try {
+      await apiHelper.patch(`/enquiry-statuses/toggle-status/${id}`, {});
 
-    getEnquiryStatuses();
-  } catch (error) {
-    console.log(error);
-  }
-};
-
-const onFormSubmit = async (data: FormValues) => {
-  try {
-    if (editId) {
-      await apiHelper.put(`/enquiry-statuses/${editId}`, data);
-      toast.success("Enquiry status updated successfully!");
-    } else {
-      await apiHelper.post("/enquiry-statuses", data);
-      toast.success("Enquiry status created successfully!");
+      getEnquiryStatuses();
+    } catch (error) {
+      console.log(error);
     }
+  };
 
-    await getEnquiryStatuses();
-    setShowDrawer(false);
-    setEditId(null);
-    reset({
-      enquiryStatus: "",
-      status: "ACTIVE",
-    });
-  } catch (error: any) {
-    console.log(error);
-    toast.error(error.response?.data?.message || "Failed to save enquiry status. Please try again.");
-  }
-};
-const enquiryStatusFilterOptions = [
-  { id: "All", name: "All Enquiry Statuses" },
-  ...Array.from(
-    new Set(enquiryStatuses.map((item) => item.enquiryStatus).filter(Boolean)),
-  ).map((name) => ({ id: name, name })),
-];
+  const onFormSubmit = async (data: FormValues) => {
+    try {
+      if (editId) {
+        await apiHelper.put(`/enquiry-statuses/${editId}`, data);
+        toast.success("Enquiry status updated successfully!");
+      } else {
+        await apiHelper.post("/enquiry-statuses", data);
+        toast.success("Enquiry status created successfully!");
+      }
+
+      await getEnquiryStatuses();
+      setShowDrawer(false);
+      setEditId(null);
+      reset({
+        enquiryStatus: "",
+        status: "ACTIVE",
+      });
+    } catch (error: any) {
+      console.log(error);
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to save enquiry status. Please try again.",
+      );
+    }
+  };
+  const enquiryStatusFilterOptions = [
+    { id: "All", name: "All Enquiry Statuses" },
+    ...Array.from(
+      new Set(
+        enquiryStatuses.map((item) => item.enquiryStatus).filter(Boolean),
+      ),
+    ).map((name) => ({ id: name, name })),
+  ];
   // Filter data
-const filteredData = enquiryStatuses.filter((item) => {
-  const matchesSearch = item.enquiryStatus
-    .toLowerCase()
-    .includes(search.toLowerCase());
+  const filteredData = enquiryStatuses.filter((item) => {
+    const matchesSearch = item.enquiryStatus
+      .toLowerCase()
+      .includes(search.toLowerCase());
 
-  const matchesEnquiryStatus =
-    selectedEnquiryStatusFilter === "All" ||
-    item.enquiryStatus === selectedEnquiryStatusFilter;
+    const matchesEnquiryStatus =
+      selectedEnquiryStatusFilter === "All" ||
+      item.enquiryStatus === selectedEnquiryStatusFilter;
 
-  const matchesStatus =
-    selectedStatusFilter === "All" || item.status === selectedStatusFilter;
+    const matchesStatus =
+      selectedStatusFilter === "All" || item.status === selectedStatusFilter;
 
-  return matchesSearch && matchesEnquiryStatus && matchesStatus;
-});
+    return matchesSearch && matchesEnquiryStatus && matchesStatus;
+  });
 
   const totalItems = filteredData.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
@@ -283,47 +287,47 @@ const filteredData = enquiryStatuses.filter((item) => {
           </p>
         </div>
 
-       <div className="flex flex-wrap items-center justify-between gap-2 md:flex-nowrap">
-  {/* Left side - Filter and icons */}
-  <div className="flex items-center gap-2">
-    <button
-      type="button"
-      onClick={() => setShowFilterBar(!showFilterBar)}
-      className={`inline-flex items-center gap-1.5 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
-        showFilterBar
-          ? "bg-primary-50 border-primary-200 text-primary-600 dark:bg-dark-600 dark:border-dark-500 dark:text-white"
-          : "dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
-      }`}
-    >
-      <FunnelIcon className="size-4.5" />
-      <span className="hidden sm:inline">Filter</span>
-    </button>
+        <div className="flex flex-wrap items-center justify-between gap-2 md:flex-nowrap">
+          {/* Left side - Filter and icons */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowFilterBar(!showFilterBar)}
+              className={`inline-flex items-center gap-1.5 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
+                showFilterBar
+                  ? "bg-primary-50 border-primary-200 text-primary-600 dark:bg-dark-600 dark:border-dark-500 dark:text-white"
+                  : "dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              <FunnelIcon className="size-4.5" />
+              <span className="hidden sm:inline">Filter</span>
+            </button>
 
-    <button
-      type="button"
-      className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
-    >
-      <RiFileExcel2Fill className="text-lg text-green-500" />
-    </button>
+            <button
+              type="button"
+              className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            >
+              <RiFileExcel2Fill className="text-lg text-green-500" />
+            </button>
 
-    <button
-      type="button"
-      className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
-    >
-      <RiFilePdfFill className="text-lg text-red-500" />
-    </button>
-  </div>
+            <button
+              type="button"
+              className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            >
+              <RiFilePdfFill className="text-lg text-red-500" />
+            </button>
+          </div>
 
-  {/* Right side - Add Finance button */}
-  <Button
-    color="primary"
-    onClick={handleOpenAddDrawer}
-    className="whitespace-nowrap"
-  >
-    <PlusIcon className="mr-1.5 size-4.5" />
-    Add Finance
-  </Button>
-</div>
+          {/* Right side - Add Finance button */}
+          <Button
+            color="primary"
+            onClick={handleOpenAddDrawer}
+            className="whitespace-nowrap"
+          >
+            <PlusIcon className="mr-1.5 size-4.5" />
+            Add Enquiry Status
+          </Button>
+        </div>
       </div>
 
       {/* Search */}
@@ -344,47 +348,48 @@ const filteredData = enquiryStatuses.filter((item) => {
       {/* Filter Bar */}
       {showFilterBar && (
         <div className="dark:bg-dark-700 dark:border-dark-500 animate-in fade-in slide-in-from-top-2 rounded-xl border border-gray-200 bg-white p-4 transition-all duration-150">
-         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
-  <div className="flex flex-col gap-1">
-    <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
-      Enquiry Status
-    </span>
-    <Combobox
-      data={enquiryStatusFilterOptions}
-      value={
-        enquiryStatusFilterOptions.find(
-          (o) => o.id === selectedEnquiryStatusFilter,
-        ) || enquiryStatusFilterOptions[0]
-      }
-      displayField="name"
-      searchFields={["name"]}
-      placeholder="Search or select enquiry status"
-      onChange={(opt: any) => {
-        setSelectedEnquiryStatusFilter(opt?.id ?? "All");
-        setCurrentPage(1);
-      }}
-    />
-  </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+            <div className="flex flex-col gap-1">
+              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
+                Enquiry Status
+              </span>
+              <Combobox
+                data={enquiryStatusFilterOptions}
+                value={
+                  enquiryStatusFilterOptions.find(
+                    (o) => o.id === selectedEnquiryStatusFilter,
+                  ) || enquiryStatusFilterOptions[0]
+                }
+                displayField="name"
+                searchFields={["name"]}
+                placeholder="Search or select enquiry status"
+                onChange={(opt: any) => {
+                  setSelectedEnquiryStatusFilter(opt?.id ?? "All");
+                  setCurrentPage(1);
+                }}
+              />
+            </div>
 
-  <div className="flex flex-col gap-1">
-    <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
-      Status
-    </span>
-    <Listbox
-      data={statusFilterOptions}
-      value={
-        statusFilterOptions.find((o) => o.id === selectedStatusFilter) ||
-        statusFilterOptions[0]
-      }
-      placeholder="All Statuses"
-      onChange={(opt: any) => {
-        setSelectedStatusFilter(opt.id);
-        setCurrentPage(1);
-      }}
-      displayField="name"
-    />
-  </div>
-</div>
+            <div className="flex flex-col gap-1">
+              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
+                Status
+              </span>
+              <Listbox
+                data={statusFilterOptions}
+                value={
+                  statusFilterOptions.find(
+                    (o) => o.id === selectedStatusFilter,
+                  ) || statusFilterOptions[0]
+                }
+                placeholder="All Statuses"
+                onChange={(opt: any) => {
+                  setSelectedStatusFilter(opt.id);
+                  setCurrentPage(1);
+                }}
+                displayField="name"
+              />
+            </div>
+          </div>
         </div>
       )}
 
@@ -574,7 +579,7 @@ const filteredData = enquiryStatuses.filter((item) => {
                     leaveTo="transform opacity-0 scale-95"
                   >
                     <MenuItems
-                        anchor="bottom start"
+                      anchor="bottom start"
                       className="dark:bg-dark-700 dark:border-dark-600 z-[200] w-20 space-y-0.5 rounded-lg border border-gray-200 bg-white p-1 shadow-xl ring-1 ring-black/5 [--anchor-gap:6px] focus:outline-none"
                     >
                       {entriesOptions.map((opt) => (
@@ -732,8 +737,8 @@ const filteredData = enquiryStatuses.filter((item) => {
                 className="flex h-full flex-col"
               >
                 {/* Header */}
-                <div className="dark:border-dark-500 flex items-center justify-between border-b border-gray-200 px-5 py-4">
-                  <h2 className="dark:text-dark-50 text-lg font-semibold text-gray-800">
+                 <div className="bg-primary-600 dark:bg-primary-700 flex items-center justify-between px-5 py-4">
+                  <h2 className="text-lg font-semibold text-white">
                     {editId !== null
                       ? "Edit Enquiry Status"
                       : "Add Enquiry Status"}
@@ -742,7 +747,7 @@ const filteredData = enquiryStatuses.filter((item) => {
                     onClick={() => setShowDrawer(false)}
                     variant="flat"
                     isIcon
-                    className="size-8 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                    className="size-8 rounded-full text-white hover:bg-white/10 hover:text-white focus:bg-white/10 active:bg-white/20"
                     type="button"
                   >
                     <XMarkIcon className="size-5" />
@@ -753,12 +758,11 @@ const filteredData = enquiryStatuses.filter((item) => {
                 <div className="grow space-y-5 overflow-y-auto p-5">
                   <div>
                     <Input
-                     label={
-      <span>
-       Enquiry Status <span className="text-red-500">*</span>
-      </span>
-    }
-                     
+                      label={
+                        <span>
+                          Enquiry Status <span className="text-red-500">*</span>
+                        </span>
+                      }
                       placeholder="Enter enquiry status"
                       {...register(
                         "enquiryStatus",
@@ -813,39 +817,41 @@ const filteredData = enquiryStatuses.filter((item) => {
       </Transition>
 
       {/* Confirmation Modal */}
-<ConfirmModal
-  show={showConfirmModal}
-  onClose={() => {
-    setShowConfirmModal(false);
-    setDeleteTargetId(null);
-    setConfirmState("pending");
-  }}
-  onOk={performDelete}
-  confirmLoading={confirmLoading}
-  state={confirmState}
-  messages={{
-    pending: {
-      Icon: ExclamationTriangleIcon,
-      title: isBulkDelete ? "Delete Selected Enquiry Statuses?" : "Are you sure?",
-      description: isBulkDelete 
-        ? `Are you sure you want to delete ${selectedIds.length} selected enquiry statuses? This action cannot be undone.`
-        : "Are you sure you want to delete this enquiry status? Once deleted, it cannot be restored.",
-      actionText: isBulkDelete ? "Delete All" : "Delete",
-    },
-    success: {
-      title: "Deleted Successfully",
-      description: isBulkDelete 
-        ? `${selectedIds.length} enquiry statuses have been deleted.`
-        : "The enquiry status has been deleted.",
-      actionText: "Done",
-    },
-    error: {
-      title: "Delete Failed",
-      description: "Failed to delete. Please try again.",
-      actionText: "Try Again",
-    },
-  }}
-/>
+      <ConfirmModal
+        show={showConfirmModal}
+        onClose={() => {
+          setShowConfirmModal(false);
+          setDeleteTargetId(null);
+          setConfirmState("pending");
+        }}
+        onOk={performDelete}
+        confirmLoading={confirmLoading}
+        state={confirmState}
+        messages={{
+          pending: {
+            Icon: ExclamationTriangleIcon,
+            title: isBulkDelete
+              ? "Delete Selected Enquiry Statuses?"
+              : "Are you sure?",
+            description: isBulkDelete
+              ? `Are you sure you want to delete ${selectedIds.length} selected enquiry statuses? This action cannot be undone.`
+              : "Are you sure you want to delete this enquiry status? Once deleted, it cannot be restored.",
+            actionText: isBulkDelete ? "Delete All" : "Delete",
+          },
+          success: {
+            title: "Deleted Successfully",
+            description: isBulkDelete
+              ? `${selectedIds.length} enquiry statuses have been deleted.`
+              : "The enquiry status has been deleted.",
+            actionText: "Done",
+          },
+          error: {
+            title: "Delete Failed",
+            description: "Failed to delete. Please try again.",
+            actionText: "Try Again",
+          },
+        }}
+      />
     </div>
   );
 };

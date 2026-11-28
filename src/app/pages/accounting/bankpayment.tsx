@@ -939,7 +939,7 @@ export default function BankPayment() {
                     leaveTo="transform opacity-0 scale-95"
                   >
                     <MenuItems
-                        anchor="bottom start"
+                      anchor="bottom start"
                       className="dark:bg-dark-700 dark:border-dark-600 z-[200] w-20 space-y-0.5 rounded-lg border border-gray-200 bg-white p-1 shadow-xl ring-1 ring-black/5 [--anchor-gap:6px] focus:outline-none"
                     >
                       {entriesOptions.map((opt) => (
@@ -1078,13 +1078,14 @@ export default function BankPayment() {
             leaveTo="translate-x-full"
           >
             <DialogPanel className="dark:bg-dark-700 shadow-4xl fixed top-0 right-0 flex h-full w-full max-w-4xl transform-gpu flex-col bg-white transition-transform duration-200">
-              <div className="dark:border-dark-500 flex items-center justify-between border-b border-gray-200 px-5 py-4">
-                <h2 className="dark:text-dark-50 text-lg font-semibold text-gray-800">
+              <div className="bg-primary-600 dark:bg-primary-700 flex items-center justify-between px-4 py-3 sm:px-5 sm:py-4">
+                <h2 className="text-base font-semibold text-white sm:text-lg">
                   {editId !== null ? "Edit Bank Payment" : "Add Bank Payment"}
                 </h2>
                 <button
+                  type="button"
                   onClick={() => setShowDrawer(false)}
-                  className="size-8 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                  className="flex size-8 cursor-pointer items-center justify-center rounded-full text-white hover:bg-white/10 hover:text-white focus:bg-white/10 active:bg-white/20"
                 >
                   <X className="size-5" />
                 </button>

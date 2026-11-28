@@ -410,15 +410,15 @@ export default function Followup() {
             <DialogPanel className="dark:bg-dark-700 fixed top-0 right-0 flex h-full w-full max-w-md transform-gpu flex-col bg-white shadow-2xl transition-transform duration-200">
               <form className="flex h-full flex-col">
                 {/* Header - Same as ModelYear */}
-                <div className="dark:border-dark-500 flex items-center justify-between border-b border-gray-200 px-5 py-4">
-                  <h2 className="dark:text-dark-50 text-lg font-semibold text-gray-800">
+                <div className="bg-primary-600 dark:bg-primary-700 flex items-center justify-between px-5 py-4">
+                  <h2 className="text-lg font-semibold text-white">
                     Add Follow-up
                   </h2>
                   <Button
                     onClick={() => setOpenFollowupModal(false)}
                     variant="flat"
                     isIcon
-                    className="size-8 rounded-full text-gray-400 transition-colors hover:text-gray-600 dark:hover:text-gray-200"
+                    className="cursor-pointer rounded-full p-1.5 text-white hover:bg-white/10 hover:text-white focus:bg-white/10 active:bg-white/20"
                     type="button"
                   >
                     <XMarkIcon className="size-5" />

@@ -301,25 +301,23 @@ export default function ModelYear() {
   ];
 
   // Year filter options - dynamically generated from existing data
-const yearFilterOptions = [
-  { id: "All", name: "All Years" },
-  ...(selectedModelFilter === "All"
-    ? []
-    : Array.from(
-        new Set(
-          years
-            .filter(
-              (y) => String(y.modelId) === selectedModelFilter
-            )
-            .map((y) => y.year)
+  const yearFilterOptions = [
+    { id: "All", name: "All Years" },
+    ...(selectedModelFilter === "All"
+      ? []
+      : Array.from(
+          new Set(
+            years
+              .filter((y) => String(y.modelId) === selectedModelFilter)
+              .map((y) => y.year),
+          ),
         )
-      )
-        .sort((a, b) => b - a)
-        .map((yr) => ({
-          id: yr.toString(),
-          name: yr.toString(),
-        }))),
-];
+          .sort((a, b) => b - a)
+          .map((yr) => ({
+            id: yr.toString(),
+            name: yr.toString(),
+          }))),
+  ];
 
   const statusFilterOptions = [
     { id: "All", name: "All Statuses" },
@@ -967,7 +965,7 @@ const yearFilterOptions = [
                     leaveTo="transform opacity-0 scale-95"
                   >
                     <MenuItems
-                        anchor="bottom start"
+                      anchor="bottom start"
                       className="dark:bg-dark-700 dark:border-dark-600 z-200 w-20 space-y-0.5 rounded-lg border border-gray-200 bg-white p-1 shadow-xl ring-1 ring-black/5 [--anchor-gap:6px] focus:outline-none"
                     >
                       {entriesOptions.map((opt) => (
@@ -1126,16 +1124,15 @@ const yearFilterOptions = [
                 onSubmit={handleSubmit(onFormSubmit)}
                 className="flex h-full flex-col"
               >
-                {/* Header */}
-                <div className="dark:border-dark-500 flex items-center justify-between border-b border-gray-200 px-5 py-4">
-                  <h2 className="dark:text-dark-50 text-lg font-semibold text-gray-800">
+                <div className="bg-primary-600 dark:bg-primary-700 flex items-center justify-between px-5 py-4">
+                  <h2 className="text-lg font-semibold text-white">
                     {editId !== null ? "Edit Year" : "Add Year"}
                   </h2>
                   <Button
                     onClick={() => setShowDrawer(false)}
                     variant="flat"
                     isIcon
-                    className="size-8 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                    className="size-8 rounded-full text-white hover:bg-white/10 hover:text-white focus:bg-white/10 active:bg-white/20"
                     type="button"
                   >
                     <XMarkIcon className="size-5" />

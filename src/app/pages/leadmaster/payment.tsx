@@ -41,7 +41,9 @@ const ModeBadge = ({ mode }: { mode: string }) => {
   };
   const color = colorMap[mode] || "bg-gray-500";
   return (
-    <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold text-white ${color}`}>
+    <span
+      className={`rounded-full px-2.5 py-0.5 text-xs font-semibold text-white ${color}`}
+    >
       {mode}
     </span>
   );
@@ -100,7 +102,7 @@ export function PaymentDrawer({
         {/* Right side sliding panel */}
         <div className="fixed inset-0 overflow-hidden">
           <div className="absolute inset-0 overflow-hidden">
-            <div className="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10">
+            <div className="pointer-events-none fixed inset-y-0 right-0 flex w-full max-w-full sm:w-auto sm:pl-10">
               <Transition.Child
                 as={Fragment}
                 enter="transform transition ease-in-out duration-300"
@@ -110,23 +112,23 @@ export function PaymentDrawer({
                 leaveFrom="translate-x-0"
                 leaveTo="translate-x-full"
               >
-                <Dialog.Panel className="pointer-events-auto w-screen max-w-3xl">
+                <Dialog.Panel className="pointer-events-auto w-full sm:w-screen sm:max-w-3xl">
                   <div className="dark:bg-dark-700 flex h-full flex-col overflow-y-auto bg-white shadow-xl">
                     {/* Header */}
-                    <div className="dark:bg-dark-600 dark:border-dark-500 sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-white px-5 py-4">
+                    <div className="bg-primary-600 dark:bg-primary-700 flex items-center justify-between px-5 py-4">
                       <div>
-                        <Dialog.Title className="dark:text-dark-50 text-lg font-semibold text-gray-900">
+                        <Dialog.Title className="text-lg font-semibold text-white">
                           Payment Details
                         </Dialog.Title>
                         {customerName && (
-                          <p className="dark:text-dark-200 mt-0.5 text-xs text-gray-500">
+                          <p className="mt-0.5 text-xs text-white">
                             {customerName}
                           </p>
                         )}
                       </div>
                       <button
                         onClick={onClose}
-                        className="dark:text-dark-200 rounded-full p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-white/10 dark:hover:text-white"
+                        className="cursor-pointer rounded-full p-1.5 text-white hover:bg-white/10 hover:text-white focus:bg-white/10 active:bg-white/20"
                       >
                         <XMarkIcon className="size-5" />
                       </button>

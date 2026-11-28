@@ -38,14 +38,14 @@ import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 interface Tractor {
   id: number;
   modelId: number;
-   showroomVariantId: number;
+  showroomVariantId: number;
 
   showroomVariant?: {
     variantName: string;
   };
   colourId: number;
   model?: { modelName: string };
- 
+
   colour?: { colourName: string; colourCode: string };
   itemName: string;
   codeNo: string;
@@ -82,7 +82,7 @@ interface OptionType {
   id: number;
   name: string;
   modelId?: number;
- showroomVariantId?: number;
+  showroomVariantId?: number;
 }
 
 // ─── Helper Functions ──────────────────────────────────────────────────────
@@ -122,8 +122,6 @@ const statusFilterOptions = [
   { id: "INACTIVE", name: "Inactive" },
 ];
 
-
-
 // ─── Main Component ──────────────────────────────────────────────────────
 const Tractor = () => {
   const [showDrawer, setShowDrawer] = useState(false);
@@ -139,24 +137,27 @@ const Tractor = () => {
   const [filteredColours, setFilteredColours] = useState<OptionType[]>([]);
   // ─── Dynamic Data from API ─────────────────────────────────────────────
   const [models, setModels] = useState<OptionType[]>([]);
-const [showroomVariants, setShowroomVariants] = useState<OptionType[]>([]);
-const [filteredShowroomVariants, setFilteredShowroomVariants] =
-  useState<OptionType[]>([]);
+  const [showroomVariants, setShowroomVariants] = useState<OptionType[]>([]);
+  const [filteredShowroomVariants, setFilteredShowroomVariants] = useState<
+    OptionType[]
+  >([]);
   const [colours, setColours] = useState<OptionType[]>([]);
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-const [confirmState, setConfirmState] = useState<"pending" | "success" | "error">("pending");
-const [confirmLoading, setConfirmLoading] = useState(false);
-const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
-const [isBulkDelete, setIsBulkDelete] = useState(false);
-const [selectedModelFilter, setSelectedModelFilter] = useState("All");
-const [selectedVariantFilter, setSelectedVariantFilter] = useState("All");
-const [selectedColourFilter, setSelectedColourFilter] = useState("All");
+  const [confirmState, setConfirmState] = useState<
+    "pending" | "success" | "error"
+  >("pending");
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+  const [isBulkDelete, setIsBulkDelete] = useState(false);
+  const [selectedModelFilter, setSelectedModelFilter] = useState("All");
+  const [selectedVariantFilter, setSelectedVariantFilter] = useState("All");
+  const [selectedColourFilter, setSelectedColourFilter] = useState("All");
 
   // ─── Form State ─────────────────────────────────────────────────────────
   const [formData, setFormData] = useState<FormValues>({
     modelId: "",
-     showroomVariantId: "",
+    showroomVariantId: "",
     colourId: "",
     itemName: "",
     codeNo: "",
@@ -173,12 +174,12 @@ const [selectedColourFilter, setSelectedColourFilter] = useState("All");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // ─── Fetch Data ──────────────────────────────────────────────────────
- useEffect(() => {
-  getModels();
-  getShowroomVariants();
-  getColours();
-  getTractors();
-}, []);
+  useEffect(() => {
+    getModels();
+    getShowroomVariants();
+    getColours();
+    getTractors();
+  }, []);
 
   const getModels = async () => {
     try {
@@ -196,50 +197,49 @@ const [selectedColourFilter, setSelectedColourFilter] = useState("All");
     }
   };
 
-const getShowroomVariants = async () => {
-  try {
-    const response = await apiHelper.get("/showroom-variant");
+  const getShowroomVariants = async () => {
+    try {
+      const response = await apiHelper.get("/showroom-variant");
 
-    let data = response?.data || response;
+      let data = response?.data || response;
 
-    if (!Array.isArray(data)) data = [];
+      if (!Array.isArray(data)) data = [];
 
-    const mapped = data.map((item: any) => ({
-      id: item.id,
-      name: item.variantName,
-      modelId: item.modelId,
-    }));
+      const mapped = data.map((item: any) => ({
+        id: item.id,
+        name: item.variantName,
+        modelId: item.modelId,
+      }));
 
-    setShowroomVariants(mapped);
-    setFilteredShowroomVariants(mapped);
-  } catch (error) {
-    console.error(error);
+      setShowroomVariants(mapped);
+      setFilteredShowroomVariants(mapped);
+    } catch (error) {
+      console.error(error);
 
-    setShowroomVariants([]);
-    setFilteredShowroomVariants([]);
-  }
-};
-const getVariantDetails = async (id: number) => {
-  try {
-    const res = await apiHelper.get(`/showroom-variant/${id}`);
+      setShowroomVariants([]);
+      setFilteredShowroomVariants([]);
+    }
+  };
+  const getVariantDetails = async (id: number) => {
+    try {
+      const res = await apiHelper.get(`/showroom-variant/${id}`);
 
-    console.log("Variant Response", res.data);
+      console.log("Variant Response", res.data);
 
-    // Your API returns the object directly
-    const variant = res.data;
+      // Your API returns the object directly
+      const variant = res.data;
 
-    setFormData((prev) => ({
-      ...prev,
-      purchasePriceNoGST: variant.purPrice,
-      purchasePriceTaxable:
-        variant.purPrice +
-        (variant.purPrice * variant.purTaxPercent) / 100,
-      taxSlab: String(variant.purTaxPercent),
-    }));
-  } catch (err) {
-    console.log(err);
-  }
-};
+      setFormData((prev) => ({
+        ...prev,
+        purchasePriceNoGST: variant.purPrice,
+        purchasePriceTaxable:
+          variant.purPrice + (variant.purPrice * variant.purTaxPercent) / 100,
+        taxSlab: String(variant.purTaxPercent),
+      }));
+    } catch (err) {
+      console.log(err);
+    }
+  };
   const getColours = async () => {
     try {
       const response = await apiHelper.get("/colours");
@@ -247,12 +247,11 @@ const getVariantDetails = async (id: number) => {
       let data = response?.data || response;
       if (!Array.isArray(data)) data = [];
 
-     const mapped = data.map((item: any) => ({
-  id: item.id,
-  name: item.colourName,
-  showroomVariantId:
-    item.showroomVariantId || item.showroomVariant?.id,
-}));
+      const mapped = data.map((item: any) => ({
+        id: item.id,
+        name: item.colourName,
+        showroomVariantId: item.showroomVariantId || item.showroomVariant?.id,
+      }));
 
       setColours(mapped);
       setFilteredColours(mapped);
@@ -279,28 +278,28 @@ const getVariantDetails = async (id: number) => {
   };
 
   // ─── Filter Variants by Model ─────────────────────────────────────────
- useEffect(() => {
-  if (formData.modelId) {
-    const filtered = showroomVariants.filter(
-      (v) => v.modelId === Number(formData.modelId)
-    );
-
-    setFilteredShowroomVariants(filtered);
-  } else {
-    setFilteredShowroomVariants(showroomVariants);
-  }
-}, [formData.modelId, showroomVariants]);
   useEffect(() => {
-  if (formData.showroomVariantId) {
-    const filtered = colours.filter(
-      (c) => c.showroomVariantId === Number(formData.showroomVariantId)
-    );
+    if (formData.modelId) {
+      const filtered = showroomVariants.filter(
+        (v) => v.modelId === Number(formData.modelId),
+      );
 
-    setFilteredColours(filtered);
-  } else {
-    setFilteredColours([]);
-  }
-}, [formData.showroomVariantId, colours]);
+      setFilteredShowroomVariants(filtered);
+    } else {
+      setFilteredShowroomVariants(showroomVariants);
+    }
+  }, [formData.modelId, showroomVariants]);
+  useEffect(() => {
+    if (formData.showroomVariantId) {
+      const filtered = colours.filter(
+        (c) => c.showroomVariantId === Number(formData.showroomVariantId),
+      );
+
+      setFilteredColours(filtered);
+    } else {
+      setFilteredColours([]);
+    }
+  }, [formData.showroomVariantId, colours]);
   // ─── Handlers ───────────────────────────────────────────────────────────
   const handleInputChange = (field: keyof FormValues, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -315,7 +314,7 @@ const getVariantDetails = async (id: number) => {
     setEditId(null);
     setFormData({
       modelId: "",
-       showroomVariantId: "",
+      showroomVariantId: "",
       colourId: "",
       itemName: "",
       codeNo: "",
@@ -337,7 +336,7 @@ const getVariantDetails = async (id: number) => {
     setEditId(item.id);
     setFormData({
       modelId: item.modelId || "",
-     showroomVariantId: item.showroomVariantId || "",
+      showroomVariantId: item.showroomVariantId || "",
       colourId: item.colourId || "",
       itemName: item.itemName,
       codeNo: item.codeNo,
@@ -354,74 +353,75 @@ const getVariantDetails = async (id: number) => {
     setShowDrawer(true);
   };
 
-const handleDelete = (id: number) => {
-  setDeleteTargetId(id);
-  setIsBulkDelete(false);
-  setConfirmState("pending");
-  setShowConfirmModal(true);
-};
-const handleBulkDelete = () => {
-  setIsBulkDelete(true);
-  setConfirmState("pending");
-  setShowConfirmModal(true);
-};
+  const handleDelete = (id: number) => {
+    setDeleteTargetId(id);
+    setIsBulkDelete(false);
+    setConfirmState("pending");
+    setShowConfirmModal(true);
+  };
+  const handleBulkDelete = () => {
+    setIsBulkDelete(true);
+    setConfirmState("pending");
+    setShowConfirmModal(true);
+  };
 
-const performDelete = async () => {
-  setConfirmLoading(true);
-  try {
-    if (isBulkDelete) {
-      await Promise.all(selectedIds.map((id) => apiHelper.delete(`/tractors/${id}`)));
-      toast.success(`${selectedIds.length} tractors deleted successfully!`);
-      setSelectedIds([]);
-      await getTractors();
-      setCurrentPage(1);
-      setConfirmState("success");
-    } else {
-      if (deleteTargetId === null) return;
-      await apiHelper.delete(`/tractors/${deleteTargetId}`);
-      toast.success("Tractor deleted successfully!");
-      await getTractors();
-      setDeleteTargetId(null);
-      setConfirmState("success");
+  const performDelete = async () => {
+    setConfirmLoading(true);
+    try {
+      if (isBulkDelete) {
+        await Promise.all(
+          selectedIds.map((id) => apiHelper.delete(`/tractors/${id}`)),
+        );
+        toast.success(`${selectedIds.length} tractors deleted successfully!`);
+        setSelectedIds([]);
+        await getTractors();
+        setCurrentPage(1);
+        setConfirmState("success");
+      } else {
+        if (deleteTargetId === null) return;
+        await apiHelper.delete(`/tractors/${deleteTargetId}`);
+        toast.success("Tractor deleted successfully!");
+        await getTractors();
+        setDeleteTargetId(null);
+        setConfirmState("success");
+      }
+      setTimeout(() => setShowConfirmModal(false), 1500);
+    } catch (error: any) {
+      console.error("Delete failed:", error);
+      setConfirmState("error");
+      toast.error(
+        error.response?.data?.message || "Failed to delete. Please try again.",
+      );
+    } finally {
+      setConfirmLoading(false);
     }
-    setTimeout(() => setShowConfirmModal(false), 1500);
-  } catch (error: any) {
-    console.error("Delete failed:", error);
-    setConfirmState("error");
-    toast.error(error.response?.data?.message || "Failed to delete. Please try again.");
-  } finally {
-    setConfirmLoading(false);
-  }
-};
+  };
 
-const handleToggleStatus = async (id: number) => {
-  try {
-    setTractors((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              status:
-                item.status === "ACTIVE"
-                  ? "INACTIVE"
-                  : "ACTIVE",
-            }
-          : item,
-      )
-    );
+  const handleToggleStatus = async (id: number) => {
+    try {
+      setTractors((prev) =>
+        prev.map((item) =>
+          item.id === id
+            ? {
+                ...item,
+                status: item.status === "ACTIVE" ? "INACTIVE" : "ACTIVE",
+              }
+            : item,
+        ),
+      );
 
-    await apiHelper.patch(`/tractors/${id}/status`);
-  } catch (error) {
-    console.error(error);
-    await getTractors();
-  }
-};
+      await apiHelper.patch(`/tractors/${id}/status`);
+    } catch (error) {
+      console.error(error);
+      await getTractors();
+    }
+  };
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
     if (!formData.modelId) newErrors.modelId = "Model is required";
     if (!formData.showroomVariantId)
-  newErrors.showroomVariantId = "Showroom Variant is required";
+      newErrors.showroomVariantId = "Showroom Variant is required";
     if (!formData.colourId) newErrors.colourId = "Colour is required";
     if (!formData.itemName.trim()) newErrors.itemName = "Item Name is required";
     if (!formData.codeNo.trim()) newErrors.codeNo = "Code No is required";
@@ -430,156 +430,159 @@ const handleToggleStatus = async (id: number) => {
   };
 
   const handleSave = async () => {
-  if (!validate()) return;
+    if (!validate()) return;
 
-  try {
-    const payload = {
-      modelId: Number(formData.modelId),
-      showroomVariantId: Number(formData.showroomVariantId),
-      colourId: Number(formData.colourId),
-      itemName: formData.itemName,
-      codeNo: formData.codeNo,
-      shortName: formData.shortName,
-      hsnCode: formData.hsnCode,
-      taxSlab: formData.taxSlab,
-      listOfGroup: formData.listOfGroup,
-      typeOfFuel: formData.typeOfFuel,
-      fuelCapacity: formData.fuelCapacity,
-      purchasePriceNoGST: Number(formData.purchasePriceNoGST),
-      purchasePriceTaxable: Number(formData.purchasePriceTaxable),
-      status: formData.status,
-    };
+    try {
+      const payload = {
+        modelId: Number(formData.modelId),
+        showroomVariantId: Number(formData.showroomVariantId),
+        colourId: Number(formData.colourId),
+        itemName: formData.itemName,
+        codeNo: formData.codeNo,
+        shortName: formData.shortName,
+        hsnCode: formData.hsnCode,
+        taxSlab: formData.taxSlab,
+        listOfGroup: formData.listOfGroup,
+        typeOfFuel: formData.typeOfFuel,
+        fuelCapacity: formData.fuelCapacity,
+        purchasePriceNoGST: Number(formData.purchasePriceNoGST),
+        purchasePriceTaxable: Number(formData.purchasePriceTaxable),
+        status: formData.status,
+      };
 
-    if (editId) {
-      await apiHelper.put(`/tractors/${editId}`, payload);
-      toast.success("Tractor updated successfully!");
-    } else {
-      await apiHelper.post("/tractors", payload);
-      toast.success("Tractor created successfully!");
+      if (editId) {
+        await apiHelper.put(`/tractors/${editId}`, payload);
+        toast.success("Tractor updated successfully!");
+      } else {
+        await apiHelper.post("/tractors", payload);
+        toast.success("Tractor created successfully!");
+      }
+
+      await getTractors();
+      setShowDrawer(false);
+    } catch (error: any) {
+      console.error("Save failed:", error);
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to save tractor. Please try again.",
+      );
     }
-
-    await getTractors();
-    setShowDrawer(false);
-  } catch (error: any) {
-    console.error("Save failed:", error);
-    toast.error(error.response?.data?.message || "Failed to save tractor. Please try again.");
-  }
-};
+  };
 
   // ─── Filter Data ────────────────────────────────────────────────────────
- const filteredData = tractors.filter((item: any) => {
-  const searchText = search.trim().toLowerCase();
+  const filteredData = tractors.filter((item: any) => {
+    const searchText = search.trim().toLowerCase();
 
-  const matchesSearch =
-    !searchText ||
-    String(item.model?.modelName ?? "")
-      .toLowerCase()
-      .includes(searchText) ||
-    String(item.showroomVariant?.variantName ?? "")
-      .toLowerCase()
-      .includes(searchText) ||
-    String(item.colour?.colourName ?? "")
-      .toLowerCase()
-      .includes(searchText) ||
-    String(item.itemName ?? "")
-      .toLowerCase()
-      .includes(searchText) ||
-    String(item.codeNo ?? "")
-      .toLowerCase()
-      .includes(searchText);
+    const matchesSearch =
+      !searchText ||
+      String(item.model?.modelName ?? "")
+        .toLowerCase()
+        .includes(searchText) ||
+      String(item.showroomVariant?.variantName ?? "")
+        .toLowerCase()
+        .includes(searchText) ||
+      String(item.colour?.colourName ?? "")
+        .toLowerCase()
+        .includes(searchText) ||
+      String(item.itemName ?? "")
+        .toLowerCase()
+        .includes(searchText) ||
+      String(item.codeNo ?? "")
+        .toLowerCase()
+        .includes(searchText);
 
-  const matchesModel =
-    selectedModelFilter === "All" ||
-    String(item.model?.id) === String(selectedModelFilter);
+    const matchesModel =
+      selectedModelFilter === "All" ||
+      String(item.model?.id) === String(selectedModelFilter);
 
-  const matchesVariant =
-    selectedVariantFilter === "All" ||
-    String(item.showroomVariant?.id) === String(selectedVariantFilter);
+    const matchesVariant =
+      selectedVariantFilter === "All" ||
+      String(item.showroomVariant?.id) === String(selectedVariantFilter);
 
-  const matchesColour =
-    selectedColourFilter === "All" ||
-    String(item.colour?.id) === String(selectedColourFilter);
+    const matchesColour =
+      selectedColourFilter === "All" ||
+      String(item.colour?.id) === String(selectedColourFilter);
 
-  const matchesStatus =
-    selectedStatusFilter === "All" ||
-    String(item.status) === String(selectedStatusFilter);
+    const matchesStatus =
+      selectedStatusFilter === "All" ||
+      String(item.status) === String(selectedStatusFilter);
 
-  return (
-    matchesSearch &&
-    matchesModel &&
-    matchesVariant &&
-    matchesColour &&
-    matchesStatus
-  );
-});
+    return (
+      matchesSearch &&
+      matchesModel &&
+      matchesVariant &&
+      matchesColour &&
+      matchesStatus
+    );
+  });
   const modelOptions = [
-  { id: "All", name: "All Models" },
+    { id: "All", name: "All Models" },
 
-  ...Array.from(
-    new Map(
-      tractors
-        .filter((item: any) => item.model?.id)
-        .map((item: any) => [
-          String(item.model.id),
-          {
-            id: String(item.model.id),
-            name: item.model.modelName,
-          },
-        ]),
-    ).values(),
-  ),
-];
-const variantOptions = [
-  { id: "All", name: "All Variants" },
+    ...Array.from(
+      new Map(
+        tractors
+          .filter((item: any) => item.model?.id)
+          .map((item: any) => [
+            String(item.model.id),
+            {
+              id: String(item.model.id),
+              name: item.model.modelName,
+            },
+          ]),
+      ).values(),
+    ),
+  ];
+  const variantOptions = [
+    { id: "All", name: "All Variants" },
 
-  ...Array.from(
-    new Map(
-      tractors
-        .filter((item: any) => {
-          return (
-            selectedModelFilter === "All" ||
-            String(item.model?.id) === String(selectedModelFilter)
-          );
-        })
-        .filter((item: any) => item.showroomVariant?.id)
-        .map((item: any) => [
-          String(item.showroomVariant.id),
-          {
-            id: String(item.showroomVariant.id),
-            name: item.showroomVariant.variantName,
-          },
-        ]),
-    ).values(),
-  ),
-];
-const colourOptions = [
-  { id: "All", name: "All Colours" },
+    ...Array.from(
+      new Map(
+        tractors
+          .filter((item: any) => {
+            return (
+              selectedModelFilter === "All" ||
+              String(item.model?.id) === String(selectedModelFilter)
+            );
+          })
+          .filter((item: any) => item.showroomVariant?.id)
+          .map((item: any) => [
+            String(item.showroomVariant.id),
+            {
+              id: String(item.showroomVariant.id),
+              name: item.showroomVariant.variantName,
+            },
+          ]),
+      ).values(),
+    ),
+  ];
+  const colourOptions = [
+    { id: "All", name: "All Colours" },
 
-  ...Array.from(
-    new Map(
-      tractors
-        .filter((item: any) => {
-          const modelMatch =
-            selectedModelFilter === "All" ||
-            String(item.model?.id) === String(selectedModelFilter);
+    ...Array.from(
+      new Map(
+        tractors
+          .filter((item: any) => {
+            const modelMatch =
+              selectedModelFilter === "All" ||
+              String(item.model?.id) === String(selectedModelFilter);
 
-          const variantMatch =
-            selectedVariantFilter === "All" ||
-            String(item.variant?.id) === String(selectedVariantFilter);
+            const variantMatch =
+              selectedVariantFilter === "All" ||
+              String(item.variant?.id) === String(selectedVariantFilter);
 
-          return modelMatch && variantMatch;
-        })
-        .filter((item: any) => item.colour?.id)
-        .map((item: any) => [
-          String(item.colour.id),
-          {
-            id: String(item.colour.id),
-            name: item.colour.colourName,
-          },
-        ]),
-    ).values(),
-  ),
-];
+            return modelMatch && variantMatch;
+          })
+          .filter((item: any) => item.colour?.id)
+          .map((item: any) => [
+            String(item.colour.id),
+            {
+              id: String(item.colour.id),
+              name: item.colour.colourName,
+            },
+          ]),
+      ).values(),
+    ),
+  ];
   const groupOptions = [
     { id: "TRACTOR", name: "Tractor" },
     { id: "IMPLEMENT", name: "Implement" },
@@ -634,47 +637,47 @@ const colourOptions = [
           </p>
         </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-2 md:flex-nowrap">
-  {/* Left side - Filter and icons */}
-  <div className="flex items-center gap-2">
-    <button
-      type="button"
-      onClick={() => setShowFilterBar(!showFilterBar)}
-      className={`inline-flex items-center gap-1.5 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
-        showFilterBar
-          ? "bg-primary-50 border-primary-200 text-primary-600 dark:bg-dark-600 dark:border-dark-500 dark:text-white"
-          : "dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
-      }`}
-    >
-      <FunnelIcon className="size-4.5" />
-      <span className="hidden sm:inline">Filter</span>
-    </button>
+        <div className="flex flex-wrap items-center justify-between gap-2 md:flex-nowrap">
+          {/* Left side - Filter and icons */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowFilterBar(!showFilterBar)}
+              className={`inline-flex items-center gap-1.5 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
+                showFilterBar
+                  ? "bg-primary-50 border-primary-200 text-primary-600 dark:bg-dark-600 dark:border-dark-500 dark:text-white"
+                  : "dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              <FunnelIcon className="size-4.5" />
+              <span className="hidden sm:inline">Filter</span>
+            </button>
 
-    <button
-      type="button"
-      className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
-    >
-      <RiFileExcel2Fill className="text-lg text-green-500" />
-    </button>
+            <button
+              type="button"
+              className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            >
+              <RiFileExcel2Fill className="text-lg text-green-500" />
+            </button>
 
-    <button
-      type="button"
-      className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
-    >
-      <RiFilePdfFill className="text-lg text-red-500" />
-    </button>
-  </div>
+            <button
+              type="button"
+              className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            >
+              <RiFilePdfFill className="text-lg text-red-500" />
+            </button>
+          </div>
 
-  {/* Right side - Add Tractor button */}
-  <Button
-    color="primary"
-    onClick={handleOpenAddDrawer}
-    className="whitespace-nowrap"
-  >
-    <PlusIcon className="mr-1.5 size-4.5" />
-    Add Tractor
-  </Button>
-</div>
+          {/* Right side - Add Tractor button */}
+          <Button
+            color="primary"
+            onClick={handleOpenAddDrawer}
+            className="whitespace-nowrap"
+          >
+            <PlusIcon className="mr-1.5 size-4.5" />
+            Add Tractor
+          </Button>
+        </div>
       </div>
 
       {/* Search */}
@@ -696,80 +699,74 @@ const colourOptions = [
       {showFilterBar && (
         <div className="dark:bg-dark-700 dark:border-dark-500 animate-in fade-in slide-in-from-top-2 rounded-xl border border-gray-200 bg-white p-4 transition-all duration-150">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
-             <div>
-    <label className="mb-1 block text-sm font-medium">
-      Model
-    </label>
+            <div>
+              <label className="mb-1 block text-sm font-medium">Model</label>
 
-    <Combobox
-      data={modelOptions}
-      searchFields={["name"]}
-      value={
-        modelOptions.find(
-          (item) => item.id === selectedModelFilter,
-        ) || modelOptions[0]
-      }
-      onChange={(option: any) => {
-        const value = option?.id ?? "All";
+              <Combobox
+                data={modelOptions}
+                searchFields={["name"]}
+                value={
+                  modelOptions.find(
+                    (item) => item.id === selectedModelFilter,
+                  ) || modelOptions[0]
+                }
+                onChange={(option: any) => {
+                  const value = option?.id ?? "All";
 
-        setSelectedModelFilter(value);
+                  setSelectedModelFilter(value);
 
-        // Reset dependent filters
-        setSelectedVariantFilter("All");
-        setSelectedColourFilter("All");
+                  // Reset dependent filters
+                  setSelectedVariantFilter("All");
+                  setSelectedColourFilter("All");
 
-        setCurrentPage(1);
-      }}
-      displayField="name"
-    />
-  </div>
-   <div>
-    <label className="mb-1 block text-sm font-medium">
-      Variant
-    </label>
+                  setCurrentPage(1);
+                }}
+                displayField="name"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium">Variant</label>
 
-    <Combobox
-      data={variantOptions}
-      searchFields={["name"]}
-      value={
-        variantOptions.find(
-          (item) => item.id === selectedVariantFilter,
-        ) || variantOptions[0]
-      }
-      onChange={(option: any) => {
-        const value = option?.id ?? "All";
+              <Combobox
+                data={variantOptions}
+                searchFields={["name"]}
+                value={
+                  variantOptions.find(
+                    (item) => item.id === selectedVariantFilter,
+                  ) || variantOptions[0]
+                }
+                onChange={(option: any) => {
+                  const value = option?.id ?? "All";
 
-        setSelectedVariantFilter(value);
+                  setSelectedVariantFilter(value);
 
-        // Reset colour
-        setSelectedColourFilter("All");
+                  // Reset colour
+                  setSelectedColourFilter("All");
 
-        setCurrentPage(1);
-      }}
-      displayField="name"
-    />
-  </div>
+                  setCurrentPage(1);
+                }}
+                displayField="name"
+              />
+            </div>
 
-   <div>
-    <label className="mb-1 block text-sm font-medium">
-      Colour
-    </label>
+            <div>
+              <label className="mb-1 block text-sm font-medium">Colour</label>
 
-    <Combobox
-      data={colourOptions}
-      searchFields={["name"]}
-      value={
-        colourOptions.find(
-          (item) => item.id === selectedColourFilter,
-        ) || colourOptions[0]
-      }
-      onChange={(option: any) => {
-        setSelectedColourFilter(option?.id ?? "All");
-        setCurrentPage(1);
-      }}
-      displayField="name"
-    />
-  </div>
+              <Combobox
+                data={colourOptions}
+                searchFields={["name"]}
+                value={
+                  colourOptions.find(
+                    (item) => item.id === selectedColourFilter,
+                  ) || colourOptions[0]
+                }
+                onChange={(option: any) => {
+                  setSelectedColourFilter(option?.id ?? "All");
+                  setCurrentPage(1);
+                }}
+                displayField="name"
+              />
+            </div>
             <div className="flex flex-col gap-1">
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
                 Status
@@ -863,7 +860,7 @@ const colourOptions = [
                       {item.model?.modelName}
                     </Td>
                     <Td className="dark:text-dark-200 py-4 text-gray-600">
-                   {item.showroomVariant?.variantName}
+                      {item.showroomVariant?.variantName}
                     </Td>
                     <Td className="dark:text-dark-200 py-4 text-gray-600">
                       <span className="inline-flex items-center gap-2">
@@ -1005,7 +1002,7 @@ const colourOptions = [
                     leaveTo="transform opacity-0 scale-95"
                   >
                     <MenuItems
-                        anchor="bottom start"
+                      anchor="bottom start"
                       className="dark:bg-dark-700 dark:border-dark-600 z-200 w-20 space-y-0.5 rounded-lg border border-gray-200 bg-white p-1 shadow-xl ring-1 ring-black/5 [--anchor-gap:6px] focus:outline-none"
                     >
                       {entriesOptions.map((opt) => (
@@ -1154,15 +1151,15 @@ const colourOptions = [
             <DialogPanel className="dark:bg-dark-700 fixed top-0 right-0 flex h-full w-full max-w-full transform-gpu flex-col bg-white shadow-2xl transition-transform duration-200 sm:max-w-xl md:max-w-2xl lg:max-w-3xl xl:max-w-4xl">
               <div className="flex h-full flex-col">
                 {/* Header */}
-                <div className="dark:border-dark-500 flex items-center justify-between border-b border-gray-200 px-4 py-3 sm:px-5 sm:py-4">
-                  <h2 className="dark:text-dark-50 text-base font-semibold text-gray-800 sm:text-lg">
+                <div className="bg-primary-600 dark:bg-primary-700 flex items-center justify-between px-4 py-3 sm:px-5 sm:py-4">
+                  <h2 className="text-base font-semibold text-white sm:text-lg">
                     {editId !== null ? "Edit Tractor" : "Add Tractor"}
                   </h2>
                   <Button
                     onClick={() => setShowDrawer(false)}
                     variant="flat"
                     isIcon
-                    className="size-8 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                    className="size-8 rounded-full text-white hover:bg-white/10 hover:text-white focus:bg-white/10 active:bg-white/20"
                     type="button"
                   >
                     <XMarkIcon className="size-5" />
@@ -1215,22 +1212,22 @@ const colourOptions = [
                       <Combobox
                         data={filteredShowroomVariants}
                         displayField="name"
-                       value={
-  filteredShowroomVariants.find(
-    (v) => v.id === Number(formData.showroomVariantId)
-  ) || null
-}
-                       onChange={async (val: OptionType | null) => {
-  setFormData((prev) => ({
-    ...prev,
-    showroomVariantId: val?.id || "",
-    colourId: "",
-  }));
+                        value={
+                          filteredShowroomVariants.find(
+                            (v) => v.id === Number(formData.showroomVariantId),
+                          ) || null
+                        }
+                        onChange={async (val: OptionType | null) => {
+                          setFormData((prev) => ({
+                            ...prev,
+                            showroomVariantId: val?.id || "",
+                            colourId: "",
+                          }));
 
-  if (val?.id) {
-    await getVariantDetails(val.id);
-  }
-}}
+                          if (val?.id) {
+                            await getVariantDetails(val.id);
+                          }
+                        }}
                         placeholder="Select Variant"
                         searchFields={["name"]}
                         disabled={!formData.modelId}
@@ -1449,8 +1446,14 @@ const colourOptions = [
                     <Combobox
                       data={statusOptions}
                       displayField="label"
-                     value={statusOptions.find(opt => opt.value === formData.status) as { label: string; value: "ACTIVE" | "INACTIVE" } | null || null}
-
+                      value={
+                        (statusOptions.find(
+                          (opt) => opt.value === formData.status,
+                        ) as {
+                          label: string;
+                          value: "ACTIVE" | "INACTIVE";
+                        } | null) || null
+                      }
                       onChange={(
                         val: {
                           label: string;
@@ -1489,39 +1492,39 @@ const colourOptions = [
       </Transition>
 
       {/* Confirmation Modal */}
-<ConfirmModal
-  show={showConfirmModal}
-  onClose={() => {
-    setShowConfirmModal(false);
-    setDeleteTargetId(null);
-    setConfirmState("pending");
-  }}
-  onOk={performDelete}
-  confirmLoading={confirmLoading}
-  state={confirmState}
-  messages={{
-    pending: {
-      Icon: ExclamationTriangleIcon,
-      title: isBulkDelete ? "Delete Selected Tractors?" : "Are you sure?",
-      description: isBulkDelete 
-        ? `Are you sure you want to delete ${selectedIds.length} selected tractors? This action cannot be undone.`
-        : "Are you sure you want to delete this tractor? Once deleted, it cannot be restored.",
-      actionText: isBulkDelete ? "Delete All" : "Delete",
-    },
-    success: {
-      title: "Deleted Successfully",
-      description: isBulkDelete 
-        ? `${selectedIds.length} tractors have been deleted.`
-        : "The tractor has been deleted.",
-      actionText: "Done",
-    },
-    error: {
-      title: "Delete Failed",
-      description: "Failed to delete. Please try again.",
-      actionText: "Try Again",
-    },
-  }}
-/>
+      <ConfirmModal
+        show={showConfirmModal}
+        onClose={() => {
+          setShowConfirmModal(false);
+          setDeleteTargetId(null);
+          setConfirmState("pending");
+        }}
+        onOk={performDelete}
+        confirmLoading={confirmLoading}
+        state={confirmState}
+        messages={{
+          pending: {
+            Icon: ExclamationTriangleIcon,
+            title: isBulkDelete ? "Delete Selected Tractors?" : "Are you sure?",
+            description: isBulkDelete
+              ? `Are you sure you want to delete ${selectedIds.length} selected tractors? This action cannot be undone.`
+              : "Are you sure you want to delete this tractor? Once deleted, it cannot be restored.",
+            actionText: isBulkDelete ? "Delete All" : "Delete",
+          },
+          success: {
+            title: "Deleted Successfully",
+            description: isBulkDelete
+              ? `${selectedIds.length} tractors have been deleted.`
+              : "The tractor has been deleted.",
+            actionText: "Done",
+          },
+          error: {
+            title: "Delete Failed",
+            description: "Failed to delete. Please try again.",
+            actionText: "Try Again",
+          },
+        }}
+      />
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import { useState,useEffect } from "react";
+import { useState, useEffect } from "react";
 import apiHelper from "@/utils/apiHelper";
 import { useForm, useWatch } from "react-hook-form";
 import {
@@ -69,20 +69,21 @@ const statusFilterOptions = [
 const Banker = () => {
   const [showDrawer, setShowDrawer] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
-const [bankers, setBankers] =
-  useState<Banker[]>([]);
+  const [bankers, setBankers] = useState<Banker[]>([]);
   const [search, setSearch] = useState("");
   const [showFilterBar, setShowFilterBar] = useState(false);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [selectedStatusFilter, setSelectedStatusFilter] = useState("All");
-const [selectedBankerFilter, setSelectedBankerFilter] = useState("All");
+  const [selectedBankerFilter, setSelectedBankerFilter] = useState("All");
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-const [confirmState, setConfirmState] = useState<"pending" | "success" | "error">("pending");
-const [confirmLoading, setConfirmLoading] = useState(false);
-const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
-const [isBulkDelete, setIsBulkDelete] = useState(false);
+  const [confirmState, setConfirmState] = useState<
+    "pending" | "success" | "error"
+  >("pending");
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+  const [isBulkDelete, setIsBulkDelete] = useState(false);
 
   const {
     register,
@@ -101,24 +102,24 @@ const [isBulkDelete, setIsBulkDelete] = useState(false);
   const formStatusValue = useWatch({
     control,
     name: "status",
-    defaultValue: "ACTIVE"
+    defaultValue: "ACTIVE",
   });
 
   const formValidationRules = {
     banker: { required: "Banker name is required" },
   };
-const getBankers = async () => {
-  try {
-    const response = await apiHelper.get("/bankers");
-    setBankers(response.data || []);
-  } catch (error) {
-    console.log(error);
-  }
-};
+  const getBankers = async () => {
+    try {
+      const response = await apiHelper.get("/bankers");
+      setBankers(response.data || []);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
-useEffect(() => {
-  getBankers();
-}, []);
+  useEffect(() => {
+    getBankers();
+  }, []);
   const handleOpenAddDrawer = () => {
     setEditId(null);
     reset({
@@ -137,102 +138,106 @@ useEffect(() => {
     setShowDrawer(true);
   };
 
-const handleDelete = (id: number) => {
-  setDeleteTargetId(id);
-  setIsBulkDelete(false);
-  setConfirmState("pending");
-  setShowConfirmModal(true);
-};
+  const handleDelete = (id: number) => {
+    setDeleteTargetId(id);
+    setIsBulkDelete(false);
+    setConfirmState("pending");
+    setShowConfirmModal(true);
+  };
 
-const handleBulkDelete = () => {
-  setIsBulkDelete(true);
-  setConfirmState("pending");
-  setShowConfirmModal(true);
-};
+  const handleBulkDelete = () => {
+    setIsBulkDelete(true);
+    setConfirmState("pending");
+    setShowConfirmModal(true);
+  };
 
-const performDelete = async () => {
-  setConfirmLoading(true);
-  try {
-    if (isBulkDelete) {
-      await Promise.all(selectedIds.map((id) => apiHelper.delete(`/bankers/${id}`)));
-      toast.success(`${selectedIds.length} bankers deleted successfully!`);
-      setSelectedIds([]);
-      await getBankers();
-      setCurrentPage(1);
-      setConfirmState("success");
-    } else {
-      if (deleteTargetId === null) return;
-      await apiHelper.delete(`/bankers/${deleteTargetId}`);
-      toast.success("Banker deleted successfully!");
-      await getBankers();
-      setDeleteTargetId(null);
-      setConfirmState("success");
+  const performDelete = async () => {
+    setConfirmLoading(true);
+    try {
+      if (isBulkDelete) {
+        await Promise.all(
+          selectedIds.map((id) => apiHelper.delete(`/bankers/${id}`)),
+        );
+        toast.success(`${selectedIds.length} bankers deleted successfully!`);
+        setSelectedIds([]);
+        await getBankers();
+        setCurrentPage(1);
+        setConfirmState("success");
+      } else {
+        if (deleteTargetId === null) return;
+        await apiHelper.delete(`/bankers/${deleteTargetId}`);
+        toast.success("Banker deleted successfully!");
+        await getBankers();
+        setDeleteTargetId(null);
+        setConfirmState("success");
+      }
+      setTimeout(() => setShowConfirmModal(false), 1500);
+    } catch (error: any) {
+      console.error("Delete failed:", error);
+      setConfirmState("error");
+      toast.error(
+        error.response?.data?.message || "Failed to delete. Please try again.",
+      );
+    } finally {
+      setConfirmLoading(false);
     }
-    setTimeout(() => setShowConfirmModal(false), 1500);
-  } catch (error: any) {
-    console.error("Delete failed:", error);
-    setConfirmState("error");
-    toast.error(error.response?.data?.message || "Failed to delete. Please try again.");
-  } finally {
-    setConfirmLoading(false);
-  }
-};
+  };
 
-const handleToggleStatus = async (id: number) => {
-  try {
-    await apiHelper.patch(
-      `/bankers/toggle-status/${id}`,
-      {}
-    );
+  const handleToggleStatus = async (id: number) => {
+    try {
+      await apiHelper.patch(`/bankers/toggle-status/${id}`, {});
 
-    getBankers();
-  } catch (error) {
-    console.log(error);
-  }
-};
-
- const onFormSubmit = async (data: FormValues) => {
-  try {
-    if (editId) {
-      await apiHelper.put(`/bankers/${editId}`, data);
-      toast.success("Banker updated successfully!");
-    } else {
-      await apiHelper.post("/bankers", data);
-      toast.success("Banker created successfully!");
+      getBankers();
+    } catch (error) {
+      console.log(error);
     }
+  };
 
-    await getBankers();
-    setShowDrawer(false);
-    setEditId(null);
-    reset({
-      banker: "",
-      status: "ACTIVE",
-    });
-  } catch (error: any) {
-    console.log(error);
-    toast.error(error.response?.data?.message || "Failed to save banker. Please try again.");
-  }
-};
-const bankerFilterOptions = [
-  { id: "All", name: "All Bankers" },
-  ...Array.from(
-    new Set(bankers.map((item) => item.banker).filter(Boolean)),
-  ).map((name) => ({ id: name, name })),
-];
+  const onFormSubmit = async (data: FormValues) => {
+    try {
+      if (editId) {
+        await apiHelper.put(`/bankers/${editId}`, data);
+        toast.success("Banker updated successfully!");
+      } else {
+        await apiHelper.post("/bankers", data);
+        toast.success("Banker created successfully!");
+      }
+
+      await getBankers();
+      setShowDrawer(false);
+      setEditId(null);
+      reset({
+        banker: "",
+        status: "ACTIVE",
+      });
+    } catch (error: any) {
+      console.log(error);
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to save banker. Please try again.",
+      );
+    }
+  };
+  const bankerFilterOptions = [
+    { id: "All", name: "All Bankers" },
+    ...Array.from(
+      new Set(bankers.map((item) => item.banker).filter(Boolean)),
+    ).map((name) => ({ id: name, name })),
+  ];
   // Filter data
-const filteredData = bankers.filter((item) => {
-  const matchesSearch = item.banker
-    .toLowerCase()
-    .includes(search.toLowerCase());
+  const filteredData = bankers.filter((item) => {
+    const matchesSearch = item.banker
+      .toLowerCase()
+      .includes(search.toLowerCase());
 
-  const matchesBanker =
-    selectedBankerFilter === "All" || item.banker === selectedBankerFilter;
+    const matchesBanker =
+      selectedBankerFilter === "All" || item.banker === selectedBankerFilter;
 
-  const matchesStatus =
-    selectedStatusFilter === "All" || item.status === selectedStatusFilter;
+    const matchesStatus =
+      selectedStatusFilter === "All" || item.status === selectedStatusFilter;
 
-  return matchesSearch && matchesBanker && matchesStatus;
-});
+    return matchesSearch && matchesBanker && matchesStatus;
+  });
 
   const totalItems = filteredData.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
@@ -258,7 +263,7 @@ const filteredData = bankers.filter((item) => {
     setSelectedIds((prev) =>
       prev.includes(id)
         ? prev.filter((selectedId) => selectedId !== id)
-        : [...prev, id]
+        : [...prev, id],
     );
   };
 
@@ -276,46 +281,46 @@ const filteredData = bankers.filter((item) => {
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-2 md:flex-nowrap">
-  {/* Left side - Filter and icons */}
-  <div className="flex items-center gap-2">
-    <button
-      type="button"
-      onClick={() => setShowFilterBar(!showFilterBar)}
-      className={`inline-flex items-center gap-1.5 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
-        showFilterBar
-          ? "bg-primary-50 border-primary-200 text-primary-600 dark:bg-dark-600 dark:border-dark-500 dark:text-white"
-          : "dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
-      }`}
-    >
-      <FunnelIcon className="size-4.5" />
-      <span className="hidden sm:inline">Filter</span>
-    </button>
+          {/* Left side - Filter and icons */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowFilterBar(!showFilterBar)}
+              className={`inline-flex items-center gap-1.5 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
+                showFilterBar
+                  ? "bg-primary-50 border-primary-200 text-primary-600 dark:bg-dark-600 dark:border-dark-500 dark:text-white"
+                  : "dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              <FunnelIcon className="size-4.5" />
+              <span className="hidden sm:inline">Filter</span>
+            </button>
 
-    <button
-      type="button"
-      className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
-    >
-      <RiFileExcel2Fill className="text-lg text-green-500" />
-    </button>
+            <button
+              type="button"
+              className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            >
+              <RiFileExcel2Fill className="text-lg text-green-500" />
+            </button>
 
-    <button
-      type="button"
-      className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
-    >
-      <RiFilePdfFill className="text-lg text-red-500" />
-    </button>
-  </div>
+            <button
+              type="button"
+              className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            >
+              <RiFilePdfFill className="text-lg text-red-500" />
+            </button>
+          </div>
 
-  {/* Right side - Add Banker button */}
-  <Button
-    color="primary"
-    onClick={handleOpenAddDrawer}
-    className="whitespace-nowrap"
-  >
-    <PlusIcon className="size-4.5 mr-1.5" />
-    Add Banker
-  </Button>
-</div>
+          {/* Right side - Add Banker button */}
+          <Button
+            color="primary"
+            onClick={handleOpenAddDrawer}
+            className="whitespace-nowrap"
+          >
+            <PlusIcon className="mr-1.5 size-4.5" />
+            Add Banker
+          </Button>
+        </div>
       </div>
 
       {/* Search */}
@@ -336,46 +341,48 @@ const filteredData = bankers.filter((item) => {
       {/* Filter Bar */}
       {showFilterBar && (
         <div className="dark:bg-dark-700 dark:border-dark-500 animate-in fade-in slide-in-from-top-2 rounded-xl border border-gray-200 bg-white p-4 transition-all duration-150">
-         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
-  <div className="flex flex-col gap-1">
-    <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
-      Banker
-    </span>
-    <Combobox
-      data={bankerFilterOptions}
-      value={
-        bankerFilterOptions.find((o) => o.id === selectedBankerFilter) ||
-        bankerFilterOptions[0]
-      }
-      displayField="name"
-      searchFields={["name"]}
-      placeholder="Search or select banker"
-      onChange={(opt: any) => {
-        setSelectedBankerFilter(opt?.id ?? "All");
-        setCurrentPage(1);
-      }}
-    />
-  </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+            <div className="flex flex-col gap-1">
+              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
+                Banker
+              </span>
+              <Combobox
+                data={bankerFilterOptions}
+                value={
+                  bankerFilterOptions.find(
+                    (o) => o.id === selectedBankerFilter,
+                  ) || bankerFilterOptions[0]
+                }
+                displayField="name"
+                searchFields={["name"]}
+                placeholder="Search or select banker"
+                onChange={(opt: any) => {
+                  setSelectedBankerFilter(opt?.id ?? "All");
+                  setCurrentPage(1);
+                }}
+              />
+            </div>
 
-  <div className="flex flex-col gap-1">
-    <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
-      Status
-    </span>
-    <Listbox
-      data={statusFilterOptions}
-      value={
-        statusFilterOptions.find((o) => o.id === selectedStatusFilter) ||
-        statusFilterOptions[0]
-      }
-      placeholder="All Statuses"
-      onChange={(opt: any) => {
-        setSelectedStatusFilter(opt.id);
-        setCurrentPage(1);
-      }}
-      displayField="name"
-    />
-  </div>
-</div>
+            <div className="flex flex-col gap-1">
+              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
+                Status
+              </span>
+              <Listbox
+                data={statusFilterOptions}
+                value={
+                  statusFilterOptions.find(
+                    (o) => o.id === selectedStatusFilter,
+                  ) || statusFilterOptions[0]
+                }
+                placeholder="All Statuses"
+                onChange={(opt: any) => {
+                  setSelectedStatusFilter(opt.id);
+                  setCurrentPage(1);
+                }}
+                displayField="name"
+              />
+            </div>
+          </div>
         </div>
       )}
 
@@ -565,7 +572,7 @@ const filteredData = bankers.filter((item) => {
                     leaveTo="transform opacity-0 scale-95"
                   >
                     <MenuItems
-                        anchor="bottom start"
+                      anchor="bottom start"
                       className="dark:bg-dark-700 dark:border-dark-600 z-[200] w-20 space-y-0.5 rounded-lg border border-gray-200 bg-white p-1 shadow-xl ring-1 ring-black/5 [--anchor-gap:6px] focus:outline-none"
                     >
                       {entriesOptions.map((opt) => (
@@ -639,7 +646,7 @@ const filteredData = bankers.filter((item) => {
                     >
                       {page}
                     </button>
-                  )
+                  ),
                 )}
 
                 <button
@@ -723,15 +730,15 @@ const filteredData = bankers.filter((item) => {
                 className="flex h-full flex-col"
               >
                 {/* Header */}
-                <div className="dark:border-dark-500 flex items-center justify-between border-b border-gray-200 px-5 py-4">
-                  <h2 className="dark:text-dark-50 text-lg font-semibold text-gray-800">
+                 <div className="bg-primary-600 dark:bg-primary-700 flex items-center justify-between px-5 py-4">
+                  <h2 className="text-lg font-semibold text-white">
                     {editId !== null ? "Edit Banker" : "Add Banker"}
                   </h2>
                   <Button
                     onClick={() => setShowDrawer(false)}
                     variant="flat"
                     isIcon
-                    className="size-8 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                     className="size-8 rounded-full text-white hover:bg-white/10 hover:text-white focus:bg-white/10 active:bg-white/20"
                     type="button"
                   >
                     <XMarkIcon className="size-5" />
@@ -742,12 +749,11 @@ const filteredData = bankers.filter((item) => {
                 <div className="grow space-y-5 overflow-y-auto p-5">
                   <div>
                     <Input
-                     label={
-      <span>
-        Banker Name <span className="text-red-500">*</span>
-      </span>
-    }
-                      
+                      label={
+                        <span>
+                          Banker Name <span className="text-red-500">*</span>
+                        </span>
+                      }
                       placeholder="Enter banker name"
                       {...register("banker", formValidationRules.banker)}
                       error={errors?.banker && errors.banker.message}
@@ -755,24 +761,24 @@ const filteredData = bankers.filter((item) => {
                   </div>
 
                   <div>
-                                     <label className="mb-2 block text-sm font-medium">
-                                       Status
-                                     </label>
-                                   
-                                     <Listbox
-                                       data={statusOptions}
-                                       value={
-                                         statusOptions.find(
-                                           (item) => item.value === formStatusValue
-                                         ) || statusOptions[0]
-                                       }
-                                       placeholder="Select Status"
-                                       onChange={(option: any) => {
-                                         setValue("status", option.value);
-                                       }}
-                                       displayField="label"
-                                     />
-                                   </div>
+                    <label className="mb-2 block text-sm font-medium">
+                      Status
+                    </label>
+
+                    <Listbox
+                      data={statusOptions}
+                      value={
+                        statusOptions.find(
+                          (item) => item.value === formStatusValue,
+                        ) || statusOptions[0]
+                      }
+                      placeholder="Select Status"
+                      onChange={(option: any) => {
+                        setValue("status", option.value);
+                      }}
+                      displayField="label"
+                    />
+                  </div>
                 </div>
 
                 {/* Footer */}
@@ -797,39 +803,39 @@ const filteredData = bankers.filter((item) => {
       </Transition>
 
       {/* Confirmation Modal */}
-<ConfirmModal
-  show={showConfirmModal}
-  onClose={() => {
-    setShowConfirmModal(false);
-    setDeleteTargetId(null);
-    setConfirmState("pending");
-  }}
-  onOk={performDelete}
-  confirmLoading={confirmLoading}
-  state={confirmState}
-  messages={{
-    pending: {
-      Icon: ExclamationTriangleIcon,
-      title: isBulkDelete ? "Delete Selected Bankers?" : "Are you sure?",
-      description: isBulkDelete 
-        ? `Are you sure you want to delete ${selectedIds.length} selected bankers? This action cannot be undone.`
-        : "Are you sure you want to delete this banker? Once deleted, it cannot be restored.",
-      actionText: isBulkDelete ? "Delete All" : "Delete",
-    },
-    success: {
-      title: "Deleted Successfully",
-      description: isBulkDelete 
-        ? `${selectedIds.length} bankers have been deleted.`
-        : "The banker has been deleted.",
-      actionText: "Done",
-    },
-    error: {
-      title: "Delete Failed",
-      description: "Failed to delete. Please try again.",
-      actionText: "Try Again",
-    },
-  }}
-/>
+      <ConfirmModal
+        show={showConfirmModal}
+        onClose={() => {
+          setShowConfirmModal(false);
+          setDeleteTargetId(null);
+          setConfirmState("pending");
+        }}
+        onOk={performDelete}
+        confirmLoading={confirmLoading}
+        state={confirmState}
+        messages={{
+          pending: {
+            Icon: ExclamationTriangleIcon,
+            title: isBulkDelete ? "Delete Selected Bankers?" : "Are you sure?",
+            description: isBulkDelete
+              ? `Are you sure you want to delete ${selectedIds.length} selected bankers? This action cannot be undone.`
+              : "Are you sure you want to delete this banker? Once deleted, it cannot be restored.",
+            actionText: isBulkDelete ? "Delete All" : "Delete",
+          },
+          success: {
+            title: "Deleted Successfully",
+            description: isBulkDelete
+              ? `${selectedIds.length} bankers have been deleted.`
+              : "The banker has been deleted.",
+            actionText: "Done",
+          },
+          error: {
+            title: "Delete Failed",
+            description: "Failed to delete. Please try again.",
+            actionText: "Try Again",
+          },
+        }}
+      />
     </div>
   );
 };

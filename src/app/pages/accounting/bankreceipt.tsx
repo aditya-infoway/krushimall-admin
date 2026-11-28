@@ -147,21 +147,21 @@ export default function BankReceipt() {
   const [form, setForm] = useState({ ...initialForm });
   const [showFilterBar, setShowFilterBar] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-// Type filter options — dynamically built from actual rows data
-const typeFilterOptions = [
-  { id: "All", name: "All Types" },
-  ...Array.from(new Set(rows.map((r) => r.type).filter(Boolean))).map(
-    (type) => ({ id: type, name: type }),
-  ),
-];
+  // Type filter options — dynamically built from actual rows data
+  const typeFilterOptions = [
+    { id: "All", name: "All Types" },
+    ...Array.from(new Set(rows.map((r) => r.type).filter(Boolean))).map(
+      (type) => ({ id: type, name: type }),
+    ),
+  ];
 
-// Payment Type filter options — dynamically built from actual rows data
-const paymentTypeFilterOptions = [
-  { id: "All", name: "All Types" },
-  ...Array.from(
-    new Set(rows.map((r) => r.paymentType).filter(Boolean)),
-  ).map((type) => ({ id: type, name: type })),
-];
+  // Payment Type filter options — dynamically built from actual rows data
+  const paymentTypeFilterOptions = [
+    { id: "All", name: "All Types" },
+    ...Array.from(new Set(rows.map((r) => r.paymentType).filter(Boolean))).map(
+      (type) => ({ id: type, name: type }),
+    ),
+  ];
   // Filter states
   const [filterType, setFilterType] = useState("All");
   const [filterDateFrom, setFilterDateFrom] = useState<any>(null);
@@ -169,38 +169,38 @@ const paymentTypeFilterOptions = [
   const [filterPaymentType, setFilterPaymentType] = useState("All");
 
   const filteredRows = rows.filter((r) => {
-  const matchesSearch = Object.values(r).some((v) =>
-    String(v).toLowerCase().includes(search.toLowerCase()),
-  );
-  const matchesType = filterType === "All" || r.type === filterType;
-  const matchesPaymentType =
-    filterPaymentType === "All" || r.paymentType === filterPaymentType;
+    const matchesSearch = Object.values(r).some((v) =>
+      String(v).toLowerCase().includes(search.toLowerCase()),
+    );
+    const matchesType = filterType === "All" || r.type === filterType;
+    const matchesPaymentType =
+      filterPaymentType === "All" || r.paymentType === filterPaymentType;
 
-  // NEW: date range filter — handles DatePicker returning either a Date or an array
-  const rowDate = new Date(r.date);
-  rowDate.setHours(0, 0, 0, 0);
+    // NEW: date range filter — handles DatePicker returning either a Date or an array
+    const rowDate = new Date(r.date);
+    rowDate.setHours(0, 0, 0, 0);
 
-  const rawFrom = Array.isArray(filterDateFrom)
-    ? filterDateFrom[0]
-    : filterDateFrom;
-  const fromDate = rawFrom ? new Date(rawFrom) : null;
-  if (fromDate) fromDate.setHours(0, 0, 0, 0);
+    const rawFrom = Array.isArray(filterDateFrom)
+      ? filterDateFrom[0]
+      : filterDateFrom;
+    const fromDate = rawFrom ? new Date(rawFrom) : null;
+    if (fromDate) fromDate.setHours(0, 0, 0, 0);
 
-  const rawTo = Array.isArray(filterDateTo) ? filterDateTo[0] : filterDateTo;
-  const toDate = rawTo ? new Date(rawTo) : null;
-  if (toDate) toDate.setHours(23, 59, 59, 999);
+    const rawTo = Array.isArray(filterDateTo) ? filterDateTo[0] : filterDateTo;
+    const toDate = rawTo ? new Date(rawTo) : null;
+    if (toDate) toDate.setHours(23, 59, 59, 999);
 
-  const matchesDateFrom = !fromDate || rowDate >= fromDate;
-  const matchesDateTo = !toDate || rowDate <= toDate;
+    const matchesDateFrom = !fromDate || rowDate >= fromDate;
+    const matchesDateTo = !toDate || rowDate <= toDate;
 
-  return (
-    matchesSearch &&
-    matchesType &&
-    matchesPaymentType &&
-    matchesDateFrom &&
-    matchesDateTo
-  );
-});
+    return (
+      matchesSearch &&
+      matchesType &&
+      matchesPaymentType &&
+      matchesDateFrom &&
+      matchesDateTo
+    );
+  });
 
   const totalItems = filteredRows.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
@@ -293,26 +293,26 @@ const paymentTypeFilterOptions = [
 
     return Object.keys(newErrors).length === 0;
   };
-const getLeads = async () => {
-  try {
-    const res = await apiHelper.get("/leads/pending"); // ✅ endpoint change
+  const getLeads = async () => {
+    try {
+      const res = await apiHelper.get("/leads/pending"); // ✅ endpoint change
 
-    const leads = res.data || [];
+      const leads = res.data || [];
 
-    const options = leads.map((item: any) => ({
-      value: item.id,
-      label: `${item.quotationNo} - ${item.customer?.accountName || ""}`,
-      quotationNo: item.quotationNo,
-      customerName: item.customer?.accountName || "",
-      mobile: item.customer?.mobile || "",
-      customerId: item.customer?.id,
-    }));
+      const options = leads.map((item: any) => ({
+        value: item.id,
+        label: `${item.quotationNo} - ${item.customer?.accountName || ""}`,
+        quotationNo: item.quotationNo,
+        customerName: item.customer?.accountName || "",
+        mobile: item.customer?.mobile || "",
+        customerId: item.customer?.id,
+      }));
 
-    setLeadOptions(options);
-  } catch (err) {
-    console.log(err);
-  }
-};
+      setLeadOptions(options);
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   useEffect(() => {
     getLeads();
@@ -392,25 +392,22 @@ const getLeads = async () => {
     getBankReceipts();
   }, []);
 
-const getVoucherNo = async () => {
-  try {
-    const res = await apiHelper.get(
-      `/bank-receipt/voucher?companyId=${companyId}&financialYearId=${financialYearId}`
-    );
+  const getVoucherNo = async () => {
+    try {
+      const res = await apiHelper.get(
+        `/bank-receipt/voucher?companyId=${companyId}&financialYearId=${financialYearId}`,
+      );
 
-    const voucherNo =
-      res?.data?.voucherNo ??
-      res?.voucherNo ??
-      "";
+      const voucherNo = res?.data?.voucherNo ?? res?.voucherNo ?? "";
 
-    setForm((prev) => ({
-      ...prev,
-      voucherNo,
-    }));
-  } catch (err) {
-    console.log(err);
-  }
-};
+      setForm((prev) => ({
+        ...prev,
+        voucherNo,
+      }));
+    } catch (err) {
+      console.log(err);
+    }
+  };
   const handleAdd = async () => {
     setEditId(null);
     setErrors({});
@@ -679,60 +676,60 @@ const getVoucherNo = async () => {
       {/* Filter Bar - Auto Apply */}
       {showFilterBar && (
         <div className="dark:bg-dark-700 dark:border-dark-500 animate-in fade-in slide-in-from-top-2 rounded-xl border border-gray-200 bg-white p-4 transition-all duration-150">
-       <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
-  <div>
-    <label className="dark:text-dark-200 mb-1.5 block text-sm font-medium text-gray-700">
-      Type
-    </label>
-    <Listbox
-      data={typeFilterOptions}
-      value={
-        typeFilterOptions.find((o) => o.id === filterType) ||
-        typeFilterOptions[0]
-      }
-      onChange={(opt: any) => setFilterType(opt.id)}
-      displayField="name"
-    />
-  </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
+            <div>
+              <label className="dark:text-dark-200 mb-1.5 block text-sm font-medium text-gray-700">
+                Type
+              </label>
+              <Listbox
+                data={typeFilterOptions}
+                value={
+                  typeFilterOptions.find((o) => o.id === filterType) ||
+                  typeFilterOptions[0]
+                }
+                onChange={(opt: any) => setFilterType(opt.id)}
+                displayField="name"
+              />
+            </div>
 
-  <div>
-    <label className="dark:text-dark-200 mb-1.5 block text-sm font-medium text-gray-700">
-      Payment Type
-    </label>
-    <Listbox
-      data={paymentTypeFilterOptions}
-      value={
-        paymentTypeFilterOptions.find(
-          (o) => o.id === filterPaymentType,
-        ) || paymentTypeFilterOptions[0]
-      }
-      onChange={(opt: any) => setFilterPaymentType(opt.id)}
-      displayField="name"
-    />
-  </div>
+            <div>
+              <label className="dark:text-dark-200 mb-1.5 block text-sm font-medium text-gray-700">
+                Payment Type
+              </label>
+              <Listbox
+                data={paymentTypeFilterOptions}
+                value={
+                  paymentTypeFilterOptions.find(
+                    (o) => o.id === filterPaymentType,
+                  ) || paymentTypeFilterOptions[0]
+                }
+                onChange={(opt: any) => setFilterPaymentType(opt.id)}
+                displayField="name"
+              />
+            </div>
 
-  <div>
-    <label className="dark:text-dark-200 mb-1.5 block text-sm font-medium text-gray-700">
-      Date From
-    </label>
-    <DatePicker
-      placeholder="From Date"
-      value={filterDateFrom}
-      onChange={setFilterDateFrom}
-    />
-  </div>
+            <div>
+              <label className="dark:text-dark-200 mb-1.5 block text-sm font-medium text-gray-700">
+                Date From
+              </label>
+              <DatePicker
+                placeholder="From Date"
+                value={filterDateFrom}
+                onChange={setFilterDateFrom}
+              />
+            </div>
 
-  <div>
-    <label className="dark:text-dark-200 mb-1.5 block text-sm font-medium text-gray-700">
-      Date To
-    </label>
-    <DatePicker
-      placeholder="To Date"
-      value={filterDateTo}
-      onChange={setFilterDateTo}
-    />
-  </div>
-</div>
+            <div>
+              <label className="dark:text-dark-200 mb-1.5 block text-sm font-medium text-gray-700">
+                Date To
+              </label>
+              <DatePicker
+                placeholder="To Date"
+                value={filterDateTo}
+                onChange={setFilterDateTo}
+              />
+            </div>
+          </div>
         </div>
       )}
 
@@ -935,7 +932,7 @@ const getVoucherNo = async () => {
                     leaveTo="transform opacity-0 scale-95"
                   >
                     <MenuItems
-                        anchor="bottom start"
+                      anchor="bottom start"
                       className="dark:bg-dark-700 dark:border-dark-600 z-200 w-20 space-y-0.5 rounded-lg border border-gray-200 bg-white p-1 shadow-xl ring-1 ring-black/5 [--anchor-gap:6px] focus:outline-none"
                     >
                       {entriesOptions.map((opt) => (
@@ -1074,13 +1071,13 @@ const getVoucherNo = async () => {
             leaveTo="translate-x-full"
           >
             <DialogPanel className="dark:bg-dark-700 fixed top-0 right-0 flex h-full w-full max-w-4xl transform-gpu flex-col bg-white shadow-2xl transition-transform duration-200">
-              <div className="dark:border-dark-500 flex items-center justify-between border-b border-gray-200 px-5 py-4">
-                <h2 className="dark:text-dark-50 text-lg font-semibold text-gray-800">
+              <div className="bg-primary-600 dark:bg-primary-700 flex items-center justify-between px-4 py-3 sm:px-5 sm:py-4">
+                <h2 className="text-base font-semibold text-white sm:text-lg">
                   {editId !== null ? "Edit Bank Receipt" : "Add Bank Receipt"}
                 </h2>
                 <button
                   onClick={() => setShowDrawer(false)}
-                  className="size-8 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                  className="flex size-8 cursor-pointer items-center justify-center rounded-full text-white hover:bg-white/10 hover:text-white focus:bg-white/10 active:bg-white/20"
                 >
                   <X className="size-5" />
                 </button>
@@ -1134,7 +1131,7 @@ const getVoucherNo = async () => {
                   </div>
 
                   {/* Right side - Combobox */}
-                   <div className="w-full  md:w-110 lg:w-110 ">
+                  <div className="w-full md:w-110 lg:w-110">
                     {form.type === "Lead Cancel" && (
                       <Combobox
                         data={leadOptions}

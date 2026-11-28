@@ -12,7 +12,7 @@ import {
 import { Input } from "@/components/ui";
 import { Listbox } from "@/components/shared/form/StyledListbox";
 import { DatePicker } from "@/components/shared/form/Datepicker";
-import { Radio } from "@/components/ui";
+import { Radio, Button } from "@/components/ui";
 import emptyStateImage from "@/assets/notfound.png";
 import { Country, State, City } from "country-state-city";
 import Select from "react-select";
@@ -20,10 +20,12 @@ import { components } from "react-select";
 import apiHelper from "@/utils/apiHelper";
 // import { Combobox } from "@/components/shared/form/StyledCombobox";
 import { toast } from "sonner";
-import { createPortal } from "react-dom";
+
 // ---------- Types ----------
 import { useParams } from "react-router-dom";
 import { Combobox } from "@/components/shared/form/Combobox";
+
+import SideDrawer from "@/components/shared/SideDrawer";
 interface AccessoriesPurchaseBillProps {
   onBack?: () => void;
   onSaved?: (row: any) => void;
@@ -487,22 +489,22 @@ const AccessoriesPurchaseBill: React.FC<AccessoriesPurchaseBillProps> = ({
     }
   };
   // ── API Functions ────────────────────────────────────────────────────
-const fetchAccessories = async () => {
-  try {
-    const res = await apiHelper.get("/accessories/active");
+  const fetchAccessories = async () => {
+    try {
+      const res = await apiHelper.get("/accessories/active");
 
-    setAccessories(
-      Array.isArray(res.data?.data)
-        ? res.data.data
-        : Array.isArray(res.data)
-          ? res.data
-          : [],
-    );
-  } catch (err) {
-    console.log(err);
-    setAccessories([]);
-  }
-};
+      setAccessories(
+        Array.isArray(res.data?.data)
+          ? res.data.data
+          : Array.isArray(res.data)
+            ? res.data
+            : [],
+      );
+    } catch (err) {
+      console.log(err);
+      setAccessories([]);
+    }
+  };
 
   // Get Bill Number
   const getBillNo = async () => {
@@ -1049,15 +1051,15 @@ const fetchAccessories = async () => {
       itemCode: a.codeNo,
       hsn: a.hsnCode,
       barCode: a.barCode,
-    modelName:
-  a.showroomVariantDetails?.[0]?.model?.modelName ||
-  a.showroomVariants?.[0]?.model ||
-  "",
+      modelName:
+        a.showroomVariantDetails?.[0]?.model?.modelName ||
+        a.showroomVariants?.[0]?.model ||
+        "",
       groupName: a.group,
-    variantName:
-  a.showroomVariantDetails?.[0]?.variantName ||
-  a.showroomVariants?.[0]?.variantName ||
-  "",
+      variantName:
+        a.showroomVariantDetails?.[0]?.variantName ||
+        a.showroomVariants?.[0]?.variantName ||
+        "",
       unit: a.unit,
       qty,
       pPrice: String(price),
@@ -1427,22 +1429,20 @@ const fetchAccessories = async () => {
                   mobile: acc.mobile,
                   openingBalance: acc.openingBalance,
                 }))}
-                value={
-                  cashAccounts.find((acc) => acc.id === cashAccount)
+                value={(() => {
+                  const selected = cashAccounts.find(
+                    (acc) => Number(acc.id) === Number(cashAccount),
+                  );
+
+                  return selected
                     ? {
-                        label:
-                          cashAccounts.find((acc) => acc.id === cashAccount)
-                            ?.accountName || "",
-                        value: cashAccount,
-                        mobile:
-                          cashAccounts.find((acc) => acc.id === cashAccount)
-                            ?.mobile || "",
-                        openingBalance:
-                          cashAccounts.find((acc) => acc.id === cashAccount)
-                            ?.openingBalance || 0,
+                        label: selected.accountName,
+                        value: selected.id,
+                        mobile: selected.mobile,
+                        openingBalance: selected.openingBalance,
                       }
-                    : null
-                }
+                    : null;
+                })()}
                 onChange={(val: any) => setCashAccount(val.value)}
                 displayField="label"
                 placeholder="Search Cash Account"
@@ -1553,7 +1553,7 @@ const fetchAccessories = async () => {
               </div>
               <button
                 onClick={() => setAccountModalOpen(true)}
-                className="flex h-[38px] w-[38px] flex-shrink-0 items-center justify-center rounded-lg border border-gray-300 text-xl text-blue-600 hover:bg-gray-50 dark:border-gray-600 dark:text-blue-400 dark:hover:bg-gray-700"
+                className="flex h-9.5 w-9.5 shrink-0 items-center justify-center rounded-lg border border-gray-300 text-xl text-blue-600 hover:bg-gray-50 dark:border-gray-600 dark:text-blue-400 dark:hover:bg-gray-700"
               >
                 +
               </button>
@@ -1653,50 +1653,184 @@ const fetchAccessories = async () => {
         </div>
 
         <div className="px-3 pb-3 sm:px-4 sm:pb-4 md:px-6">
+          {/* ───────── CHOTI SCREEN (md se niche): item entry form ─────────
+              Full width : Select button, Item Name, Item Code, Add button
+              2 column   : HSN | Unit, Qty | P. Price, GST % | Net Amount      */}
+          <div className="mb-3 rounded-lg border border-gray-300 bg-white p-3 md:hidden dark:border-gray-600 dark:bg-gray-800">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="col-span-2">
+                <button
+                  type="button"
+                  onClick={() => setAccessoryDrawerOpen(true)}
+                  className="border-primary-600 bg-primary-600 hover:bg-primary-700 inline-flex h-10 w-full cursor-pointer items-center justify-center gap-1.5 rounded-lg border text-sm font-semibold text-white transition"
+                  title="Add Item"
+                >
+                  <PlusIcon className="h-5 w-5" />
+                  Select
+                </button>
+              </div>
+
+              <div className="col-span-2">
+                <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">
+                  Item Name
+                </label>
+                <Input
+                  placeholder="Enter Item Name"
+                  value={draft.item}
+                  onChange={(e) => updateDraft("item", e.target.value)}
+                  className="w-full rounded border border-gray-300 px-2 py-2 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
+                />
+              </div>
+              <div className="col-span-2">
+                <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">
+                  Item Code
+                </label>
+                <Input
+                  placeholder="Enter Code"
+                  value={draft.itemCode}
+                  readOnly
+                  onChange={(e) => updateDraft("itemCode", e.target.value)}
+                  className="w-full rounded border border-gray-300 px-2 py-2 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
+                />
+              </div>
+
+              {/* 2 column fields */}
+              <div>
+                <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">
+                  HSN
+                </label>
+                <Input
+                  placeholder="HSN"
+                  value={draft.hsn}
+                  onChange={(e) => updateDraft("hsn", e.target.value)}
+                  className="w-full rounded border border-gray-300 px-2 py-2 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">
+                  Unit
+                </label>
+                <Input
+                  placeholder="Unit"
+                  value={draft.unit}
+                  onChange={(e) => updateDraft("unit", e.target.value)}
+                  className="w-full rounded border border-gray-300 px-2 py-2 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">
+                  Qty
+                </label>
+                <Input
+                  type="number"
+                  min={1}
+                  value={draft.qty || ""}
+                  onChange={(e) => updateDraft("qty", Number(e.target.value))}
+                  className="w-full rounded border border-gray-300 px-2 py-2 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">
+                  P. Price
+                </label>
+                <input
+                  placeholder="Rate"
+                  value={draft.pPrice}
+                  onChange={(e) => updateDraft("pPrice", e.target.value)}
+                  className="w-full rounded border border-gray-300 px-2 py-2 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">
+                  GST %
+                </label>
+                <input
+                  placeholder="GST"
+                  value={draft.gstPercent}
+                  onChange={(e) => updateDraft("gstPercent", e.target.value)}
+                  className="w-full rounded border border-gray-300 px-2 py-2 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">
+                  Net Amount
+                </label>
+                <input
+                  placeholder="Amount"
+                  value={draft.netAmount}
+                  onChange={(e) => updateDraft("netAmount", e.target.value)}
+                  className="w-full rounded border border-gray-300 px-2 py-2 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
+                />
+              </div>
+
+              {/* Add button */}
+              <div className="col-span-2">
+                <button
+                  type="button"
+                  onClick={saveDraftRow}
+                  disabled={!draft.item.trim()}
+                  className={`inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-lg text-sm font-semibold text-white ${
+                    draft.item.trim()
+                      ? "bg-green-600 hover:bg-green-700"
+                      : "cursor-not-allowed bg-gray-300"
+                  }`}
+                  title="Add"
+                >
+                  <CheckIcon className="h-5 w-5" />
+                  Add
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* ───────── TABLE ─────────
+              Choti screen : sirf saved rows, columns ki min-width + horizontal scroll
+              Badi screen  : draft row bhi table ke andar (pehle jaisa)            */}
           <div className="overflow-x-auto rounded border border-gray-200 dark:border-gray-700">
-            <div className="h-96 overflow-y-auto">
+            <div className="max-h-96 overflow-y-auto md:h-96 md:max-h-none">
               <table className="w-full border-collapse text-sm">
                 <thead className="sticky top-0 z-10 bg-gray-100 dark:bg-gray-700">
                   <tr>
-                    <th className="border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
+                    <th className="min-w-15 border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
                       ITEM
                     </th>
-                    <th className="border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
+                    <th className="min-w-47.5 border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
                       ITEM NAME
                     </th>
-                    <th className="border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
+                    <th className="min-w-35 border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
                       ITEM CODE
                     </th>
-                    <th className="border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
+                    <th className="min-w-27.5 border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
                       HSN
                     </th>
-                    <th className="border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
+                    <th className="min-w-22.5 border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
                       UNIT
                     </th>
-                    <th className="border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
+                    <th className="min-w-20 border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
                       QTY
                     </th>
-                    <th className="border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
+                    <th className="min-w-27.5 border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
                       P. PRICE
                     </th>
-                    <th className="border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
+                    <th className="min-w-22.5 border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
                       GST %
                     </th>
-                    <th className="border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
+                    <th className="min-w-32.5 border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
                       NET AMOUNT
                     </th>
-                    <th className="border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
+                    <th className="min-w-20 border border-gray-500 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap text-gray-700 dark:text-gray-300">
                       ACTION
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {/* Draft row */}
-                  <tr className="sticky top-9 z-10">
+                  {/* Draft row - sirf badi screen pe (choti screen pe upar wala form use hota hai) */}
+                  <tr className="sticky top-9 z-10 hidden md:table-row">
                     <td className="border border-gray-500 px-2 py-1.5 text-center dark:border-gray-500">
                       <button
+                        type="button"
                         onClick={() => setAccessoryDrawerOpen(true)}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-blue-600 bg-blue-600 text-white transition hover:bg-blue-700"
+                        className="border-primary-600 bg-primary-600 hover:bg-primary-700 inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border text-white transition"
                       >
                         <PlusIcon className="h-5 w-5" />
                       </button>
@@ -1713,6 +1847,7 @@ const fetchAccessories = async () => {
                       <input
                         placeholder="Enter Code"
                         value={draft.itemCode}
+                        readOnly
                         onChange={(e) =>
                           updateDraft("itemCode", e.target.value)
                         }
@@ -1802,28 +1937,28 @@ const fetchAccessories = async () => {
                       <td className="border border-gray-500 px-3 py-2.5 text-center font-medium text-gray-500 dark:text-gray-400">
                         {index + 1}
                       </td>
-                      <td className="border border-gray-500 px-3 py-2.5 font-medium text-gray-900 dark:text-gray-200">
+                      <td className="border border-gray-500 px-3 py-2.5 font-medium whitespace-nowrap text-gray-900 dark:text-gray-200">
                         {r.item}
                       </td>
-                      <td className="border border-gray-500 px-3 py-2.5 text-gray-700 dark:text-gray-300">
+                      <td className="border border-gray-500 px-3 py-2.5 whitespace-nowrap text-gray-700 dark:text-gray-300">
                         {r.itemCode}
                       </td>
-                      <td className="border border-gray-500 px-3 py-2.5 text-gray-700 dark:text-gray-300">
+                      <td className="border border-gray-500 px-3 py-2.5 whitespace-nowrap text-gray-700 dark:text-gray-300">
                         {r.hsn}
                       </td>
-                      <td className="border border-gray-500 px-3 py-2.5 text-gray-700 dark:text-gray-300">
+                      <td className="border border-gray-500 px-3 py-2.5 whitespace-nowrap text-gray-700 dark:text-gray-300">
                         {r.unit}
                       </td>
                       <td className="border border-gray-500 px-3 py-2.5 text-center font-semibold text-gray-900 dark:text-gray-200">
                         {r.qty}
                       </td>
-                      <td className="border border-gray-500 px-3 py-2.5 text-gray-700 dark:text-gray-300">
+                      <td className="border border-gray-500 px-3 py-2.5 whitespace-nowrap text-gray-700 dark:text-gray-300">
                         {r.pPrice}
                       </td>
                       <td className="border border-gray-500 px-3 py-2.5 text-center text-gray-700 dark:text-gray-300">
                         {r.gstPercent}%
                       </td>
-                      <td className="border border-gray-500 px-3 py-2.5 text-right font-semibold text-gray-900 dark:text-gray-200">
+                      <td className="border border-gray-500 px-3 py-2.5 text-right font-semibold whitespace-nowrap text-gray-900 dark:text-gray-200">
                         ₹{r.netAmount}
                       </td>
                       <td className="border border-gray-500 px-3 py-2.5 text-center">
@@ -2073,1365 +2208,1221 @@ const fetchAccessories = async () => {
       {/* ========== MODALS (Keep all the same as before) ========== */}
 
       {/* Accessories Details - Right Drawer */}
-      {accessoryDrawerOpen && createPortal(
-        <div className="fixed inset-0 z-100 overflow-hidden">
-          <div
-            className="absolute inset-0 bg-black/50"
+      <SideDrawer
+        show={accessoryDrawerOpen}
+        onClose={() => {
+          setAccessoryDrawerOpen(false);
+          setAccessorySearch("");
+        }}
+        title="Accessories Details"
+        widthClass="max-w-3xl"
+      >
+        <div className="mb-4 flex gap-2">
+          <div className="relative flex-1">
+            <MagnifyingGlassIcon className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <Input
+              placeholder="Search accessories..."
+              value={accessorySearch}
+              onChange={(e) => setAccessorySearch(e.target.value)}
+              className="w-full pl-10"
+            />
+          </div>
+          <button
+            type="button"
+            title="Add new accessory item"
             onClick={() => {
               setAccessoryDrawerOpen(false);
-              setAccessorySearch("");
+              setAddAccessoryModalOpen(true);
             }}
-          />
-          <div className="absolute top-0 right-0 h-full w-full max-w-7xl transform bg-white shadow-2xl transition-transform sm:w-3/4 lg:w-1/2 dark:bg-gray-800">
-            <div className="flex h-full flex-col">
-              <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 sm:px-6 sm:py-4 dark:border-gray-700">
-                <h2 className="text-lg font-bold text-blue-600 dark:text-blue-400">
-                  Accessories Details
-                </h2>
-                <button
-                  onClick={() => {
-                    setAccessoryDrawerOpen(false);
-                    setAccessorySearch("");
-                  }}
-                  className="rounded-lg p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+            className="bg-primary-600 hover:bg-primary-700 flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-lg text-white transition"
+          >
+            <PlusIcon className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+          <table className="w-full border-collapse text-sm">
+            <thead>
+              <tr className="bg-gray-100 text-left whitespace-nowrap dark:bg-gray-700">
+                <th className="w-12 p-2">#</th>
+                <th className="p-2">Item Name</th>
+                <th className="p-2">Item Code</th>
+                <th className="p-2">HSN Code</th>
+                <th className="p-2">Model</th>
+                <th className="p-2">Variant</th>
+                <th className="p-2">Purchase Price</th>
+                <th className="p-2">Tax</th>
+                <th className="p-2">Stock</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredAccessories.map((a: any) => (
+                <tr
+                  key={a.id}
+                  className="hover:bg-primary-50 dark:hover:bg-primary-900/20 border-t border-gray-200 dark:border-gray-700"
                 >
-                  <XMarkIcon className="h-6 w-6" />
-                </button>
-              </div>
+                  <td className="p-2 text-center">
+                    <button
+                      type="button"
+                      onClick={() => handleAccessorySelect(a)}
+                      className="inline-flex h-6 w-6 cursor-pointer items-center justify-center rounded bg-green-600 text-white hover:bg-green-700"
+                    >
+                      ✓
+                    </button>
+                  </td>
+                  <td className="p-2 whitespace-nowrap">{a.itemName}</td>
+                  <td className="p-2 whitespace-nowrap">{a.codeNo}</td>
+                  <td className="p-2 whitespace-nowrap">{a.hsnCode}</td>
+                  <td className="p-2 whitespace-nowrap">
+                    {(a.showroomVariantDetails?.length
+                      ? a.showroomVariantDetails
+                      : a.showroomVariants || []
+                    )
+                      .map((v: any) => v?.model?.modelName || v?.model)
+                      .filter(Boolean)
+                      .join(", ") || "-"}
+                  </td>
+                  <td className="p-2 whitespace-nowrap">
+                    {(a.showroomVariantDetails?.length
+                      ? a.showroomVariantDetails
+                      : a.showroomVariants || []
+                    )
+                      .map((v: any) => v?.variantName)
+                      .filter(Boolean)
+                      .join(", ") || "-"}
+                  </td>
+                  <td className="p-2 whitespace-nowrap">
+                    ₹{Number(a.purchasePrice || 0).toFixed(2)}
+                  </td>
+                  <td className="p-2 whitespace-nowrap">{a.taxSlab || "-"}</td>
+                  <td className="p-2">{a.currentStock ?? a.opStock ?? 0}</td>
+                </tr>
+              ))}
 
-              <div className="flex-1 overflow-y-auto p-4 sm:p-6">
-                <div className="mb-4 flex gap-2">
-                  <div className="relative flex-1">
-                    <MagnifyingGlassIcon className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                    <input
-                      placeholder="Search accessories..."
-                      value={accessorySearch}
-                      onChange={(e) => setAccessorySearch(e.target.value)}
-                      className="w-full rounded-lg border border-red-500 bg-white px-4 py-2 pl-10 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
-                    />
-                  </div>
-                  <button
-                    title="Add new accessory item"
-                    onClick={() => {
-                      setAccessoryDrawerOpen(false);
-                      setAddAccessoryModalOpen(true);
-                    }}
-                    className="flex h-10.5 w-10.5 shrink-0 items-center justify-center rounded-lg bg-blue-700 text-white hover:bg-blue-800"
+              {filteredAccessories.length === 0 && (
+                <tr>
+                  <td
+                    colSpan={9}
+                    className="p-4 text-center text-gray-400 dark:text-gray-500"
                   >
-                    <PlusIcon className="h-5 w-5" />
-                  </button>
-                </div>
-
-                <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-                  <table className="w-full border-collapse text-sm">
-                    <thead>
-                      <tr className="bg-gray-100 text-left whitespace-nowrap dark:bg-gray-700">
-                        <th className="w-12 p-2">#</th>
-                        <th className="p-2">Item Name</th>
-                        <th className="p-2">Item Code </th>
-                        <th className="p-2">HSN Code</th>
-                        <th className="p-2">Modal</th>
-                        <th className="p-2">Variant</th>
-                        <th className="p-2">purchase price</th>
-                        <th className="p-2">Tax</th>
-                        <th className="p-2">Stock</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredAccessories.map((a: any) => (
-                        <tr
-                          key={a.id}
-                          className="border-t border-gray-200 hover:bg-blue-50 dark:border-gray-700 dark:hover:bg-blue-900/20"
-                        >
-                          <td className="p-2 text-center">
-                            <button
-                              onClick={() => handleAccessorySelect(a)}
-                              className="inline-flex h-6 w-6 cursor-pointer items-center justify-center rounded bg-green-600 text-white hover:bg-green-700"
-                            >
-                              ✓
-                            </button>
-                          </td>
-                          <td className="p-2">{a.itemName}</td>
-
-                          <td className="p-2">{a.codeNo}</td>
-
-                          <td className="p-2">{a.hsnCode}</td>
-
-                         <td className="p-2">
-  {(
-    a.showroomVariantDetails?.length
-      ? a.showroomVariantDetails
-      : a.showroomVariants || []
-  )
-    .map((v: any) => v?.model?.modelName || v?.model)
-    .filter(Boolean)
-    .join(", ") || "-"}
-</td>
-
-<td className="p-2">
-  {(
-    a.showroomVariantDetails?.length
-      ? a.showroomVariantDetails
-      : a.showroomVariants || []
-  )
-    .map((v: any) => v?.variantName)
-    .filter(Boolean)
-    .join(", ") || "-"}
-</td>
-
-                          <td className="p-2">
-                            ₹{Number(a.purchasePrice || 0).toFixed(2)}
-                          </td>
-
-                          <td className="p-2">{a.taxSlab || "-"}</td>
-
-                          <td className="p-2">
-                            {a.currentStock ?? a.opStock ?? 0}
-                          </td>
-                        </tr>
-                      ))}
-
-                      {filteredAccessories.length === 0 && (
-                        <tr>
-                          <td
-                            colSpan={9}
-                            className="p-4 text-center text-gray-400 dark:text-gray-500"
-                          >
-                            No items found
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>,
-      document.body,
-  )}
+                    No items found
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </SideDrawer>
 
       {/* Add Accessories Item Modal */}
-      {addAccessoryModalOpen && createPortal(
-        <div className="fixed inset-0 z-100 overflow-hidden">
-          <div
-            className="absolute inset-0 bg-black/50"
-            onClick={() => {
-              setAddAccessoryModalOpen(false);
-              resetAccessoryForm();
-            }}
-          />
-          <div className="absolute top-0 right-0 h-full w-full max-w-7xl transform bg-white shadow-2xl transition-transform sm:w-3/4 lg:w-2/3 xl:w-1/2 dark:bg-gray-800">
-            <div className="flex h-full flex-col">
-              {/* Header */}
-              <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 sm:px-6 sm:py-4 dark:border-gray-700">
-                <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-                  Add Accessories Item
-                </h2>
-                <button
-                  onClick={() => {
-                    setAddAccessoryModalOpen(false);
-                    resetAccessoryForm();
-                  }}
-                  className="rounded-lg p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
-                >
-                  <XMarkIcon className="h-6 w-6" />
-                </button>
-              </div>
+      <SideDrawer
+        show={addAccessoryModalOpen}
+        onClose={() => {
+          setAddAccessoryModalOpen(false);
+          resetAccessoryForm();
+        }}
+        title="Add Accessories Item"
+        widthClass="max-w-3xl"
+        footer={
+          <>
+            <Button
+              variant="outlined"
+              color="neutral"
+              type="button"
+              onClick={() => {
+                setAddAccessoryModalOpen(false);
+                resetAccessoryForm();
+              }}
+              className="h-10 w-1/2"
+            >
+              Cancel
+            </Button>
+            <Button
+              color="primary"
+              type="button"
+              onClick={handleSaveAccessoryItem}
+              className="h-10 w-1/2"
+            >
+              Save Accessory
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4 sm:space-y-5">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
+            {/* Accessories Name */}
+            <div>
+              <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+                Accessories Name <span className="text-red-500">*</span>
+              </label>
+              <Input
+                type="text"
+                placeholder="Enter Accessories Name"
+                value={accessoryForm.itemName}
+                onChange={(e) =>
+                  handleAccessoryFormChange("itemName", e.target.value)
+                }
+                className={`w-full ${
+                  accessoryFormTouched && !accessoryForm.itemName.trim()
+                    ? "border-red-500"
+                    : ""
+                }`}
+              />
+              {accessoryFormErrors.itemName && (
+                <p className="mt-1 text-xs text-red-500">
+                  {accessoryFormErrors.itemName}
+                </p>
+              )}
+            </div>
 
-              {/* Content */}
-              <div className="flex-1 overflow-y-auto p-4 sm:p-6">
-                <div className="space-y-4 sm:space-y-5">
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
-                    {/* Item Name */}
-                    <div>
-                      <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
-                        Accessories Name <span className="text-red-500">*</span>
-                      </label>
-                      <Input
-                        type="text"
-                        placeholder="Enter Accessories Name"
-                        value={accessoryForm.itemName}
-                        onChange={(e) =>
-                          handleAccessoryFormChange("itemName", e.target.value)
-                        }
-                        className={`w-full ${
-                          accessoryFormTouched && !accessoryForm.itemName.trim()
-                            ? "border-red-500"
-                            : ""
-                        }`}
-                      />
-                      {accessoryFormErrors.itemName && (
-                        <span className="text-xs text-red-500">
-                          {accessoryFormErrors.itemName}
-                        </span>
-                      )}
-                    </div>
+            {/* Accessories Code */}
+            <div>
+              <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+                Accessories Code <span className="text-red-500">*</span>
+              </label>
+              <Input
+                type="text"
+                placeholder="Enter Accessories Code"
+                value={accessoryForm.codeNo}
+                onChange={(e) =>
+                  handleAccessoryFormChange("codeNo", e.target.value)
+                }
+                className={`w-full ${
+                  accessoryFormTouched && !accessoryForm.codeNo.trim()
+                    ? "border-red-500"
+                    : ""
+                }`}
+              />
+              {accessoryFormErrors.codeNo && (
+                <p className="mt-1 text-xs text-red-500">
+                  {accessoryFormErrors.codeNo}
+                </p>
+              )}
+            </div>
 
-                    {/* Code No */}
-                    <div>
-                      <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
-                        Accessories Code <span className="text-red-500">*</span>
-                      </label>
-                      <Input
-                        type="text"
-                        placeholder="Enter Accessories Code"
-                        value={accessoryForm.codeNo}
-                        onChange={(e) =>
-                          handleAccessoryFormChange("codeNo", e.target.value)
-                        }
-                        className={`w-full ${
-                          accessoryFormTouched && !accessoryForm.codeNo.trim()
-                            ? "border-red-500"
-                            : ""
-                        }`}
-                      />
-                      {accessoryFormErrors.codeNo && (
-                        <span className="text-xs text-red-500">
-                          {accessoryFormErrors.codeNo}
-                        </span>
-                      )}
-                    </div>
+            {/* Short Name */}
+            <div>
+              <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+                Short Name
+              </label>
+              <Input
+                type="text"
+                placeholder="Enter Short Name"
+                value={accessoryForm.shortName}
+                onChange={(e) =>
+                  handleAccessoryFormChange("shortName", e.target.value)
+                }
+                className="w-full"
+              />
+            </div>
 
-                    {/* Short Name */}
-                    <div>
-                      <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
-                        Short Name
-                      </label>
-                      <Input
-                        type="text"
-                        placeholder="Enter Short Name"
-                        value={accessoryForm.shortName}
-                        onChange={(e) =>
-                          handleAccessoryFormChange("shortName", e.target.value)
-                        }
-                        className="w-full"
-                      />
-                    </div>
+            {/* HSN Code */}
+            <div>
+              <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+                HSN Code
+              </label>
+              <Input
+                type="text"
+                placeholder="Enter HSN Code"
+                value={accessoryForm.hsnCode}
+                onChange={(e) =>
+                  handleAccessoryFormChange("hsnCode", e.target.value)
+                }
+                className="w-full"
+              />
+            </div>
 
-                    {/* HSN Code */}
-                    <div>
-                      <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
-                        HSN Code
-                      </label>
-                      <Input
-                        type="text"
-                        placeholder="Enter HSN Code"
-                        value={accessoryForm.hsnCode}
-                        onChange={(e) =>
-                          handleAccessoryFormChange("hsnCode", e.target.value)
-                        }
-                        className="w-full"
-                      />
-                    </div>
-                    <div>
-                      <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
-                        Unit
-                      </label>
-                      <Listbox
-                        data={unitOptions}
-                        value={
-                          unitOptions.find(
-                            (u) => u.value === accessoryForm.unit,
-                          ) || null
-                        }
-                        onChange={(val: any) =>
-                          handleAccessoryFormChange("unit", val.value)
-                        }
-                        displayField="label"
-                        placeholder="Select Unit"
-                      />
-                    </div>
-                    {/* Tax Slab */}
-                    <div>
-                      <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
-                        Tax Slab
-                      </label>
-                      <Listbox
-                        data={taxSlabOptions}
-                        value={
-                          taxSlabOptions.find(
-                            (t) => t.value === accessoryForm.taxSlab,
-                          ) || null
-                        }
-                        onChange={(val: any) =>
-                          handleAccessoryFormChange("taxSlab", val.value)
-                        }
-                        displayField="label"
-                        placeholder="Search Tax Slab"
-                      />
-                    </div>
+            {/* Unit */}
+            <div>
+              <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+                Unit
+              </label>
+              <Listbox
+                data={unitOptions}
+                value={
+                  unitOptions.find((u) => u.value === accessoryForm.unit) ||
+                  null
+                }
+                onChange={(val: any) =>
+                  handleAccessoryFormChange("unit", val.value)
+                }
+                displayField="label"
+                placeholder="Select Unit"
+              />
+            </div>
 
-                    {/* List of Group */}
-                    <div>
-                      <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
-                        List of Group
-                      </label>
-                      <Listbox
-                        data={groupOption}
-                        value={
-                          groupOption.find(
-                            (g) => g.value === accessoryForm.group,
-                          ) || null
-                        }
-                        onChange={(val: any) =>
-                          handleAccessoryFormChange("group", val.value)
-                        }
-                        displayField="label"
-                        placeholder="Search Group"
-                      />
-                    </div>
+            {/* Tax Slab */}
+            <div>
+              <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+                Tax Slab
+              </label>
+              <Listbox
+                data={taxSlabOptions}
+                value={
+                  taxSlabOptions.find(
+                    (t) => t.value === accessoryForm.taxSlab,
+                  ) || null
+                }
+                onChange={(val: any) =>
+                  handleAccessoryFormChange("taxSlab", val.value)
+                }
+                displayField="label"
+                placeholder="Search Tax Slab"
+              />
+            </div>
 
-                    {/* Purchase Price */}
-                    <div>
-                      <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
-                        Purchase Price (Without GST)
-                        <span className="text-red-500">*</span>
-                      </label>
-                      <Input
-                        type="number"
-                        placeholder="Enter Purchase Price"
-                        value={accessoryForm.purchasePrice}
-                        onChange={(e) =>
-                          handleAccessoryFormChange(
-                            "purchasePrice",
-                            e.target.value,
-                          )
-                        }
-                        className={`w-full ${
-                          accessoryFormTouched &&
-                          !accessoryForm.purchasePrice.trim()
-                            ? "border-red-500"
-                            : ""
-                        }`}
-                      />
-                      {accessoryFormErrors.purchasePrice && (
-                        <span className="text-xs text-red-500">
-                          {accessoryFormErrors.purchasePrice}
-                        </span>
-                      )}
-                    </div>
+            {/* List of Group */}
+            <div>
+              <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+                List of Group
+              </label>
+              <Listbox
+                data={groupOption}
+                value={
+                  groupOption.find((g) => g.value === accessoryForm.group) ||
+                  null
+                }
+                onChange={(val: any) =>
+                  handleAccessoryFormChange("group", val.value)
+                }
+                displayField="label"
+                placeholder="Search Group"
+              />
+            </div>
 
-                    {/* Sales Price */}
-                    <div>
-                      <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
-                        Sales Price (Without GST)
-                        <span className="text-red-500">*</span>
-                      </label>
-                      <Input
-                        type="number"
-                        placeholder="Enter Sales Price"
-                        value={accessoryForm.salesPrice}
-                        onChange={(e) =>
-                          handleAccessoryFormChange(
-                            "salesPrice",
-                            e.target.value,
-                          )
-                        }
-                        className={`w-full ${
-                          accessoryFormTouched &&
-                          !accessoryForm.salesPrice.trim()
-                            ? "border-red-500"
-                            : ""
-                        }`}
-                      />
-                      {accessoryFormErrors.salesPrice && (
-                        <span className="text-xs text-red-500">
-                          {accessoryFormErrors.salesPrice}
-                        </span>
-                      )}
-                    </div>
+            {/* Barcode */}
+            <div>
+              <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+                Barcode
+              </label>
+              <Input
+                type="text"
+                placeholder="Enter Barcode"
+                value={accessoryForm.barCode}
+                onChange={(e) =>
+                  handleAccessoryFormChange("barCode", e.target.value)
+                }
+                className="w-full"
+              />
+            </div>
 
-                    {/* MRP */}
-                    <div>
-                      <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
-                        MRP <span className="text-red-500">*</span>
-                      </label>
-                      <Input
-                        type="number"
-                        placeholder="Enter MRP"
-                        value={accessoryForm.mrp}
-                        onChange={(e) =>
-                          handleAccessoryFormChange("mrp", e.target.value)
-                        }
-                        className={`w-full ${
-                          accessoryFormTouched && !accessoryForm.mrp.trim()
-                            ? "border-red-500"
-                            : ""
-                        }`}
-                      />
-                      {accessoryFormErrors.mrp && (
-                        <span className="text-xs text-red-500">
-                          {accessoryFormErrors.mrp}
-                        </span>
-                      )}
-                    </div>
+            {/* Purchase Price */}
+            <div>
+              <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+                Purchase Price (Without GST){" "}
+                <span className="text-red-500">*</span>
+              </label>
+              <Input
+                type="number"
+                placeholder="Enter Purchase Price"
+                value={accessoryForm.purchasePrice}
+                onChange={(e) =>
+                  handleAccessoryFormChange("purchasePrice", e.target.value)
+                }
+                className={`w-full ${
+                  accessoryFormTouched && !accessoryForm.purchasePrice.trim()
+                    ? "border-red-500"
+                    : ""
+                }`}
+              />
+              {accessoryFormErrors.purchasePrice && (
+                <p className="mt-1 text-xs text-red-500">
+                  {accessoryFormErrors.purchasePrice}
+                </p>
+              )}
+            </div>
 
-                    {/* Opening Stock */}
-                    <div>
-                      <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
-                        Opening Stock <span className="text-red-500">*</span>
-                      </label>
-                      <Input
-                        type="number"
-                        placeholder="Enter Opening Stock"
-                        value={accessoryForm.opStock}
-                        onChange={(e) =>
-                          handleAccessoryFormChange("opStock", e.target.value)
-                        }
-                        className={`w-full ${
-                          accessoryFormTouched && !accessoryForm.opStock.trim()
-                            ? "border-red-500"
-                            : ""
-                        }`}
-                      />
-                      {accessoryFormErrors.opStock && (
-                        <span className="text-xs text-red-500">
-                          {accessoryFormErrors.opStock}
-                        </span>
-                      )}
-                    </div>
-                    <div>
-                      <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
-                        Barcode
-                      </label>
-                      <Input
-                        type="text"
-                        placeholder="Enter Barcode"
-                        value={accessoryForm.barCode}
-                        onChange={(e) =>
-                          handleAccessoryFormChange("barCode", e.target.value)
-                        }
-                      />
-                    </div>
-                    {/* Variant */}
-                    <div className="lg:col-span-3">
-                      <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
-                        Variant <span className="text-red-500">*</span>
-                      </label>
-                      <Select
-                        isMulti
-                        unstyled
-                        closeMenuOnSelect={false}
-                        hideSelectedOptions={false}
-                        menuPlacement="auto"
-                        maxMenuHeight={220}
-                        classNames={selectClassNames}
-                        options={variantOptionsState}
-                        value={selectedVariants}
-                        onChange={(selected) =>
-                          setSelectedVariants(selected as any[])
-                        }
-                        components={{ Option: CheckboxOption }}
-                        placeholder="Select Variant"
-                      />
-                      {accessoryFormErrors.variant && (
-                        <span className="text-xs text-red-500">
-                          {accessoryFormErrors.variant}
-                        </span>
-                      )}
-                    </div>
-                  </div>
+            {/* Sales Price */}
+            <div>
+              <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+                Sales Price (Without GST){" "}
+                <span className="text-red-500">*</span>
+              </label>
+              <Input
+                type="number"
+                placeholder="Enter Sales Price"
+                value={accessoryForm.salesPrice}
+                onChange={(e) =>
+                  handleAccessoryFormChange("salesPrice", e.target.value)
+                }
+                className={`w-full ${
+                  accessoryFormTouched && !accessoryForm.salesPrice.trim()
+                    ? "border-red-500"
+                    : ""
+                }`}
+              />
+              {accessoryFormErrors.salesPrice && (
+                <p className="mt-1 text-xs text-red-500">
+                  {accessoryFormErrors.salesPrice}
+                </p>
+              )}
+            </div>
 
-                  {/* Status */}
-                  <div>
-                    <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
-                      Status
-                    </label>
-                    <Listbox
-                      data={statusOptions}
-                      value={
-                        statusOptions.find(
-                          (s) => s.value === accessoryForm.status,
-                        ) || null
-                      }
-                      onChange={(val: any) =>
-                        handleAccessoryFormChange("status", val.value)
-                      }
-                      displayField="label"
-                      placeholder="Select Status"
-                    />
-                  </div>
-                </div>
-              </div>
+            {/* MRP */}
+            <div>
+              <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+                MRP <span className="text-red-500">*</span>
+              </label>
+              <Input
+                type="number"
+                placeholder="Enter MRP"
+                value={accessoryForm.mrp}
+                onChange={(e) =>
+                  handleAccessoryFormChange("mrp", e.target.value)
+                }
+                className={`w-full ${
+                  accessoryFormTouched && !accessoryForm.mrp.trim()
+                    ? "border-red-500"
+                    : ""
+                }`}
+              />
+              {accessoryFormErrors.mrp && (
+                <p className="mt-1 text-xs text-red-500">
+                  {accessoryFormErrors.mrp}
+                </p>
+              )}
+            </div>
 
-              {/* Footer */}
-              <div className="border-t border-gray-200 p-4 sm:p-6 dark:border-gray-700">
-                <div className="flex flex-col gap-2 sm:flex-row sm:justify-end sm:gap-3">
-                  <button
-                    onClick={() => {
-                      setAddAccessoryModalOpen(false);
-                      resetAccessoryForm();
-                    }}
-                    className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 sm:w-auto sm:px-6 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleSaveAccessoryItem}
-                    className="bg-primary-500 hover:bg-primary-500 w-full rounded-lg px-4 py-2 text-sm font-semibold text-white sm:w-auto sm:px-6"
-                  >
-                    Save Accessory
-                  </button>
-                </div>
-              </div>
+            {/* Opening Stock */}
+            <div>
+              <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+                Opening Stock <span className="text-red-500">*</span>
+              </label>
+              <Input
+                type="number"
+                placeholder="Enter Opening Stock"
+                value={accessoryForm.opStock}
+                onChange={(e) =>
+                  handleAccessoryFormChange("opStock", e.target.value)
+                }
+                className={`w-full ${
+                  accessoryFormTouched && !accessoryForm.opStock.trim()
+                    ? "border-red-500"
+                    : ""
+                }`}
+              />
+              {accessoryFormErrors.opStock && (
+                <p className="mt-1 text-xs text-red-500">
+                  {accessoryFormErrors.opStock}
+                </p>
+              )}
+            </div>
+
+            {/* Variant */}
+            <div className="sm:col-span-2">
+              <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+                Variant <span className="text-red-500">*</span>
+              </label>
+              <Select
+                isMulti
+                unstyled
+                closeMenuOnSelect={false}
+                hideSelectedOptions={false}
+                menuPlacement="auto"
+                maxMenuHeight={220}
+                classNames={selectClassNames}
+                options={variantOptionsState}
+                value={selectedVariants}
+                onChange={(selected) => setSelectedVariants(selected as any[])}
+                components={{ Option: CheckboxOption }}
+                placeholder="Select Variant"
+              />
+              {accessoryFormErrors.variant && (
+                <p className="mt-1 text-xs text-red-500">
+                  {accessoryFormErrors.variant}
+                </p>
+              )}
             </div>
           </div>
-        </div>,
-       document.body,
-  )}
 
+          {/* Status */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+              Status
+            </label>
+            <Listbox
+              data={statusOptions}
+              value={
+                statusOptions.find((s) => s.value === accessoryForm.status) ||
+                null
+              }
+              onChange={(val: any) =>
+                handleAccessoryFormChange("status", val.value)
+              }
+              displayField="label"
+              placeholder="Select Status"
+            />
+          </div>
+        </div>
+      </SideDrawer>
       {/* Add Tractor Modal */}
-      {addTractorModalOpen && createPortal(
-        <div className="fixed inset-0 z-100 overflow-hidden">
-          <div
-            className="absolute inset-0 bg-black/50"
-            onClick={() => {
-              setAddTractorModalOpen(false);
-              setTractorForm(emptyTractor);
-              setTractorTouched(false);
-            }}
-          />
-          <div className="absolute top-0 right-0 h-full w-full max-w-7xl transform bg-white shadow-2xl transition-transform sm:w-3/4 lg:w-1/2 dark:bg-gray-800">
-            <div className="flex h-full flex-col">
-              <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 sm:px-6 sm:py-4 dark:border-gray-700">
-                <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-                  Add Tractor
-                </h2>
-                <button
-                  onClick={() => {
-                    setAddTractorModalOpen(false);
-                    setTractorForm(emptyTractor);
-                    setTractorTouched(false);
-                  }}
-                  className="rounded-lg p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
-                >
-                  <XMarkIcon className="h-6 w-6" />
-                </button>
-              </div>
-              <div className="flex-1 overflow-y-auto p-4 sm:p-6">
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
-                  {/* Tractor form fields - same as before */}
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Select Model <span className="text-red-500">*</span>
-                    </label>
-                    <Listbox
-                      data={modelOptions}
-                      value={
-                        modelOptions.find(
-                          (o) => o.value === tractorForm.selectModel,
-                        ) || null
-                      }
-                      onChange={(val: any) =>
-                        updateTractorForm("selectModel", val.value)
-                      }
-                      displayField="label"
-                      placeholder="Select Model"
-                    />
-                    {tractorTouched && !tractorForm.selectModel && (
-                      <p className="mt-1 text-xs text-red-500">
-                        Please select a model.
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Select Variant <span className="text-red-500">*</span>
-                    </label>
-                    <Listbox
-                      data={variantOptions}
-                      value={
-                        variantOptions.find(
-                          (o) => o.value === tractorForm.selectVariant,
-                        ) || null
-                      }
-                      onChange={(val: any) =>
-                        updateTractorForm("selectVariant", val.value)
-                      }
-                      displayField="label"
-                      placeholder="Select Variant"
-                    />
-                    {tractorTouched && !tractorForm.selectVariant && (
-                      <p className="mt-1 text-xs text-red-500">
-                        Please select a variant.
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Select Colour <span className="text-red-500">*</span>
-                    </label>
-                    <Listbox
-                      data={colourOptions}
-                      value={
-                        colourOptions.find(
-                          (o) => o.value === tractorForm.selectColour,
-                        ) || null
-                      }
-                      onChange={(val: any) =>
-                        updateTractorForm("selectColour", val.value)
-                      }
-                      displayField="label"
-                      placeholder="Select Colour"
-                    />
-                    {tractorTouched && !tractorForm.selectColour && (
-                      <p className="mt-1 text-xs text-red-500">
-                        Please select a colour.
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Item Name <span className="text-red-500">*</span>
-                    </label>
-                    <Input
-                      placeholder="Enter Item Name"
-                      value={tractorForm.itemName}
-                      onChange={(e) =>
-                        updateTractorForm("itemName", e.target.value)
-                      }
-                      className={`w-full ${
-                        tractorTouched && !tractorForm.itemName.trim()
-                          ? "border-red-500"
-                          : ""
-                      }`}
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Code No <span className="text-red-500">*</span>
-                    </label>
-                    <Input
-                      placeholder="Enter Code No"
-                      value={tractorForm.codeNo}
-                      onChange={(e) =>
-                        updateTractorForm("codeNo", e.target.value)
-                      }
-                      className={`w-full ${
-                        tractorTouched && !tractorForm.codeNo.trim()
-                          ? "border-red-500"
-                          : ""
-                      }`}
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Short Name
-                    </label>
-                    <Input
-                      placeholder="Enter Short Name"
-                      value={tractorForm.shortName}
-                      onChange={(e) =>
-                        updateTractorForm("shortName", e.target.value)
-                      }
-                      className="w-full"
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      HSN Code
-                    </label>
-                    <Input
-                      placeholder="Enter HSN Code"
-                      value={tractorForm.hsnCode}
-                      onChange={(e) =>
-                        updateTractorForm("hsnCode", e.target.value)
-                      }
-                      className="w-full"
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Tax Slab
-                    </label>
-                    <Listbox
-                      data={taxSlabOptions}
-                      value={
-                        taxSlabOptions.find(
-                          (o) => o.value === tractorForm.taxSlab,
-                        ) || null
-                      }
-                      onChange={(val: any) =>
-                        updateTractorForm("taxSlab", val.value)
-                      }
-                      displayField="label"
-                      placeholder="Select Tax Slab"
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      List of Group
-                    </label>
-                    <Listbox
-                      data={groupOptions}
-                      value={
-                        groupOptions.find(
-                          (o) => o.value === tractorForm.selectGroup,
-                        ) || null
-                      }
-                      onChange={(val: any) =>
-                        updateTractorForm("selectGroup", val.value)
-                      }
-                      displayField="label"
-                      placeholder="Select Group"
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Type of Fuel
-                    </label>
-                    <Listbox
-                      data={fuelTypeOptions}
-                      value={
-                        fuelTypeOptions.find(
-                          (o) => o.value === tractorForm.fuelType,
-                        ) || null
-                      }
-                      onChange={(val: any) =>
-                        updateTractorForm("fuelType", val.value)
-                      }
-                      displayField="label"
-                      placeholder="Select Fuel Type"
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Fuel Capacity
-                    </label>
-                    <Input
-                      placeholder="Enter Fuel Capacity"
-                      value={tractorForm.fuelCapacity}
-                      onChange={(e) =>
-                        updateTractorForm("fuelCapacity", e.target.value)
-                      }
-                      className="w-full"
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Purchase Price (Without GST){" "}
-                      <span className="text-red-500">*</span>
-                    </label>
-                    <Input
-                      placeholder="Enter Purchase Price"
-                      value={tractorForm.purchasePriceWithoutGST}
-                      onChange={(e) =>
-                        updateTractorForm(
-                          "purchasePriceWithoutGST",
-                          e.target.value,
-                        )
-                      }
-                      className={`w-full ${
-                        tractorTouched &&
-                        !tractorForm.purchasePriceWithoutGST.trim()
-                          ? "border-red-500"
-                          : ""
-                      }`}
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Purchase Price (Taxable){" "}
-                      <span className="text-red-500">*</span>
-                    </label>
-                    <Input
-                      placeholder="Enter Taxable Price"
-                      value={tractorForm.purchasePriceTaxable}
-                      onChange={(e) =>
-                        updateTractorForm(
-                          "purchasePriceTaxable",
-                          e.target.value,
-                        )
-                      }
-                      className={`w-full ${
-                        tractorTouched &&
-                        !tractorForm.purchasePriceTaxable.trim()
-                          ? "border-red-500"
-                          : ""
-                      }`}
-                    />
-                  </div>
-                  <div className="sm:col-span-2">
-                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Status
-                    </label>
-                    <Listbox
-                      data={[
-                        { label: "Active", value: "Active" },
-                        { label: "Inactive", value: "Inactive" },
-                      ]}
-                      value={
-                        [
-                          { label: "Active", value: "Active" },
-                          { label: "Inactive", value: "Inactive" },
-                        ].find((o) => o.value === tractorForm.status) || {
-                          label: "Active",
-                          value: "Active",
-                        }
-                      }
-                      onChange={(val: any) =>
-                        updateTractorForm("status", val.value)
-                      }
-                      displayField="label"
-                      placeholder="Select Status"
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="border-t border-gray-200 p-4 sm:p-6 dark:border-gray-700">
-                <div className="flex flex-col gap-2 sm:flex-row sm:justify-end sm:gap-3">
-                  <button
-                    onClick={() => {
-                      setAddTractorModalOpen(false);
-                      setTractorForm(emptyTractor);
-                      setTractorTouched(false);
-                    }}
-                    className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 sm:w-auto sm:px-6 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleSaveTractor}
-                    className="w-full rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 sm:w-auto sm:px-6"
-                  >
-                    Save Tractor
-                  </button>
-                </div>
-              </div>
-            </div>
+      <SideDrawer
+        show={addTractorModalOpen}
+        onClose={() => {
+          setAddTractorModalOpen(false);
+          setTractorForm(emptyTractor);
+          setTractorTouched(false);
+        }}
+        title="Add Tractor"
+        widthClass="max-w-3xl"
+        footer={
+          <>
+            <Button
+              variant="outlined"
+              color="neutral"
+              type="button"
+              onClick={() => {
+                setAddTractorModalOpen(false);
+                setTractorForm(emptyTractor);
+                setTractorTouched(false);
+              }}
+              className="h-10 w-1/2"
+            >
+              Cancel
+            </Button>
+            <Button
+              color="primary"
+              type="button"
+              onClick={handleSaveTractor}
+              className="h-10 w-1/2"
+            >
+              Save Tractor
+            </Button>
+          </>
+        }
+      >
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
+          {/* Select Model */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+              Select Model <span className="text-red-500">*</span>
+            </label>
+            <Listbox
+              data={modelOptions}
+              value={
+                modelOptions.find((o) => o.value === tractorForm.selectModel) ||
+                null
+              }
+              onChange={(val: any) =>
+                updateTractorForm("selectModel", val.value)
+              }
+              displayField="label"
+              placeholder="Select Model"
+            />
+            {tractorTouched && !tractorForm.selectModel && (
+              <p className="mt-1 text-xs text-red-500">
+                Please select a model.
+              </p>
+            )}
           </div>
-        </div>,
-       document.body,
-  )}
+
+          {/* Select Variant */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+              Select Variant <span className="text-red-500">*</span>
+            </label>
+            <Listbox
+              data={variantOptions}
+              value={
+                variantOptions.find(
+                  (o) => o.value === tractorForm.selectVariant,
+                ) || null
+              }
+              onChange={(val: any) =>
+                updateTractorForm("selectVariant", val.value)
+              }
+              displayField="label"
+              placeholder="Select Variant"
+            />
+            {tractorTouched && !tractorForm.selectVariant && (
+              <p className="mt-1 text-xs text-red-500">
+                Please select a variant.
+              </p>
+            )}
+          </div>
+
+          {/* Select Colour */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+              Select Colour <span className="text-red-500">*</span>
+            </label>
+            <Listbox
+              data={colourOptions}
+              value={
+                colourOptions.find(
+                  (o) => o.value === tractorForm.selectColour,
+                ) || null
+              }
+              onChange={(val: any) =>
+                updateTractorForm("selectColour", val.value)
+              }
+              displayField="label"
+              placeholder="Select Colour"
+            />
+            {tractorTouched && !tractorForm.selectColour && (
+              <p className="mt-1 text-xs text-red-500">
+                Please select a colour.
+              </p>
+            )}
+          </div>
+
+          {/* Item Name */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+              Item Name <span className="text-red-500">*</span>
+            </label>
+            <Input
+              placeholder="Enter Item Name"
+              value={tractorForm.itemName}
+              onChange={(e) => updateTractorForm("itemName", e.target.value)}
+              className={`w-full ${
+                tractorTouched && !tractorForm.itemName.trim()
+                  ? "border-red-500"
+                  : ""
+              }`}
+            />
+          </div>
+
+          {/* Code No */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+              Code No <span className="text-red-500">*</span>
+            </label>
+            <Input
+              placeholder="Enter Code No"
+              value={tractorForm.codeNo}
+              onChange={(e) => updateTractorForm("codeNo", e.target.value)}
+              className={`w-full ${
+                tractorTouched && !tractorForm.codeNo.trim()
+                  ? "border-red-500"
+                  : ""
+              }`}
+            />
+          </div>
+
+          {/* Short Name */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+              Short Name
+            </label>
+            <Input
+              placeholder="Enter Short Name"
+              value={tractorForm.shortName}
+              onChange={(e) => updateTractorForm("shortName", e.target.value)}
+              className="w-full"
+            />
+          </div>
+
+          {/* HSN Code */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+              HSN Code
+            </label>
+            <Input
+              placeholder="Enter HSN Code"
+              value={tractorForm.hsnCode}
+              onChange={(e) => updateTractorForm("hsnCode", e.target.value)}
+              className="w-full"
+            />
+          </div>
+
+          {/* Tax Slab */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+              Tax Slab
+            </label>
+            <Listbox
+              data={taxSlabOptions}
+              value={
+                taxSlabOptions.find((o) => o.value === tractorForm.taxSlab) ||
+                null
+              }
+              onChange={(val: any) => updateTractorForm("taxSlab", val.value)}
+              displayField="label"
+              placeholder="Select Tax Slab"
+            />
+          </div>
+
+          {/* List of Group */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+              List of Group
+            </label>
+            <Listbox
+              data={groupOptions}
+              value={
+                groupOptions.find((o) => o.value === tractorForm.selectGroup) ||
+                null
+              }
+              onChange={(val: any) =>
+                updateTractorForm("selectGroup", val.value)
+              }
+              displayField="label"
+              placeholder="Select Group"
+            />
+          </div>
+
+          {/* Type of Fuel */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+              Type of Fuel
+            </label>
+            <Listbox
+              data={fuelTypeOptions}
+              value={
+                fuelTypeOptions.find((o) => o.value === tractorForm.fuelType) ||
+                null
+              }
+              onChange={(val: any) => updateTractorForm("fuelType", val.value)}
+              displayField="label"
+              placeholder="Select Fuel Type"
+            />
+          </div>
+
+          {/* Fuel Capacity */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+              Fuel Capacity
+            </label>
+            <Input
+              placeholder="Enter Fuel Capacity"
+              value={tractorForm.fuelCapacity}
+              onChange={(e) =>
+                updateTractorForm("fuelCapacity", e.target.value)
+              }
+              className="w-full"
+            />
+          </div>
+
+          {/* Purchase Price (Without GST) */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+              Purchase Price (Without GST){" "}
+              <span className="text-red-500">*</span>
+            </label>
+            <Input
+              placeholder="Enter Purchase Price"
+              value={tractorForm.purchasePriceWithoutGST}
+              onChange={(e) =>
+                updateTractorForm("purchasePriceWithoutGST", e.target.value)
+              }
+              className={`w-full ${
+                tractorTouched && !tractorForm.purchasePriceWithoutGST.trim()
+                  ? "border-red-500"
+                  : ""
+              }`}
+            />
+          </div>
+
+          {/* Purchase Price (Taxable) */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+              Purchase Price (Taxable) <span className="text-red-500">*</span>
+            </label>
+            <Input
+              placeholder="Enter Taxable Price"
+              value={tractorForm.purchasePriceTaxable}
+              onChange={(e) =>
+                updateTractorForm("purchasePriceTaxable", e.target.value)
+              }
+              className={`w-full ${
+                tractorTouched && !tractorForm.purchasePriceTaxable.trim()
+                  ? "border-red-500"
+                  : ""
+              }`}
+            />
+          </div>
+
+          {/* Status */}
+          <div className="sm:col-span-2">
+            <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+              Status
+            </label>
+            <Listbox
+              data={[
+                { label: "Active", value: "Active" },
+                { label: "Inactive", value: "Inactive" },
+              ]}
+              value={
+                [
+                  { label: "Active", value: "Active" },
+                  { label: "Inactive", value: "Inactive" },
+                ].find((o) => o.value === tractorForm.status) || {
+                  label: "Active",
+                  value: "Active",
+                }
+              }
+              onChange={(val: any) => updateTractorForm("status", val.value)}
+              displayField="label"
+              placeholder="Select Status"
+            />
+          </div>
+        </div>
+      </SideDrawer>
 
       {/* Bank Details Modal */}
-      {bankDetailsModalOpen && createPortal(
-        <div className="fixed inset-0 z-100 overflow-hidden">
-          <div
-            className="absolute inset-0 bg-black/50"
-            onClick={handleCancelBankDetails}
-          />
-          <div className="absolute top-0 right-0 h-full w-full max-w-lg transform bg-white shadow-2xl transition-transform sm:w-3/4 lg:w-2/5 dark:bg-gray-800">
-            <div className="flex h-full flex-col">
-              <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 sm:px-6 sm:py-4 dark:border-gray-700">
-                <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-                  Bank Details
-                </h2>
-                <button
-                  onClick={handleCancelBankDetails}
-                  className="rounded-lg p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+      <SideDrawer
+        show={bankDetailsModalOpen}
+        onClose={handleCancelBankDetails}
+        title="Bank Details"
+        widthClass="max-w-lg"
+        footer={
+          <>
+            <Button
+              variant="outlined"
+              color="neutral"
+              type="button"
+              onClick={handleCancelBankDetails}
+              className="h-10 w-1/2"
+            >
+              Cancel
+            </Button>
+            <Button
+              color="primary"
+              type="button"
+              onClick={handleSaveBankDetails}
+              className="h-10 w-1/2"
+            >
+              Add Bank Details
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          {/* Payment Mode */}
+          <div>
+            <label className="mb-2 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+              Payment Mode <span className="text-red-500">*</span>
+            </label>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
+              {paymentModeOptions.map((opt) => (
+                <label
+                  key={opt.value}
+                  className="flex cursor-pointer items-center gap-2 text-sm text-gray-800 dark:text-gray-200"
                 >
-                  <XMarkIcon className="h-6 w-6" />
-                </button>
-              </div>
-              <div className="flex-1 overflow-y-auto p-4 sm:p-6">
-                <div className="mb-4">
-                  <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Payment Mode <span className="text-red-500">*</span>
-                  </label>
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
-                    {paymentModeOptions.map((opt) => (
-                      <label
-                        key={opt.value}
-                        className="flex cursor-pointer items-center gap-2 text-sm text-gray-800 dark:text-gray-200"
-                      >
-                        <Radio
-                          checked={bankDetails.paymentMode === opt.value}
-                          onChange={() =>
-                            updateBankDetails("paymentMode", opt.value)
-                          }
-                        />
-                        {opt.label}
-                      </label>
-                    ))}
-                  </div>
-                  {bankDetailsTouched && !bankDetails.paymentMode && (
-                    <p className="mt-1 text-xs text-red-500">
-                      Please select a payment mode.
-                    </p>
-                  )}
-                </div>
-
-                {bankDetails.paymentMode === "CHEQUE" && (
-                  <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    <div>
-                      <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Cheque No <span className="text-red-500">*</span>
-                      </label>
-                      <Input
-                        placeholder="Enter Cheque No"
-                        value={bankDetails.chequeNo}
-                        onChange={(e) =>
-                          updateBankDetails("chequeNo", e.target.value)
-                        }
-                        className={`w-full ${
-                          bankDetailsTouched && !bankDetails.chequeNo.trim()
-                            ? "border-red-500"
-                            : ""
-                        }`}
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Cheque Date <span className="text-red-500">*</span>
-                      </label>
-                      <DatePicker
-                        value={
-                          bankDetails.chequeDate
-                            ? parseLocalDate(bankDetails.chequeDate)
-                            : undefined
-                        }
-                        options={{ disableMobile: true }}
-                        onChange={(selectedDates: Date[]) => {
-                          updateBankDetails(
-                            "chequeDate",
-                            formatLocalDate(selectedDates[0] || null),
-                          );
-                        }}
-                        placeholder="Select date..."
-                        className={`w-full ${
-                          bankDetailsTouched && !bankDetails.chequeDate.trim()
-                            ? "border-red-500"
-                            : ""
-                        }`}
-                      />
-                    </div>
-                    <div className="sm:col-span-2">
-                      <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Clear Date
-                      </label>
-                      <DatePicker
-                        value={
-                          bankDetails.clearDate
-                            ? parseLocalDate(bankDetails.clearDate)
-                            : undefined
-                        }
-                        options={{ disableMobile: true }}
-                        onChange={(selectedDates: Date[]) => {
-                          updateBankDetails(
-                            "clearDate",
-                            formatLocalDate(selectedDates[0] || null),
-                          );
-                        }}
-                        placeholder="Select date..."
-                        className="w-full"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                <div className="mb-4">
-                  <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Narration
-                  </label>
-                  <textarea
-                    placeholder="Enter Narration"
-                    value={bankDetails.narration}
-                    onChange={(e) =>
-                      updateBankDetails("narration", e.target.value)
-                    }
-                    rows={3}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                  <Radio
+                    checked={bankDetails.paymentMode === opt.value}
+                    onChange={() => updateBankDetails("paymentMode", opt.value)}
                   />
-                </div>
+                  {opt.label}
+                </label>
+              ))}
+            </div>
+            {bankDetailsTouched && !bankDetails.paymentMode && (
+              <p className="mt-1 text-xs text-red-500">
+                Please select a payment mode.
+              </p>
+            )}
+          </div>
+
+          {/* Cheque fields */}
+          {bankDetails.paymentMode === "CHEQUE" && (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
+              <div>
+                <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+                  Cheque No <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  placeholder="Enter Cheque No"
+                  value={bankDetails.chequeNo}
+                  onChange={(e) =>
+                    updateBankDetails("chequeNo", e.target.value)
+                  }
+                  className={`w-full ${
+                    bankDetailsTouched && !bankDetails.chequeNo.trim()
+                      ? "border-red-500"
+                      : ""
+                  }`}
+                />
               </div>
-              <div className="border-t border-gray-200 p-4 sm:p-6 dark:border-gray-700">
-                <div className="flex flex-col gap-2 sm:flex-row sm:justify-end sm:gap-3">
-                  <button
-                    onClick={handleCancelBankDetails}
-                    className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 sm:w-auto sm:px-6 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleSaveBankDetails}
-                    className="bg-primary-500 hover:bg-primary-500 w-full rounded-lg px-4 py-2 text-sm font-semibold text-white sm:w-auto sm:px-6"
-                  >
-                    Add Bank Details
-                  </button>
-                </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+                  Cheque Date <span className="text-red-500">*</span>
+                </label>
+                <DatePicker
+                  value={
+                    bankDetails.chequeDate
+                      ? parseLocalDate(bankDetails.chequeDate)
+                      : undefined
+                  }
+                  options={{ disableMobile: true }}
+                  onChange={(selectedDates: Date[]) => {
+                    updateBankDetails(
+                      "chequeDate",
+                      formatLocalDate(selectedDates[0] || null),
+                    );
+                  }}
+                  placeholder="Select date..."
+                  className={`w-full ${
+                    bankDetailsTouched && !bankDetails.chequeDate.trim()
+                      ? "border-red-500"
+                      : ""
+                  }`}
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+                  Clear Date
+                </label>
+                <DatePicker
+                  value={
+                    bankDetails.clearDate
+                      ? parseLocalDate(bankDetails.clearDate)
+                      : undefined
+                  }
+                  options={{ disableMobile: true }}
+                  onChange={(selectedDates: Date[]) => {
+                    updateBankDetails(
+                      "clearDate",
+                      formatLocalDate(selectedDates[0] || null),
+                    );
+                  }}
+                  placeholder="Select date..."
+                  className="w-full"
+                />
               </div>
             </div>
+          )}
+
+          {/* Narration */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+              Narration
+            </label>
+            <textarea
+              placeholder="Enter Narration"
+              value={bankDetails.narration}
+              onChange={(e) => updateBankDetails("narration", e.target.value)}
+              rows={3}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+            />
           </div>
-        </div>,
-        document.body,
-  )}
+        </div>
+      </SideDrawer>
 
       {/* Create Account Modal */}
-      {accountModalOpen && createPortal(
-        <div className="fixed inset-0 z-100 overflow-hidden">
-          <div
-            className="absolute inset-0 bg-black/50"
-            onClick={() => {
-              setAccountModalOpen(false);
-              setAccountForm(emptyAccount);
-              setAccountTouched(false);
-            }}
-          />
-          <div className="absolute top-0 right-0 h-full w-full max-w-3xl transform bg-white shadow-2xl transition-transform sm:w-3/4 lg:w-1/2 dark:bg-gray-800">
-            <div className="flex h-full flex-col">
-              <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 sm:px-6 sm:py-4 dark:border-gray-700">
-                <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-                  Create Account
-                </h2>
-                <button
-                  onClick={() => {
-                    setAccountModalOpen(false);
-                    setAccountForm(emptyAccount);
-                    setAccountTouched(false);
-                  }}
-                  className="rounded-lg p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
-                >
-                  <XMarkIcon className="h-6 w-6" />
-                </button>
-              </div>
-              <div className="flex-1 overflow-y-auto p-4 sm:p-6">
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
-                  {/* Account Name */}
-                  <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
-                      Account Name <span className="text-red-500">*</span>
-                    </label>
-                    <Input
-                      placeholder="Enter Account Name"
-                      value={accountForm.accountName}
-                      onChange={(e) =>
-                        updateAccountForm("accountName", e.target.value)
-                      }
-                      className={`w-full ${accountTouched && !accountForm.accountName.trim() ? "border-red-500" : ""}`}
-                    />
-                    {getAccountError("accountName") && (
-                      <p className="mt-1 text-xs text-red-500">
-                        {getAccountError("accountName")}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-xs font-medium">
-                      Group
-                    </label>
-
-                    <Listbox
-                      data={groupOptions}
-                      value={
-                        groupOptions.find(
-                          (x) => x.value === accountForm.group,
-                        ) || null
-                      }
-                      onChange={(val: any) =>
-                        updateAccountForm("group", val?.value || "")
-                      }
-                      placeholder="Select Group"
-                    />
-                    {getAccountError("group") && (
-                      <p className="mt-1 text-xs text-red-500">
-                        {getAccountError("group")}
-                      </p>
-                    )}
-                  </div>
-
-                  {accountForm.group === "Sundry Creditor" && (
-                    <>
-                      <div>
-                        <label className="mb-1 block text-xs font-medium">
-                          Opening Balance
-                        </label>
-
-                        <Input
-                          placeholder="Opening Balance"
-                          value={accountForm.openingBalance}
-                          onChange={(e) =>
-                            updateAccountForm("openingBalance", e.target.value)
-                          }
-                        />
-                        {getAccountError("openingBalance") && (
-                          <p className="mt-1 text-xs text-red-500">
-                            {getAccountError("openingBalance")}
-                          </p>
-                        )}
-                      </div>
-
-                      <div>
-                        <label className="mb-1 block text-xs font-medium">
-                          Dr / Cr
-                        </label>
-
-                        <Listbox
-                          data={drCrOptions}
-                          value={
-                            drCrOptions.find(
-                              (x) => x.value === accountForm.drCr,
-                            ) || null
-                          }
-                          onChange={(val: any) =>
-                            updateAccountForm("drCr", val?.value || "")
-                          }
-                          placeholder="Select Dr / Cr"
-                        />
-                        {getAccountError("drCr") && (
-                          <p className="mt-1 text-xs text-red-500">
-                            {getAccountError("drCr")}
-                          </p>
-                        )}
-                      </div>
-                    </>
-                  )}
-                  {/* Mobile */}
-                  <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
-                      Mobile <span className="text-red-500">*</span>
-                    </label>
-                    <Input
-                      placeholder="Mobile"
-                      value={accountForm.mobile}
-                      onChange={(e) =>
-                        updateAccountForm("mobile", e.target.value)
-                      }
-                      className={`w-full ${accountTouched && !accountForm.mobile.trim() ? "border-red-500" : ""}`}
-                    />
-                    {getAccountError("mobile") && (
-                      <p className="mt-1 text-xs text-red-500">
-                        {getAccountError("mobile")}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Country - Dynamic with react-select */}
-                  {/* Country */}
-                  <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
-                      Country <span className="text-red-500">*</span>
-                    </label>
-                    <Combobox
-                      data={countryOptions}
-                      displayField="label"
-                      searchFields={["label"]}
-                      placeholder="Search Country"
-                      value={
-                        countryOptions.find(
-                          (o) => o.value === accountForm.countryCode,
-                        ) || null
-                      }
-                      onChange={(
-                        selected: { value: string; label: string } | null,
-                      ) => {
-                        updateAccountForm("countryCode", selected?.value || "");
-                        updateAccountForm("country", selected?.label || "");
-                        updateAccountForm("stateCode", "");
-                        updateAccountForm("state", "");
-                        updateAccountForm("district", "");
-                        updateAccountForm("city", "");
-                      }}
-                    />
-                    {getAccountError("countryCode") && (
-                      <p className="mt-1 text-xs text-red-500">
-                        {getAccountError("countryCode")}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* State */}
-                  <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
-                      State <span className="text-red-500">*</span>
-                    </label>
-                    <div
-                      className={
-                        !accountForm.countryCode
-                          ? "pointer-events-none opacity-60"
-                          : ""
-                      }
-                    >
-                      <Combobox
-                        data={stateOptions}
-                        displayField="label"
-                        searchFields={["label"]}
-                        placeholder="Search State"
-                        value={
-                          stateOptions.find(
-                            (o) => o.value === accountForm.stateCode,
-                          ) || null
-                        }
-                        onChange={(
-                          selected: { value: string; label: string } | null,
-                        ) => {
-                          updateAccountForm("stateCode", selected?.value || "");
-                          updateAccountForm("state", selected?.label || "");
-                          updateAccountForm("district", "");
-                          updateAccountForm("city", "");
-                        }}
-                      />
-                    </div>
-                    {getAccountError("stateCode") && (
-                      <p className="mt-1 text-xs text-red-500">
-                        {getAccountError("stateCode")}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* District */}
-                  <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
-                      District <span className="text-red-500">*</span>
-                    </label>
-                    <div
-                      className={
-                        !accountForm.stateCode
-                          ? "pointer-events-none opacity-60"
-                          : ""
-                      }
-                    >
-                      <Combobox
-                        data={districtOptions}
-                        displayField="label"
-                        searchFields={["label"]}
-                        placeholder="Search District"
-                        value={
-                          districtOptions.find(
-                            (o) => o.value === accountForm.district,
-                          ) || null
-                        }
-                        onChange={(
-                          selected: { value: string; label: string } | null,
-                        ) =>
-                          updateAccountForm("district", selected?.value || "")
-                        }
-                      />
-                    </div>
-                    {getAccountError("district") && (
-                      <p className="mt-1 text-xs text-red-500">
-                        {getAccountError("district")}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* City */}
-                  <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
-                      City <span className="text-red-500">*</span>
-                    </label>
-                    <div
-                      className={
-                        !accountForm.stateCode
-                          ? "pointer-events-none opacity-60"
-                          : ""
-                      }
-                    >
-                      <Combobox
-                        data={cityOptions}
-                        displayField="label"
-                        searchFields={["label"]}
-                        placeholder="Search City"
-                        value={
-                          cityOptions.find(
-                            (o) => o.value === accountForm.city,
-                          ) || null
-                        }
-                        onChange={(
-                          selected: { value: string; label: string } | null,
-                        ) => updateAccountForm("city", selected?.value || "")}
-                      />
-                    </div>
-                    {getAccountError("city") && (
-                      <p className="mt-1 text-xs text-red-500">
-                        {getAccountError("city")}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Address */}
-                  <div className="sm:col-span-2">
-                    <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
-                      Address <span className="text-red-500">*</span>
-                    </label>
-                    <Input
-                      placeholder="Enter Address"
-                      value={accountForm.address}
-                      onChange={(e) =>
-                        updateAccountForm("address", e.target.value)
-                      }
-                      className={`w-full ${accountTouched && !accountForm.address.trim() ? "border-red-500" : ""}`}
-                    />
-                    {getAccountError("address") && (
-                      <p className="mt-1 text-xs text-red-500">
-                        {getAccountError("address")}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* PAN Card */}
-                  <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
-                      PAN Card <span className="text-red-500">*</span>
-                    </label>
-                    <Input
-                      placeholder="PAN Card Number"
-                      value={accountForm.panCard}
-                      onChange={(e) => {
-                        updateAccountForm(
-                          "panCard",
-                          e.target.value.toUpperCase(),
-                        );
-                        validateField("panCard", e.target.value.toUpperCase());
-                      }}
-                      error={accountErrors.panCard}
-                      className={`w-full ${accountTouched && !accountForm.panCard.trim() ? "border-red-500" : ""}`}
-                    />
-                    {/* {getAccountError("panCard") && (
-  <p className="mt-1 text-xs text-red-500">
-    {getAccountError("panCard")}
-  </p>
-)} */}
-                  </div>
-                  {/* Aadhar Card */}
-                  <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
-                      Aadhar Card No <span className="text-red-500">*</span>
-                    </label>
-                    <Input
-                      placeholder="Aadhar Number"
-                      value={accountForm.aadharCard}
-                      onChange={(e) => {
-                        updateAccountForm("aadharCard", e.target.value);
-                        validateField("aadharCard", e.target.value);
-                      }}
-                      error={accountErrors.aadharCard}
-                      className={`w-full ${accountTouched && !accountForm.aadharCard.trim() ? "border-red-500" : ""}`}
-                    />
-                    {/* {getAccountError("aadharCard") && (
-  <p className="mt-1 text-xs text-red-500">
-    {getAccountError("aadharCard")}
-  </p>
-)} */}
-                  </div>
-                </div>
-              </div>
-              <div className="border-t border-gray-200 p-4 sm:p-6 dark:border-gray-700">
-                <div className="flex flex-col gap-2 sm:flex-row sm:justify-end sm:gap-3">
-                  <button
-                    onClick={() => {
-                      setAccountModalOpen(false);
-                      setAccountForm(emptyAccount);
-                      setAccountTouched(false);
-                    }}
-                    className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 sm:w-auto sm:px-6 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleCreateAccount}
-                    className="bg-primary-500 hover:bg-primary-500 w-full cursor-pointer rounded-lg px-4 py-2 text-sm font-semibold text-white sm:w-auto sm:px-6"
-                  >
-                    Create Account
-                  </button>
-                </div>
-              </div>
-            </div>
+      <SideDrawer
+        show={accountModalOpen}
+        onClose={() => {
+          setAccountModalOpen(false);
+          setAccountForm(emptyAccount);
+          setAccountTouched(false);
+        }}
+        title="Create Account"
+        widthClass="max-w-3xl"
+        footer={
+          <>
+            <Button
+              variant="outlined"
+              color="neutral"
+              type="button"
+              onClick={() => {
+                setAccountModalOpen(false);
+                setAccountForm(emptyAccount);
+                setAccountTouched(false);
+              }}
+              className="h-10 w-1/2"
+            >
+              Cancel
+            </Button>
+            <Button
+              color="primary"
+              type="button"
+              onClick={handleCreateAccount}
+              className="h-10 w-1/2"
+            >
+              Create Account
+            </Button>
+          </>
+        }
+      >
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
+          {/* Account Name */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+              Account Name <span className="text-red-500">*</span>
+            </label>
+            <Input
+              placeholder="Enter Account Name"
+              value={accountForm.accountName}
+              onChange={(e) => updateAccountForm("accountName", e.target.value)}
+              className={`w-full ${accountTouched && !accountForm.accountName.trim() ? "border-red-500" : ""}`}
+            />
+            {getAccountError("accountName") && (
+              <p className="mt-1 text-xs text-red-500">
+                {getAccountError("accountName")}
+              </p>
+            )}
           </div>
-        </div>,
-      document.body,
-  )}
+
+          {/* Group */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+              Group
+            </label>
+            <Listbox
+              data={groupOptions}
+              value={
+                groupOptions.find((x) => x.value === accountForm.group) || null
+              }
+              onChange={(val: any) =>
+                updateAccountForm("group", val?.value || "")
+              }
+              placeholder="Select Group"
+            />
+            {getAccountError("group") && (
+              <p className="mt-1 text-xs text-red-500">
+                {getAccountError("group")}
+              </p>
+            )}
+          </div>
+
+          {isCreditorGroup && (
+            <>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+                  Opening Balance
+                </label>
+                <Input
+                  placeholder="Opening Balance"
+                  value={accountForm.openingBalance}
+                  onChange={(e) =>
+                    updateAccountForm("openingBalance", e.target.value)
+                  }
+                />
+                {getAccountError("openingBalance") && (
+                  <p className="mt-1 text-xs text-red-500">
+                    {getAccountError("openingBalance")}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+                  Dr / Cr
+                </label>
+                <Listbox
+                  data={drCrOptions}
+                  value={
+                    drCrOptions.find((x) => x.value === accountForm.drCr) ||
+                    null
+                  }
+                  onChange={(val: any) =>
+                    updateAccountForm("drCr", val?.value || "")
+                  }
+                  placeholder="Select Dr / Cr"
+                />
+                {getAccountError("drCr") && (
+                  <p className="mt-1 text-xs text-red-500">
+                    {getAccountError("drCr")}
+                  </p>
+                )}
+              </div>
+            </>
+          )}
+
+          {/* Mobile */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+              Mobile <span className="text-red-500">*</span>
+            </label>
+            <Input
+              placeholder="Mobile"
+              value={accountForm.mobile}
+              onChange={(e) => updateAccountForm("mobile", e.target.value)}
+              className={`w-full ${accountTouched && !accountForm.mobile.trim() ? "border-red-500" : ""}`}
+            />
+            {getAccountError("mobile") && (
+              <p className="mt-1 text-xs text-red-500">
+                {getAccountError("mobile")}
+              </p>
+            )}
+          </div>
+
+          {/* Country */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+              Country <span className="text-red-500">*</span>
+            </label>
+            <Combobox
+              data={countryOptions}
+              displayField="label"
+              searchFields={["label"]}
+              placeholder="Search Country"
+              value={
+                countryOptions.find(
+                  (o) => o.value === accountForm.countryCode,
+                ) || null
+              }
+              onChange={(selected: { value: string; label: string } | null) => {
+                updateAccountForm("countryCode", selected?.value || "");
+                updateAccountForm("country", selected?.label || "");
+                updateAccountForm("stateCode", "");
+                updateAccountForm("state", "");
+                updateAccountForm("district", "");
+                updateAccountForm("city", "");
+              }}
+            />
+            {getAccountError("countryCode") && (
+              <p className="mt-1 text-xs text-red-500">
+                {getAccountError("countryCode")}
+              </p>
+            )}
+          </div>
+
+          {/* State */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+              State <span className="text-red-500">*</span>
+            </label>
+            <div
+              className={
+                !accountForm.countryCode ? "pointer-events-none opacity-60" : ""
+              }
+            >
+              <Combobox
+                data={stateOptions}
+                displayField="label"
+                searchFields={["label"]}
+                placeholder="Search State"
+                value={
+                  stateOptions.find((o) => o.value === accountForm.stateCode) ||
+                  null
+                }
+                onChange={(
+                  selected: { value: string; label: string } | null,
+                ) => {
+                  updateAccountForm("stateCode", selected?.value || "");
+                  updateAccountForm("state", selected?.label || "");
+                  updateAccountForm("district", "");
+                  updateAccountForm("city", "");
+                }}
+              />
+            </div>
+            {getAccountError("stateCode") && (
+              <p className="mt-1 text-xs text-red-500">
+                {getAccountError("stateCode")}
+              </p>
+            )}
+          </div>
+
+          {/* District */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+              District <span className="text-red-500">*</span>
+            </label>
+            <div
+              className={
+                !accountForm.stateCode ? "pointer-events-none opacity-60" : ""
+              }
+            >
+              <Combobox
+                data={districtOptions}
+                displayField="label"
+                searchFields={["label"]}
+                placeholder="Search District"
+                value={
+                  districtOptions.find(
+                    (o) => o.value === accountForm.district,
+                  ) || null
+                }
+                onChange={(selected: { value: string; label: string } | null) =>
+                  updateAccountForm("district", selected?.value || "")
+                }
+              />
+            </div>
+            {getAccountError("district") && (
+              <p className="mt-1 text-xs text-red-500">
+                {getAccountError("district")}
+              </p>
+            )}
+          </div>
+
+          {/* City */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+              City <span className="text-red-500">*</span>
+            </label>
+            <div
+              className={
+                !accountForm.stateCode ? "pointer-events-none opacity-60" : ""
+              }
+            >
+              <Combobox
+                data={cityOptions}
+                displayField="label"
+                searchFields={["label"]}
+                placeholder="Search City"
+                value={
+                  cityOptions.find((o) => o.value === accountForm.city) || null
+                }
+                onChange={(selected: { value: string; label: string } | null) =>
+                  updateAccountForm("city", selected?.value || "")
+                }
+              />
+            </div>
+            {getAccountError("city") && (
+              <p className="mt-1 text-xs text-red-500">
+                {getAccountError("city")}
+              </p>
+            )}
+          </div>
+
+          {/* Address */}
+          <div className="sm:col-span-2">
+            <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+              Address <span className="text-red-500">*</span>
+            </label>
+            <Input
+              placeholder="Enter Address"
+              value={accountForm.address}
+              onChange={(e) => updateAccountForm("address", e.target.value)}
+              className={`w-full ${accountTouched && !accountForm.address.trim() ? "border-red-500" : ""}`}
+            />
+            {getAccountError("address") && (
+              <p className="mt-1 text-xs text-red-500">
+                {getAccountError("address")}
+              </p>
+            )}
+          </div>
+
+          {/* PAN Card */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+              PAN Card <span className="text-red-500">*</span>
+            </label>
+            <Input
+              placeholder="PAN Card Number"
+              value={accountForm.panCard}
+              onChange={(e) => {
+                updateAccountForm("panCard", e.target.value.toUpperCase());
+                validateField("panCard", e.target.value.toUpperCase());
+              }}
+              error={accountErrors.panCard}
+              className={`w-full ${accountTouched && !accountForm.panCard.trim() ? "border-red-500" : ""}`}
+            />
+          </div>
+
+          {/* Aadhar Card */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+              Aadhar Card No <span className="text-red-500">*</span>
+            </label>
+            <Input
+              placeholder="Aadhar Number"
+              value={accountForm.aadharCard}
+              onChange={(e) => {
+                updateAccountForm("aadharCard", e.target.value);
+                validateField("aadharCard", e.target.value);
+              }}
+              error={accountErrors.aadharCard}
+              className={`w-full ${accountTouched && !accountForm.aadharCard.trim() ? "border-red-500" : ""}`}
+            />
+          </div>
+        </div>
+      </SideDrawer>
     </div>
   );
 };

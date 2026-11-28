@@ -136,33 +136,33 @@ export default function CashPayment() {
   const [filterDateFrom, setFilterDateFrom] = useState<any>(null);
   const [filterDateTo, setFilterDateTo] = useState<any>(null);
 
-const filteredRows = rows.filter((r) => {
-  const matchesSearch = Object.values(r).some((v) =>
-    String(v).toLowerCase().includes(search.toLowerCase()),
-  );
-  const matchesType = filterType === "All" || r.type === filterType;
+  const filteredRows = rows.filter((r) => {
+    const matchesSearch = Object.values(r).some((v) =>
+      String(v).toLowerCase().includes(search.toLowerCase()),
+    );
+    const matchesType = filterType === "All" || r.type === filterType;
 
-  // NEW: date range filter — DatePicker gives an array, so pull the first date
-  const rowDate = new Date(r.date);
-  rowDate.setHours(0, 0, 0, 0);
+    // NEW: date range filter — DatePicker gives an array, so pull the first date
+    const rowDate = new Date(r.date);
+    rowDate.setHours(0, 0, 0, 0);
 
-  const fromDate =
-    Array.isArray(filterDateFrom) && filterDateFrom[0]
-      ? new Date(filterDateFrom[0])
-      : null;
-  if (fromDate) fromDate.setHours(0, 0, 0, 0);
+    const fromDate =
+      Array.isArray(filterDateFrom) && filterDateFrom[0]
+        ? new Date(filterDateFrom[0])
+        : null;
+    if (fromDate) fromDate.setHours(0, 0, 0, 0);
 
-  const toDate =
-    Array.isArray(filterDateTo) && filterDateTo[0]
-      ? new Date(filterDateTo[0])
-      : null;
-  if (toDate) toDate.setHours(23, 59, 59, 999);
+    const toDate =
+      Array.isArray(filterDateTo) && filterDateTo[0]
+        ? new Date(filterDateTo[0])
+        : null;
+    if (toDate) toDate.setHours(23, 59, 59, 999);
 
-  const matchesDateFrom = !fromDate || rowDate >= fromDate;
-  const matchesDateTo = !toDate || rowDate <= toDate;
+    const matchesDateFrom = !fromDate || rowDate >= fromDate;
+    const matchesDateTo = !toDate || rowDate <= toDate;
 
-  return matchesSearch && matchesType && matchesDateFrom && matchesDateTo;
-});
+    return matchesSearch && matchesType && matchesDateFrom && matchesDateTo;
+  });
   const [cashAccounts, setCashAccounts] = useState<any[]>([]);
   const [oppAccounts, setOppAccounts] = useState<any[]>([]);
   const totalItems = filteredRows.length;
@@ -174,13 +174,13 @@ const filteredRows = rows.filter((r) => {
 
   const financialYearId = Number(localStorage.getItem("financialYearId"));
   // NEW: build Type filter options from actual rows data, no hardcoding
-// Type filter options — dynamically built from actual rows data
-const typeFilterOptions = [
-  { id: "All", name: "All Types" },
-  ...Array.from(new Set(rows.map((r) => r.type).filter(Boolean))).map(
-    (type) => ({ id: type, name: type }),
-  ),
-];
+  // Type filter options — dynamically built from actual rows data
+  const typeFilterOptions = [
+    { id: "All", name: "All Types" },
+    ...Array.from(new Set(rows.map((r) => r.type).filter(Boolean))).map(
+      (type) => ({ id: type, name: type }),
+    ),
+  ];
   const getPurchaseBills = async () => {
     try {
       const res = await apiHelper.get("/purchases/pending");
@@ -236,25 +236,22 @@ const typeFilterOptions = [
       console.log(err);
     }
   };
-const getVoucherNo = async () => {
-  try {
-    const res = await apiHelper.get(
-      `/cash-payment/generate-voucher?companyId=${companyId}&financialYearId=${financialYearId}`
-    );
+  const getVoucherNo = async () => {
+    try {
+      const res = await apiHelper.get(
+        `/cash-payment/generate-voucher?companyId=${companyId}&financialYearId=${financialYearId}`,
+      );
 
-    const voucherNo =
-      res?.data?.voucherNo ??
-      res?.voucherNo ??
-      "";
+      const voucherNo = res?.data?.voucherNo ?? res?.voucherNo ?? "";
 
-    setForm((prev) => ({
-      ...prev,
-      voucherNo,
-    }));
-  } catch (err) {
-    console.error(err);
-  }
-};
+      setForm((prev) => ({
+        ...prev,
+        voucherNo,
+      }));
+    } catch (err) {
+      console.error(err);
+    }
+  };
   const getCashPayments = async () => {
     try {
       const res = await apiHelper.get("/cash-payment");
@@ -580,15 +577,15 @@ const getVoucherNo = async () => {
               <label className="dark:text-dark-200 mb-1.5 block text-sm font-medium text-gray-700">
                 Type
               </label>
-            <Listbox
-    data={typeFilterOptions}
-    value={
-      typeFilterOptions.find((o) => o.id === filterType) ||
-      typeFilterOptions[0]
-    }
-    onChange={(opt: any) => setFilterType(opt.id)}
-    displayField="name"
-  />
+              <Listbox
+                data={typeFilterOptions}
+                value={
+                  typeFilterOptions.find((o) => o.id === filterType) ||
+                  typeFilterOptions[0]
+                }
+                onChange={(opt: any) => setFilterType(opt.id)}
+                displayField="name"
+              />
             </div>
             <div>
               <label className="dark:text-dark-200 mb-1.5 block text-sm font-medium text-gray-700">
@@ -812,7 +809,7 @@ const getVoucherNo = async () => {
                     leaveTo="transform opacity-0 scale-95"
                   >
                     <MenuItems
-                        anchor="bottom start"
+                      anchor="bottom start"
                       className="dark:bg-dark-700 dark:border-dark-600 z-200 w-20 space-y-0.5 rounded-lg border border-gray-200 bg-white p-1 shadow-xl ring-1 ring-black/5 [--anchor-gap:6px] focus:outline-none"
                     >
                       {entriesOptions.map((opt) => (
@@ -951,13 +948,14 @@ const getVoucherNo = async () => {
             leaveTo="translate-x-full"
           >
             <DialogPanel className="dark:bg-dark-700 fixed top-0 right-0 flex h-full w-full max-w-4xl transform-gpu flex-col bg-white shadow-2xl transition-transform duration-200">
-              <div className="dark:border-dark-500 flex items-center justify-between border-b border-gray-200 px-5 py-4">
-                <h2 className="dark:text-dark-50 text-lg font-semibold text-gray-800">
+              <div className="bg-primary-600 dark:bg-primary-700 flex items-center justify-between px-4 py-3 sm:px-5 sm:py-4">
+                <h2 className="text-base font-semibold text-white sm:text-lg">
                   {editId !== null ? "Edit Cash Payment" : "Add Cash Payment"}
                 </h2>
                 <button
+                  type="button"
                   onClick={() => setShowDrawer(false)}
-                  className="size-8 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                  className="flex size-8 cursor-pointer items-center justify-center rounded-full text-white hover:bg-white/10 hover:text-white focus:bg-white/10 active:bg-white/20"
                 >
                   <X className="size-5" />
                 </button>

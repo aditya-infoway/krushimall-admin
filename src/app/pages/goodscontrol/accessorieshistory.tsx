@@ -69,30 +69,49 @@ const AccessoriesHistory = () => {
   // FETCH ACCESSORIES HISTORY
   // ------------------------------------------
 
-  const fetchHistory = async () => {
-    try {
-      setLoading(true);
-      const res = await apiHelper.get(`/accessories/history/${id}`);
+const fetchHistory = async () => {
+  try {
+    setLoading(true);
+    const res = await apiHelper.get(`/accessories/history/${id}`);
 
-      console.log(res);
+  
 
-      setRows(res.history || []);
+    // Date ke hisaab se sort karo (same date ho to Opening Stock pehle)
+    const sorted = [...(res.history || [])].sort(
+      (a: HistoryRow, b: HistoryRow) => {
+        const diff = new Date(a.date).getTime() - new Date(b.date).getTime();
+        if (diff !== 0) return diff;
 
-      // Set accessory details from response
-      if (res.itemName) {
-        setAccessory({
-          itemName: res.itemName || "-",
-          codeNo: res.codeNo || "-",
-          group: res.group || "-",
-        });
-      }
-    } catch (err) {
-      console.log(err);
-      setRows([]);
-    } finally {
-      setLoading(false);
+        const aOpen = /opening/i.test(a.type) ? 0 : 1;
+        const bOpen = /opening/i.test(b.type) ? 0 : 1;
+        return aOpen - bOpen;
+      },
+    );
+
+    // Running stock dobara nikalo (sorted order ke hisaab se)
+    let running = 0;
+    const withBalance = sorted.map((row: HistoryRow) => {
+      running += (row.qtyIn || 0) - (row.qtyOut || 0);
+      return { ...row, balance: running };
+    });
+
+    setRows(withBalance);
+
+    // Set accessory details from response
+    if (res.itemName) {
+      setAccessory({
+        itemName: res.itemName || "-",
+        codeNo: res.codeNo || "-",
+        group: res.group || "-",
+      });
     }
-  };
+  } catch (err) {
+    console.log(err);
+    setRows([]);
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     if (id) {
