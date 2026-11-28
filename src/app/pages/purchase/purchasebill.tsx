@@ -1856,635 +1856,650 @@ const TractorPurchaseBill: React.FC<TractorPurchaseBillProps> = ({
       {/* ========== RIGHT SIDE DRAWER MODALS ========== */}
 
       {/* Vehicle Details - Right Drawer */}
-      {vehicleModalOpen && createPortal (
-        <div className="fixed inset-0 z-100 overflow-hidden">
-          <div
-            className="absolute inset-0 bg-black/50"
-            onClick={() => {
-              setVehicleModalOpen(false);
-              setVehicleSearch("");
-            }}
-          />
-          <div className="absolute top-0 right-0 h-full w-full max-w-5xl transform bg-white shadow-2xl transition-transform sm:w-3/4 lg:w-1/2 dark:bg-gray-800">
-            <div className="flex h-full flex-col">
-              <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 sm:px-6 sm:py-4 dark:border-gray-700">
-                <h2 className="text-lg font-bold text-blue-600 dark:text-blue-400">
-                  {" "}
-                  Vehicle Details
-                </h2>
-                <button
-                  onClick={() => {
-                    setVehicleModalOpen(false);
-                    setVehicleSearch("");
-                  }}
-                  className="rounded-lg p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
-                >
-                  <XMarkIcon className="h-6 w-6" />
-                </button>
-              </div>
-              <div className="flex-1 overflow-y-auto p-4 sm:p-6">
-                <div className="relative mb-4">
-                  <MagnifyingGlassIcon className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                  <input
-                    placeholder="Search vehicles..."
-                    value={vehicleSearch}
-                    onChange={(e) => setVehicleSearch(e.target.value)}
-                    className="w-full rounded-lg border border-red-500 bg-white px-4 py-2 pl-10 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
-                  />
+      {vehicleModalOpen &&
+        createPortal(
+          <div className="fixed inset-0 z-100 overflow-hidden">
+            <div
+              className="absolute inset-0 bg-black/50"
+              onClick={() => {
+                setVehicleModalOpen(false);
+                setVehicleSearch("");
+              }}
+            />
+            <div className="absolute top-0 right-0 h-full w-full max-w-5xl transform bg-white shadow-2xl transition-transform sm:w-3/4 lg:w-1/2 dark:bg-gray-800">
+              <div className="flex h-full flex-col">
+                <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 sm:px-6 sm:py-4 dark:border-gray-700">
+                  <h2 className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                    {" "}
+                    Vehicle Details
+                  </h2>
+                  <button
+                    onClick={() => {
+                      setVehicleModalOpen(false);
+                      setVehicleSearch("");
+                    }}
+                    className="rounded-lg p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+                  >
+                    <XMarkIcon className="h-6 w-6" />
+                  </button>
                 </div>
-                <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-                  <table className="w-full border-collapse text-sm">
-                    <thead>
-                      <tr className="bg-gray-100 text-left whitespace-nowrap dark:bg-gray-700">
-                        <th className="w-12 p-2">#</th>
-                        <th className="p-2">Item Name</th>
-                        <th className="p-2">Model</th>
-                        <th className="p-2">Item Code</th>
-                        <th className="p-2">Variant</th>
-                        <th className="p-2">Colour</th>
-                        <th className="p-2">Short Name</th>
-                        <th className="p-2">HSN</th>
-                        <th className="p-2">GST</th>
-                        <th className="p-2">Fuel</th>
-                        <th className="p-2">Capacity</th>
-                        <th className="p-2">Purchase (No GST)</th>
-                        <th className="p-2">Purchase (GST)</th>
-                        <th className="p-2">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredVehicles.map((v) => (
-                        <tr
-                          key={v.id}
-                          className="border-t border-gray-200 whitespace-nowrap dark:border-gray-700"
-                        >
-                          <td className="p-2 text-center">
-                            <button
-                              onClick={() => handleVehicleSelect(v)}
-                              className="inline-flex h-6 w-6 items-center justify-center rounded bg-green-600 text-white hover:bg-green-700"
-                            >
-                              ✓
-                            </button>
-                          </td>
-                          <td className="p-2">{v.itemName}</td>
-                          <td className="p-2">{v.model}</td>
-                          <td className="p-2">{v.itemCode}</td>
-                          <td className="p-2">{v.variant}</td>
-                          <td className="p-2">{v.colour}</td>
-                          <td className="p-2">{v.shortName}</td>
-                          <td className="p-2">{v.hsnCode}</td>
-                          <td className="p-2">{v.taxSlab}%</td>
-                          <td className="p-2">{v.typeOfFuel}</td>
-                          <td className="p-2">{v.fuelCapacity}</td>
-                          <td className="p-2">{v.purchasePriceNoGST}</td>
-                          <td className="p-2">{v.purchasePriceTaxable}</td>
-                          <td className="p-2">{v.status}</td>
+                <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+                  <div className="relative mb-4">
+                    <MagnifyingGlassIcon className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                    <input
+                      placeholder="Search vehicles..."
+                      value={vehicleSearch}
+                      onChange={(e) => setVehicleSearch(e.target.value)}
+                      className="w-full rounded-lg border border-red-500 bg-white px-4 py-2 pl-10 text-sm outline-none dark:border-gray-600 dark:bg-gray-800"
+                    />
+                  </div>
+                  <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+                    <table className="w-full border-collapse text-sm">
+                      <thead>
+                        <tr className="bg-gray-100 text-left whitespace-nowrap dark:bg-gray-700">
+                          <th className="w-12 p-2">#</th>
+                          <th className="p-2">Item Name</th>
+                          <th className="p-2">Model</th>
+                          <th className="p-2">Item Code</th>
+                          <th className="p-2">Variant</th>
+                          <th className="p-2">Colour</th>
+                          <th className="p-2">Short Name</th>
+                          <th className="p-2">HSN</th>
+                          <th className="p-2">GST</th>
+                          <th className="p-2">Fuel</th>
+                          <th className="p-2">Capacity</th>
+                          <th className="p-2">Purchase (No GST)</th>
+                          <th className="p-2">Purchase (GST)</th>
+                          <th className="p-2">Status</th>
                         </tr>
-                      ))}
-                      {filteredVehicles.length === 0 && (
-                        <tr>
-                          <td
-                            colSpan={6}
-                            className="p-4 text-center text-gray-500"
+                      </thead>
+                      <tbody>
+                        {filteredVehicles.map((v) => (
+                          <tr
+                            key={v.id}
+                            className="border-t border-gray-200 whitespace-nowrap dark:border-gray-700"
                           >
-                            No vehicles match your search.
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
+                            <td className="p-2 text-center">
+                              <button
+                                onClick={() => handleVehicleSelect(v)}
+                                className="inline-flex h-6 w-6 items-center justify-center rounded bg-green-600 text-white hover:bg-green-700"
+                              >
+                                ✓
+                              </button>
+                            </td>
+                            <td className="p-2">{v.itemName}</td>
+                            <td className="p-2">{v.model}</td>
+                            <td className="p-2">{v.itemCode}</td>
+                            <td className="p-2">{v.variant}</td>
+                            <td className="p-2">{v.colour}</td>
+                            <td className="p-2">{v.shortName}</td>
+                            <td className="p-2">{v.hsnCode}</td>
+                            <td className="p-2">{v.taxSlab}%</td>
+                            <td className="p-2">{v.typeOfFuel}</td>
+                            <td className="p-2">{v.fuelCapacity}</td>
+                            <td className="p-2">{v.purchasePriceNoGST}</td>
+                            <td className="p-2">{v.purchasePriceTaxable}</td>
+                            <td className="p-2">{v.status}</td>
+                          </tr>
+                        ))}
+                        {filteredVehicles.length === 0 && (
+                          <tr>
+                            <td
+                              colSpan={6}
+                              className="p-4 text-center text-gray-500"
+                            >
+                              No vehicles match your search.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </div>,
-       document.body,
-  )}
+          </div>,
+          document.body,
+        )}
       {/* Bank Details - Right Drawer */}
-      {bankDetailsModalOpen && createPortal(
-        <div className="fixed inset-0 z-100 overflow-hidden">
-          <div
-            className="absolute inset-0 bg-black/50"
-            onClick={handleCancelBankDetails}
-          />
-          <div className="absolute top-0 right-0 h-full w-full max-w-lg transform bg-white shadow-2xl transition-transform sm:w-3/4 lg:w-2/5 dark:bg-gray-800">
-            <div className="flex h-full flex-col">
-              <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 sm:px-6 sm:py-4 dark:border-gray-700">
-                <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-                  {" "}
-                  Bank Details
-                </h2>
-                <button
-                  onClick={handleCancelBankDetails}
-                  className="rounded-lg p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
-                >
-                  <XMarkIcon className="h-6 w-6" />
-                </button>
-              </div>
-              <div className="flex-1 overflow-y-auto p-4 sm:p-6">
-                <div className="mb-4">
-                  <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Payment Mode <span className="text-red-500">*</span>
-                  </label>
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
-                    {paymentModeOptions.map((opt) => (
-                      <label
-                        key={opt.value}
-                        className="flex cursor-pointer items-center gap-2 text-sm text-gray-800 dark:text-gray-200"
-                      >
-                        <input
-                          type="radio"
-                          name="paymentMode"
-                          checked={bankDetails.paymentMode === opt.value}
-                          onChange={() =>
-                            updateBankDetails("paymentMode", opt.value)
-                          }
-                        />
-                        {opt.label}
-                      </label>
-                    ))}
-                  </div>
-                  {bankDetailsTouched && !bankDetails.paymentMode && (
-                    <p className="mt-1 text-xs text-red-500">
-                      Please select a payment mode.
-                    </p>
-                  )}
-                </div>
-
-                {bankDetails.paymentMode === "CHEQUE" && (
-                  <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    <div>
-                      <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Cheque No <span className="text-red-500">*</span>
-                      </label>
-                      <Input
-                        placeholder="Enter Cheque No"
-                        value={bankDetails.chequeNo}
-                        onChange={(e) =>
-                          updateBankDetails("chequeNo", e.target.value)
-                        }
-                        className={`w-full ${bankDetailsTouched && !bankDetails.chequeNo.trim() ? "border-red-500" : ""}`}
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Cheque Date <span className="text-red-500">*</span>
-                      </label>
-                      <DatePicker
-                        value={
-                          bankDetails.chequeDate
-                            ? parseLocalDate(bankDetails.chequeDate)
-                            : undefined
-                        }
-                        options={{ disableMobile: true }}
-                        onChange={(selectedDates: Date[]) => {
-                          updateBankDetails(
-                            "chequeDate",
-                            formatLocalDate(selectedDates[0] || null),
-                          );
-                        }}
-                        placeholder="Select date..."
-                        className={`w-full ${
-                          bankDetailsTouched && !bankDetails.chequeDate.trim()
-                            ? "border-red-500"
-                            : ""
-                        }`}
-                      />
-                    </div>
-                    <div className="sm:col-span-2">
-                      <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Clear Date
-                      </label>
-                      <DatePicker
-                        value={
-                          bankDetails.clearDate
-                            ? parseLocalDate(bankDetails.clearDate)
-                            : undefined
-                        }
-                        options={{ disableMobile: true }}
-                        onChange={(selectedDates: Date[]) => {
-                          updateBankDetails(
-                            "clearDate",
-                            formatLocalDate(selectedDates[0] || null),
-                          );
-                        }}
-                        placeholder="Select date..."
-                        className="w-full"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                <div className="mb-4">
-                  <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Narration
-                  </label>
-                  <textarea
-                    placeholder="Enter Narration"
-                    value={bankDetails.narration}
-                    onChange={(e) =>
-                      updateBankDetails("narration", e.target.value)
-                    }
-                    rows={3}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-                  />
-                </div>
-              </div>
-              <div className="border-t border-gray-200 p-4 sm:p-6 dark:border-gray-700">
-                <div className="flex flex-col gap-2 sm:flex-row sm:justify-end sm:gap-3">
+      {bankDetailsModalOpen &&
+        createPortal(
+          <div className="fixed inset-0 z-100 overflow-hidden">
+            <div
+              className="absolute inset-0 bg-black/50"
+              onClick={handleCancelBankDetails}
+            />
+            <div className="absolute top-0 right-0 h-full w-full max-w-lg transform bg-white shadow-2xl transition-transform sm:w-3/4 lg:w-2/5 dark:bg-gray-800">
+              <div className="flex h-full flex-col">
+                <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 sm:px-6 sm:py-4 dark:border-gray-700">
+                  <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+                    {" "}
+                    Bank Details
+                  </h2>
                   <button
                     onClick={handleCancelBankDetails}
-                    className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 sm:w-auto sm:px-6 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+                    className="rounded-lg p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
                   >
-                    Cancel
+                    <XMarkIcon className="h-6 w-6" />
                   </button>
-                  <button
-                    onClick={handleSaveBankDetails}
-                    className="bg-primary-500 hover:bg-primary-500 w-full rounded-lg px-4 py-2 text-sm font-semibold text-white sm:w-auto sm:px-6"
-                  >
-                    Add Bank Details
-                  </button>
+                </div>
+                <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+                  <div className="mb-4">
+                    <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Payment Mode <span className="text-red-500">*</span>
+                    </label>
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
+                      {paymentModeOptions.map((opt) => (
+                        <label
+                          key={opt.value}
+                          className="flex cursor-pointer items-center gap-2 text-sm text-gray-800 dark:text-gray-200"
+                        >
+                          <input
+                            type="radio"
+                            name="paymentMode"
+                            checked={bankDetails.paymentMode === opt.value}
+                            onChange={() =>
+                              updateBankDetails("paymentMode", opt.value)
+                            }
+                          />
+                          {opt.label}
+                        </label>
+                      ))}
+                    </div>
+                    {bankDetailsTouched && !bankDetails.paymentMode && (
+                      <p className="mt-1 text-xs text-red-500">
+                        Please select a payment mode.
+                      </p>
+                    )}
+                  </div>
+
+                  {bankDetails.paymentMode === "CHEQUE" && (
+                    <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <div>
+                        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Cheque No <span className="text-red-500">*</span>
+                        </label>
+                        <Input
+                          placeholder="Enter Cheque No"
+                          value={bankDetails.chequeNo}
+                          onChange={(e) =>
+                            updateBankDetails("chequeNo", e.target.value)
+                          }
+                          className={`w-full ${bankDetailsTouched && !bankDetails.chequeNo.trim() ? "border-red-500" : ""}`}
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Cheque Date <span className="text-red-500">*</span>
+                        </label>
+                        <DatePicker
+                          value={
+                            bankDetails.chequeDate
+                              ? parseLocalDate(bankDetails.chequeDate)
+                              : undefined
+                          }
+                          options={{ disableMobile: true }}
+                          onChange={(selectedDates: Date[]) => {
+                            updateBankDetails(
+                              "chequeDate",
+                              formatLocalDate(selectedDates[0] || null),
+                            );
+                          }}
+                          placeholder="Select date..."
+                          className={`w-full ${
+                            bankDetailsTouched && !bankDetails.chequeDate.trim()
+                              ? "border-red-500"
+                              : ""
+                          }`}
+                        />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Clear Date
+                        </label>
+                        <DatePicker
+                          value={
+                            bankDetails.clearDate
+                              ? parseLocalDate(bankDetails.clearDate)
+                              : undefined
+                          }
+                          options={{ disableMobile: true }}
+                          onChange={(selectedDates: Date[]) => {
+                            updateBankDetails(
+                              "clearDate",
+                              formatLocalDate(selectedDates[0] || null),
+                            );
+                          }}
+                          placeholder="Select date..."
+                          className="w-full"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="mb-4">
+                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Narration
+                    </label>
+                    <textarea
+                      placeholder="Enter Narration"
+                      value={bankDetails.narration}
+                      onChange={(e) =>
+                        updateBankDetails("narration", e.target.value)
+                      }
+                      rows={3}
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                    />
+                  </div>
+                </div>
+                <div className="border-t border-gray-200 p-4 sm:p-6 dark:border-gray-700">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:justify-end sm:gap-3">
+                    <button
+                      onClick={handleCancelBankDetails}
+                      className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 sm:w-auto sm:px-6 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleSaveBankDetails}
+                      className="bg-primary-500 hover:bg-primary-500 w-full rounded-lg px-4 py-2 text-sm font-semibold text-white sm:w-auto sm:px-6"
+                    >
+                      Add Bank Details
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </div>,
-       document.body,
-  )}
+          </div>,
+          document.body,
+        )}
 
       {/* Create Account - Right Drawer WITH DYNAMIC LOCATION */}
-      {accountModalOpen && createPortal(
-        <div className="fixed inset-0 z-100 overflow-hidden">
-          <div
-            className="absolute inset-0 bg-black/50"
-            onClick={() => {
-              setAccountModalOpen(false);
-              setAccountForm(emptyAccount);
-              setAccountTouched(false);
-            }}
-          />
-          <div className="absolute top-0 right-0 h-full w-full max-w-3xl transform bg-white shadow-2xl transition-transform sm:w-3/4 lg:w-1/2 dark:bg-gray-800">
-            <div className="flex h-full flex-col">
-              <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 sm:px-6 sm:py-4 dark:border-gray-700">
-                <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-                  Create Account
-                </h2>
-                <button
-                  onClick={() => {
-                    setAccountModalOpen(false);
-                    setAccountForm(emptyAccount);
-                    setAccountTouched(false);
-                  }}
-                  className="rounded-lg p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
-                >
-                  <XMarkIcon className="h-6 w-6" />
-                </button>
-              </div>
-              <div className="flex-1 overflow-y-auto p-4 sm:p-6">
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
-                  {/* Account Name */}
-                  <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
-                      Account Name <span className="text-red-500">*</span>
-                    </label>
-                    <Input
-                      placeholder="Enter Account Name"
-                      value={accountForm.accountName}
-                      onChange={(e) =>
-                        updateAccountForm("accountName", e.target.value)
-                      }
-                      className={`w-full ${accountTouched && !accountForm.accountName.trim() ? "border-red-500" : ""}`}
-                    />
-                    {getAccountError("accountName") && (
-                      <p className="mt-1 text-xs text-red-500">
-                        {getAccountError("accountName")}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-xs font-medium">
-                      Group
-                    </label>
-
-                    <Listbox
-                      data={groupOptions}
-                      value={
-                        groupOptions.find(
-                          (x) => x.value === accountForm.group,
-                        ) || null
-                      }
-                      onChange={(val: any) =>
-                        updateAccountForm("group", val?.value || "")
-                      }
-                      placeholder="Select Group"
-                    />
-                    {getAccountError("group") && (
-                      <p className="mt-1 text-xs text-red-500">
-                        {getAccountError("group")}
-                      </p>
-                    )}
-                  </div>
-
-                  {isCreditorGroup && (
-                    <>
-                      <div>
-                        <label className="mb-1 block text-xs font-medium">
-                          Opening Balance
-                        </label>
-
-                        <Input
-                          placeholder="Opening Balance"
-                          value={accountForm.openingBalance}
-                          onChange={(e) =>
-                            updateAccountForm("openingBalance", e.target.value)
-                          }
-                        />
-                        {getAccountError("openingBalance") && (
-                          <p className="mt-1 text-xs text-red-500">
-                            {getAccountError("openingBalance")}
-                          </p>
-                        )}
-                      </div>
-
-                      <div>
-                        <label className="mb-1 block text-xs font-medium">
-                          Dr / Cr
-                        </label>
-
-                        <Listbox
-                          data={drCrOptions}
-                          value={
-                            drCrOptions.find(
-                              (x) => x.value === accountForm.drCr,
-                            ) || null
-                          }
-                          onChange={(val: any) =>
-                            updateAccountForm("drCr", val?.value || "")
-                          }
-                          placeholder="Select Dr / Cr"
-                        />
-                        {getAccountError("drCr") && (
-                          <p className="mt-1 text-xs text-red-500">
-                            {getAccountError("drCr")}
-                          </p>
-                        )}
-                      </div>
-                    </>
-                  )}
-                  {/* Mobile */}
-                  <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
-                      Mobile <span className="text-red-500">*</span>
-                    </label>
-                    <Input
-                      placeholder="Mobile"
-                      value={accountForm.mobile}
-                      onChange={(e) =>
-                        updateAccountForm("mobile", e.target.value)
-                      }
-                      className={`w-full ${accountTouched && !accountForm.mobile.trim() ? "border-red-500" : ""}`}
-                    />
-                    {getAccountError("mobile") && (
-                      <p className="mt-1 text-xs text-red-500">
-                        {getAccountError("mobile")}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Country - Dynamic with react-select */}
-                  {/* Country */}
-                  <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
-                      Country <span className="text-red-500">*</span>
-                    </label>
-                    <Combobox
-                      data={countryOptions}
-                      displayField="label"
-                      searchFields={["label"]}
-                      placeholder="Search Country"
-                      value={
-                        countryOptions.find(
-                          (o) => o.value === accountForm.countryCode,
-                        ) || null
-                      }
-                      onChange={(
-                        selected: { value: string; label: string } | null,
-                      ) => {
-                        updateAccountForm("countryCode", selected?.value || "");
-                        updateAccountForm("country", selected?.label || "");
-                        updateAccountForm("stateCode", "");
-                        updateAccountForm("state", "");
-                        updateAccountForm("district", "");
-                        updateAccountForm("city", "");
-                      }}
-                    />
-                    {getAccountError("countryCode") && (
-                      <p className="mt-1 text-xs text-red-500">
-                        {getAccountError("countryCode")}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* State */}
-                  <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
-                      State <span className="text-red-500">*</span>
-                    </label>
-                    <div
-                      className={
-                        !accountForm.countryCode
-                          ? "pointer-events-none opacity-60"
-                          : ""
-                      }
-                    >
-                      <Combobox
-                        data={stateOptions}
-                        displayField="label"
-                        searchFields={["label"]}
-                        placeholder="Search State"
-                        value={
-                          stateOptions.find(
-                            (o) => o.value === accountForm.stateCode,
-                          ) || null
-                        }
-                        onChange={(
-                          selected: { value: string; label: string } | null,
-                        ) => {
-                          updateAccountForm("stateCode", selected?.value || "");
-                          updateAccountForm("state", selected?.label || "");
-                          updateAccountForm("district", "");
-                          updateAccountForm("city", "");
-                        }}
-                      />
-                    </div>
-                    {getAccountError("stateCode") && (
-                      <p className="mt-1 text-xs text-red-500">
-                        {getAccountError("stateCode")}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* District */}
-                  <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
-                      District <span className="text-red-500">*</span>
-                    </label>
-                    <div
-                      className={
-                        !accountForm.stateCode
-                          ? "pointer-events-none opacity-60"
-                          : ""
-                      }
-                    >
-                      <Combobox
-                        data={districtOptions}
-                        displayField="label"
-                        searchFields={["label"]}
-                        placeholder="Search District"
-                        value={
-                          districtOptions.find(
-                            (o) => o.value === accountForm.district,
-                          ) || null
-                        }
-                        onChange={(
-                          selected: { value: string; label: string } | null,
-                        ) =>
-                          updateAccountForm("district", selected?.value || "")
-                        }
-                      />
-                    </div>
-                    {getAccountError("district") && (
-                      <p className="mt-1 text-xs text-red-500">
-                        {getAccountError("district")}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* City */}
-                  <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
-                      City <span className="text-red-500">*</span>
-                    </label>
-                    <div
-                      className={
-                        !accountForm.stateCode
-                          ? "pointer-events-none opacity-60"
-                          : ""
-                      }
-                    >
-                      <Combobox
-                        data={cityOptions}
-                        displayField="label"
-                        searchFields={["label"]}
-                        placeholder="Search City"
-                        value={
-                          cityOptions.find(
-                            (o) => o.value === accountForm.city,
-                          ) || null
-                        }
-                        onChange={(
-                          selected: { value: string; label: string } | null,
-                        ) => updateAccountForm("city", selected?.value || "")}
-                      />
-                    </div>
-                    {getAccountError("city") && (
-                      <p className="mt-1 text-xs text-red-500">
-                        {getAccountError("city")}
-                      </p>
-                    )}
-                  </div>
-                  {/* Address */}
-                  <div className="sm:col-span-2">
-                    <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
-                      Address <span className="text-red-500">*</span>
-                    </label>
-                    <Input
-                      placeholder="Enter Address"
-                      value={accountForm.address}
-                      onChange={(e) =>
-                        updateAccountForm("address", e.target.value)
-                      }
-                      className={`w-full ${accountTouched && !accountForm.address.trim() ? "border-red-500" : ""}`}
-                    />
-                    {getAccountError("address") && (
-                      <p className="mt-1 text-xs text-red-500">
-                        {getAccountError("address")}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* PAN Card */}
-                  <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
-                      PAN Card <span className="text-red-500">*</span>
-                    </label>
-                    <Input
-                      placeholder="PAN Card Number"
-                      value={accountForm.panCard}
-                      onChange={(e) => {
-                        updateAccountForm(
-                          "panCard",
-                          e.target.value.toUpperCase(),
-                        );
-                        validateField("panCard", e.target.value.toUpperCase());
-                      }}
-                      error={accountErrors.panCard}
-                      className={`w-full ${accountTouched && !accountForm.panCard.trim() ? "border-red-500" : ""}`}
-                    />
-                    {/* {getAccountError("panCard") && (
-  <p className="mt-1 text-xs text-red-500">
-    {getAccountError("panCard")}
-  </p>
-)} */}
-                  </div>
-                  {/* Aadhar Card */}
-                  <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
-                      Aadhar Card No <span className="text-red-500">*</span>
-                    </label>
-                    <Input
-                      placeholder="Aadhar Number"
-                      value={accountForm.aadharCard}
-                      onChange={(e) => {
-                        updateAccountForm("aadharCard", e.target.value);
-                        validateField("aadharCard", e.target.value);
-                      }}
-                      error={accountErrors.aadharCard}
-                      className={`w-full ${accountTouched && !accountForm.aadharCard.trim() ? "border-red-500" : ""}`}
-                    />
-                    {/* {getAccountError("aadharCard") && (
-  <p className="mt-1 text-xs text-red-500">
-    {getAccountError("aadharCard")}
-  </p>
-)} */}
-                  </div>
-                </div>
-              </div>
-              <div className="border-t border-gray-200 p-4 sm:p-6 dark:border-gray-700">
-                <div className="flex flex-col gap-2 sm:flex-row sm:justify-end sm:gap-3">
+      {accountModalOpen &&
+        createPortal(
+          <div className="fixed inset-0 z-100 overflow-hidden">
+            <div
+              className="absolute inset-0 bg-black/50"
+              onClick={() => {
+                setAccountModalOpen(false);
+                setAccountForm(emptyAccount);
+                setAccountTouched(false);
+              }}
+            />
+            <div className="absolute top-0 right-0 h-full w-full max-w-3xl transform bg-white shadow-2xl transition-transform sm:w-3/4 lg:w-1/2 dark:bg-gray-800">
+              <div className="flex h-full flex-col">
+                <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 sm:px-6 sm:py-4 dark:border-gray-700">
+                  <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+                    Create Account
+                  </h2>
                   <button
                     onClick={() => {
                       setAccountModalOpen(false);
                       setAccountForm(emptyAccount);
                       setAccountTouched(false);
                     }}
-                    className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 sm:w-auto sm:px-6 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+                    className="rounded-lg p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
                   >
-                    Cancel
+                    <XMarkIcon className="h-6 w-6" />
                   </button>
-                  <button
-                    onClick={handleCreateAccount}
-                    className="bg-primary-500 hover:bg-primary-500 w-full cursor-pointer rounded-lg px-4 py-2 text-sm font-semibold text-white sm:w-auto sm:px-6"
-                  >
-                    Create Account
-                  </button>
+                </div>
+                <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
+                    {/* Account Name */}
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+                        Account Name <span className="text-red-500">*</span>
+                      </label>
+                      <Input
+                        placeholder="Enter Account Name"
+                        value={accountForm.accountName}
+                        onChange={(e) =>
+                          updateAccountForm("accountName", e.target.value)
+                        }
+                        className={`w-full ${accountTouched && !accountForm.accountName.trim() ? "border-red-500" : ""}`}
+                      />
+                      {getAccountError("accountName") && (
+                        <p className="mt-1 text-xs text-red-500">
+                          {getAccountError("accountName")}
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium">
+                        Group
+                      </label>
+
+                      <Listbox
+                        data={groupOptions}
+                        value={
+                          groupOptions.find(
+                            (x) => x.value === accountForm.group,
+                          ) || null
+                        }
+                        onChange={(val: any) =>
+                          updateAccountForm("group", val?.value || "")
+                        }
+                        placeholder="Select Group"
+                      />
+                      {getAccountError("group") && (
+                        <p className="mt-1 text-xs text-red-500">
+                          {getAccountError("group")}
+                        </p>
+                      )}
+                    </div>
+
+                    {isCreditorGroup && (
+                      <>
+                        <div>
+                          <label className="mb-1 block text-xs font-medium">
+                            Opening Balance
+                          </label>
+
+                          <Input
+                            placeholder="Opening Balance"
+                            value={accountForm.openingBalance}
+                            onChange={(e) =>
+                              updateAccountForm(
+                                "openingBalance",
+                                e.target.value,
+                              )
+                            }
+                          />
+                          {getAccountError("openingBalance") && (
+                            <p className="mt-1 text-xs text-red-500">
+                              {getAccountError("openingBalance")}
+                            </p>
+                          )}
+                        </div>
+
+                        <div>
+                          <label className="mb-1 block text-xs font-medium">
+                            Dr / Cr
+                          </label>
+
+                          <Listbox
+                            data={drCrOptions}
+                            value={
+                              drCrOptions.find(
+                                (x) => x.value === accountForm.drCr,
+                              ) || null
+                            }
+                            onChange={(val: any) =>
+                              updateAccountForm("drCr", val?.value || "")
+                            }
+                            placeholder="Select Dr / Cr"
+                          />
+                          {getAccountError("drCr") && (
+                            <p className="mt-1 text-xs text-red-500">
+                              {getAccountError("drCr")}
+                            </p>
+                          )}
+                        </div>
+                      </>
+                    )}
+                    {/* Mobile */}
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+                        Mobile <span className="text-red-500">*</span>
+                      </label>
+                      <Input
+                        placeholder="Mobile"
+                        value={accountForm.mobile}
+                        onChange={(e) =>
+                          updateAccountForm("mobile", e.target.value)
+                        }
+                        className={`w-full ${accountTouched && !accountForm.mobile.trim() ? "border-red-500" : ""}`}
+                      />
+                      {getAccountError("mobile") && (
+                        <p className="mt-1 text-xs text-red-500">
+                          {getAccountError("mobile")}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Country - Dynamic with react-select */}
+                    {/* Country */}
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+                        Country <span className="text-red-500">*</span>
+                      </label>
+                      <Combobox
+                        data={countryOptions}
+                        displayField="label"
+                        searchFields={["label"]}
+                        placeholder="Search Country"
+                        value={
+                          countryOptions.find(
+                            (o) => o.value === accountForm.countryCode,
+                          ) || null
+                        }
+                        onChange={(
+                          selected: { value: string; label: string } | null,
+                        ) => {
+                          updateAccountForm(
+                            "countryCode",
+                            selected?.value || "",
+                          );
+                          updateAccountForm("country", selected?.label || "");
+                          updateAccountForm("stateCode", "");
+                          updateAccountForm("state", "");
+                          updateAccountForm("district", "");
+                          updateAccountForm("city", "");
+                        }}
+                      />
+                      {getAccountError("countryCode") && (
+                        <p className="mt-1 text-xs text-red-500">
+                          {getAccountError("countryCode")}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* State */}
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+                        State <span className="text-red-500">*</span>
+                      </label>
+                      <div
+                        className={
+                          !accountForm.countryCode
+                            ? "pointer-events-none opacity-60"
+                            : ""
+                        }
+                      >
+                        <Combobox
+                          data={stateOptions}
+                          displayField="label"
+                          searchFields={["label"]}
+                          placeholder="Search State"
+                          value={
+                            stateOptions.find(
+                              (o) => o.value === accountForm.stateCode,
+                            ) || null
+                          }
+                          onChange={(
+                            selected: { value: string; label: string } | null,
+                          ) => {
+                            updateAccountForm(
+                              "stateCode",
+                              selected?.value || "",
+                            );
+                            updateAccountForm("state", selected?.label || "");
+                            updateAccountForm("district", "");
+                            updateAccountForm("city", "");
+                          }}
+                        />
+                      </div>
+                      {getAccountError("stateCode") && (
+                        <p className="mt-1 text-xs text-red-500">
+                          {getAccountError("stateCode")}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* District */}
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+                        District <span className="text-red-500">*</span>
+                      </label>
+                      <div
+                        className={
+                          !accountForm.stateCode
+                            ? "pointer-events-none opacity-60"
+                            : ""
+                        }
+                      >
+                        <Combobox
+                          data={districtOptions}
+                          displayField="label"
+                          searchFields={["label"]}
+                          placeholder="Search District"
+                          value={
+                            districtOptions.find(
+                              (o) => o.value === accountForm.district,
+                            ) || null
+                          }
+                          onChange={(
+                            selected: { value: string; label: string } | null,
+                          ) =>
+                            updateAccountForm("district", selected?.value || "")
+                          }
+                        />
+                      </div>
+                      {getAccountError("district") && (
+                        <p className="mt-1 text-xs text-red-500">
+                          {getAccountError("district")}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* City */}
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+                        City <span className="text-red-500">*</span>
+                      </label>
+                      <div
+                        className={
+                          !accountForm.stateCode
+                            ? "pointer-events-none opacity-60"
+                            : ""
+                        }
+                      >
+                        <Combobox
+                          data={cityOptions}
+                          displayField="label"
+                          searchFields={["label"]}
+                          placeholder="Search City"
+                          value={
+                            cityOptions.find(
+                              (o) => o.value === accountForm.city,
+                            ) || null
+                          }
+                          onChange={(
+                            selected: { value: string; label: string } | null,
+                          ) => updateAccountForm("city", selected?.value || "")}
+                        />
+                      </div>
+                      {getAccountError("city") && (
+                        <p className="mt-1 text-xs text-red-500">
+                          {getAccountError("city")}
+                        </p>
+                      )}
+                    </div>
+                    {/* Address */}
+                    <div className="sm:col-span-2">
+                      <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+                        Address <span className="text-red-500">*</span>
+                      </label>
+                      <Input
+                        placeholder="Enter Address"
+                        value={accountForm.address}
+                        onChange={(e) =>
+                          updateAccountForm("address", e.target.value)
+                        }
+                        className={`w-full ${accountTouched && !accountForm.address.trim() ? "border-red-500" : ""}`}
+                      />
+                      {getAccountError("address") && (
+                        <p className="mt-1 text-xs text-red-500">
+                          {getAccountError("address")}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* PAN Card */}
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+                        PAN Card <span className="text-red-500">*</span>
+                      </label>
+                      <Input
+                        placeholder="PAN Card Number"
+                        value={accountForm.panCard}
+                        onChange={(e) => {
+                          updateAccountForm(
+                            "panCard",
+                            e.target.value.toUpperCase(),
+                          );
+                          validateField(
+                            "panCard",
+                            e.target.value.toUpperCase(),
+                          );
+                        }}
+                        error={accountErrors.panCard}
+                        className={`w-full ${accountTouched && !accountForm.panCard.trim() ? "border-red-500" : ""}`}
+                      />
+                      {/* {getAccountError("panCard") && (
+  <p className="mt-1 text-xs text-red-500">
+    {getAccountError("panCard")}
+  </p>
+)} */}
+                    </div>
+                    {/* Aadhar Card */}
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+                        Aadhar Card No <span className="text-red-500">*</span>
+                      </label>
+                      <Input
+                        placeholder="Aadhar Number"
+                        value={accountForm.aadharCard}
+                        onChange={(e) => {
+                          updateAccountForm("aadharCard", e.target.value);
+                          validateField("aadharCard", e.target.value);
+                        }}
+                        error={accountErrors.aadharCard}
+                        className={`w-full ${accountTouched && !accountForm.aadharCard.trim() ? "border-red-500" : ""}`}
+                      />
+                      {/* {getAccountError("aadharCard") && (
+  <p className="mt-1 text-xs text-red-500">
+    {getAccountError("aadharCard")}
+  </p>
+)} */}
+                    </div>
+                  </div>
+                </div>
+                <div className="border-t border-gray-200 p-4 sm:p-6 dark:border-gray-700">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:justify-end sm:gap-3">
+                    <button
+                      onClick={() => {
+                        setAccountModalOpen(false);
+                        setAccountForm(emptyAccount);
+                        setAccountTouched(false);
+                      }}
+                      className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 sm:w-auto sm:px-6 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleCreateAccount}
+                      className="bg-primary-500 hover:bg-primary-500 w-full cursor-pointer rounded-lg px-4 py-2 text-sm font-semibold text-white sm:w-auto sm:px-6"
+                    >
+                      Create Account
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </div>,
-      document.body,
-  )}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 };
