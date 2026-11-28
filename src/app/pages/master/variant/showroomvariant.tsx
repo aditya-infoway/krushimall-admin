@@ -256,8 +256,7 @@ export default function ShowroomVariantPage() {
       let data = response?.data || response;
       if (!Array.isArray(data)) data = [];
       setVariants(data);
-      console.log("", data);
-      console.log("Accessories:", accessories);
+      
     } catch (error) {
       console.error(error);
       setVariants([]);
@@ -286,7 +285,7 @@ export default function ShowroomVariantPage() {
 
       const data = res.data || [];
 
-      console.log("Accessories API:", data);
+     
 
       setAccessoryOptions(data);
     } catch (error) {
