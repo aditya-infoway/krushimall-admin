@@ -2,6 +2,16 @@
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
+## Build the Android APK
+
+Install Android Studio with the Android SDK and use JDK 21. Set `ANDROID_HOME` to
+the SDK location if it is not already configured, and set `VITE_API_URL` to an
+API endpoint reachable from the device.
+
+Run `npm run build:apk` to build the Capacitor web app, sync it into the Android
+project, and create a debug APK at
+`android/app/build/outputs/apk/debug/app-debug.apk`.
+
 Currently, two official plugins are available:
 
 - [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
